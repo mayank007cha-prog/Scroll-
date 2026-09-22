@@ -2,32 +2,144 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>ScrollTrigger</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ScrollTrigger — Scroll Video</title>
 
     <style>
-        div.Wrapper {
-            width: 250vw;
-            height: 250vw;
+        * {
+            box-sizing: border-box;
         }
 
-        div.Block {
-            float: left;
-            width: 25vw;
-            height: 25vw;
-            margin: 100vw;
-            background-color: tomato;
-
-            transition: background-color 0.8s ease;
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0b0b0c;
+            color: #fff;
         }
 
-        div.Block.visible {
-            background-color: chartreuse;
+        /* The fold is a tall scroll track; the video stays pinned to the
+           viewport for its whole duration and is scrubbed by scroll
+           progress instead of playing on a timer. */
+        section.Fold {
+            position: relative;
+            height: 400vh;
+        }
+
+        div.Fold-sticky {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        video.Fold-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        div.Fold-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0.55) 100%);
+            pointer-events: none;
+        }
+
+        div.Fold-overlay h1 {
+            font-size: clamp(2rem, 6vw, 4.5rem);
+            margin: 0 0 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        div.Fold-overlay p {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            opacity: 0.85;
+            margin: 0 0 2rem;
+        }
+
+        div.Fold-scrollHint {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            opacity: 0.7;
+            transition: opacity 0.4s ease;
+        }
+
+        div.Fold-scrollHint.is-hidden {
+            opacity: 0;
+        }
+
+        div.Fold-progress {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 0%;
+            background: #fff;
+            transform-origin: left;
+        }
+
+        section.Content {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 1.5rem;
+        }
+
+        section.Content .Content-inner {
+            max-width: 640px;
+            text-align: center;
+        }
+
+        section.Content h2 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 1rem;
+        }
+
+        section.Content p {
+            opacity: 0.75;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
-<div class="Wrapper">
-    <div class="Block"></div>
-</div>
+<section class="Fold">
+    <div class="Fold-sticky">
+        <video class="Fold-video" src="https://vimeo.com/347119375" muted playsinline preload="auto"></video>
+        <div class="Fold-overlay">
+            <h1>Scroll to play</h1>
+            <p>The video scrubs frame by frame as you scroll through this section.</p>
+        </div>
+        <div class="Fold-scrollHint">Scroll down</div>
+        <div class="Fold-progress"></div>
+    </div>
+</section>
+
+<section class="Content">
+    <div class="Content-inner">
+        <h2>You made it through the fold</h2>
+        <p>Everything above uses your scroll position to drive the video's
+            playback head directly, so it feels tied to the scrollbar rather
+            than autoplaying on its own.</p>
+    </div>
+</section>
+<script src="main.js"></script>
 </body>
 </html>
