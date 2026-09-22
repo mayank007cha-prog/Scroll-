@@ -27,8 +27,12 @@ switch (process.env.NODE_ENV) {
     case 'development':
         entry = __dirname + '/dev/main.js'
 
+        // dev/index.html loads dev/main.js itself via a plain <script> tag so
+        // the page also works when opened without webpack at all. Don't let
+        // HtmlWebpackPlugin inject a second (bundled, hashed) script tag on
+        // top of it.
         plugins.push(new HtmlWebpackPlugin({
-            inject: 'body',
+            inject: false,
             template: 'dev/index.html'
         }))
 
