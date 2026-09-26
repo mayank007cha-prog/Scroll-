@@ -18,6 +18,8 @@ A single pinned scene (`ScrollStage`) drives one scrubbed GSAP timeline, so scro
 3. **Floating row**: the video shrinks to card size while case study 01 slides in beside it, then the whole row (video first, then the case studies from `ProjectStack`) glides right → left with scroll. Each item turns away (`rotateY`) and sinks back (`translateZ`) by its distance from the centre, which bends the row into a gentle curve.
 4. **Footer**: the last item on the row, ending centred and flat.
 
+As the video becomes a card, a soft white fog fades in on its sides and its corner radius is counter-scaled to match the cards. Behind everything, `DepthField` floats CSS-3D product-design objects (wireframe cubes, an exploded layer stack, a pen-tool curve, a multiplayer cursor, colour swatches, a selection frame, a type specimen, UI controls) over a perspective grid floor. They drift with the row (deeper ones move slower) and the cubes turn as you scroll.
+
 Clicking a card opens `/work/[slug]`, a placeholder case study page generated from `projects.ts`.
 
 `SceneFrame` is the rounded `overflow: hidden` window with the CSS `perspective`.
@@ -28,6 +30,7 @@ Clicking a card opens `/work/[slug]`, a placeholder case study page generated fr
 | `src/data/projects.ts` | Case-study content (title, one-liner, description) and footer/contact links |
 | `src/components/ScrollStage.tsx` | Pin, timeline, Lenis, video scrubbing, curve |
 | `src/components/{HeroVideo,SceneFrame,ProjectStack,ProjectCard,Footer}.tsx` | Presentational pieces |
+| `src/components/DepthField.tsx` | Background objects and their placement (x, y, z, size, spin) |
 | `src/app/work/[slug]/page.tsx` | Dummy case study page |
 
 ## Video

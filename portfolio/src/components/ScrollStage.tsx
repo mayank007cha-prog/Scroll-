@@ -97,6 +97,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   // ---- Elements -----------------------------------------------------------
   const track = stage.querySelector<HTMLElement>("[data-track]");
   const items = track ? gsap.utils.toArray<HTMLElement>(".work-item", track) : [];
+  const fog = hero.querySelector<HTMLElement>(".hero-fog");
+  const depthField = stage.querySelector<HTMLElement>("[data-depth-field]");
+  const spinners = depthField ? gsap.utils.toArray<HTMLElement>("[data-spin]", depthField) : [];
+  const depthFaders = depthField ? gsap.utils.toArray<HTMLElement>(".depth-obj, .depth-floor", depthField) : [];
 
   gsap.set(frame, { perspective: config.perspective });
   gsap.set(hero, { transformOrigin: "50% 50%", force3D: true });
@@ -106,8 +110,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   let frameWidth = 0;
   let centers: number[] = [];
   let halfWidths: number[] = [];
+  let radius = 0;
   const measure = () => {
     frameWidth = frame.clientWidth;
+    radius = parseFloat(getComputedStyle(frame).borderTopLeftRadius) || 0; // same --radius as the cards
     centers = items.map((el) => el.offsetLeft + el.offsetWidth / 2);
     halfWidths = items.map((el) => el.offsetWidth / 2);
   };
@@ -146,12 +152,32 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const shift = Math.min(0, trackState.x - parkedX);
     const heroX = (shift * trackFactor) / heroFactor;
     const dh = bend((heroX * heroFactor) / half);
+    // Counter-scale the corner radius so the shrunken video's corners look
+    // the same as the cards' (which sit at trackDepth) instead of shrinking.
+    const shrink = gsap.utils.clamp(0, 1, (1 - heroState.scale) / (1 - config.heroScale || 1));
+    const onScreen = heroState.scale * heroFactor;
+    const cornerRadius = (radius * gsap.utils.interpolate(1, trackFactor, shrink)) / onScreen;
     gsap.set(hero, {
       x: heroX,
       z: heroState.z - Math.abs(dh) * config.curveDepth,
       scale: heroState.scale,
       rotateY: dh * config.curveRotate,
+      borderRadius: cornerRadius,
     });
+    // The fog on the video's sides and the background objects fade in as the
+    // video turns into a card.
+    if (fog) gsap.set(fog, { opacity: shrink });
+
+    // Background objects: the layer drifts with the row (deeper objects move
+    // slower on screen thanks to perspective) and some objects slowly turn.
+    if (depthField) {
+      const layerX = (trackState.x - offscreenX()) * config.depthParallax;
+      gsap.set(depthField, { x: layerX });
+      gsap.set(depthFaders, { opacity: shrink });
+      spinners.forEach((el) => {
+        gsap.set(el, { rotateY: layerX * config.depthSpin * Number(el.dataset.spin || 1) });
+      });
+    }
 
     if (!track) return;
     gsap.set(track, { x: trackState.x, z: config.trackDepth });

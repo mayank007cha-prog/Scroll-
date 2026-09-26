@@ -18,6 +18,10 @@ export type SceneConfig = {
   curveRotate: number;
   /** Extra Z depth (px) for cards at the edges of the curve. */
   curveDepth: number;
+  /** How much the background objects drift relative to the row (0–1). */
+  depthParallax: number;
+  /** Degrees per px of drift that the spinning background objects turn. */
+  depthSpin: number;
   /** ScrollTrigger scrub: `true` or seconds of smoothing. */
   scrub: boolean | number;
   /** Where the row starts, in vw from the left edge of the frame (100 = just off-screen right). */
@@ -41,6 +45,8 @@ export const sceneConfig: SceneConfig = {
   trackDepth: -80,
   curveRotate: 24,
   curveDepth: 260,
+  depthParallax: 0.7,
+  depthSpin: -0.02,
   scrub: 1.2,
   entryDistance: 110,
   videoDistance: 1.5,

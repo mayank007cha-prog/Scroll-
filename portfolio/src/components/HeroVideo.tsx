@@ -26,6 +26,8 @@ export function HeroVideo({ src, webmSrc, poster, label = "Intro video" }: HeroV
         <source src={src} type="video/mp4" />
         {webmSrc && <source src={webmSrc} type="video/webm" />}
       </video>
+      {/* White haze on the sides, faded in as the video becomes a card. */}
+      <div className="hero-fog" aria-hidden="true" />
     </div>
   );
 }
