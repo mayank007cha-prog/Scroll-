@@ -111,8 +111,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   let centers: number[] = [];
   let halfWidths: number[] = [];
   let radius = 0;
+  let gapPx = 0;
   const measure = () => {
     frameWidth = frame.clientWidth;
+    gapPx = parseFloat(getComputedStyle(track ?? frame).columnGap) || 0;
     radius = parseFloat(getComputedStyle(frame).borderTopLeftRadius) || 0; // same --radius as the cards
     centers = items.map((el) => el.offsetLeft + el.offsetWidth / 2);
     halfWidths = items.map((el) => el.offsetWidth / 2);
@@ -123,14 +125,13 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const P = config.perspective;
   const depthFactor = (z: number) => P / (P - z);
   const trackFactor = depthFactor(config.trackDepth);
-  const gap = () => parseFloat(getComputedStyle(track ?? frame).columnGap) || 0;
 
   // Track x values: off-screen right → first card parked beside the shrunken
   // video → last item (footer) centred.
   const offscreenX = () => (config.entryDistance / 100) * frameWidth - (items[0]?.offsetLeft ?? 0);
   const rowStartX = () => {
     const heroHalf = (frameWidth / 2) * config.heroScale * depthFactor(config.heroDepth);
-    const firstLeft = heroHalf / trackFactor + gap(); // distance from centre, in track space
+    const firstLeft = heroHalf / trackFactor + gapPx; // distance from centre, in track space
     return frameWidth / 2 + firstLeft + (halfWidths[0] ?? 0) - (centers[0] ?? 0);
   };
   const endX = () => frameWidth / 2 - (centers[centers.length - 1] ?? 0);
@@ -142,9 +143,18 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const heroState = { z: 0, scale: 1 };
   let parkedX = 0; // trackState.x at the moment the row starts moving the video
 
+  const bend = (d: number) => gsap.utils.clamp(-1.5, 1.5, d);
+  const toRad = Math.PI / 180;
+  // On-screen x (from the frame centre) of a point at local x `lx` on a plane
+  // centred at `cx`, depth `cz`, turned by `deg` around Y.
+  const project = (cx: number, cz: number, lx: number, deg: number) => {
+    const X = cx + lx * Math.cos(deg * toRad);
+    const Z = cz - lx * Math.sin(deg * toRad);
+    return (X * P) / (P - Z);
+  };
+
   const render = () => {
     const half = frameWidth / 2 || 1;
-    const bend = (d: number) => gsap.utils.clamp(-1.5, 1.5, d);
 
     // The video rides with the row once the row passes its parked position,
     // scaled so it moves at the same on-screen speed as the cards.
@@ -157,11 +167,13 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const shrink = gsap.utils.clamp(0, 1, (1 - heroState.scale) / (1 - config.heroScale || 1));
     const onScreen = heroState.scale * heroFactor;
     const cornerRadius = (radius * gsap.utils.interpolate(1, trackFactor, shrink)) / onScreen;
+    const heroZ = heroState.z - Math.abs(dh) * config.curveDepth;
+    const heroDeg = dh * config.curveRotate;
     gsap.set(hero, {
       x: heroX,
-      z: heroState.z - Math.abs(dh) * config.curveDepth,
+      z: heroZ,
       scale: heroState.scale,
-      rotateY: dh * config.curveRotate,
+      rotateY: heroDeg,
       borderRadius: cornerRadius,
     });
     // The fog on the video's sides and the background objects fade in as the
@@ -180,9 +192,27 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     }
 
     if (!track) return;
-    gsap.set(track, { x: trackState.x, z: config.trackDepth });
+
+    // Keep the first card at least one gap clear of the video's right edge
+    // at every moment and viewport size (both edges measured on screen,
+    // including their curve), so they never overlap.
+    const heroRight = project(heroX, heroZ, half * heroState.scale, heroDeg);
+    const minLeft = heroRight + gapPx * trackFactor;
+    const cardLeft = (x: number) => {
+      const c = centers[0] + x - half;
+      const d = bend(c / half);
+      return project(c, config.trackDepth - Math.abs(d) * config.curveDepth, -(halfWidths[0] ?? 0), d * config.curveRotate);
+    };
+    let x = trackState.x;
+    for (let k = 0; k < 4 && items.length; k++) {
+      const left = cardLeft(x);
+      if (left >= minLeft - 0.5) break;
+      x += (minLeft - left) / trackFactor;
+    }
+
+    gsap.set(track, { x, z: config.trackDepth });
     items.forEach((el, i) => {
-      const d = bend((centers[i] + trackState.x - half) / half);
+      const d = bend((centers[i] + x - half) / half);
       gsap.set(el, { rotateY: d * config.curveRotate, z: -Math.abs(d) * config.curveDepth, transformOrigin: "50% 50%" });
     });
   };

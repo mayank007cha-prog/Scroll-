@@ -482,7 +482,7 @@ a:focus-visible {
   justify-content: flex-end;
   gap: 20px;
   height: var(--card-h);
-  padding: clamp(28px, 4vw, 64px);
+  padding: clamp(22px, min(4vw, 6vh), 64px);
   border-radius: var(--radius);
   background: var(--card);
   color: var(--ink);
@@ -498,7 +498,8 @@ a:focus-visible {
 .project-card__title {
   margin: 0;
   max-width: 16ch;
-  font-size: clamp(36px, 5.2vw, 84px);
+  /* Scale with width and height so short screens don't overflow the card. */
+  font-size: clamp(28px, min(5.2vw, 7vh), 84px);
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -508,7 +509,7 @@ a:focus-visible {
 .project-card__line {
   margin: 0;
   max-width: 40ch;
-  font-size: clamp(17px, 1.6vw, 22px);
+  font-size: clamp(15px, min(1.6vw, 2.6vh), 22px);
   line-height: 1.4;
   color: var(--muted);
 }
@@ -532,7 +533,7 @@ a:focus-visible {
 .footer-card__headline {
   margin: 0;
   max-width: 12ch;
-  font-size: clamp(44px, 7vw, 112px);
+  font-size: clamp(40px, min(7vw, 11vh), 112px);
   font-weight: 500;
   line-height: 0.95;
   letter-spacing: -0.045em;
@@ -640,6 +641,10 @@ a:focus-visible {
   .project-card__bar {
     padding: 14px 18px;
     font-size: 14px;
+  }
+
+  .project-card__title {
+    font-size: clamp(26px, min(8.6vw, 5vh), 40px);
   }
 }
 
