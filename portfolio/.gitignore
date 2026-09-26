@@ -1,0 +1,9 @@
+# The repo root ignores every `public/` folder (for the library demo build);
+# this app serves its video from public/, so re-include it here.
+!public/
+
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo

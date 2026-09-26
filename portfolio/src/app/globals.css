@@ -1,0 +1,242 @@
+/* Interaction prototype styling: grey background, white cards, black text.
+   Final visual design comes later. */
+
+:root {
+  --bg: #cfcfcf;
+  --frame-bg: #b9b9b9;
+  --card: #ffffff;
+  --ink: #111111;
+  --muted: #666666;
+  --placeholder: #e4e4e4;
+  --gutter: 16px;
+  --radius: 24px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+/* ---- Stage / frame ------------------------------------------------------ */
+
+.scroll-stage {
+  position: relative;
+  height: 100vh;
+  height: 100svh;
+}
+
+.scene-frame {
+  position: absolute;
+  inset: var(--gutter);
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--frame-bg);
+  perspective: 1200px;
+  /* Keeps the clip + radius on the GPU layer in Safari. */
+  isolation: isolate;
+}
+
+/* Every hero/card/footer is a full-frame plane stacked in the same spot. */
+.plane {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* ---- Hero --------------------------------------------------------------- */
+
+.hero-plane {
+  background: #9a9a9a; /* placeholder while the video loads */
+}
+
+.hero-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Keep the person (right of frame) in view on narrow screens. */
+  object-position: 72% 50%;
+}
+
+/* ---- Project card ------------------------------------------------------- */
+
+.project-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: clamp(24px, 4vw, 64px);
+  padding: clamp(24px, 4vw, 64px);
+  background: var(--card);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.15);
+}
+
+.project-card__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.project-card__meta {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.project-card__title {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.project-card__description {
+  margin: 0;
+  max-width: 44ch;
+  font-size: clamp(16px, 1.4vw, 19px);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.project-card__media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: calc(var(--radius) - 8px);
+  background: var(--placeholder);
+  overflow: hidden;
+}
+
+.project-card__media img {
+  object-fit: cover;
+}
+
+.project-card__placeholder {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---- Footer ------------------------------------------------------------- */
+
+.footer-plane {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  padding: clamp(24px, 6vw, 96px);
+  background: var(--card);
+}
+
+.footer-plane__headline {
+  margin: 0;
+  font-size: clamp(36px, 7vw, 96px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.footer-plane__supporting {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-size: clamp(18px, 2vw, 24px);
+  color: var(--muted);
+}
+
+.footer-plane__cta {
+  align-self: flex-start;
+  padding: 14px 24px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--card);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-plane__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- Motion states ------------------------------------------------------ */
+
+/* Before JS runs, only the hero is visible; GSAP takes over from here. */
+@media (prefers-reduced-motion: no-preference) {
+  .project-card,
+  .footer-plane {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: no pinning or 3D, just a readable vertical stack. */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-stage {
+    height: auto;
+  }
+
+  .scene-frame {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gutter);
+    margin: var(--gutter);
+    overflow: visible;
+    perspective: none;
+    background: none;
+  }
+
+  .plane {
+    position: relative;
+    inset: auto;
+    min-height: 80vh;
+    will-change: auto;
+  }
+
+  .hero-plane {
+    height: 80vh;
+  }
+}
+
+/* ---- Mobile ------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  :root {
+    --gutter: 10px;
+    --radius: 18px;
+  }
+
+  /* Portrait crop of a wide video: keep the person (right side) in frame. */
+  .hero-video {
+    object-position: 90% 50%;
+  }
+
+  .project-card {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .project-card__text {
+    justify-content: flex-start;
+  }
+}
