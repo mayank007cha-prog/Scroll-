@@ -14,8 +14,8 @@ npm run build && npm start
 A single pinned scene (`ScrollStage`) drives one scrubbed GSAP timeline, so scrolling up simply plays it in reverse:
 
 1. **Video**: autoplays once (muted, no loop). Once you scroll, the scroll position takes over and scrubs `currentTime` from 0 to 100%.
-2. **Hero moves back**: `translateZ(0 → heroDepth)` and `scale(1 → heroScale)`.
-3. **Floating cards**: the case studies sit in one row (`ProjectStack`) in the space behind the frame and glide right → left with scroll. Each card turns away (`rotateY`) and sinks back (`translateZ`) by its distance from the centre, which bends the row into a gentle curve. The hero fades out as the first card passes.
+2. **Hero moves back**: `translateZ(0 → heroDepth)` and `scale(1 → heroScale)`, so it becomes the first card in the row.
+3. **Floating row**: the video shrinks to card size while case study 01 slides in beside it, then the whole row (video first, then the case studies from `ProjectStack`) glides right → left with scroll. Each item turns away (`rotateY`) and sinks back (`translateZ`) by its distance from the centre, which bends the row into a gentle curve.
 4. **Footer**: the last item on the row, ending centred and flat.
 
 Clicking a card opens `/work/[slug]`, a placeholder case study page generated from `projects.ts`.

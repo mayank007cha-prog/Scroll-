@@ -24,7 +24,7 @@ export type SceneConfig = {
   entryDistance: number;
   /** Timeline units of scrolling spent scrubbing the video 0 → 100%. */
   videoDistance: number;
-  /** Timeline units the hero spends moving back in Z. */
+  /** Timeline units the hero spends moving back to card size (the first card slides in meanwhile). */
   heroDistance: number;
   /** Timeline units of horizontal scrolling per card. */
   cardDistance: number;
@@ -36,8 +36,8 @@ export type SceneConfig = {
 
 export const sceneConfig: SceneConfig = {
   perspective: 1400,
-  heroDepth: -700,
-  heroScale: 0.82,
+  heroDepth: -400,
+  heroScale: 0.85,
   trackDepth: -80,
   curveRotate: 24,
   curveDepth: 260,
@@ -53,8 +53,8 @@ export const sceneConfig: SceneConfig = {
 /** Softer movement on small screens so text stays readable. */
 export const mobileOverrides: Partial<SceneConfig> = {
   perspective: 1000,
-  heroDepth: -350,
-  heroScale: 0.88,
+  heroDepth: -200,
+  heroScale: 0.9,
   trackDepth: -40,
   curveRotate: 9,
   curveDepth: 80,

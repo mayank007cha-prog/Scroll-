@@ -14,8 +14,9 @@ gsap.registerPlugin(ScrollTrigger);
  * horizontal glide) is a segment of a single scrubbed timeline, so
  * scrolling up simply plays it backwards.
  *
- *   video 0→100% → hero moves back in Z → floating case-study cards glide
- *   right → left on a gentle curve → footer settles in the centre
+ *   video 0→100% → video moves back to card size as case study 01 slides
+ *   in beside it → the whole row (video first) glides right → left on a
+ *   gentle curve → footer settles in the centre
  */
 export function ScrollStage({ children }: { children: ReactNode }) {
   const stageRef = useRef<HTMLElement>(null);
@@ -98,42 +99,79 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const items = track ? gsap.utils.toArray<HTMLElement>(".work-item", track) : [];
 
   gsap.set(frame, { perspective: config.perspective });
-  gsap.set(hero, { z: 0, scale: 1, opacity: 1, force3D: true });
+  gsap.set(hero, { transformOrigin: "50% 50%", force3D: true });
 
-  // ---- Horizontal track geometry (re-measured on every refresh) -----------
+  // ---- Geometry (re-measured on every refresh) ----------------------------
   // Transforms don't affect layout, so offsetLeft/Width stay stable.
   let frameWidth = 0;
   let centers: number[] = [];
+  let halfWidths: number[] = [];
   const measure = () => {
     frameWidth = frame.clientWidth;
     centers = items.map((el) => el.offsetLeft + el.offsetWidth / 2);
+    halfWidths = items.map((el) => el.offsetWidth / 2);
   };
   measure();
-  const startX = () => (config.entryDistance / 100) * frameWidth - (items[0]?.offsetLeft ?? 0);
-  // End with the last item (the footer) centred in the frame.
+
+  // How much an element at depth z appears scaled on screen.
+  const P = config.perspective;
+  const depthFactor = (z: number) => P / (P - z);
+  const trackFactor = depthFactor(config.trackDepth);
+  const gap = () => parseFloat(getComputedStyle(track ?? frame).columnGap) || 0;
+
+  // Track x values: off-screen right → first card parked beside the shrunken
+  // video → last item (footer) centred.
+  const offscreenX = () => (config.entryDistance / 100) * frameWidth - (items[0]?.offsetLeft ?? 0);
+  const rowStartX = () => {
+    const heroHalf = (frameWidth / 2) * config.heroScale * depthFactor(config.heroDepth);
+    const firstLeft = heroHalf / trackFactor + gap(); // distance from centre, in track space
+    return frameWidth / 2 + firstLeft + (halfWidths[0] ?? 0) - (centers[0] ?? 0);
+  };
   const endX = () => frameWidth / 2 - (centers[centers.length - 1] ?? 0);
 
-  // Bend the row: items further from the centre turn away and sink back.
+  // ---- Render state -------------------------------------------------------
+  // Tweens animate these plain objects; `render` turns them into transforms
+  // so the video can share the row's movement and curve.
   const trackState = { x: 0 };
-  const curve = () => {
+  const heroState = { z: 0, scale: 1 };
+  let parkedX = 0; // trackState.x at the moment the row starts moving the video
+
+  const render = () => {
+    const half = frameWidth / 2 || 1;
+    const bend = (d: number) => gsap.utils.clamp(-1.5, 1.5, d);
+
+    // The video rides with the row once the row passes its parked position,
+    // scaled so it moves at the same on-screen speed as the cards.
+    const heroFactor = depthFactor(heroState.z);
+    const shift = Math.min(0, trackState.x - parkedX);
+    const heroX = (shift * trackFactor) / heroFactor;
+    const dh = bend((heroX * heroFactor) / half);
+    gsap.set(hero, {
+      x: heroX,
+      z: heroState.z - Math.abs(dh) * config.curveDepth,
+      scale: heroState.scale,
+      rotateY: dh * config.curveRotate,
+    });
+
     if (!track) return;
     gsap.set(track, { x: trackState.x, z: config.trackDepth });
-    const half = frameWidth / 2 || 1;
     items.forEach((el, i) => {
-      const d = gsap.utils.clamp(-1.5, 1.5, (centers[i] + trackState.x - half) / half);
-      gsap.set(el, {
-        rotateY: d * config.curveRotate,
-        z: -Math.abs(d) * config.curveDepth,
-        transformOrigin: "50% 50%",
-      });
+      const d = bend((centers[i] + trackState.x - half) / half);
+      gsap.set(el, { rotateY: d * config.curveRotate, z: -Math.abs(d) * config.curveDepth, transformOrigin: "50% 50%" });
     });
   };
-  trackState.x = startX();
-  curve();
+  const refreshPositions = () => {
+    parkedX = rowStartX();
+    if (tl.progress() === 0) trackState.x = offscreenX();
+    render();
+  };
 
   // ---- Timeline -----------------------------------------------------------
   const tl = gsap.timeline({ paused: true, defaults: { ease: "none", immediateRender: false } });
   let trigger: ScrollTrigger | undefined;
+  trackState.x = offscreenX();
+  parkedX = rowStartX();
+  render();
 
   // 1. Scroll scrubs the video 0 → 100%.
   const playhead = { p: 0 };
@@ -148,26 +186,27 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     },
   });
 
-  // 2. The finished video moves back in Z, like the camera pulling away.
-  tl.addLabel("heroBack").fromTo(
-    hero,
-    { z: 0, scale: 1 },
-    { z: config.heroDepth, scale: config.heroScale, duration: config.heroDistance, ease: "power1.inOut" },
-  );
+  // 2. The finished video moves back and shrinks to card size while the
+  //    first case study slides in beside it.
+  tl.addLabel("heroBack")
+    .fromTo(
+      heroState,
+      { z: 0, scale: 1 },
+      { z: config.heroDepth, scale: config.heroScale, duration: config.heroDistance, ease: "power1.inOut", onUpdate: render },
+      "heroBack",
+    )
+    .fromTo(
+      trackState,
+      { x: offscreenX },
+      { x: rowStartX, duration: config.heroDistance, ease: "power2.out", onUpdate: render },
+      "heroBack",
+    );
 
-  // 3. The floating cards glide right → left through the back space. The
-  //    hero keeps drifting back and fades as the first card passes over it.
-  const trackDuration = Math.max(items.length - 0.5, 1) * config.cardDistance;
-  tl.addLabel("track", `heroBack+=${config.heroDistance * 0.55}`);
-  tl.fromTo(
+  // 3. The whole row (video first) glides right → left on a gentle curve.
+  tl.addLabel("track").fromTo(
     trackState,
-    { x: startX },
-    { x: endX, duration: trackDuration, ease: "none", onUpdate: curve },
-    "track",
-  );
-  tl.to(
-    hero,
-    { z: config.heroDepth * 1.4, opacity: 0, duration: config.cardDistance * 1.2, ease: "power1.in" },
+    { x: rowStartX },
+    { x: endX, duration: items.length * config.cardDistance, onUpdate: render },
     "track",
   );
   // A short rest on the footer before the pin releases.
@@ -184,7 +223,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     invalidateOnRefresh: true,
     anticipatePin: 1,
     onRefreshInit: measure,
-    onRefresh: curve,
+    onRefresh: refreshPositions,
   });
 
   // Autoplay the intro once, but only if the visitor is at the very top.
