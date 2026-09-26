@@ -57,6 +57,17 @@ export const projects: Project[] = [
   },
 ];
 
+/** Intro shown on the left of the video, inside the bus window. */
+export const intro = {
+  eyebrow: "Product Designer",
+  title: "Designing products that feel clear, calm and useful.",
+  lines: [
+    "I turn complex flows into journeys people actually finish.",
+    "Checkout, payments, healthcare, safety and design systems.",
+  ],
+  hint: "Scroll to explore",
+};
+
 export const getProject = (slug: string) => projects.find((p) => p.slug === slug);
 
 // TODO: replace the placeholder email / LinkedIn / resume links.

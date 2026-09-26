@@ -9,7 +9,7 @@ import { sceneConfig } from "@/lib/sceneConfig";
  * ScrollStage drifts the whole layer with the row and turns the `spin` ones.
  */
 type DepthObject = {
-  kind: "cube" | "layers" | "pen" | "cursor" | "swatches" | "selection" | "controls" | "type";
+  kind: "cube" | "layers" | "pen" | "cursor" | "selection" | "type" | "rings" | "cross" | "measure";
   x: number;
   y: number;
   z: number;
@@ -23,17 +23,19 @@ type DepthObject = {
 // drifts left by about two frame widths over the scroll, so x runs 0–260%.
 const objects: DepthObject[] = [
   { kind: "cube", x: 14, y: 10, z: -800, size: 110, spin: 1 },
-  { kind: "controls", x: 40, y: 90, z: -1000, size: 180 },
+  { kind: "rings", x: 40, y: 90, z: -1200, size: 220 },
   { kind: "pen", x: 72, y: 9, z: -900, size: 240 },
   { kind: "layers", x: 98, y: 90, z: -1100, size: 190 },
   { kind: "cube", x: 128, y: 50, z: -1700, size: 300, spin: 0.5 },
   { kind: "cursor", x: 122, y: 12, z: -500, size: 90 },
-  { kind: "swatches", x: 150, y: 89, z: -900, size: 150 },
+  { kind: "cross", x: 60, y: 30, z: -1500, size: 60 },
+  { kind: "measure", x: 150, y: 90, z: -900, size: 200 },
   { kind: "type", x: 172, y: 10, z: -1000, size: 150 },
+  { kind: "cross", x: 180, y: 72, z: -1500, size: 60 },
   { kind: "selection", x: 196, y: 90, z: -1100, size: 230 },
   { kind: "cube", x: 222, y: 10, z: -700, size: 80, spin: -1.4 },
   { kind: "layers", x: 246, y: 89, z: -1200, size: 180 },
-  { kind: "pen", x: 262, y: 11, z: -800, size: 200 },
+  { kind: "rings", x: 258, y: 12, z: -1300, size: 200 },
 ];
 
 const P = sceneConfig.perspective;
@@ -86,13 +88,6 @@ const shapes: Record<DepthObject["kind"], ReactNode> = {
       <span>Product designer</span>
     </div>
   ),
-  swatches: (
-    <div className="d-swatches">
-      {["#f4f4f2", "#9aa6ff", "#ffb4a2", "#b7dfc6", "#2a2a2f"].map((c, i) => (
-        <span key={c} style={{ background: c, "--i": i } as CSSProperties} />
-      ))}
-    </div>
-  ),
   selection: (
     <div className="d-selection">
       <span className="d-selection__box">
@@ -104,6 +99,28 @@ const shapes: Record<DepthObject["kind"], ReactNode> = {
       <span className="d-selection__label">Frame · 1440 × 900</span>
     </div>
   ),
+  rings: (
+    <svg className="d-rings" viewBox="0 0 200 200" fill="none">
+      <circle cx="100" cy="100" r="96" />
+      <circle cx="100" cy="100" r="66" />
+      <circle cx="100" cy="100" r="36" />
+      <circle cx="196" cy="100" r="3.5" className="d-rings__dot" />
+    </svg>
+  ),
+  cross: (
+    <svg className="d-cross" viewBox="0 0 40 40" fill="none">
+      <path d="M20 4V36M4 20H36" />
+    </svg>
+  ),
+  measure: (
+    <div className="d-measure">
+      <span className="d-measure__box" />
+      <span className="d-measure__gap">
+        <b>24</b>
+      </span>
+      <span className="d-measure__box" />
+    </div>
+  ),
   type: (
     <div className="d-type">
       <span className="d-type__glyph">Aa</span>
@@ -111,17 +128,6 @@ const shapes: Record<DepthObject["kind"], ReactNode> = {
       <i className="d-type__line d-type__line--x" />
       <i className="d-type__line d-type__line--base" />
       <span className="d-type__meta">Geist · 96 / 100</span>
-    </div>
-  ),
-  controls: (
-    <div className="d-controls">
-      <span className="d-controls__toggle">
-        <i />
-      </span>
-      <span className="d-controls__slider">
-        <i />
-      </span>
-      <span className="d-controls__button">Button</span>
     </div>
   ),
 };

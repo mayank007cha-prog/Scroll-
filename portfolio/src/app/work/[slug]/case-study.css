@@ -1,0 +1,400 @@
+/* Case study page: same glass system and type scale as the home scene. */
+
+.cs-page {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+/* Soft light pools, dashed guides and grain behind the page. */
+.cs-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 35% at 15% 10%, rgb(255 255 255 / 0.07), transparent 70%),
+    radial-gradient(45% 40% at 90% 60%, rgb(255 255 255 / 0.05), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='1' stroke-dasharray='8 10'/%3E%3C/svg%3E"),
+    var(--bg);
+  background-size: auto, auto, 240px 240px, auto;
+}
+
+.cs-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise);
+  background-size: 200px;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+}
+
+/* ---- Floating nav --------------------------------------------------------- */
+
+.cs-nav {
+  position: sticky;
+  top: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(560px, calc(100% - 32px));
+  margin: 16px auto 0;
+  padding: 10px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.cs-nav__link {
+  padding: 8px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.cs-nav__link:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.cs-nav__count {
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Layout ----------------------------------------------------------------- */
+
+.cs {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(48px, 8vw, 120px);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 104px) clamp(16px, 4vw, 40px) 120px;
+}
+
+/* ---- Hero ------------------------------------------------------------------- */
+
+.cs-hero {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 3vw, 40px);
+}
+
+.cs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 12px 22px 12px 12px;
+  border-radius: 20px;
+}
+
+.cs-bar__who {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cs-bar__text,
+.cs-bar__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 15px;
+}
+
+.cs-bar__meta {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.cs-bar__text span,
+.cs-bar__meta span {
+  color: var(--ink-3);
+}
+
+.cs-bar strong {
+  font-weight: 500;
+}
+
+.cs-title {
+  margin: 0;
+  max-width: 15ch;
+  font-size: clamp(44px, 7.4vw, 112px);
+  font-weight: 600;
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.cs-lead {
+  margin: 0;
+  max-width: 52ch;
+  font-size: clamp(18px, 1.9vw, 24px);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ---- Media placeholders ---------------------------------------------------- */
+
+.cs-media {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  border-radius: var(--radius);
+  color: var(--ink-3);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.cs-media--cover {
+  aspect-ratio: 16 / 9;
+}
+
+.cs-media--wide {
+  aspect-ratio: 21 / 9;
+}
+
+.cs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 24px);
+}
+
+/* ---- Meta tiles ------------------------------------------------------------ */
+
+.cs-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 20px);
+  margin: 0;
+}
+
+.cs-meta__item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 22px;
+  border-radius: 20px;
+}
+
+.cs-meta dt {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.cs-meta dd {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+/* ---- Sections: sticky label left, text right -------------------------------- */
+
+.cs-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 24px clamp(24px, 5vw, 80px);
+}
+
+.cs-section__label {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.cs-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 64ch;
+}
+
+.cs-section__body h2 {
+  margin: 0 0 6px;
+  font-size: clamp(28px, 3.4vw, 48px);
+  font-weight: 550;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.cs-section__body p {
+  margin: 0;
+  font-size: clamp(16px, 1.3vw, 18px);
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+.cs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-2);
+}
+
+.cs-list li {
+  padding-left: 22px;
+  background: linear-gradient(var(--ink-3), var(--ink-3)) 0 0.72em / 10px 1px no-repeat;
+}
+
+/* ---- Features / metrics ---------------------------------------------------- */
+
+.cs-features,
+.cs-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 20px);
+}
+
+.cs-feature {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: clamp(22px, 2.4vw, 32px);
+  border-radius: var(--radius);
+}
+
+.cs-feature__num {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cs-feature h3 {
+  margin: 24px 0 0;
+  font-size: 22px;
+  font-weight: 550;
+  letter-spacing: -0.02em;
+}
+
+.cs-feature p {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.cs-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(22px, 2.4vw, 32px);
+  border-radius: var(--radius);
+}
+
+.cs-metric strong {
+  font-size: clamp(40px, 5vw, 72px);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cs-metric span {
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+
+.cs-quote {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 2.6vw, 36px);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+/* ---- Next case study ------------------------------------------------------- */
+
+.cs-next {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: border-color 0.3s;
+}
+
+.cs-next:hover {
+  border-color: rgb(255 255 255 / 0.28);
+}
+
+.cs-next__label {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.cs-next__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink-2);
+}
+
+.cs-next__title {
+  max-width: 18ch;
+  font-size: clamp(32px, 4.6vw, 64px);
+  font-weight: 550;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.cs-next__cta {
+  font-weight: 500;
+}
+
+/* ---- Responsive -------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .cs-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cs-section {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-section__label {
+    position: static;
+  }
+
+  .cs-features,
+  .cs-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .cs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-bar__meta {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .cs-media--wide {
+    aspect-ratio: 4 / 3;
+  }
+}
