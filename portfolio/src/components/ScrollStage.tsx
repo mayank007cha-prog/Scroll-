@@ -100,7 +100,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const fog = hero.querySelector<HTMLElement>(".hero-fog");
   const depthField = stage.querySelector<HTMLElement>("[data-depth-field]");
   const spinners = depthField ? gsap.utils.toArray<HTMLElement>("[data-spin]", depthField) : [];
-  const depthFaders = depthField ? gsap.utils.toArray<HTMLElement>(".depth-obj, .depth-floor", depthField) : [];
+  const depthFaders = depthField ? gsap.utils.toArray<HTMLElement>(".depth-obj, .depth-floor, .depth-wall", depthField) : [];
 
   gsap.set(frame, { perspective: config.perspective });
   gsap.set(hero, { transformOrigin: "50% 50%", force3D: true });

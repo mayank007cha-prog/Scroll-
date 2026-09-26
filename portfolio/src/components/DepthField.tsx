@@ -129,6 +129,7 @@ const shapes: Record<DepthObject["kind"], ReactNode> = {
 export function DepthField() {
   return (
     <div className="depth-field" data-depth-field aria-hidden="true">
+      <div className="depth-wall" />
       <div className="depth-floor" />
       {objects.map((o, i) => (
         <div key={i} className="depth-obj" style={placement(o)}>

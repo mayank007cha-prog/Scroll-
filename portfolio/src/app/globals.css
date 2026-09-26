@@ -125,7 +125,8 @@ a:focus-visible {
 }
 
 .depth-obj,
-.depth-floor {
+.depth-floor,
+.depth-wall {
   opacity: 0;
 }
 
@@ -144,20 +145,33 @@ a:focus-visible {
   transform-style: preserve-3d;
 }
 
-/* Perspective grid floor that slides as the row moves. */
+/* Big perspective grid floor that slides as the row moves. */
 .depth-floor {
   position: absolute;
-  left: -200%;
-  width: 600%;
-  top: 55%;
-  height: 160%;
-  transform: translateZ(-900px) rotateX(80deg);
+  left: -300%;
+  width: 800%;
+  top: 50%;
+  height: 300%;
+  transform: translateZ(-500px) rotateX(78deg);
   transform-origin: 50% 0;
   background-image:
-    linear-gradient(rgb(255 255 255 / 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.07) 1px, transparent 1px);
-  background-size: 96px 96px;
-  mask-image: linear-gradient(180deg, transparent 0%, #000 25%, #000 55%, transparent 100%);
+    linear-gradient(rgb(255 255 255 / 0.13) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.13) 1.5px, transparent 1.5px);
+  background-size: 200px 200px;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 45%, transparent 85%);
+}
+
+/* Dashed layout guides on a wall far behind everything. */
+.depth-wall {
+  position: absolute;
+  left: -300%;
+  width: 800%;
+  top: -90%;
+  height: 280%;
+  transform: translateZ(-1800px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23ffffff' stroke-opacity='0.16' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+  mask-image: radial-gradient(60% 55% at 50% 50%, #000 40%, transparent 100%);
 }
 
 /* Wireframe cube */
