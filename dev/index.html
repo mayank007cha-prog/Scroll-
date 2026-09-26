@@ -13,27 +13,52 @@
         html, body {
             margin: 0;
             padding: 0;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: none;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0b0b0c;
+            background: #000;
             color: #fff;
         }
 
-        /* The fold is a tall scroll track; the video stays pinned to the
-           viewport for its whole duration and is scrubbed by scroll
-           progress instead of playing on a timer. */
-        section.Fold {
-            position: relative;
-            height: 400vh;
+        /* Each slide is a full-viewport layer. Only the active one, the one
+           it just came from (receded, sitting behind it) and the one about
+           to enter (parked off-screen left) ever differ from their resting
+           "parked" position — see main.js's syncRoles(). */
+        .Slide {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0b0d;
+            transform: translateX(-100%);
+            opacity: 0;
+            z-index: 0;
+            pointer-events: none;
+            transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1), opacity 900ms cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        div.Fold-sticky {
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow: hidden;
+        /* Transitions are only enabled once JS has set the correct initial
+           roles, so the first paint never animates in from off-screen. */
+        .Deck:not(.is-ready) .Slide {
+            transition: none;
         }
 
-        video.Fold-video {
+        .Slide.is-active {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .Slide.is-receded {
+            transform: translateX(0) scale(0.85);
+            opacity: 0.35;
+            z-index: 1;
+        }
+
+        video.Slide-video {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -45,101 +70,28 @@
             object-fit: cover;
         }
 
-        div.Fold-overlay {
+        .Slide-index {
             position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0.55) 100%);
-            pointer-events: none;
-        }
-
-        div.Fold-overlay h1 {
-            font-size: clamp(2rem, 6vw, 4.5rem);
-            margin: 0 0 0.5rem;
-            letter-spacing: -0.02em;
-        }
-
-        div.Fold-overlay p {
-            font-size: clamp(1rem, 2vw, 1.25rem);
-            opacity: 0.85;
-            margin: 0 0 2rem;
-        }
-
-        div.Fold-scrollHint {
-            position: absolute;
-            bottom: 2.5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.85rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            opacity: 0.7;
-            transition: opacity 0.4s ease;
-        }
-
-        div.Fold-scrollHint.is-hidden {
-            opacity: 0;
-        }
-
-        div.Fold-progress {
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            height: 3px;
-            width: 0%;
-            background: #fff;
-            transform-origin: left;
-        }
-
-        section.Content {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4rem 1.5rem;
-        }
-
-        section.Content .Content-inner {
-            max-width: 640px;
-            text-align: center;
-        }
-
-        section.Content h2 {
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
-            margin-bottom: 1rem;
-        }
-
-        section.Content p {
-            opacity: 0.75;
-            line-height: 1.6;
+            bottom: 2rem;
+            right: 2rem;
+            font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+            font-size: 0.8rem;
+            letter-spacing: 0.18em;
+            color: rgba(255, 255, 255, 0.25);
         }
     </style>
 </head>
 <body>
-<section class="Fold">
-    <div class="Fold-sticky">
-        <video class="Fold-video" src="assets/hero-video.mp4" muted playsinline preload="auto"></video>
-        <div class="Fold-overlay">
-            <h1>Scroll to play</h1>
-            <p>The video scrubs frame by frame as you scroll through this section.</p>
-        </div>
-        <div class="Fold-scrollHint">Scroll down</div>
-        <div class="Fold-progress"></div>
-    </div>
-</section>
-
-<section class="Content">
-    <div class="Content-inner">
-        <h2>You made it through the fold</h2>
-        <p>Everything above uses your scroll position to drive the video's
-            playback head directly, so it feels tied to the scrollbar rather
-            than autoplaying on its own.</p>
-    </div>
-</section>
+<div class="Deck" id="deck">
+    <section class="Slide is-active" data-index="0">
+        <video class="Slide-video" src="assets/hero-video.mp4" muted playsinline preload="auto"></video>
+    </section>
+    <section class="Slide" data-index="1"><span class="Slide-index">02</span></section>
+    <section class="Slide" data-index="2"><span class="Slide-index">03</span></section>
+    <section class="Slide" data-index="3"><span class="Slide-index">04</span></section>
+    <section class="Slide" data-index="4"><span class="Slide-index">05</span></section>
+    <section class="Slide is-receded" data-index="5"><span class="Slide-index">06</span></section>
+</div>
 <script src="main.js"></script>
 </body>
 </html>
