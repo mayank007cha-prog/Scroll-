@@ -9,8 +9,9 @@ export default function Home() {
     <main>
       <ScrollStage>
         <HeroVideo src="/video/hero.mp4" webmSrc="/video/hero.webm" poster="/video/hero-poster.jpg" />
-        <ProjectStack projects={projects} />
-        <Footer {...contact} />
+        <ProjectStack projects={projects}>
+          <Footer {...contact} />
+        </ProjectStack>
       </ScrollStage>
     </main>
   );

@@ -1,41 +1,27 @@
-import Image from "next/image";
+import Link from "next/link";
 import type { Project } from "@/data/projects";
 
 type ProjectCardProps = {
   project: Project;
   index: number;
-  total: number;
 };
 
-export function ProjectCard({ project, index, total }: ProjectCardProps) {
-  const number = String(index + 1).padStart(2, "0");
-
+/** One floating case study: a slim label bar above a big text-only card. */
+export function ProjectCard({ project, index }: ProjectCardProps) {
   return (
-    <article className="plane project-card" data-plane="project" aria-label={project.title}>
-      <div className="project-card__text">
-        <p className="project-card__meta">
-          <span>
-            {number} / {String(total).padStart(2, "0")}
-          </span>
-          <span>{project.category}</span>
-        </p>
+    <Link href={`/work/${project.slug}`} className="work-item project-card" data-plane="project">
+      <div className="project-card__bar">
+        <span className="project-card__client">
+          {project.client}
+          <span className="project-card__topic">{project.topic}</span>
+        </span>
+        <span className="project-card__index">Case study {String(index + 1).padStart(2, "0")}</span>
+      </div>
+      <article className="project-card__body">
         <h2 className="project-card__title">{project.title}</h2>
-        <p className="project-card__description">{project.description}</p>
-        {project.href && (
-          <a className="project-card__link" href={project.href}>
-            View case study →
-          </a>
-        )}
-      </div>
-
-      <div className="project-card__media">
-        {project.image ? (
-          // next/image lazy loads by default.
-          <Image src={project.image.src} alt={project.image.alt} fill sizes="(max-width: 767px) 100vw, 50vw" />
-        ) : (
-          <span className="project-card__placeholder">Project {number} visual</span>
-        )}
-      </div>
-    </article>
+        <p className="project-card__line">{project.oneLiner}</p>
+        <span className="project-card__cta">View case study →</span>
+      </article>
+    </Link>
   );
 }

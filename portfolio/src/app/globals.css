@@ -1,15 +1,19 @@
-/* Interaction prototype styling: grey background, white cards, black text.
-   Final visual design comes later. */
-
 :root {
-  --bg: #cfcfcf;
-  --frame-bg: #b9b9b9;
-  --card: #ffffff;
-  --ink: #111111;
-  --muted: #666666;
-  --placeholder: #e4e4e4;
+  --bg: #111113;
+  --frame-bg: #151518;
+  --bar: #1e1e22;
+  --bar-ink: #f4f4f5;
+  --bar-muted: #9a9aa3;
+  --card: #fafaf9;
+  --ink: #111113;
+  --muted: #5e5e66;
   --gutter: 16px;
-  --radius: 24px;
+  --radius: 28px;
+  --card-w: min(68vw, 1080px);
+  --card-h: min(58vh, 620px);
+  --track-gap: 5vw;
+  --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
 }
 
 *,
@@ -22,12 +26,18 @@ html,
 body {
   margin: 0;
   background: var(--bg);
-  color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--bar-ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
   color: inherit;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--bar-ink);
+  outline-offset: 4px;
 }
 
 /* ---- Stage / frame ------------------------------------------------------ */
@@ -44,12 +54,10 @@ a {
   overflow: hidden;
   border-radius: var(--radius);
   background: var(--frame-bg);
-  perspective: 1200px;
-  /* Keeps the clip + radius on the GPU layer in Safari. */
+  perspective: 1400px;
   isolation: isolate;
 }
 
-/* Every hero/card/footer is a full-frame plane stacked in the same spot. */
 .plane {
   position: absolute;
   inset: 0;
@@ -62,7 +70,7 @@ a {
 /* ---- Hero --------------------------------------------------------------- */
 
 .hero-plane {
-  background: #9a9a9a; /* placeholder while the video loads */
+  background: #2a2a2e;
 }
 
 .hero-video {
@@ -70,125 +78,167 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Keep the person (right of frame) in view on narrow screens. */
-  object-position: 72% 50%;
+  /* Keep the person (right) and their body (bottom) when cover crops. */
+  object-position: 72% 100%;
 }
 
-/* ---- Project card ------------------------------------------------------- */
+/* ---- Floating track ------------------------------------------------------ */
+
+.work-track {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--track-gap);
+  transform-style: preserve-3d;
+  will-change: transform;
+  /* Cards sit at z <= 0 inside the track's 3D space, so the track itself
+     would win hit-testing; only the cards should take clicks. */
+  pointer-events: none;
+}
+
+.work-item {
+  flex: 0 0 auto;
+  width: var(--card-w);
+  will-change: transform;
+  pointer-events: auto;
+}
+
+/* ---- Project card --------------------------------------------------------- */
 
 .project-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-  gap: clamp(24px, 4vw, 64px);
-  padding: clamp(24px, 4vw, 64px);
-  background: var(--card);
-  box-shadow: 0 30px 80px rgb(0 0 0 / 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--bar-ink);
+  text-decoration: none;
 }
 
-.project-card__text {
+.project-card__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+  border-radius: 20px;
+  background: var(--bar);
+  font-size: 15px;
+}
+
+.project-card__client {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-weight: 500;
+}
+
+.project-card__topic,
+.project-card__index {
+  color: var(--bar-muted);
+  font-weight: 400;
+}
+
+.project-card__index {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.project-card__body {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 20px;
+  height: var(--card-h);
+  padding: clamp(28px, 4vw, 64px);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 40px 90px rgb(0 0 0 / 0.35);
+  transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-.project-card__meta {
-  display: flex;
-  gap: 16px;
-  margin: 0;
-  font-size: 14px;
-  color: var(--muted);
+.project-card:hover .project-card__body,
+.project-card:focus-visible .project-card__body {
+  transform: translateY(-6px);
 }
 
 .project-card__title {
   margin: 0;
-  font-size: clamp(28px, 4vw, 56px);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  max-width: 16ch;
+  font-size: clamp(36px, 5.2vw, 84px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
 }
 
-.project-card__description {
+.project-card__line {
   margin: 0;
-  max-width: 44ch;
-  font-size: clamp(16px, 1.4vw, 19px);
-  line-height: 1.5;
+  max-width: 40ch;
+  font-size: clamp(17px, 1.6vw, 22px);
+  line-height: 1.4;
   color: var(--muted);
 }
 
-.project-card__media {
-  position: relative;
-  display: grid;
-  place-items: center;
-  border-radius: calc(var(--radius) - 8px);
-  background: var(--placeholder);
-  overflow: hidden;
+.project-card__cta {
+  font-size: 15px;
+  font-weight: 500;
 }
 
-.project-card__media img {
-  object-fit: cover;
-}
+/* ---- Footer (last item on the track) -------------------------------------- */
 
-.project-card__placeholder {
-  font-size: 14px;
-  color: var(--muted);
-}
-
-/* ---- Footer ------------------------------------------------------------- */
-
-.footer-plane {
+.footer-card {
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 24px;
-  padding: clamp(24px, 6vw, 96px);
-  background: var(--card);
+  min-height: calc(var(--card-h) + 70px);
+  padding: clamp(28px, 4vw, 64px);
 }
 
-.footer-plane__headline {
+.footer-card__headline {
   margin: 0;
-  font-size: clamp(36px, 7vw, 96px);
-  line-height: 1;
-  letter-spacing: -0.03em;
+  max-width: 12ch;
+  font-size: clamp(44px, 7vw, 112px);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
 }
 
-.footer-plane__supporting {
+.footer-card__supporting {
   display: flex;
   flex-direction: column;
   margin: 0;
   font-size: clamp(18px, 2vw, 24px);
-  color: var(--muted);
+  color: var(--bar-muted);
 }
 
-.footer-plane__cta {
+.footer-card__cta {
   align-self: flex-start;
-  padding: 14px 24px;
+  padding: 16px 28px;
   border-radius: 999px;
-  background: var(--ink);
-  color: var(--card);
+  background: var(--card);
+  color: var(--ink);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 17px;
 }
 
-.footer-plane__links {
+.footer-card__links {
   display: flex;
   flex-wrap: wrap;
   gap: 24px;
   margin: 0;
   padding: 0;
   list-style: none;
+  color: var(--bar-muted);
 }
 
-/* ---- Motion states ------------------------------------------------------ */
+/* ---- Reduced motion: no pinning or 3D, a plain vertical stack ------------- */
 
-/* Before JS runs, only the hero is visible; GSAP takes over from here. */
-@media (prefers-reduced-motion: no-preference) {
-  .project-card,
-  .footer-plane {
-    opacity: 0;
-  }
-}
-
-/* Reduced motion: no pinning or 3D, just a readable vertical stack. */
 @media (prefers-reduced-motion: reduce) {
   .scroll-stage {
     height: auto;
@@ -197,24 +247,38 @@ a {
   .scene-frame {
     position: relative;
     inset: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--gutter);
     margin: var(--gutter);
     overflow: visible;
     perspective: none;
     background: none;
   }
 
-  .plane {
+  .plane,
+  .work-track {
     position: relative;
     inset: auto;
-    min-height: 80vh;
     will-change: auto;
   }
 
   .hero-plane {
-    height: 80vh;
+    height: 70vh;
+  }
+
+  .work-track {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 48px;
+    padding-block: 48px;
+  }
+
+  .work-item {
+    width: 100%;
+  }
+
+  .project-card__body {
+    height: auto;
+    min-height: 50vh;
+    transition: none;
   }
 }
 
@@ -223,20 +287,119 @@ a {
 @media (max-width: 767px) {
   :root {
     --gutter: 10px;
-    --radius: 18px;
+    --radius: 22px;
+    --card-w: 82vw;
+    --card-h: 56svh;
+    --track-gap: 12vw;
   }
 
-  /* Portrait crop of a wide video: keep the person (right side) in frame. */
   .hero-video {
-    object-position: 90% 50%;
+    object-position: 88% 100%;
   }
 
-  .project-card {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
+  .project-card__bar {
+    padding: 14px 18px;
+    font-size: 14px;
   }
+}
 
-  .project-card__text {
-    justify-content: flex-start;
-  }
+/* ---- Case study page (dummy) ---------------------------------------------- */
+
+.case {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 6vw, 80px);
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 24px 96px;
+}
+
+.case__back {
+  align-self: flex-start;
+  color: var(--bar-muted);
+  text-decoration: none;
+}
+
+.case__back:hover {
+  color: var(--bar-ink);
+}
+
+.case__header {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.case__eyebrow {
+  margin: 0;
+  color: var(--bar-muted);
+}
+
+.case__title {
+  margin: 0;
+  max-width: 16ch;
+  font-size: clamp(44px, 7vw, 104px);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.case__lead {
+  margin: 0;
+  max-width: 48ch;
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1.45;
+  color: var(--bar-muted);
+}
+
+.case__cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  border-radius: var(--radius);
+  background: var(--bar);
+  color: var(--bar-muted);
+}
+
+.case__sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 40px 48px;
+}
+
+.case__section h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.case__section p {
+  margin: 0;
+  max-width: 60ch;
+  line-height: 1.6;
+  color: var(--bar-muted);
+}
+
+.case__next {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.case__next span {
+  color: var(--muted);
+}
+
+.case__next strong {
+  font-size: clamp(28px, 4vw, 56px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
 }
