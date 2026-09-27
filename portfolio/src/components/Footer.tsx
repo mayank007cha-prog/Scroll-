@@ -4,7 +4,7 @@ type FooterProps = typeof Contact;
 
 export function Footer({ headline, supporting, cta, links }: FooterProps) {
   return (
-    <footer className="work-item footer-card glass" data-plane="footer">
+    <footer className="work-item footer-card" data-plane="footer">
       <h2 className="footer-card__headline">{headline}</h2>
       <p className="footer-card__supporting">
         {supporting.map((line) => (

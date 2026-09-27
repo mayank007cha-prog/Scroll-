@@ -57,15 +57,18 @@ export const projects: Project[] = [
   },
 ];
 
-/** Intro shown on the left of the video, inside the bus window. */
+/** Intro shown on the left of the video, inside the bus window. The video
+ *  carries the story: always on the move (an Air Force childhood), looking
+ *  out and noticing, music on, the sea he loves outside, and a mind that
+ *  stays on the problem wherever he is. */
 export const intro = {
   eyebrow: "Product Designer",
-  title: "Designing products that feel clear, calm and useful.",
+  title: "The view keeps changing. The problem stays with me.",
   lines: [
-    "I turn complex flows into journeys people actually finish.",
-    "Checkout, payments, healthcare, safety and design systems.",
+    "An Air Force childhood meant a new city every few years. It taught me to settle in fast and notice what others pass by.",
+    "Headphones on, sea outside, mind still on the problem I'm solving. I stay with it until it works.",
   ],
-  hint: "Scroll to explore",
+  hint: "Scroll to see the work",
 };
 
 export const getProject = (slug: string) => projects.find((p) => p.slug === slug);
