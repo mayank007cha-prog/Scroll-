@@ -1,7 +1,5 @@
-/* Theme tokens. Dark is the default; [data-theme] is set before paint by the
-   script in layout.tsx (stored choice, else the system preference). */
-:root,
-:root[data-theme="dark"] {
+/* Theme tokens (dark only). */
+:root {
   --bg-rgb: 15 15 17;
   --fg: 255 255 255;
   --bg: rgb(var(--bg-rgb));
@@ -17,25 +15,14 @@
   --glass-border: rgb(255 255 255 / 0.13);
   --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 40px 90px rgb(0 0 0 / 0.45);
   --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23ffffff' stroke-opacity='0.16' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
+  /* Accents: one per case study, plus the soft glows in the background. */
+  --iris: 143 134 255;
+  --aqua: 95 211 232;
+  --coral: 255 143 112;
+  --mint: 126 224 168;
+  --amber: 245 196 107;
+  --accent: var(--iris);
   color-scheme: dark;
-}
-
-:root[data-theme="light"] {
-  --bg-rgb: 244 244 241;
-  --fg: 17 17 19;
-  --frame-bg: #ebebe7;
-  --hero-bg: #d9d9d4;
-  --ink: #111113;
-  --ink-2: rgb(17 17 19 / 0.68);
-  --ink-3: rgb(17 17 19 / 0.46);
-  --hairline: rgb(17 17 19 / 0.1);
-  --surface: #e9e9e5;
-  --glass-fill: linear-gradient(150deg, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0.55) 50%, rgb(255 255 255 / 0.75) 100%);
-  --glass-base: rgb(250 250 248 / 0.8);
-  --glass-border: rgb(17 17 19 / 0.08);
-  --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 30px 70px rgb(17 17 19 / 0.12);
-  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23111113' stroke-opacity='0.14' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
-  color-scheme: light;
 }
 
 :root {
@@ -98,7 +85,9 @@ a:focus-visible {
 }
 
 .glass::after {
-  background: radial-gradient(120% 80% at 0% 0%, rgb(255 255 255 / 0.1), transparent 55%);
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgb(var(--accent) / 0.16), transparent 55%),
+    radial-gradient(90% 70% at 100% 100%, rgb(255 255 255 / 0.04), transparent 60%);
 }
 
 .glass > * {
@@ -114,8 +103,9 @@ a:focus-visible {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgb(var(--fg) / 0.92);
-  color: var(--bg);
+  background: linear-gradient(140deg, rgb(var(--accent)), rgb(var(--accent) / 0.55));
+  color: #111113;
+  box-shadow: 0 6px 18px rgb(var(--accent) / 0.3);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -134,7 +124,10 @@ a:focus-visible {
   inset: var(--gutter);
   overflow: hidden;
   border-radius: var(--radius);
-  background: var(--frame-bg);
+  background:
+    radial-gradient(55% 45% at 15% 0%, rgb(var(--iris) / 0.12), transparent 70%),
+    radial-gradient(50% 45% at 95% 100%, rgb(var(--aqua) / 0.09), transparent 70%),
+    var(--frame-bg);
   perspective: 1400px;
   isolation: isolate;
 }
@@ -152,6 +145,26 @@ a:focus-visible {
 
 .hero-plane {
   background: var(--hero-bg);
+  box-shadow: 0 40px 120px -30px rgb(var(--iris) / 0.45);
+}
+
+/* Gradient border around the video frame. */
+.hero-border {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 1.5px;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgb(var(--iris) / 0.95),
+    rgb(var(--aqua) / 0.7) 30%,
+    rgb(255 255 255 / 0.18) 55%,
+    rgb(var(--coral) / 0.85) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }
 
 /* Every hero layer follows the card's animated radius: Chrome doesn't clip
@@ -219,6 +232,18 @@ a:focus-visible {
   transform: translateY(-50%);
 }
 
+.hero-intro__eyebrow span::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 9px;
+  border-radius: 50%;
+  background: rgb(var(--mint));
+  box-shadow: 0 0 10px rgb(var(--mint) / 0.8);
+  vertical-align: 1px;
+}
+
 .hero-intro__eyebrow {
   margin: 0;
   padding: 8px 14px;
@@ -231,6 +256,11 @@ a:focus-visible {
 
 .hero-intro__title {
   margin: 0;
+  /* A hint of colour through the headline. */
+  background: linear-gradient(100deg, var(--ink) 55%, rgb(var(--aqua)) 85%, rgb(var(--iris)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   font-size: clamp(34px, min(4.6vw, 8vh), 84px);
   font-weight: 650;
   line-height: 0.98;
@@ -275,8 +305,19 @@ a:focus-visible {
 
 .depth-obj,
 .depth-floor,
-.depth-wall {
+.depth-wall,
+.depth-glow {
   opacity: 0;
+}
+
+/* Big soft colour pools far back in the space. */
+.depth-glow {
+  position: absolute;
+  width: 170%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(var(--glow) / 0.22), rgb(var(--glow) / 0.08) 55%, transparent);
+  transform: translate(-50%, -50%) translateZ(-2200px);
 }
 
 .depth-obj {
@@ -304,8 +345,8 @@ a:focus-visible {
   transform: translateZ(-500px) rotateX(78deg);
   transform-origin: 50% 0;
   background-image:
-    linear-gradient(rgb(var(--fg) / 0.12) 1.5px, transparent 1.5px),
-    linear-gradient(90deg, rgb(var(--fg) / 0.12) 1.5px, transparent 1.5px);
+    linear-gradient(rgb(var(--iris) / 0.2) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, rgb(var(--iris) / 0.2) 1.5px, transparent 1.5px);
   background-size: 200px 200px;
   mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 45%, transparent 85%);
 }
@@ -333,7 +374,7 @@ a:focus-visible {
 .d-cube__face {
   position: absolute;
   inset: 0;
-  border: 2px solid var(--line);
+  border: 2px solid rgb(var(--iris) / 0.5);
   border-radius: 0.08em;
   background: var(--fill);
 }
@@ -368,7 +409,8 @@ a:focus-visible {
   gap: 0.08em;
   padding: 0.14em;
   transform: translateZ(0.44em);
-  background: rgb(var(--fg) / 0.07);
+  border-color: rgb(var(--aqua) / 0.55);
+  background: rgb(var(--aqua) / 0.1);
 }
 
 .d-layers__plane--top i {
@@ -390,7 +432,7 @@ a:focus-visible {
 }
 
 .d-pen .d-pen__handle { stroke: var(--soft); stroke-width: 1.5; }
-.d-pen circle,
+.d-pen circle { fill: var(--bg); stroke: rgb(var(--coral)); }
 .d-pen rect { fill: var(--bg); stroke: rgb(var(--fg) / 0.6); }
 
 /* Multiplayer cursor */
@@ -404,15 +446,16 @@ a:focus-visible {
   flex: 0 0 auto;
   width: 0.4em;
   height: 0.4em;
-  fill: rgb(var(--fg) / 0.75);
+  fill: rgb(var(--coral));
 }
 
 .d-cursor span {
   margin-top: 0.34em;
   padding: 0.07em 0.16em;
-  border: 1px solid rgb(var(--fg) / 0.3);
   border-radius: 1em;
-  color: rgb(var(--fg) / 0.7);
+  background: rgb(var(--coral));
+  color: #111113;
+  font-weight: 500;
   font-size: 0.18em;
   white-space: nowrap;
 }
@@ -429,14 +472,15 @@ a:focus-visible {
   position: relative;
   width: 1em;
   height: 0.62em;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid rgb(var(--aqua) / 0.7);
+  background: rgb(var(--aqua) / 0.05);
 }
 
 .d-selection__box i {
   position: absolute;
   width: 0.045em;
   height: 0.045em;
-  border: 1.5px solid rgb(var(--fg) / 0.6);
+  border: 1.5px solid rgb(var(--aqua));
   background: var(--bg);
 }
 
@@ -446,7 +490,7 @@ a:focus-visible {
 .d-selection__box i:nth-child(4) { right: -0.025em; bottom: -0.025em; }
 
 .d-selection__label {
-  color: rgb(var(--fg) / 0.45);
+  color: rgb(var(--aqua) / 0.8);
   font-size: 0.07em;
   white-space: nowrap;
 }
@@ -471,7 +515,7 @@ a:focus-visible {
   left: -0.1em;
   right: -0.3em;
   height: 0;
-  border-top: 1px dashed var(--soft);
+  border-top: 1px dashed rgb(var(--iris) / 0.55);
 }
 
 .d-type__line--cap { top: 0.1em; }
@@ -491,14 +535,14 @@ a:focus-visible {
   width: 1em;
   height: 1em;
   overflow: visible;
-  stroke: var(--soft);
+  stroke: rgb(var(--aqua) / 0.35);
   stroke-width: 1.2;
   stroke-dasharray: 4 6;
   transform: rotateX(62deg);
 }
 
 .d-rings .d-rings__dot {
-  fill: rgb(var(--fg) / 0.6);
+  fill: rgb(var(--aqua));
   stroke: none;
 }
 
@@ -531,13 +575,14 @@ a:focus-visible {
   place-items: center;
   width: 0.26em;
   height: 0.34em;
-  border-block: 1px dashed var(--soft);
+  border-block: 1px dashed rgb(var(--coral) / 0.6);
+  background: rgb(var(--coral) / 0.1);
 }
 
 .d-measure__gap b {
   font-size: 0.07em;
   font-weight: 500;
-  color: rgb(var(--fg) / 0.55);
+  color: rgb(var(--coral));
 }
 
 /* ---- Floating track ------------------------------------------------------ */
@@ -608,6 +653,18 @@ a:focus-visible {
   white-space: nowrap;
 }
 
+.project-card__index::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: rgb(var(--accent));
+  box-shadow: 0 0 8px rgb(var(--accent) / 0.8);
+  vertical-align: 2px;
+}
+
 .project-card__body {
   display: flex;
   flex-direction: column;
@@ -624,7 +681,7 @@ a:focus-visible {
 .project-card:hover .project-card__body,
 .project-card:focus-visible .project-card__body {
   transform: translateY(-6px);
-  border-color: rgb(var(--fg) / 0.26);
+  border-color: rgb(var(--accent) / 0.5);
 }
 
 .project-card__title {
@@ -649,6 +706,7 @@ a:focus-visible {
 .project-card__cta {
   font-size: 15px;
   font-weight: 500;
+  color: rgb(var(--accent));
 }
 
 /* ---- Footer (last item on the track) -------------------------------------- */
@@ -686,8 +744,9 @@ a:focus-visible {
   align-self: flex-start;
   padding: 16px 28px;
   border-radius: 999px;
-  background: var(--ink);
-  color: var(--bg);
+  background: linear-gradient(120deg, rgb(var(--iris)), rgb(var(--aqua)));
+  color: #111113;
+  box-shadow: 0 12px 30px rgb(var(--iris) / 0.35);
   text-decoration: none;
   font-weight: 500;
   font-size: 17px;
@@ -811,55 +870,4 @@ a:focus-visible {
   .project-card__title {
     font-size: clamp(26px, min(8.6vw, 5vh), 40px);
   }
-}
-
-/* ---- Theme toggle ----------------------------------------------------------- */
-
-.theme-toggle {
-  position: fixed;
-  top: calc(var(--gutter) + 14px);
-  right: calc(var(--gutter) + 14px);
-  z-index: 50;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid var(--glass-border);
-  border-radius: 50%;
-  background: var(--glass-base);
-  color: var(--ink);
-  box-shadow: var(--glass-shadow);
-  cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-.theme-toggle:hover {
-  transform: rotate(-12deg);
-}
-
-.theme-toggle:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 3px;
-}
-
-.theme-toggle svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* Show the icon for the theme you'd switch to. */
-:root[data-theme="dark"] .theme-toggle__moon,
-:root[data-theme="light"] .theme-toggle__sun,
-:root:not([data-theme]) .theme-toggle__moon {
-  display: none;
-}
-
-/* Smooth colour change when toggling (only while switching). */
-.theme-switching,
-.theme-switching * {
-  transition:
-    background-color 0.35s ease,
-    border-color 0.35s ease,
-    color 0.35s ease !important;
 }

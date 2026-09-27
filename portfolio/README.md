@@ -24,7 +24,7 @@ Motion: Lenis smooth scrolling, and the row moves one card at a time (`sine.inOu
 
 Clicking a card opens `/work/[slug]`, a plain, fast case study page with a sticky **Contents** list on the left (it highlights the section in view and glides to a section on click; a scrollable row on small screens).
 
-Light and dark mode: the sun/moon button (`ThemeToggle`) switches themes and remembers the choice; the first visit follows the system setting. The theme is applied before first paint, so there's no flash.
+Colour: a small accent palette (`--iris`, `--aqua`, `--coral`, `--mint`, `--amber` in `globals.css`). Each case study has its own accent (`accent` in `projects.ts`), used for its card sheen, logo tile, status dot, link and on its case study page. The video has a gradient border, and the background has soft colour pools and tinted objects.
 
 `SceneFrame` is the rounded `overflow: hidden` window with the CSS `perspective`.
 
@@ -37,7 +37,6 @@ Light and dark mode: the sun/moon button (`ThemeToggle`) switches themes and rem
 | `src/components/DepthField.tsx` | Background objects and their placement (x, y, z, size, spin) |
 | `src/app/work/[slug]/page.tsx` + `case-study.css` | Case study page (dummy content) |
 | `src/components/CaseToc.tsx` | Contents sidebar with scroll highlight |
-| `src/components/ThemeToggle.tsx` | Light/dark toggle |
 
 ## Video
 

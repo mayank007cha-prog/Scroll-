@@ -8,7 +8,14 @@ export type Project = {
   oneLiner: string;
   /** Longer summary, used on the case study page. */
   description: string;
+  /** Accent colour (a palette name from globals.css). */
+  accent: Accent;
 };
+
+export type Accent = "iris" | "aqua" | "coral" | "mint" | "amber";
+
+/** Inline style that sets a project's accent on an element. */
+export const accentStyle = (accent: Accent) => ({ "--accent": `var(--${accent})` }) as React.CSSProperties;
 
 export const projects: Project[] = [
   {
@@ -19,6 +26,7 @@ export const projects: Project[] = [
     oneLiner: "Plan, installation, payment and confirmation in one faster flow.",
     description:
       "Simplifying plan selection, installation, payment and confirmation into a faster, clearer checkout experience.",
+    accent: "iris",
   },
   {
     slug: "earthlink-promise-to-pay",
@@ -28,6 +36,7 @@ export const projects: Project[] = [
     oneLiner: "A clearer way for customers to ask for more time to pay.",
     description:
       "Designing a clearer Promise to Pay experience for customers who need more time before their next payment.",
+    accent: "aqua",
   },
   {
     slug: "de-medic-swap-duty",
@@ -36,6 +45,7 @@ export const projects: Project[] = [
     title: "Making shift changes easier for doctors.",
     oneLiner: "Duty swaps designed for doctors in the German market.",
     description: "A duty-swap experience designed for doctors in the German market.",
+    accent: "coral",
   },
   {
     slug: "de-safe-lone-worker",
@@ -45,6 +55,7 @@ export const projects: Project[] = [
     oneLiner: "Quick check-ins, alerts and clear actions for people working alone.",
     description:
       "A lone-worker protection experience focused on quick check-ins, alerts and clear actions.",
+    accent: "mint",
   },
   {
     slug: "fleet-design-system",
@@ -54,6 +65,7 @@ export const projects: Project[] = [
     oneLiner: "One system for components, type, colour, spacing and layout.",
     description:
       "A scalable system for components, typography, colour, spacing and responsive layouts.",
+    accent: "amber",
   },
 ];
 

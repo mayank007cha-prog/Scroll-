@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CaseToc } from "@/components/CaseToc";
 import { initials } from "@/components/ProjectCard";
-import { getProject, projects } from "@/data/projects";
+import { accentStyle, getProject, projects } from "@/data/projects";
 import "./case-study.css";
 
 type Params = { slug: string };
@@ -56,7 +56,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<Params
   const next = projects[(index + 1) % projects.length];
 
   return (
-    <div className="cs-page">
+    <div className="cs-page" style={accentStyle(project.accent)}>
       <header className="cs-top">
         <Link href="/" className="cs-back">
           ← All work

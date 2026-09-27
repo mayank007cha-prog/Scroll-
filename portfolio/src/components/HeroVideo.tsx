@@ -33,6 +33,7 @@ export function HeroVideo({ src, webmSrc, poster, label = "Intro video" }: HeroV
       <div className="hero-fog" aria-hidden="true" />
       <div className="hero-shade" aria-hidden="true" />
       <div className="hero-grain" aria-hidden="true" />
+      <div className="hero-border" aria-hidden="true" />
       <div className="hero-intro">
         <p className="hero-intro__eyebrow glass">
           <span>{intro.eyebrow}</span>

@@ -38,6 +38,16 @@ const objects: DepthObject[] = [
   { kind: "rings", x: 258, y: 12, z: -1300, size: 200 },
 ];
 
+/** Soft colour pools far back (CSS position in % of the frame; they sit at
+ *  z -2200 so they drift slowly and read as distant light). */
+const glows = [
+  { x: 20, y: 35, color: "iris" },
+  { x: 130, y: 75, color: "aqua" },
+  { x: 250, y: 25, color: "coral" },
+  { x: 370, y: 70, color: "mint" },
+  { x: 480, y: 30, color: "amber" },
+];
+
 const P = sceneConfig.perspective;
 
 function placement({ x, y, z, size }: DepthObject): CSSProperties {
@@ -135,6 +145,9 @@ const shapes: Record<DepthObject["kind"], ReactNode> = {
 export function DepthField() {
   return (
     <div className="depth-field" data-depth-field aria-hidden="true">
+      {glows.map((g, i) => (
+        <div key={i} className="depth-glow" style={{ left: `${g.x}%`, top: `${g.y}%`, "--glow": `var(--${g.color})` } as CSSProperties} />
+      ))}
       <div className="depth-wall" />
       <div className="depth-floor" />
       {objects.map((o, i) => (
