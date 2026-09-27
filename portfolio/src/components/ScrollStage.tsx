@@ -294,6 +294,12 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   let settleTimer = 0;
   const settle = () => {
     if (!config.settle || !trigger || !restTimes.length) return;
+    // Never pull against a scroll in progress: wait until the smooth scroll
+    // (the visitor's, or a previous settle) has fully come to rest.
+    if (lenis.isScrolling) {
+      settleTimer = window.setTimeout(settle, 120);
+      return;
+    }
     const span = trigger.end - trigger.start;
     const y = window.scrollY;
     if (y > trigger.end + 1) return;
@@ -307,7 +313,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   };
   lenis.on("scroll", () => {
     window.clearTimeout(settleTimer);
-    settleTimer = window.setTimeout(settle, 160);
+    settleTimer = window.setTimeout(settle, 180);
   });
 
   // Autoplay the intro once, but only if the visitor is at the very top.
