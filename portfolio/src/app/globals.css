@@ -20,7 +20,11 @@
   /* No big blurred shadows: nearly invisible on this dark ground and they
      cost frames on moving 3D cards. The grey stroke defines the edge. */
   --glass-shadow: none;
-  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23ffffff' stroke-opacity='0.22' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
+  /* Wall and floor share one 240px grid: vertical lines at x = 0.5 of each
+     cell in both; the wall's horizontal lines sit on the bottom of each cell
+     so its lowest line is exactly where the floor starts. */
+  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0.5 0V240M0 239.5H240' fill='none' stroke='%23ffffff' stroke-opacity='0.22' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
+  --floor-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0.5 0V240M0 0.5H240' fill='none' stroke='%23ffffff' stroke-opacity='0.14' stroke-width='1.5'/%3E%3C/svg%3E");
   /* Colour, used sparingly and with meaning:
      --accent: violet. Only for things you can
        act on or that mark "you are here" (links, the main button, current
@@ -325,50 +329,43 @@ a:focus-visible {
   transform-style: preserve-3d;
 }
 
-/* Dashed layout guides on a wall behind the cards. Like the floor, the
-   wrapper is shifted within one 240px cell so a modest plane reads as an
-   endless moving grid. */
-.depth-wall-wrap {
+/* The room: a dashed back wall and a floor built on one grid.
+   Both planes span the same x range; the wall stands at z -1100 with its
+   bottom edge at the frame's bottom edge (half a frame below eye level, which
+   puts the horizon just under the cards), and the floor lies flat
+   (rotateX 90deg) from that same edge towards the viewer. So each vertical
+   wall line continues into a floor line, and they meet on one horizon. */
+.depth-room {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
+}
+
+.depth-wall,
+.depth-floor {
+  position: absolute;
+  left: -150%;
+  width: 400%;
+  height: 1440px; /* 6 grid cells */
+  background-size: 240px 240px;
 }
 
 .depth-wall {
-  position: absolute;
-  left: -70%;
-  width: 240%;
-  top: -60%;
-  height: 220%;
+  bottom: 0;
   transform: translateZ(-1100px);
   background-image: var(--wall-img);
-  background-size: 240px 240px;
-  mask-image: radial-gradient(60% 55% at 50% 50%, #000 35%, transparent 100%);
-}
-
-/* Perspective grid floor. The wrapper is shifted by ScrollStage within one
-   200px cell, so this modest plane reads as an endless sliding floor. */
-.depth-floor-wrap {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
+  background-position: 0 100%; /* anchor the grid on the floor line */
+  mask-image: linear-gradient(0deg, #000 0%, #000 35%, transparent 95%);
 }
 
 .depth-floor {
-  position: absolute;
-  left: -200%;
-  width: 500%;
-  top: 50%;
-  height: 260%;
-  transform: translateZ(-500px) rotateX(78deg);
+  top: 100%;
+  transform: translateZ(-1100px) rotateX(90deg);
   transform-origin: 50% 0;
-  background-image:
-    linear-gradient(rgb(var(--fg) / 0.13) 1.5px, transparent 1.5px),
-    linear-gradient(90deg, rgb(var(--fg) / 0.13) 1.5px, transparent 1.5px);
-  background-size: 200px 200px;
-  mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 55%, transparent 92%);
+  background-image: var(--floor-img);
+  background-position: 0 0;
+  mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 100%);
 }
-
 
 /* Wireframe cube */
 .d-cube {

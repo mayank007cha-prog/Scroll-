@@ -142,12 +142,11 @@ const shapes: Record<DepthObject["kind"], ReactNode> = {
 export function DepthField() {
   return (
     <div className="depth-field" data-depth-field aria-hidden="true">
-      {/* The floor sits in a wrapper that ScrollStage shifts within one grid
-          cell, so a small plane looks like it slides forever. */}
-      <div className="depth-wall-wrap" data-wall>
+      {/* One "room": a dashed back wall and a floor that meet on the same
+          grid, so every wall line runs straight into a floor line. ScrollStage
+          shifts the room within one grid cell, so it looks endless. */}
+      <div className="depth-room" data-room>
         <div className="depth-wall" />
-      </div>
-      <div className="depth-floor-wrap" data-floor>
         <div className="depth-floor" />
       </div>
       {objects.map((o, i) => (

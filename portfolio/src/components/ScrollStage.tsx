@@ -60,6 +60,9 @@ export function ScrollStage({ children }: { children: ReactNode }) {
   );
 }
 
+/** Grid cell (px) shared by the back wall and the floor (see globals.css). */
+const GRID = 240;
+
 function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: SceneConfig) {
   const frame = stage.querySelector<HTMLElement>(".scene-frame");
   const hero = stage.querySelector<HTMLElement>('[data-plane="hero"]');
@@ -99,8 +102,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const items = track ? gsap.utils.toArray<HTMLElement>(".work-item", track) : [];
   const fog = hero.querySelector<HTMLElement>(".hero-fog");
   const depthField = stage.querySelector<HTMLElement>("[data-depth-field]");
-  const floor = depthField?.querySelector<HTMLElement>("[data-floor]");
-  const wall = depthField?.querySelector<HTMLElement>("[data-wall]");
+  const room = depthField?.querySelector<HTMLElement>("[data-room]");
   const spinners = depthField ? gsap.utils.toArray<HTMLElement>("[data-spin]", depthField) : [];
   const depthFaders = depthField ? gsap.utils.toArray<HTMLElement>(".depth-obj, .depth-floor, .depth-wall", depthField) : [];
 
@@ -188,8 +190,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       gsap.set(depthField, { x: layerX });
       // Cancel the layer's drift on the floor except for the part within one
       // 200px grid cell: the pattern repeats, so it looks continuous.
-      if (floor) gsap.set(floor, { x: -layerX + (layerX % 200) });
-      if (wall) gsap.set(wall, { x: -layerX + (layerX % 240) });
+      if (room) gsap.set(room, { x: -layerX + (layerX % GRID) });
       // Appear only once the video is card-sized, so nothing sits behind it
       // while it is still large.
       gsap.set(depthFaders, { opacity: gsap.utils.clamp(0, 1, (shrink - 0.7) / 0.3) });
