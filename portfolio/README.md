@@ -13,7 +13,7 @@ npm run build && npm start
 
 A single pinned scene (`ScrollStage`) drives one scrubbed GSAP timeline, so scrolling up simply plays it in reverse:
 
-1. **Video**: autoplays once (muted, no loop). Once you scroll, the scroll position takes over and scrubs `currentTime` from 0 to 100%.
+1. **Video**: autoplays once (muted, no loop). Once you scroll, the scroll position takes over and scrubs `currentTime` from 0 to 100%. Meanwhile the intro text changes: part one (headline and focus areas) melts away with a liquid ripple (an SVG turbulence/displacement filter), then three points (Observe, Adapt, Persist) rise in one by one. Copy lives in `intro` in `projects.ts`.
 2. **Hero moves back**: `translateZ(0 → heroDepth)` and `scale(1 → heroScale)`, so it becomes the first card in the row.
 3. **Floating row**: the video shrinks to card size while case study 01 slides in beside it, then the whole row (video first, then the case studies from `ProjectStack`) glides right → left with scroll. Each item turns away (`rotateY`) and sinks back (`translateZ`) by its distance from the centre, which bends the row into a gentle curve.
 4. **Footer**: the last item on the row, ending centred and flat.

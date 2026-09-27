@@ -58,7 +58,7 @@ export const sceneConfig: SceneConfig = {
   depthSpin: -0.012,
   scrub: 1,
   entryDistance: 110,
-  videoDistance: 1.5,
+  videoDistance: 2.2,
   heroDistance: 0.8,
   cardDistance: 1,
   holdDistance: 0.45,

@@ -265,6 +265,37 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     },
   });
 
+  // 1b. The intro text changes while the video plays: part one melts away
+  //     (liquid ripple + blur, lines lifting off one after another), then the
+  //     three points rise in one by one. Scrubbed, so it reverses on scroll up.
+  const V = config.videoDistance;
+  const introOne = hero.querySelector<HTMLElement>("[data-intro-one]");
+  const introOneParts = introOne ? Array.from(introOne.children) : [];
+  const introPoints = gsap.utils.toArray<HTMLElement>("[data-intro-point]", hero);
+  const disp = hero.querySelector<SVGElement>("[data-liquid-disp]");
+  const blur = hero.querySelector<SVGElement>("[data-liquid-blur]");
+  const liquid = { amount: 0 };
+  tl.to(
+    liquid,
+    {
+      amount: 1,
+      duration: V * 0.34,
+      ease: "power1.in",
+      onUpdate: () => {
+        disp?.setAttribute("scale", (liquid.amount * 90).toFixed(1));
+        blur?.setAttribute("stdDeviation", (liquid.amount * 5).toFixed(2));
+      },
+    },
+    `video+=${V * 0.1}`,
+  );
+  tl.to(introOneParts, { opacity: 0, y: -18, duration: V * 0.28, stagger: V * 0.04, ease: "power1.in" }, `video+=${V * 0.14}`);
+  tl.fromTo(
+    introPoints,
+    { opacity: 0, y: 26, filter: "blur(10px)" },
+    { opacity: 1, y: 0, filter: "blur(0px)", duration: V * 0.2, stagger: V * 0.12, ease: "power2.out" },
+    `video+=${V * 0.5}`,
+  );
+
   // 2. The finished video moves back and shrinks to card size while the
   //    first case study slides in beside it.
   tl.addLabel("heroBack")
