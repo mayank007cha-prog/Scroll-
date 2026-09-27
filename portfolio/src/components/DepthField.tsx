@@ -18,21 +18,31 @@ type DepthObject = {
   spin?: number;
 };
 
-// Objects live only in the empty bands above and below the cards (cards and
+// Depth and size vary (near objects are larger and drift faster, far ones
+// small and slow). Objects live only in the empty bands above and below the cards (cards and
 // the shrunken video span roughly 17–83% of the frame height), so they never
 // pass behind a card. The layer drifts about two frame widths over the
 // scroll, so x runs 0–260%.
 const objects: DepthObject[] = [
-  { kind: "cube", x: 10, y: 7, z: -800, size: 60, spin: 1 },
-  { kind: "rings", x: 38, y: 93, z: -1100, size: 110 },
-  { kind: "pen", x: 64, y: 6, z: -900, size: 140 },
-  { kind: "cross", x: 90, y: 94, z: -1300, size: 34 },
-  { kind: "cursor", x: 112, y: 7, z: -500, size: 64 },
-  { kind: "measure", x: 140, y: 93, z: -900, size: 120 },
-  { kind: "type", x: 168, y: 5, z: -1000, size: 90 },
-  { kind: "selection", x: 194, y: 94, z: -1100, size: 110 },
-  { kind: "cube", x: 222, y: 7, z: -700, size: 50, spin: -1.2 },
-  { kind: "layers", x: 250, y: 94, z: -1200, size: 90 },
+  // near, larger, faster
+  { kind: "cube", x: 8, y: 8, z: -300, size: 88, spin: 1 },
+  { kind: "cursor", x: 58, y: 6, z: -250, size: 70 },
+  { kind: "layers", x: 104, y: 93, z: -350, size: 120 },
+  { kind: "pen", x: 176, y: 6, z: -300, size: 150 },
+  { kind: "cube", x: 236, y: 93, z: -280, size: 72, spin: -1.3 },
+  // middle
+  { kind: "rings", x: 30, y: 93, z: -800, size: 100 },
+  { kind: "type", x: 88, y: 5, z: -900, size: 84 },
+  { kind: "measure", x: 142, y: 94, z: -850, size: 110 },
+  { kind: "selection", x: 208, y: 6, z: -900, size: 100 },
+  { kind: "rings", x: 262, y: 7, z: -750, size: 70 },
+  // far, small, slow
+  { kind: "cross", x: 16, y: 95, z: -1600, size: 26 },
+  { kind: "cube", x: 70, y: 94, z: -1700, size: 34, spin: 0.6 },
+  { kind: "cross", x: 124, y: 4, z: -1500, size: 30 },
+  { kind: "cube", x: 158, y: 4, z: -1600, size: 30, spin: -0.8 },
+  { kind: "cross", x: 196, y: 95, z: -1400, size: 26 },
+  { kind: "layers", x: 250, y: 5, z: -1500, size: 60 },
 ];
 
 const P = sceneConfig.perspective;
@@ -134,6 +144,9 @@ export function DepthField() {
     <div className="depth-field" data-depth-field aria-hidden="true">
       {/* The floor sits in a wrapper that ScrollStage shifts within one grid
           cell, so a small plane looks like it slides forever. */}
+      <div className="depth-wall-wrap" data-wall>
+        <div className="depth-wall" />
+      </div>
       <div className="depth-floor-wrap" data-floor>
         <div className="depth-floor" />
       </div>

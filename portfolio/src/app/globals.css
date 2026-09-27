@@ -20,16 +20,16 @@
   /* No big blurred shadows: nearly invisible on this dark ground and they
      cost frames on moving 3D cards. The grey stroke defines the edge. */
   --glass-shadow: none;
-  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23ffffff' stroke-opacity='0.16' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
+  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23ffffff' stroke-opacity='0.22' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
   /* Colour, used sparingly and with meaning:
-     --accent: the warm cabin light from the video. Only for things you can
+     --accent: violet. Only for things you can
        act on or that mark "you are here" (links, the main button, current
        section, quote rule, focus).
-     --dusk: the blue of the dusk sky outside the window. Only as a faint
-       light in the background, so the space continues the video's mood.
+     --dusk: a deeper violet, only as a faint light in the background and in
+       the video's fog, so the scene reads as one space.
      Everything else is neutral. */
-  --accent: 232 180 126;
-  --dusk: 104 144 186;
+  --accent: 157 140 255;
+  --dusk: 92 70 190;
   color-scheme: dark;
 }
 
@@ -131,14 +131,11 @@ a:focus-visible {
   inset: var(--gutter);
   overflow: hidden;
   border-radius: var(--radius);
-  /* Static backdrop: faint cabin light and dusk light, and dashed layout
-     guides that fade towards the edges. Kept out of the 3D layer because
-     huge moving planes are expensive to draw. */
+  /* Static backdrop: two faint violet lights. */
   background:
     radial-gradient(70% 60% at 50% 50%, transparent 30%, var(--frame-bg) 100%),
-    radial-gradient(55% 45% at 85% 0%, rgb(var(--accent) / 0.06), transparent 70%),
+    radial-gradient(55% 45% at 85% 0%, rgb(var(--accent) / 0.07), transparent 70%),
     radial-gradient(60% 50% at 10% 100%, rgb(var(--dusk) / 0.08), transparent 70%),
-    var(--wall-img) center / 240px 240px,
     var(--frame-bg);
   perspective: 1400px;
   isolation: isolate;
@@ -195,14 +192,15 @@ a:focus-visible {
   pointer-events: none;
 }
 
-/* White mist that rolls in from the edges as the video zooms out (opacity is
-   driven by ScrollStage). */
+/* Fog that rolls in from the edges as the video zooms out (opacity driven by
+   ScrollStage): the page's near-black blending into a soft violet haze, so
+   the video melts into the dark scene. */
 .hero-fog {
   opacity: 0;
   background:
-    radial-gradient(90% 80% at 62% 48%, transparent 50%, rgb(250 250 250 / 0.42) 100%),
-    linear-gradient(180deg, rgb(250 250 250 / 0.22) 0%, transparent 22%, transparent 78%, rgb(250 250 250 / 0.22) 100%),
-    rgb(250 250 250 / 0.06);
+    radial-gradient(90% 80% at 62% 48%, transparent 45%, rgb(var(--dusk) / 0.35) 78%, rgb(var(--bg-rgb) / 0.85) 100%),
+    linear-gradient(180deg, rgb(var(--bg-rgb) / 0.55) 0%, transparent 24%, transparent 72%, rgb(var(--dusk) / 0.3) 100%),
+    rgb(var(--dusk) / 0.08);
 }
 
 /* Theme-coloured gradient over the window side, behind the intro text. */
@@ -211,8 +209,8 @@ a:focus-visible {
     90deg,
     rgb(var(--bg-rgb) / 0.92) 0%,
     rgb(var(--bg-rgb) / 0.78) 26%,
-    rgb(var(--bg-rgb) / 0.35) 48%,
-    rgb(var(--bg-rgb) / 0) 66%
+    rgb(var(--dusk) / 0.28) 48%,
+    rgb(var(--dusk) / 0) 68%
   );
 }
 
@@ -304,7 +302,8 @@ a:focus-visible {
 }
 
 .depth-obj,
-.depth-floor {
+.depth-floor,
+.depth-wall {
   opacity: 0;
 }
 
@@ -322,6 +321,27 @@ a:focus-visible {
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
+}
+
+/* Dashed layout guides on a wall behind the cards. Like the floor, the
+   wrapper is shifted within one 240px cell so a modest plane reads as an
+   endless moving grid. */
+.depth-wall-wrap {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.depth-wall {
+  position: absolute;
+  left: -70%;
+  width: 240%;
+  top: -60%;
+  height: 220%;
+  transform: translateZ(-1100px);
+  background-image: var(--wall-img);
+  background-size: 240px 240px;
+  mask-image: radial-gradient(60% 55% at 50% 50%, #000 35%, transparent 100%);
 }
 
 /* Perspective grid floor. The wrapper is shifted by ScrollStage within one

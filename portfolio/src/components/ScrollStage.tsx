@@ -100,8 +100,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const fog = hero.querySelector<HTMLElement>(".hero-fog");
   const depthField = stage.querySelector<HTMLElement>("[data-depth-field]");
   const floor = depthField?.querySelector<HTMLElement>("[data-floor]");
+  const wall = depthField?.querySelector<HTMLElement>("[data-wall]");
   const spinners = depthField ? gsap.utils.toArray<HTMLElement>("[data-spin]", depthField) : [];
-  const depthFaders = depthField ? gsap.utils.toArray<HTMLElement>(".depth-obj, .depth-floor", depthField) : [];
+  const depthFaders = depthField ? gsap.utils.toArray<HTMLElement>(".depth-obj, .depth-floor, .depth-wall", depthField) : [];
 
   gsap.set(frame, { perspective: config.perspective });
   gsap.set(hero, { transformOrigin: "50% 50%", force3D: true });
@@ -188,6 +189,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       // Cancel the layer's drift on the floor except for the part within one
       // 200px grid cell: the pattern repeats, so it looks continuous.
       if (floor) gsap.set(floor, { x: -layerX + (layerX % 200) });
+      if (wall) gsap.set(wall, { x: -layerX + (layerX % 240) });
       // Appear only once the video is card-sized, so nothing sits behind it
       // while it is still large.
       gsap.set(depthFaders, { opacity: gsap.utils.clamp(0, 1, (shrink - 0.7) / 0.3) });
