@@ -20,7 +20,11 @@ A single pinned scene (`ScrollStage`) drives one scrubbed GSAP timeline, so scro
 
 The video has a theme-coloured gradient over the window side with the intro text (from `intro` in `projects.ts`) and moving film grain. As it becomes a card, a white mist fades in from its edges and its corner radius is counter-scaled to match the cards. Behind everything, `DepthField` floats quiet, monochrome CSS-3D product-design objects (wireframe cubes, an exploded layer stack, a pen-tool curve, a cursor, a selection frame, a type specimen, dashed orbit rings, registration marks, a spacing measurement) over a large perspective grid floor, with a wall of dashed layout guides far behind. They drift with the row (deeper ones move slower) and the cubes turn as you scroll.
 
-Clicking a card opens `/work/[slug]`, a placeholder case study page generated from `projects.ts`.
+Motion: Lenis smooth scrolling, and the row moves one card at a time (`sine.inOut`), resting briefly with each card centred. When scrolling stops, it glides to the nearest centred card (`settle`).
+
+Clicking a card opens `/work/[slug]`, a plain, fast case study page with a sticky **Contents** list on the left (it highlights the section in view and glides to a section on click; a scrollable row on small screens).
+
+Light and dark mode: the sun/moon button (`ThemeToggle`) switches themes and remembers the choice; the first visit follows the system setting. The theme is applied before first paint, so there's no flash.
 
 `SceneFrame` is the rounded `overflow: hidden` window with the CSS `perspective`.
 
@@ -31,7 +35,9 @@ Clicking a card opens `/work/[slug]`, a placeholder case study page generated fr
 | `src/components/ScrollStage.tsx` | Pin, timeline, Lenis, video scrubbing, curve |
 | `src/components/{HeroVideo,SceneFrame,ProjectStack,ProjectCard,Footer}.tsx` | Presentational pieces |
 | `src/components/DepthField.tsx` | Background objects and their placement (x, y, z, size, spin) |
-| `src/app/work/[slug]/page.tsx` + `case-study.css` | Case study page (dummy content): nav, header bar, cover, meta, sections with a sticky label column, features, metrics, quote, next case study |
+| `src/app/work/[slug]/page.tsx` + `case-study.css` | Case study page (dummy content) |
+| `src/components/CaseToc.tsx` | Contents sidebar with scroll highlight |
+| `src/components/ThemeToggle.tsx` | Light/dark toggle |
 
 ## Video
 
@@ -50,4 +56,4 @@ ffmpeg -i hero-video.mp4 -vf "crop=1920:856:0:0" -an -c:v libx264 -crf 24 -g 1 \
 
 ## Glass
 
-Cards, label bars, the footer and the case study page share one `.glass` style in `globals.css`: a dense frosted base with a light gradient, a hairline border, a top sheen and film-grain noise. Backdrop blur is also set, but browsers don't apply it inside the 3D scene, which is why the base is dense.
+Cards, label bars and the footer share one `.glass` style in `globals.css`: a dense frosted base with a light gradient, a hairline border, a top sheen and a faint grain. There's no backdrop blur (browsers don't apply it inside the 3D scene, and it costs frames). The case study pages deliberately skip glass.

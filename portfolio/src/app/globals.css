@@ -1,32 +1,51 @@
-:root {
-  --bg: #0f0f11;
+/* Theme tokens. Dark is the default; [data-theme] is set before paint by the
+   script in layout.tsx (stored choice, else the system preference). */
+:root,
+:root[data-theme="dark"] {
+  --bg-rgb: 15 15 17;
+  --fg: 255 255 255;
+  --bg: rgb(var(--bg-rgb));
   --frame-bg: #131316;
+  --hero-bg: #202024;
   --ink: #f5f5f6;
   --ink-2: rgb(245 245 246 / 0.72);
   --ink-3: rgb(245 245 246 / 0.48);
   --hairline: rgb(255 255 255 / 0.12);
+  --surface: #18181b;
+  --glass-fill: linear-gradient(150deg, rgb(255 255 255 / 0.12) 0%, rgb(255 255 255 / 0.04) 45%, rgb(255 255 255 / 0.07) 100%);
+  --glass-base: rgb(28 28 32 / 0.84);
+  --glass-border: rgb(255 255 255 / 0.13);
+  --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 40px 90px rgb(0 0 0 / 0.45);
+  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23ffffff' stroke-opacity='0.16' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg-rgb: 244 244 241;
+  --fg: 17 17 19;
+  --frame-bg: #ebebe7;
+  --hero-bg: #d9d9d4;
+  --ink: #111113;
+  --ink-2: rgb(17 17 19 / 0.68);
+  --ink-3: rgb(17 17 19 / 0.46);
+  --hairline: rgb(17 17 19 / 0.1);
+  --surface: #e9e9e5;
+  --glass-fill: linear-gradient(150deg, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0.55) 50%, rgb(255 255 255 / 0.75) 100%);
+  --glass-base: rgb(250 250 248 / 0.8);
+  --glass-border: rgb(17 17 19 / 0.08);
+  --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 30px 70px rgb(17 17 19 / 0.12);
+  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23111113' stroke-opacity='0.14' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
+  color-scheme: light;
+}
+
+:root {
   --gutter: 16px;
   --radius: 28px;
   --card-w: min(68vw, 1080px);
   --card-h: min(58vh, 620px);
   --track-gap: 5vw;
   --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-
-  /* Glass system, shared by cards, bars, the footer and the case study page. */
-  --glass-fill: linear-gradient(
-    150deg,
-    rgb(255 255 255 / 0.14) 0%,
-    rgb(255 255 255 / 0.05) 45%,
-    rgb(255 255 255 / 0.08) 100%
-  );
-  /* Dense frosted base: backdrop blur isn't applied inside the 3D scene, so
-     the glass can't rely on it to hide what's behind. */
-  --glass-base: rgb(28 28 32 / 0.82);
-  --glass-border: rgb(255 255 255 / 0.14);
-  --glass-blur: blur(22px) saturate(140%);
-  --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 40px 90px rgb(0 0 0 / 0.45);
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  color-scheme: dark;
 }
 
 *,
@@ -60,8 +79,6 @@ a:focus-visible {
   background: var(--glass-fill), var(--glass-base);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
 }
 
 /* Film-grain noise and a soft top-left sheen over every glass surface. */
@@ -77,8 +94,7 @@ a:focus-visible {
 .glass::before {
   background-image: var(--noise);
   background-size: 220px;
-  opacity: 0.14;
-  mix-blend-mode: overlay;
+  opacity: 0.06;
 }
 
 .glass::after {
@@ -98,8 +114,8 @@ a:focus-visible {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(150deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.7));
-  color: #111113;
+  background: rgb(var(--fg) / 0.92);
+  color: var(--bg);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -135,7 +151,7 @@ a:focus-visible {
 /* ---- Hero (the video card) ------------------------------------------------ */
 
 .hero-plane {
-  background: #202024;
+  background: var(--hero-bg);
 }
 
 /* Every hero layer follows the card's animated radius: Chrome doesn't clip
@@ -175,10 +191,10 @@ a:focus-visible {
 .hero-shade {
   background: linear-gradient(
     90deg,
-    rgb(15 15 17 / 0.92) 0%,
-    rgb(15 15 17 / 0.78) 26%,
-    rgb(15 15 17 / 0.35) 48%,
-    rgb(15 15 17 / 0) 66%
+    rgb(var(--bg-rgb) / 0.92) 0%,
+    rgb(var(--bg-rgb) / 0.78) 26%,
+    rgb(var(--bg-rgb) / 0.35) 48%,
+    rgb(var(--bg-rgb) / 0) 66%
   );
 }
 
@@ -186,19 +202,10 @@ a:focus-visible {
 .hero-grain {
   background-image: var(--noise);
   background-size: 200px;
-  opacity: 0.2;
+  opacity: 0.16;
   mix-blend-mode: overlay;
-  animation: grain 0.9s steps(6) infinite;
 }
 
-@keyframes grain {
-  0% { background-position: 0 0; }
-  20% { background-position: -40px 30px; }
-  40% { background-position: 60px -20px; }
-  60% { background-position: -20px -60px; }
-  80% { background-position: 50px 40px; }
-  100% { background-position: 0 0; }
-}
 
 .hero-intro {
   position: absolute;
@@ -253,9 +260,9 @@ a:focus-visible {
 /* ---- Depth field: quiet product-design objects behind everything --------- */
 
 .depth-field {
-  --line: rgb(255 255 255 / 0.3);
-  --soft: rgb(255 255 255 / 0.16);
-  --fill: rgb(255 255 255 / 0.035);
+  --line: rgb(var(--fg) / 0.3);
+  --soft: rgb(var(--fg) / 0.16);
+  --fill: rgb(var(--fg) / 0.035);
   --depth-scale: 1;
   position: absolute;
   inset: 0;
@@ -297,8 +304,8 @@ a:focus-visible {
   transform: translateZ(-500px) rotateX(78deg);
   transform-origin: 50% 0;
   background-image:
-    linear-gradient(rgb(255 255 255 / 0.12) 1.5px, transparent 1.5px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.12) 1.5px, transparent 1.5px);
+    linear-gradient(rgb(var(--fg) / 0.12) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, rgb(var(--fg) / 0.12) 1.5px, transparent 1.5px);
   background-size: 200px 200px;
   mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 45%, transparent 85%);
 }
@@ -311,7 +318,7 @@ a:focus-visible {
   top: -90%;
   height: 280%;
   transform: translateZ(-1800px);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23ffffff' stroke-opacity='0.16' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
+  background-image: var(--wall-img);
   background-size: 240px 240px;
   mask-image: radial-gradient(60% 55% at 50% 50%, #000 40%, transparent 100%);
 }
@@ -361,7 +368,7 @@ a:focus-visible {
   gap: 0.08em;
   padding: 0.14em;
   transform: translateZ(0.44em);
-  background: rgb(255 255 255 / 0.07);
+  background: rgb(var(--fg) / 0.07);
 }
 
 .d-layers__plane--top i {
@@ -378,13 +385,13 @@ a:focus-visible {
   width: 1em;
   height: auto;
   overflow: visible;
-  stroke: rgb(255 255 255 / 0.4);
+  stroke: rgb(var(--fg) / 0.4);
   stroke-width: 2.5;
 }
 
 .d-pen .d-pen__handle { stroke: var(--soft); stroke-width: 1.5; }
 .d-pen circle,
-.d-pen rect { fill: var(--bg); stroke: rgb(255 255 255 / 0.6); }
+.d-pen rect { fill: var(--bg); stroke: rgb(var(--fg) / 0.6); }
 
 /* Multiplayer cursor */
 .d-cursor {
@@ -397,15 +404,15 @@ a:focus-visible {
   flex: 0 0 auto;
   width: 0.4em;
   height: 0.4em;
-  fill: rgb(255 255 255 / 0.75);
+  fill: rgb(var(--fg) / 0.75);
 }
 
 .d-cursor span {
   margin-top: 0.34em;
   padding: 0.07em 0.16em;
-  border: 1px solid rgb(255 255 255 / 0.3);
+  border: 1px solid rgb(var(--fg) / 0.3);
   border-radius: 1em;
-  color: rgb(255 255 255 / 0.7);
+  color: rgb(var(--fg) / 0.7);
   font-size: 0.18em;
   white-space: nowrap;
 }
@@ -429,7 +436,7 @@ a:focus-visible {
   position: absolute;
   width: 0.045em;
   height: 0.045em;
-  border: 1.5px solid rgb(255 255 255 / 0.6);
+  border: 1.5px solid rgb(var(--fg) / 0.6);
   background: var(--bg);
 }
 
@@ -439,7 +446,7 @@ a:focus-visible {
 .d-selection__box i:nth-child(4) { right: -0.025em; bottom: -0.025em; }
 
 .d-selection__label {
-  color: rgb(255 255 255 / 0.45);
+  color: rgb(var(--fg) / 0.45);
   font-size: 0.07em;
   white-space: nowrap;
 }
@@ -456,7 +463,7 @@ a:focus-visible {
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.04em;
-  color: rgb(255 255 255 / 0.45);
+  color: rgb(var(--fg) / 0.45);
 }
 
 .d-type__line {
@@ -475,7 +482,7 @@ a:focus-visible {
   display: block;
   margin-top: 0.1em;
   font-size: 0.08em;
-  color: rgb(255 255 255 / 0.4);
+  color: rgb(var(--fg) / 0.4);
   white-space: nowrap;
 }
 
@@ -491,7 +498,7 @@ a:focus-visible {
 }
 
 .d-rings .d-rings__dot {
-  fill: rgb(255 255 255 / 0.6);
+  fill: rgb(var(--fg) / 0.6);
   stroke: none;
 }
 
@@ -499,7 +506,7 @@ a:focus-visible {
 .d-cross {
   width: 1em;
   height: 1em;
-  stroke: rgb(255 255 255 / 0.28);
+  stroke: rgb(var(--fg) / 0.28);
   stroke-width: 1.5;
 }
 
@@ -530,7 +537,7 @@ a:focus-visible {
 .d-measure__gap b {
   font-size: 0.07em;
   font-weight: 500;
-  color: rgb(255 255 255 / 0.55);
+  color: rgb(var(--fg) / 0.55);
 }
 
 /* ---- Floating track ------------------------------------------------------ */
@@ -617,7 +624,7 @@ a:focus-visible {
 .project-card:hover .project-card__body,
 .project-card:focus-visible .project-card__body {
   transform: translateY(-6px);
-  border-color: rgb(255 255 255 / 0.28);
+  border-color: rgb(var(--fg) / 0.26);
 }
 
 .project-card__title {
@@ -680,7 +687,7 @@ a:focus-visible {
   padding: 16px 28px;
   border-radius: 999px;
   background: var(--ink);
-  color: #111113;
+  color: var(--bg);
   text-decoration: none;
   font-weight: 500;
   font-size: 17px;
@@ -728,10 +735,6 @@ a:focus-visible {
     display: none;
   }
 
-  .hero-grain {
-    animation: none;
-  }
-
   .work-track {
     flex-direction: column;
     align-items: stretch;
@@ -770,9 +773,9 @@ a:focus-visible {
   .hero-shade {
     background: linear-gradient(
       0deg,
-      rgb(15 15 17 / 0.95) 0%,
-      rgb(15 15 17 / 0.75) 34%,
-      rgb(15 15 17 / 0) 62%
+      rgb(var(--bg-rgb) / 0.95) 0%,
+      rgb(var(--bg-rgb) / 0.75) 34%,
+      rgb(var(--bg-rgb) / 0) 62%
     );
   }
 
@@ -808,4 +811,55 @@ a:focus-visible {
   .project-card__title {
     font-size: clamp(26px, min(8.6vw, 5vh), 40px);
   }
+}
+
+/* ---- Theme toggle ----------------------------------------------------------- */
+
+.theme-toggle {
+  position: fixed;
+  top: calc(var(--gutter) + 14px);
+  right: calc(var(--gutter) + 14px);
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  background: var(--glass-base);
+  color: var(--ink);
+  box-shadow: var(--glass-shadow);
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.theme-toggle:hover {
+  transform: rotate(-12deg);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Show the icon for the theme you'd switch to. */
+:root[data-theme="dark"] .theme-toggle__moon,
+:root[data-theme="light"] .theme-toggle__sun,
+:root:not([data-theme]) .theme-toggle__moon {
+  display: none;
+}
+
+/* Smooth colour change when toggling (only while switching). */
+.theme-switching,
+.theme-switching * {
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease !important;
 }

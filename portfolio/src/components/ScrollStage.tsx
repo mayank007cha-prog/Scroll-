@@ -66,7 +66,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   if (!frame || !hero) return;
 
   // ---- Smooth scrolling (Lenis) wired into GSAP's ticker ------------------
-  const lenis = new Lenis();
+  const lenis = new Lenis({ lerp: config.smoothness, wheelMultiplier: 0.9 });
   lenis.on("scroll", ScrollTrigger.update);
   const raf = (time: number) => lenis.raf(time * 1000);
   gsap.ticker.add(raf);
@@ -127,14 +127,13 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const trackFactor = depthFactor(config.trackDepth);
 
   // Track x values: off-screen right → first card parked beside the shrunken
-  // video → last item (footer) centred.
+  // video → each item centred in turn (see the timeline).
   const offscreenX = () => (config.entryDistance / 100) * frameWidth - (items[0]?.offsetLeft ?? 0);
   const rowStartX = () => {
     const heroHalf = (frameWidth / 2) * config.heroScale * depthFactor(config.heroDepth);
     const firstLeft = heroHalf / trackFactor + gapPx; // distance from centre, in track space
     return frameWidth / 2 + firstLeft + (halfWidths[0] ?? 0) - (centers[0] ?? 0);
   };
-  const endX = () => frameWidth / 2 - (centers[centers.length - 1] ?? 0);
 
   // ---- Render state -------------------------------------------------------
   // Tweens animate these plain objects; `render` turns them into transforms
@@ -258,15 +257,24 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       "heroBack",
     );
 
-  // 3. The whole row (video first) glides right → left on a gentle curve.
-  tl.addLabel("track").fromTo(
-    trackState,
-    { x: rowStartX },
-    { x: endX, duration: items.length * config.cardDistance, onUpdate: render },
-    "track",
-  );
-  // A short rest on the footer before the pin releases.
-  tl.to({}, { duration: 0.3 });
+  // 3. The whole row (video first) glides right → left on a gentle curve,
+  //    one card at a time: each move eases in and out, then rests with the
+  //    card centred. `restTimes` are the timeline times of those rests.
+  const restTimes: number[] = [];
+  const hold = () => {
+    restTimes.push(tl.duration() + config.holdDistance / 2);
+    tl.to({}, { duration: config.holdDistance });
+  };
+  const centreOn = (i: number) => () => frameWidth / 2 - (centers[i] ?? 0);
+  hold(); // resting on the video card
+  items.forEach((_, i) => {
+    tl.fromTo(
+      trackState,
+      { x: i === 0 ? rowStartX : centreOn(i - 1) },
+      { x: centreOn(i), duration: config.cardDistance, ease: "sine.inOut", onUpdate: render },
+    );
+    hold();
+  });
 
   // ---- Pin + scrub --------------------------------------------------------
   trigger = ScrollTrigger.create({
@@ -282,6 +290,26 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     onRefresh: refreshPositions,
   });
 
+  // ---- Gentle settle: after scrolling stops, glide to the nearest rest -----
+  let settleTimer = 0;
+  const settle = () => {
+    if (!config.settle || !trigger || !restTimes.length) return;
+    const span = trigger.end - trigger.start;
+    const y = window.scrollY;
+    if (y > trigger.end + 1) return;
+    const t = ((y - trigger.start) / span) * tl.duration();
+    // Leave the video scrub alone; only settle once the row is on screen.
+    if (t < restTimes[0] - config.heroDistance / 2) return;
+    const nearest = restTimes.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a));
+    const target = trigger.start + (nearest / tl.duration()) * span;
+    if (Math.abs(target - y) < 2) return;
+    lenis.scrollTo(target, { duration: 0.9, easing: (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2) });
+  };
+  lenis.on("scroll", () => {
+    window.clearTimeout(settleTimer);
+    settleTimer = window.setTimeout(settle, 160);
+  });
+
   // Autoplay the intro once, but only if the visitor is at the very top.
   if (video && config.autoplayOnLoad && trigger.progress === 0) {
     video.play().catch(() => {
@@ -293,6 +321,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   }
 
   return () => {
+    window.clearTimeout(settleTimer);
     gsap.ticker.remove(raf);
     lenis.destroy();
     video?.pause();

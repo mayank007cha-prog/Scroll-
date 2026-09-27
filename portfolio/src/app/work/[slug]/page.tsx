@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CaseToc } from "@/components/CaseToc";
 import { initials } from "@/components/ProjectCard";
 import { getProject, projects } from "@/data/projects";
 import "./case-study.css";
@@ -18,21 +19,33 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 
 // ---- Dummy content (same for every case study until the real copy lands) ----
 
-const meta = [
+const facts = [
   { label: "Role", value: "Lead Product Designer" },
   { label: "Timeline", value: "12 weeks" },
-  { label: "Team", value: "1 PM · 4 engineers · 1 researcher" },
+  { label: "Team", value: "PM, 4 engineers, researcher" },
   { label: "Platform", value: "Web and mobile" },
 ];
 
-const metrics = [
-  { value: "+00%", label: "Placeholder metric, e.g. completion rate" },
-  { value: "−00%", label: "Placeholder metric, e.g. support tickets" },
-  { value: "0.0×", label: "Placeholder metric, e.g. speed to task" },
+const contents = [
+  { id: "overview", label: "Overview" },
+  { id: "problem", label: "The problem" },
+  { id: "research", label: "Research" },
+  { id: "approach", label: "Approach" },
+  { id: "solution", label: "Solution" },
+  { id: "impact", label: "What changed" },
+  { id: "learnings", label: "Learnings" },
 ];
 
-const lorem =
+const copy =
   "Placeholder copy. Describe the context, the people involved and what was at stake. Keep paragraphs short and specific, and lead with what changed for the user.";
+
+function Media({ label, ratio = "16 / 10" }: { label: string; ratio?: string }) {
+  return (
+    <figure className="cs-media" style={{ aspectRatio: ratio }}>
+      <figcaption>{label}</figcaption>
+    </figure>
+  );
+}
 
 export default async function CaseStudyPage({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
@@ -41,175 +54,113 @@ export default async function CaseStudyPage({ params }: { params: Promise<Params
 
   const index = projects.indexOf(project);
   const next = projects[(index + 1) % projects.length];
-  const number = (i: number) => String(i + 1).padStart(2, "0");
 
   return (
     <div className="cs-page">
-      <div className="cs-backdrop" aria-hidden="true" />
-
-      <nav className="cs-nav glass">
-        <Link href="/" className="cs-nav__link">
+      <header className="cs-top">
+        <Link href="/" className="cs-back">
           ← All work
         </Link>
-        <span className="cs-nav__count">
-          {number(index)} / {number(projects.length - 1)}
-        </span>
-        <Link href={`/work/${next.slug}`} className="cs-nav__link">
-          Next →
-        </Link>
-      </nav>
+      </header>
 
-      <main className="cs">
-        {/* Header */}
-        <header className="cs-hero">
-          <div className="cs-bar glass">
-            <span className="cs-bar__who">
+      <div className="cs-layout">
+        <aside className="cs-aside">
+          <CaseToc items={contents} />
+        </aside>
+
+        <main className="cs-main">
+          <header className="cs-head">
+            <p className="cs-client">
               <span className="logo-tile" aria-hidden="true">
                 {initials(project.client)}
               </span>
-              <span className="cs-bar__text">
-                <strong>{project.client}</strong>
-                <span>{project.topic}</span>
-              </span>
-            </span>
-            <span className="cs-bar__meta">
-              <strong>Case study {number(index)}</strong>
-              <span>{project.oneLiner}</span>
-            </span>
-          </div>
-          <h1 className="cs-title">{project.title}</h1>
-          <p className="cs-lead">{project.description}</p>
-        </header>
+              {project.client} · {project.topic}
+            </p>
+            <h1 className="cs-title">{project.title}</h1>
+            <p className="cs-lead">{project.description}</p>
+            <dl className="cs-facts">
+              {facts.map((f) => (
+                <div key={f.label}>
+                  <dt>{f.label}</dt>
+                  <dd>{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </header>
 
-        {/* Cover */}
-        <figure className="cs-media cs-media--cover glass">
-          <span>Cover visual · 16:9</span>
-        </figure>
+          <Media label="Cover visual" />
 
-        {/* Meta */}
-        <dl className="cs-meta">
-          {meta.map((m) => (
-            <div key={m.label} className="cs-meta__item glass">
-              <dt>{m.label}</dt>
-              <dd>{m.value}</dd>
-            </div>
-          ))}
-        </dl>
+          <section id="overview" className="cs-section">
+            <h2>Overview</h2>
+            <p>{copy}</p>
+            <p>{copy}</p>
+          </section>
 
-        {/* Overview */}
-        <section className="cs-section">
-          <p className="cs-section__label">01 · Overview</p>
-          <div className="cs-section__body">
-            <h2>What we set out to do.</h2>
-            <p>{lorem}</p>
-            <p>{lorem}</p>
-          </div>
-        </section>
-
-        {/* Problem */}
-        <section className="cs-section">
-          <p className="cs-section__label">02 · The problem</p>
-          <div className="cs-section__body">
-            <h2>Where people were getting stuck.</h2>
-            <p>{lorem}</p>
-            <ul className="cs-list">
+          <section id="problem" className="cs-section">
+            <h2>The problem</h2>
+            <p>{copy}</p>
+            <ul>
               <li>Placeholder pain point one</li>
               <li>Placeholder pain point two</li>
               <li>Placeholder pain point three</li>
             </ul>
-          </div>
-        </section>
+          </section>
 
-        <figure className="cs-media cs-media--wide glass">
-          <span>Research artefact · journey map</span>
-        </figure>
+          <section id="research" className="cs-section">
+            <h2>Research</h2>
+            <p>{copy}</p>
+            <Media label="Journey map" ratio="21 / 9" />
+          </section>
 
-        {/* Process */}
-        <section className="cs-section">
-          <p className="cs-section__label">03 · Process</p>
-          <div className="cs-section__body">
-            <h2>From research to a clear direction.</h2>
-            <p>{lorem}</p>
-          </div>
-        </section>
-
-        <div className="cs-grid">
-          <figure className="cs-media glass">
-            <span>Wireframes</span>
-          </figure>
-          <figure className="cs-media glass">
-            <span>Flow exploration</span>
-          </figure>
-        </div>
-
-        {/* Solution */}
-        <section className="cs-section">
-          <p className="cs-section__label">04 · Solution</p>
-          <div className="cs-section__body">
-            <h2>The design, in three moves.</h2>
-            <p>{lorem}</p>
-          </div>
-        </section>
-
-        <div className="cs-features">
-          {["Placeholder feature one", "Placeholder feature two", "Placeholder feature three"].map((f, i) => (
-            <div key={f} className="cs-feature glass">
-              <span className="cs-feature__num">{number(i)}</span>
-              <h3>{f}</h3>
-              <p>One or two lines on what it does and why it matters.</p>
+          <section id="approach" className="cs-section">
+            <h2>Approach</h2>
+            <p>{copy}</p>
+            <div className="cs-pair">
+              <Media label="Wireframes" ratio="4 / 3" />
+              <Media label="Flow exploration" ratio="4 / 3" />
             </div>
-          ))}
-        </div>
+          </section>
 
-        <figure className="cs-media cs-media--cover glass">
-          <span>Final screens</span>
-        </figure>
+          <section id="solution" className="cs-section">
+            <h2>Solution</h2>
+            <p>{copy}</p>
+            <Media label="Final screens" />
+          </section>
 
-        {/* Impact */}
-        <section className="cs-section">
-          <p className="cs-section__label">05 · Impact</p>
-          <div className="cs-section__body">
-            <h2>What changed.</h2>
-            <p>{lorem}</p>
-          </div>
-        </section>
-
-        <div className="cs-metrics">
-          {metrics.map((m) => (
-            <div key={m.label} className="cs-metric glass">
-              <strong>{m.value}</strong>
-              <span>{m.label}</span>
+          <section id="impact" className="cs-section">
+            <h2>What changed</h2>
+            <p>{copy}</p>
+            <div className="cs-stats">
+              <div>
+                <strong>+00%</strong>
+                <span>Placeholder metric</span>
+              </div>
+              <div>
+                <strong>−00%</strong>
+                <span>Placeholder metric</span>
+              </div>
+              <div>
+                <strong>0.0×</strong>
+                <span>Placeholder metric</span>
+              </div>
             </div>
-          ))}
-        </div>
+          </section>
 
-        {/* Learnings */}
-        <section className="cs-section">
-          <p className="cs-section__label">06 · Learnings</p>
-          <div className="cs-section__body">
-            <blockquote className="cs-quote">
-              “Placeholder pull quote: the one sentence you want a hiring manager to remember from this
-              project.”
-            </blockquote>
-            <p>{lorem}</p>
-          </div>
-        </section>
+          <section id="learnings" className="cs-section">
+            <h2>Learnings</h2>
+            <blockquote>“Placeholder pull quote: the one sentence you want someone to remember from this project.”</blockquote>
+            <p>{copy}</p>
+          </section>
 
-        {/* Next */}
-        <Link href={`/work/${next.slug}`} className="cs-next glass">
-          <span className="cs-next__label">Next case study</span>
-          <span className="cs-next__row">
-            <span className="logo-tile" aria-hidden="true">
-              {initials(next.client)}
+          <Link href={`/work/${next.slug}`} className="cs-next">
+            <span className="cs-next__label">Next case study</span>
+            <span className="cs-next__title">{next.title}</span>
+            <span className="cs-next__meta">
+              {next.client} · {next.topic} →
             </span>
-            <span>
-              {next.client} · {next.topic}
-            </span>
-          </span>
-          <strong className="cs-next__title">{next.title}</strong>
-          <span className="cs-next__cta">View case study →</span>
-        </Link>
-      </main>
+          </Link>
+        </main>
+      </div>
     </div>
   );
 }

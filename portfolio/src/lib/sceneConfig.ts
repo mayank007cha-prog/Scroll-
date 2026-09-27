@@ -32,6 +32,12 @@ export type SceneConfig = {
   heroDistance: number;
   /** Timeline units of horizontal scrolling per card. */
   cardDistance: number;
+  /** Timeline units each card rests centred before the next move. */
+  holdDistance: number;
+  /** After scrolling stops, glide to the nearest centred card. */
+  settle: boolean;
+  /** Lenis smoothing (lower = smoother, heavier). */
+  smoothness: number;
   /** Viewport heights of scroll per timeline unit. */
   scrollPerUnit: number;
   /** Autoplay the intro once on load; scrolling takes over playback. */
@@ -47,11 +53,14 @@ export const sceneConfig: SceneConfig = {
   curveDepth: 260,
   depthParallax: 0.7,
   depthSpin: -0.02,
-  scrub: 1.2,
+  scrub: 0.8,
   entryDistance: 110,
   videoDistance: 1.5,
   heroDistance: 0.8,
   cardDistance: 1,
+  holdDistance: 0.35,
+  settle: true,
+  smoothness: 0.085,
   scrollPerUnit: 1,
   autoplayOnLoad: true,
 };
