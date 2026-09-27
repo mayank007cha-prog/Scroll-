@@ -452,12 +452,13 @@ a:focus-visible {
 }
 
 .d-cursor span {
-  margin-top: 0.34em;
-  padding: 0.07em 0.16em;
-  border: 1px solid rgb(var(--accent) / 0.5);
+  margin-top: 0.3em;
+  padding: 0.12em 0.45em;
+  border: 1.5px solid rgb(var(--accent) / 0.55);
   border-radius: 1em;
-  color: rgb(var(--accent) / 0.9);
-  font-size: 0.18em;
+  color: rgb(var(--accent));
+  font-size: 0.2em;
+  font-weight: 500;
   white-space: nowrap;
 }
 

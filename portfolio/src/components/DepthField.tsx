@@ -26,7 +26,7 @@ type DepthObject = {
 const objects: DepthObject[] = [
   // near, larger, faster
   { kind: "cube", x: 8, y: 8, z: -300, size: 88, spin: 1 },
-  { kind: "cursor", x: 58, y: 6, z: -250, size: 70 },
+  { kind: "cursor", x: 58, y: 7, z: -250, size: 120 },
   { kind: "layers", x: 104, y: 93, z: -350, size: 120 },
   { kind: "pen", x: 176, y: 6, z: -300, size: 150 },
   { kind: "cube", x: 236, y: 93, z: -280, size: 72, spin: -1.3 },
