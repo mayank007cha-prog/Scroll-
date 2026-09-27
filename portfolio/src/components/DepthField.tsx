@@ -18,33 +18,21 @@ type DepthObject = {
   spin?: number;
 };
 
-// Cards cover roughly 20–80% of the frame height, so objects live in the
-// top/bottom bands or far back where they show through the gaps. The layer
-// drifts left by about two frame widths over the scroll, so x runs 0–260%.
+// Objects live only in the empty bands above and below the cards (cards and
+// the shrunken video span roughly 17–83% of the frame height), so they never
+// pass behind a card. The layer drifts about two frame widths over the
+// scroll, so x runs 0–260%.
 const objects: DepthObject[] = [
-  { kind: "cube", x: 14, y: 10, z: -800, size: 110, spin: 1 },
-  { kind: "rings", x: 40, y: 90, z: -1200, size: 220 },
-  { kind: "pen", x: 72, y: 9, z: -900, size: 240 },
-  { kind: "layers", x: 98, y: 90, z: -1100, size: 190 },
-  { kind: "cube", x: 128, y: 50, z: -1700, size: 300, spin: 0.5 },
-  { kind: "cursor", x: 122, y: 12, z: -500, size: 90 },
-  { kind: "cross", x: 60, y: 30, z: -1500, size: 60 },
-  { kind: "measure", x: 150, y: 90, z: -900, size: 200 },
-  { kind: "type", x: 172, y: 10, z: -1000, size: 150 },
-  { kind: "cross", x: 180, y: 72, z: -1500, size: 60 },
-  { kind: "selection", x: 196, y: 90, z: -1100, size: 230 },
-  { kind: "cube", x: 222, y: 10, z: -700, size: 80, spin: -1.4 },
-  { kind: "layers", x: 246, y: 89, z: -1200, size: 180 },
-  { kind: "rings", x: 258, y: 12, z: -1300, size: 200 },
-];
-
-/** Two faint lights far back, in the video's own colours (dusk sky and cabin
- *  light). Soft colour pools far back (CSS position in % of the frame; they sit at
- *  z -2200 so they drift slowly and read as distant light). */
-const glows = [
-  { x: 30, y: 30, color: "dusk" },
-  { x: 200, y: 70, color: "accent" },
-  { x: 380, y: 35, color: "dusk" },
+  { kind: "cube", x: 10, y: 7, z: -800, size: 60, spin: 1 },
+  { kind: "rings", x: 38, y: 93, z: -1100, size: 110 },
+  { kind: "pen", x: 64, y: 6, z: -900, size: 140 },
+  { kind: "cross", x: 90, y: 94, z: -1300, size: 34 },
+  { kind: "cursor", x: 112, y: 7, z: -500, size: 64 },
+  { kind: "measure", x: 140, y: 93, z: -900, size: 120 },
+  { kind: "type", x: 168, y: 5, z: -1000, size: 90 },
+  { kind: "selection", x: 194, y: 94, z: -1100, size: 110 },
+  { kind: "cube", x: 222, y: 7, z: -700, size: 50, spin: -1.2 },
+  { kind: "layers", x: 250, y: 94, z: -1200, size: 90 },
 ];
 
 const P = sceneConfig.perspective;
@@ -144,11 +132,11 @@ const shapes: Record<DepthObject["kind"], ReactNode> = {
 export function DepthField() {
   return (
     <div className="depth-field" data-depth-field aria-hidden="true">
-      {glows.map((g, i) => (
-        <div key={i} className="depth-glow" style={{ left: `${g.x}%`, top: `${g.y}%`, "--glow": `var(--${g.color})` } as CSSProperties} />
-      ))}
-      <div className="depth-wall" />
-      <div className="depth-floor" />
+      {/* The floor sits in a wrapper that ScrollStage shifts within one grid
+          cell, so a small plane looks like it slides forever. */}
+      <div className="depth-floor-wrap" data-floor>
+        <div className="depth-floor" />
+      </div>
       {objects.map((o, i) => (
         <div key={i} className="depth-obj" style={placement(o)}>
           {o.spin ? (

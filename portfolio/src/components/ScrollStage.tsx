@@ -99,8 +99,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const items = track ? gsap.utils.toArray<HTMLElement>(".work-item", track) : [];
   const fog = hero.querySelector<HTMLElement>(".hero-fog");
   const depthField = stage.querySelector<HTMLElement>("[data-depth-field]");
+  const floor = depthField?.querySelector<HTMLElement>("[data-floor]");
   const spinners = depthField ? gsap.utils.toArray<HTMLElement>("[data-spin]", depthField) : [];
-  const depthFaders = depthField ? gsap.utils.toArray<HTMLElement>(".depth-obj, .depth-floor, .depth-wall, .depth-glow", depthField) : [];
+  const depthFaders = depthField ? gsap.utils.toArray<HTMLElement>(".depth-obj, .depth-floor", depthField) : [];
 
   gsap.set(frame, { perspective: config.perspective });
   gsap.set(hero, { transformOrigin: "50% 50%", force3D: true });
@@ -184,7 +185,12 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     if (depthField) {
       const layerX = (trackState.x - offscreenX()) * config.depthParallax;
       gsap.set(depthField, { x: layerX });
-      gsap.set(depthFaders, { opacity: shrink });
+      // Cancel the layer's drift on the floor except for the part within one
+      // 200px grid cell: the pattern repeats, so it looks continuous.
+      if (floor) gsap.set(floor, { x: -layerX + (layerX % 200) });
+      // Appear only once the video is card-sized, so nothing sits behind it
+      // while it is still large.
+      gsap.set(depthFaders, { opacity: gsap.utils.clamp(0, 1, (shrink - 0.7) / 0.3) });
       spinners.forEach((el) => {
         gsap.set(el, { rotateY: layerX * config.depthSpin * Number(el.dataset.spin || 1) });
       });
@@ -309,7 +315,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const nearest = restTimes.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a));
     const target = trigger.start + (nearest / tl.duration()) * span;
     if (Math.abs(target - y) < 2) return;
-    lenis.scrollTo(target, { duration: 0.9, easing: (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2) });
+    lenis.scrollTo(target, { duration: 1.1, easing: (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2) });
   };
   lenis.on("scroll", () => {
     window.clearTimeout(settleTimer);

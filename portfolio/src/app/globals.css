@@ -11,12 +11,15 @@
   --hairline: rgb(255 255 255 / 0.12);
   --surface: #18181b;
   --glass-fill: linear-gradient(150deg, rgb(255 255 255 / 0.12) 0%, rgb(255 255 255 / 0.04) 45%, rgb(255 255 255 / 0.07) 100%);
-  --glass-base: rgb(28 28 32 / 0.84);
+  /* Opaque base: nothing behind a card ever shows through it. */
+  --glass-base: #1b1b1f;
   /* Card strokes: solid neutral greys so every outline reads the same. */
   --stroke: #34343a;
   --stroke-hover: #4c4c54;
   --glass-border: var(--stroke);
-  --glass-shadow: 0 40px 90px rgb(0 0 0 / 0.45);
+  /* No big blurred shadows: nearly invisible on this dark ground and they
+     cost frames on moving 3D cards. The grey stroke defines the edge. */
+  --glass-shadow: none;
   --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0 0.5H240M0.5 0V240' fill='none' stroke='%23ffffff' stroke-opacity='0.16' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
   /* Colour, used sparingly and with meaning:
      --accent: the warm cabin light from the video. Only for things you can
@@ -128,9 +131,14 @@ a:focus-visible {
   inset: var(--gutter);
   overflow: hidden;
   border-radius: var(--radius);
+  /* Static backdrop: faint cabin light and dusk light, and dashed layout
+     guides that fade towards the edges. Kept out of the 3D layer because
+     huge moving planes are expensive to draw. */
   background:
+    radial-gradient(70% 60% at 50% 50%, transparent 30%, var(--frame-bg) 100%),
     radial-gradient(55% 45% at 85% 0%, rgb(var(--accent) / 0.06), transparent 70%),
     radial-gradient(60% 50% at 10% 100%, rgb(var(--dusk) / 0.08), transparent 70%),
+    var(--wall-img) center / 240px 240px,
     var(--frame-bg);
   perspective: 1400px;
   isolation: isolate;
@@ -149,7 +157,6 @@ a:focus-visible {
 
 .hero-plane {
   background: var(--hero-bg);
-  box-shadow: 0 40px 100px -40px rgb(0 0 0 / 0.6);
 }
 
 /* Grey hairline around the video frame, matching the other cards. */
@@ -297,21 +304,10 @@ a:focus-visible {
 }
 
 .depth-obj,
-.depth-floor,
-.depth-wall,
-.depth-glow {
+.depth-floor {
   opacity: 0;
 }
 
-/* Big soft colour pools far back in the space. */
-.depth-glow {
-  position: absolute;
-  width: 170%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(var(--glow) / 0.1), rgb(var(--glow) / 0.035) 55%, transparent);
-  transform: translate(-50%, -50%) translateZ(-2200px);
-}
 
 .depth-obj {
   position: absolute;
@@ -328,13 +324,20 @@ a:focus-visible {
   transform-style: preserve-3d;
 }
 
-/* Big perspective grid floor that slides as the row moves. */
+/* Perspective grid floor. The wrapper is shifted by ScrollStage within one
+   200px cell, so this modest plane reads as an endless sliding floor. */
+.depth-floor-wrap {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
 .depth-floor {
   position: absolute;
-  left: -300%;
-  width: 800%;
+  left: -100%;
+  width: 300%;
   top: 50%;
-  height: 300%;
+  height: 130%;
   transform: translateZ(-500px) rotateX(78deg);
   transform-origin: 50% 0;
   background-image:
@@ -344,18 +347,6 @@ a:focus-visible {
   mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 45%, transparent 85%);
 }
 
-/* Dashed layout guides on a wall far behind everything. */
-.depth-wall {
-  position: absolute;
-  left: -300%;
-  width: 800%;
-  top: -90%;
-  height: 280%;
-  transform: translateZ(-1800px);
-  background-image: var(--wall-img);
-  background-size: 240px 240px;
-  mask-image: radial-gradient(60% 55% at 50% 50%, #000 40%, transparent 100%);
-}
 
 /* Wireframe cube */
 .d-cube {
@@ -789,6 +780,14 @@ a:focus-visible {
   }
 }
 
+/* Short screens: smaller background objects so they stay in the thin
+   empty bands above and below the cards. */
+@media (min-width: 768px) and (max-height: 820px) {
+  .depth-field {
+    --depth-scale: 0.62;
+  }
+}
+
 /* ---- Mobile ------------------------------------------------------------- */
 
 @media (max-width: 767px) {
@@ -828,8 +827,10 @@ a:focus-visible {
     font-size: clamp(30px, min(9vw, 5.2vh), 44px);
   }
 
-  .depth-field {
-    --depth-scale: 0.55;
+  /* Phones have no empty band above or below the cards, so keep only the
+     grid, guides and light in the background. */
+  .depth-obj {
+    display: none;
   }
 
   .project-card__bar {
