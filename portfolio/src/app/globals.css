@@ -25,10 +25,9 @@
      --accent: violet. Only for things you can
        act on or that mark "you are here" (links, the main button, current
        section, quote rule, focus).
-     --dusk: a deeper violet, only as a faint light in the background and in
-       the video's fog, so the scene reads as one space.
+     --dusk: a deeper violet, only as a faint light in the background.
      Everything else is neutral. */
-  --accent: 157 140 255;
+  --accent: 132 116 232;
   --dusk: 92 70 190;
   color-scheme: dark;
 }
@@ -192,15 +191,14 @@ a:focus-visible {
   pointer-events: none;
 }
 
-/* Fog that rolls in from the edges as the video zooms out (opacity driven by
-   ScrollStage): the page's near-black blending into a soft violet haze, so
-   the video melts into the dark scene. */
+/* Matte black vignette that rolls in from the edges as the video zooms out
+   (opacity driven by ScrollStage), so the video sinks into the dark scene. */
 .hero-fog {
   opacity: 0;
   background:
-    radial-gradient(90% 80% at 62% 48%, transparent 45%, rgb(var(--dusk) / 0.35) 78%, rgb(var(--bg-rgb) / 0.85) 100%),
-    linear-gradient(180deg, rgb(var(--bg-rgb) / 0.55) 0%, transparent 24%, transparent 72%, rgb(var(--dusk) / 0.3) 100%),
-    rgb(var(--dusk) / 0.08);
+    radial-gradient(90% 80% at 62% 48%, transparent 40%, rgb(var(--bg-rgb) / 0.55) 78%, rgb(var(--bg-rgb) / 0.9) 100%),
+    linear-gradient(180deg, rgb(var(--bg-rgb) / 0.5) 0%, transparent 26%, transparent 70%, rgb(var(--bg-rgb) / 0.6) 100%),
+    rgb(var(--bg-rgb) / 0.18);
 }
 
 /* Theme-coloured gradient over the window side, behind the intro text. */
@@ -209,22 +207,26 @@ a:focus-visible {
     90deg,
     rgb(var(--bg-rgb) / 0.92) 0%,
     rgb(var(--bg-rgb) / 0.78) 26%,
-    rgb(var(--dusk) / 0.28) 48%,
-    rgb(var(--dusk) / 0) 68%
+    rgb(var(--bg-rgb) / 0.35) 48%,
+    rgb(var(--bg-rgb) / 0) 68%
   );
 }
 
-/* Moving film grain. */
+/* Film grain over the whole video card: a coarse and a fine layer give it
+   the same matte, printed feel as the rest of the scene. */
 .hero-grain {
-  background-image: var(--noise);
-  background-size: 200px;
-  opacity: 0.16;
-  mix-blend-mode: overlay;
+  z-index: 1;
+  background-image: var(--noise), var(--noise);
+  background-size: 180px, 90px;
+  background-position: 0 0, 37px 61px;
+  /* Plain (unblended) grain: blend modes on a moving 3D layer cost frames. */
+  opacity: 0.1;
 }
 
 
 .hero-intro {
   position: absolute;
+  z-index: 2;
   top: 50%;
   left: clamp(28px, 5.5%, 96px);
   display: flex;
@@ -354,17 +356,17 @@ a:focus-visible {
 
 .depth-floor {
   position: absolute;
-  left: -100%;
-  width: 300%;
+  left: -200%;
+  width: 500%;
   top: 50%;
-  height: 130%;
+  height: 260%;
   transform: translateZ(-500px) rotateX(78deg);
   transform-origin: 50% 0;
   background-image:
-    linear-gradient(rgb(var(--fg) / 0.1) 1.5px, transparent 1.5px),
-    linear-gradient(90deg, rgb(var(--fg) / 0.1) 1.5px, transparent 1.5px);
+    linear-gradient(rgb(var(--fg) / 0.13) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, rgb(var(--fg) / 0.13) 1.5px, transparent 1.5px);
   background-size: 200px 200px;
-  mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 45%, transparent 85%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 55%, transparent 92%);
 }
 
 
@@ -730,14 +732,34 @@ a:focus-visible {
 }
 
 .footer-card__cta {
+  position: relative;
   align-self: flex-start;
+  overflow: hidden;
   padding: 16px 28px;
+  border: 1px solid rgb(255 255 255 / 0.14);
   border-radius: 999px;
-  background: rgb(var(--accent));
-  color: #111113;
+  background: linear-gradient(180deg, rgb(104 88 206), rgb(76 62 170));
+  color: #f5f5f6;
   text-decoration: none;
   font-weight: 500;
   font-size: 17px;
+  transition: filter 0.25s;
+}
+
+/* Grain on the button so it sits in the same matte finish. */
+.footer-card__cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise);
+  background-size: 120px;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.footer-card__cta:hover {
+  filter: brightness(1.12);
 }
 
 .footer-card__links {

@@ -24,7 +24,7 @@ Motion: Lenis smooth scrolling, and the row moves one card at a time (`sine.inOu
 
 Clicking a card opens `/work/[slug]`, a plain, fast case study page with a sticky **Contents** list on the left (it highlights the section in view and glides to a section on click; a scrollable row on small screens).
 
-Colour is minimal and has one job each: `--accent` (violet) marks things you can act on or "you are here" — links, the main button, the current Contents item, the quote rule, keyboard focus. `--dusk` (a deeper violet) appears only as faint light in the background and in the video's fog, which blends the page's black into violet as the video zooms out. Everything else is neutral.
+Colour is minimal and has one job each: `--accent` (violet) marks things you can act on or "you are here" — links, the main button, the current Contents item, the quote rule, keyboard focus. `--dusk` (a deeper violet) appears only as faint light in the background only. The video card is matte black: a black vignette rolls in from its edges as it zooms out, under a two-layer film grain. Everything else is neutral.
 
 `SceneFrame` is the rounded `overflow: hidden` window with the CSS `perspective`.
 
