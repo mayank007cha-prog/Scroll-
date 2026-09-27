@@ -24,7 +24,7 @@ Motion: Lenis smooth scrolling, and the row moves one card at a time (`sine.inOu
 
 Clicking a card opens `/work/[slug]`, a plain, fast case study page with a sticky **Contents** list on the left (it highlights the section in view and glides to a section on click; a scrollable row on small screens).
 
-Colour: a small accent palette (`--iris`, `--aqua`, `--coral`, `--mint`, `--amber` in `globals.css`). Each case study has its own accent (`accent` in `projects.ts`), used for its card sheen, logo tile, status dot, link and on its case study page. The video has a gradient border, and the background has soft colour pools and tinted objects.
+Colour is minimal and has one job each: `--accent` (the warm cabin light from the video) marks things you can act on or "you are here" — links, the main button, the current Contents item, the quote rule, keyboard focus. `--dusk` (the sky outside the window) appears only as a faint light far back in the scene. Everything else is neutral.
 
 `SceneFrame` is the rounded `overflow: hidden` window with the CSS `perspective`.
 

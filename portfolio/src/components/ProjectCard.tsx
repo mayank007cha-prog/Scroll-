@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { accentStyle, type Project } from "@/data/projects";
+import type { Project } from "@/data/projects";
 
 type ProjectCardProps = {
   project: Project;
@@ -18,12 +18,7 @@ export const initials = (name: string) =>
 /** One floating case study: a glass label bar above a big glass card. */
 export function ProjectCard({ project, index }: ProjectCardProps) {
   return (
-    <Link
-      href={`/work/${project.slug}`}
-      className="work-item project-card"
-      data-plane="project"
-      style={accentStyle(project.accent)}
-    >
+    <Link href={`/work/${project.slug}`} className="work-item project-card" data-plane="project">
       <div className="project-card__bar glass">
         <span className="project-card__client">
           <span className="logo-tile" aria-hidden="true">

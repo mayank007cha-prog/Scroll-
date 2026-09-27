@@ -38,14 +38,13 @@ const objects: DepthObject[] = [
   { kind: "rings", x: 258, y: 12, z: -1300, size: 200 },
 ];
 
-/** Soft colour pools far back (CSS position in % of the frame; they sit at
+/** Two faint lights far back, in the video's own colours (dusk sky and cabin
+ *  light). Soft colour pools far back (CSS position in % of the frame; they sit at
  *  z -2200 so they drift slowly and read as distant light). */
 const glows = [
-  { x: 20, y: 35, color: "iris" },
-  { x: 130, y: 75, color: "aqua" },
-  { x: 250, y: 25, color: "coral" },
-  { x: 370, y: 70, color: "mint" },
-  { x: 480, y: 30, color: "amber" },
+  { x: 30, y: 30, color: "dusk" },
+  { x: 200, y: 70, color: "accent" },
+  { x: 380, y: 35, color: "dusk" },
 ];
 
 const P = sceneConfig.perspective;
