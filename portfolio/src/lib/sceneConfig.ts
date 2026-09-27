@@ -6,6 +6,8 @@
  * per unit), so doubling a duration doubles how long you scroll through it.
  */
 export type SceneConfig = {
+  /** Direction the card row travels: "x" (right → left) or "y" (bottom → top). */
+  axis: "x" | "y";
   /** CSS perspective on the scene frame, in px. */
   perspective: number;
   /** Where the hero video ends up in Z once it has "moved away". */
@@ -24,7 +26,7 @@ export type SceneConfig = {
   depthSpin: number;
   /** ScrollTrigger scrub: `true` or seconds of smoothing. */
   scrub: boolean | number;
-  /** Where the row starts, in vw from the left edge of the frame (100 = just off-screen right). */
+  /** Where the row starts, in % of the frame along the axis (100 = just off-screen right / below). */
   entryDistance: number;
   /** Timeline units of scrolling spent scrubbing the video 0 → 100%. */
   videoDistance: number;
@@ -45,6 +47,7 @@ export type SceneConfig = {
 };
 
 export const sceneConfig: SceneConfig = {
+  axis: "x",
   perspective: 1400,
   heroDepth: -400,
   heroScale: 0.85,
@@ -67,6 +70,8 @@ export const sceneConfig: SceneConfig = {
 
 /** Softer movement on small screens so text stays readable. */
 export const mobileOverrides: Partial<SceneConfig> = {
+  // Phones: the row travels vertically (same easing, rests and settle).
+  axis: "y",
   perspective: 1000,
   heroDepth: -200,
   heroScale: 0.9,

@@ -109,19 +109,30 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   gsap.set(frame, { perspective: config.perspective });
   gsap.set(hero, { transformOrigin: "50% 50%", force3D: true });
 
+  // ---- Axis ---------------------------------------------------------------
+  // The row travels along x on desktop and y on phones. Everything below is
+  // written along "the axis"; only the transform names differ. (The curve's
+  // projection maths is identical for both: rotateY(a) and rotateX(-a) move
+  // an edge at local offset l to depth -l·sin(a).)
+  const vertical = config.axis === "y";
+  const AX = vertical ? "y" : "x";
+  const ROT = vertical ? "rotateX" : "rotateY";
+  const turn = (deg: number) => (vertical ? -deg : deg);
+
   // ---- Geometry (re-measured on every refresh) ----------------------------
-  // Transforms don't affect layout, so offsetLeft/Width stay stable.
-  let frameWidth = 0;
+  // Transforms don't affect layout, so offsetLeft/Top/Width/Height stay stable.
+  let frameWidth = 0; // frame size along the axis
   let centers: number[] = [];
   let halfWidths: number[] = [];
   let radius = 0;
   let gapPx = 0;
   const measure = () => {
-    frameWidth = frame.clientWidth;
-    gapPx = parseFloat(getComputedStyle(track ?? frame).columnGap) || 0;
+    frameWidth = vertical ? frame.clientHeight : frame.clientWidth;
+    const trackStyle = getComputedStyle(track ?? frame);
+    gapPx = parseFloat(vertical ? trackStyle.rowGap : trackStyle.columnGap) || 0;
     radius = parseFloat(getComputedStyle(frame).borderTopLeftRadius) || 0; // same --radius as the cards
-    centers = items.map((el) => el.offsetLeft + el.offsetWidth / 2);
-    halfWidths = items.map((el) => el.offsetWidth / 2);
+    centers = items.map((el) => (vertical ? el.offsetTop + el.offsetHeight / 2 : el.offsetLeft + el.offsetWidth / 2));
+    halfWidths = items.map((el) => (vertical ? el.offsetHeight : el.offsetWidth) / 2);
   };
   measure();
 
@@ -132,7 +143,8 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
 
   // Track x values: off-screen right → first card parked beside the shrunken
   // video → each item centred in turn (see the timeline).
-  const offscreenX = () => (config.entryDistance / 100) * frameWidth - (items[0]?.offsetLeft ?? 0);
+  const offscreenX = () =>
+    (config.entryDistance / 100) * frameWidth - ((vertical ? items[0]?.offsetTop : items[0]?.offsetLeft) ?? 0);
   const rowStartX = () => {
     const heroHalf = (frameWidth / 2) * config.heroScale * depthFactor(config.heroDepth);
     const firstLeft = heroHalf / trackFactor + gapPx; // distance from centre, in track space
@@ -173,10 +185,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const heroZ = heroState.z - Math.abs(dh) * config.curveDepth;
     const heroDeg = dh * config.curveRotate;
     gsap.set(hero, {
-      x: heroX,
+      [AX]: heroX,
       z: heroZ,
       scale: heroState.scale,
-      rotateY: heroDeg,
+      [ROT]: turn(heroDeg),
       borderRadius: cornerRadius,
     });
     // The fog on the video's sides and the background objects fade in as the
@@ -186,7 +198,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     // Background objects: the layer drifts with the row (deeper objects move
     // slower on screen thanks to perspective) and some objects slowly turn.
     if (depthField) {
-      const layerX = (trackState.x - offscreenX()) * config.depthParallax;
+      // The room and objects drift sideways with a horizontal row; with a
+      // vertical row (phones) they stay put.
+      const layerX = vertical ? 0 : (trackState.x - offscreenX()) * config.depthParallax;
       gsap.set(depthField, { x: layerX });
       // Cancel the layer's drift on the floor except for the part within one
       // 200px grid cell: the pattern repeats, so it looks continuous.
@@ -201,7 +215,8 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
 
     if (!track) return;
 
-    // Keep the first card at least one gap clear of the video's right edge
+    // Keep the first card at least one gap clear of the video's trailing
+    // edge (right, or bottom on phones)
     // at every moment and viewport size (both edges measured on screen,
     // including their curve), so they never overlap.
     const heroRight = project(heroX, heroZ, half * heroState.scale, heroDeg);
@@ -218,10 +233,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       x += (minLeft - left) / trackFactor;
     }
 
-    gsap.set(track, { x, z: config.trackDepth });
+    gsap.set(track, { [AX]: x, z: config.trackDepth });
     items.forEach((el, i) => {
       const d = bend((centers[i] + x - half) / half);
-      gsap.set(el, { rotateY: d * config.curveRotate, z: -Math.abs(d) * config.curveDepth, transformOrigin: "50% 50%" });
+      gsap.set(el, { [ROT]: turn(d * config.curveRotate), z: -Math.abs(d) * config.curveDepth, transformOrigin: "50% 50%" });
     });
   };
   const refreshPositions = () => {

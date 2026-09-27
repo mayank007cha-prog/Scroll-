@@ -49,7 +49,7 @@ ffmpeg -i hero-video.mp4 -vf "crop=1920:856:0:0" -an -c:v libx264 -crf 24 -g 1 \
 
 ## Mobile and accessibility
 
-- On screens up to 767px wide, the smaller depth and curve values from `mobileOverrides` are used and the cards get wider.
+- On screens up to 767px wide (`mobileOverrides`), the row travels **vertically**: cards stack in a column and glide bottom → top with the same easing, rests and settle, and the curve bends top and bottom instead of left and right. Depth and curve values are softer and the cards are wider.
 - With `prefers-reduced-motion: reduce` there is no pinning, no 3D and no Lenis. Everything becomes a plain vertical stack, and the video gets native controls.
 - Only `transform` and `opacity` are animated.
 
