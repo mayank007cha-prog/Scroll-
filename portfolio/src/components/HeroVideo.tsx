@@ -1,4 +1,4 @@
-import { intro } from "@/data/projects";
+import { intro, owner } from "@/data/projects";
 
 type HeroVideoProps = {
   /** H.264 MP4 (primary). */
@@ -34,6 +34,13 @@ export function HeroVideo({ src, webmSrc, poster, label = "Intro video" }: HeroV
       <div className="hero-shade" aria-hidden="true" />
       <div className="hero-grain" aria-hidden="true" />
       <div className="hero-border" aria-hidden="true" />
+      {/* Wordmark, top left of the video card. */}
+      <div className="hero-mark">
+        <span className="hero-mark__tile" aria-hidden="true">
+          {owner.initials}
+        </span>
+        <span className="hero-mark__name">{owner.name}</span>
+      </div>
       <div className="hero-intro">
         {/* Part one: on load. ScrollStage melts it away with the liquid filter. */}
         <div className="hero-intro__stage" data-intro-one>

@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { owner } from "@/data/projects";
 import "lenis/dist/lenis.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Product Designer — Portfolio",
+  title: `${owner.name} · ${owner.role}`,
   description: "Selected case studies.",
 };
 

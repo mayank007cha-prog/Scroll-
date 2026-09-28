@@ -57,6 +57,13 @@ export const projects: Project[] = [
   },
 ];
 
+/** Whose portfolio this is (wordmark on the video card, page title). */
+export const owner = {
+  name: "Mayank Chauhan",
+  initials: "MC",
+  role: "Product Designer",
+};
+
 /** Intro over the video, in two parts. Part one shows on load; as you
  *  scroll it melts away and a short "about me" paragraph appears. The
  *  paragraph quietly echoes the video: on the move, looking out, music on,
