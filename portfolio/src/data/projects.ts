@@ -60,7 +60,6 @@ export const projects: Project[] = [
 /** Whose portfolio this is (wordmark on the video card, page title). */
 export const owner = {
   name: "Mayank Chauhan",
-  initials: "MC",
   role: "Product Designer",
 };
 

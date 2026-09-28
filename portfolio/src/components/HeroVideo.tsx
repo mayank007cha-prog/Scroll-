@@ -34,11 +34,8 @@ export function HeroVideo({ src, webmSrc, poster, label = "Intro video" }: HeroV
       <div className="hero-shade" aria-hidden="true" />
       <div className="hero-grain" aria-hidden="true" />
       <div className="hero-border" aria-hidden="true" />
-      {/* Wordmark, top left of the video card. */}
+      {/* Name, top left of the video card. */}
       <div className="hero-mark">
-        <span className="hero-mark__tile" aria-hidden="true">
-          {owner.initials}
-        </span>
         <span className="hero-mark__name">{owner.name}</span>
       </div>
       <div className="hero-intro">
