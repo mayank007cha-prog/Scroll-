@@ -69,21 +69,6 @@ export const intro = {
   },
 };
 
-/** Education and career card (after the case studies).
- *  TODO: placeholder entries — replace with the real roles and education. */
-export const career = {
-  label: "Career & Education",
-  title: "Where I've worked and studied.",
-  experience: [
-    { role: "UI/UX Designer", org: "Company name", period: "20XX – Present" },
-    { role: "UI/UX Designer", org: "Company name", period: "20XX – 20XX" },
-    { role: "Design Intern", org: "Company name", period: "20XX" },
-  ],
-  education: [
-    { degree: "Degree, Design / field of study", school: "University name", period: "20XX – 20XX" },
-  ],
-};
-
 export const getProject = (slug: string) => projects.find((p) => p.slug === slug);
 
 // TODO: replace the placeholder email / LinkedIn / resume links.

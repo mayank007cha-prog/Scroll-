@@ -31,7 +31,7 @@ Colour is minimal and has one job each: `--accent` (violet) marks things you can
 | File | Purpose |
 | --- | --- |
 | `src/lib/sceneConfig.ts` | **All** animation values (perspective, depths, curve, scrub, distances) plus the mobile overrides |
-| `src/data/projects.ts` | Case-study content (title, one-liner, description), owner, intro copy, career & education card, footer/contact links |
+| `src/data/projects.ts` | Case-study content (title, one-liner, description), owner, intro copy, footer/contact links |
 | `src/components/ScrollStage.tsx` | Pin, timeline, Lenis, video scrubbing, curve |
 | `src/components/{HeroVideo,SceneFrame,ProjectStack,ProjectCard,Footer}.tsx` | Presentational pieces |
 | `src/components/DepthField.tsx` | Background objects and their placement (x, y, z, size, spin) |
