@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 // ---- Dummy content (same for every case study until the real copy lands) ----
 
 const facts = [
-  { label: "Role", value: "Lead Product Designer" },
+  { label: "Role", value: "Lead UI/UX Designer" },
   { label: "Timeline", value: "12 weeks" },
   { label: "Team", value: "PM, 4 engineers, researcher" },
   { label: "Platform", value: "Web and mobile" },

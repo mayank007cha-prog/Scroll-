@@ -92,7 +92,7 @@ const shapes: Record<DepthObject["kind"], ReactNode> = {
       <svg viewBox="0 0 24 24">
         <path d="M3 2l17 8.5-7.2 1.8L9.6 20z" />
       </svg>
-      <span>Product designer</span>
+      <span>UI/UX designer</span>
     </div>
   ),
   selection: (

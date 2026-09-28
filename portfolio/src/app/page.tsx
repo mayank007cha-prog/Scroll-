@@ -1,3 +1,4 @@
+import { CareerCard } from "@/components/CareerCard";
 import { DepthField } from "@/components/DepthField";
 import { Footer } from "@/components/Footer";
 import { HeroVideo } from "@/components/HeroVideo";
@@ -12,6 +13,7 @@ export default function Home() {
         <DepthField />
         <HeroVideo src="/video/hero.mp4" webmSrc="/video/hero.webm" poster="/video/hero-poster.jpg" />
         <ProjectStack projects={projects}>
+          <CareerCard />
           <Footer {...contact} />
         </ProjectStack>
       </ScrollStage>
