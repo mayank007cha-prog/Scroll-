@@ -267,7 +267,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
 
   // 1b. The intro text changes while the video plays: part one melts away
   //     (liquid ripple + blur, lines lifting off one after another), then the
-  //     three points rise in one by one. Scrubbed, so it reverses on scroll up.
+  //     "about me" label and paragraph rise in. Scrubbed, so it reverses.
   const V = config.videoDistance;
   const introOne = hero.querySelector<HTMLElement>("[data-intro-one]");
   const introOneParts = introOne ? Array.from(introOne.children) : [];

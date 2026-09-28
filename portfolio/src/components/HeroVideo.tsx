@@ -44,15 +44,15 @@ export function HeroVideo({ src, webmSrc, poster, label = "Intro video" }: HeroV
           <p className="hero-intro__subtext">{intro.subtext}</p>
           <span className="hero-intro__hint">{intro.hint} ↓</span>
         </div>
-        {/* Part two: appears point by point as the video plays. */}
-        <ul className="hero-intro__stage hero-intro__points" data-intro-two>
-          {intro.points.map((p) => (
-            <li key={p.label} className="hero-intro__point" data-intro-point>
-              <strong>{p.label}</strong>
-              <span>{p.text}</span>
-            </li>
-          ))}
-        </ul>
+        {/* Part two: a short paragraph that rises in as the video plays. */}
+        <div className="hero-intro__stage" data-intro-two>
+          <p className="hero-intro__eyebrow glass" data-intro-point>
+            <span>{intro.about.label}</span>
+          </p>
+          <p className="hero-intro__about" data-intro-point>
+            {intro.about.text}
+          </p>
+        </div>
       </div>
       {/* Liquid dissolve: turbulence-driven displacement plus blur. ScrollStage
           scrubs the displacement and blur amounts. */}

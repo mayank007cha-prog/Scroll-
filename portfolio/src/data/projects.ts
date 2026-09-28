@@ -58,18 +58,18 @@ export const projects: Project[] = [
 ];
 
 /** Intro over the video, in two parts. Part one shows on load; as you
- *  scroll it melts away and the three points appear. The points quietly
- *  echo the video: always on the move, looking out, a mind on the problem. */
+ *  scroll it melts away and a short "about me" paragraph appears. The
+ *  paragraph quietly echoes the video: on the move, looking out, music on,
+ *  a mind on the problem. */
 export const intro = {
   eyebrow: "Product Designer",
   title: "I design clear products for complicated problems.",
   subtext: "Checkout, payments, healthcare, safety and design systems.",
   hint: "Scroll to explore",
-  points: [
-    { label: "Observe", text: "I've lived in many cities. I notice how people really live and work." },
-    { label: "Adapt", text: "New domain, new team, new constraints. I find my footing fast." },
-    { label: "Persist", text: "A good problem stays with me until it's solved." },
-  ],
+  about: {
+    label: "About me",
+    text: "I grew up moving between cities, so I learned early to watch closely and adapt quickly. That's still how I work: I notice how people really use things, settle into new problems fast, and stay with them until they're solved. Usually with music on.",
+  },
 };
 
 export const getProject = (slug: string) => projects.find((p) => p.slug === slug);
