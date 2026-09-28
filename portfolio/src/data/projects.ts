@@ -65,7 +65,7 @@ export const intro = {
   hint: "Scroll to explore",
   about: {
     label: "About me",
-    text: "I grew up moving between cities, so I learned early to watch closely and adapt quickly. That's still how I work: I notice how people really use things, settle into new problems fast, and stay with them until they're solved. Usually with music on.",
+    text: "I grew up moving from city to city. It taught me to observe closely and adapt fast. I design the same way: I watch how people use things, learn new problems quickly, and keep going until they're solved. Usually with music on.",
   },
 };
 
