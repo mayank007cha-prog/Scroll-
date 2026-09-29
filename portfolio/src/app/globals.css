@@ -818,7 +818,7 @@ a:focus-visible {
   color: var(--ink-3);
 }
 
-/* ---- Wave-line texture behind card text ----------------------------------- */
+/* ---- Wave-line texture on the video card ----------------------------------- */
 
 .wave-lines {
   position: absolute;
@@ -831,18 +831,10 @@ a:focus-visible {
   stroke: rgb(255 255 255 / 0.16);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-  /* Clear where the text sits (bottom-left), strongest toward the edges. */
-  -webkit-mask-image: radial-gradient(ellipse 80% 75% at 28% 78%, transparent 22%, #000 88%);
-  mask-image: radial-gradient(ellipse 80% 75% at 28% 78%, transparent 22%, #000 88%);
 }
 
 .wave-lines path {
   vector-effect: non-scaling-stroke;
-}
-
-.glass > .wave-lines {
-  position: absolute;
-  z-index: 0;
 }
 
 /* Video card: clear around the intro text (left, centred) and over the
