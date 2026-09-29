@@ -818,6 +818,55 @@ a:focus-visible {
   color: var(--ink-3);
 }
 
+/* ---- Wave-line texture behind card text ----------------------------------- */
+
+.wave-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
+  fill: none;
+  stroke: rgb(255 255 255 / 0.16);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  /* Clear where the text sits (bottom-left), strongest toward the edges. */
+  -webkit-mask-image: radial-gradient(ellipse 80% 75% at 28% 78%, transparent 22%, #000 88%);
+  mask-image: radial-gradient(ellipse 80% 75% at 28% 78%, transparent 22%, #000 88%);
+}
+
+.wave-lines path {
+  vector-effect: non-scaling-stroke;
+}
+
+.glass > .wave-lines {
+  position: absolute;
+  z-index: 0;
+}
+
+/* Footer text is left and centred vertically; lines fade out beyond its edges too. */
+.wave-lines--footer {
+  stroke: rgb(255 255 255 / 0.09);
+  -webkit-mask-image:
+    radial-gradient(ellipse 70% 80% at 26% 50%, transparent 25%, #000 80%),
+    linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    radial-gradient(ellipse 70% 80% at 26% 50%, transparent 25%, #000 80%),
+    linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-composite: intersect;
+}
+
+.footer-card {
+  position: relative;
+}
+
+.footer-card > :not(.wave-lines) {
+  position: relative;
+  z-index: 1;
+}
+
 /* ---- Reduced motion: no pinning or 3D, a plain vertical stack ------------- */
 
 @media (prefers-reduced-motion: reduce) {

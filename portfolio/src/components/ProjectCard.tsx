@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Project } from "@/data/projects";
+import { WaveLines } from "./WaveLines";
 
 type ProjectCardProps = {
   project: Project;
@@ -32,6 +33,7 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
         <span className="project-card__index">Case study {String(index + 1).padStart(2, "0")}</span>
       </div>
       <article className="project-card__body glass">
+        <WaveLines />
         <h2 className="project-card__title">{project.title}</h2>
         <p className="project-card__line">{project.oneLiner}</p>
         <span className="project-card__cta">View case study →</span>
