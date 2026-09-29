@@ -841,8 +841,8 @@ a:focus-visible {
    and softly around the intro text. */
 .wave-lines--hero {
   z-index: 1;
-  stroke: rgb(255 255 255 / 0.2);
-  --wave-side: linear-gradient(90deg, #000 0%, rgb(0 0 0 / 0.6) 22%, transparent 48%);
+  stroke: rgb(255 255 255 / 0.13);
+  --wave-side: linear-gradient(90deg, #000 0%, rgb(0 0 0 / 0.5) 12%, transparent 28%);
   --wave-text: radial-gradient(ellipse 30% 30% at 24% 50%, rgb(0 0 0 / 0.25) 55%, #000 100%);
   -webkit-mask-image: var(--wave-side), var(--wave-text);
   -webkit-mask-composite: source-in;
@@ -954,7 +954,7 @@ a:focus-visible {
   }
 
   .wave-lines--hero {
-    --wave-side: linear-gradient(90deg, #000 0%, rgb(0 0 0 / 0.5) 18%, transparent 40%);
+    --wave-side: linear-gradient(90deg, #000 0%, rgb(0 0 0 / 0.5) 10%, transparent 24%);
     --wave-text: radial-gradient(ellipse 70% 22% at 30% 80%, rgb(0 0 0 / 0.25) 55%, #000 100%);
   }
 
