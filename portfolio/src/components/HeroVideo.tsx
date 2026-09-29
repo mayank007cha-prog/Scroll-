@@ -1,4 +1,5 @@
 import { intro, owner } from "@/data/projects";
+import { WaveLines } from "./WaveLines";
 
 type HeroVideoProps = {
   /** H.264 MP4 (primary). */
@@ -32,6 +33,7 @@ export function HeroVideo({ src, webmSrc, poster, label = "Intro video" }: HeroV
       </video>
       <div className="hero-fog" aria-hidden="true" />
       <div className="hero-shade" aria-hidden="true" />
+      <WaveLines className="wave-lines--hero" />
       <div className="hero-grain" aria-hidden="true" />
       <div className="hero-border" aria-hidden="true" />
       {/* Name, top left of the video card. */}

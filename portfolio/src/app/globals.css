@@ -845,26 +845,13 @@ a:focus-visible {
   z-index: 0;
 }
 
-/* Footer text is left and centred vertically; lines fade out beyond its edges too. */
-.wave-lines--footer {
-  stroke: rgb(255 255 255 / 0.09);
-  -webkit-mask-image:
-    radial-gradient(ellipse 70% 80% at 26% 50%, transparent 25%, #000 80%),
-    linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    radial-gradient(ellipse 70% 80% at 26% 50%, transparent 25%, #000 80%),
-    linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-  mask-composite: intersect;
-}
-
-.footer-card {
-  position: relative;
-}
-
-.footer-card > :not(.wave-lines) {
-  position: relative;
+/* Video card: clear around the intro text (left, centred) and over the
+   person, strongest toward the card's edges. */
+.wave-lines--hero {
   z-index: 1;
+  stroke: rgb(255 255 255 / 0.2);
+  -webkit-mask-image: radial-gradient(ellipse 80% 78% at 52% 52%, transparent 52%, #000 100%);
+  mask-image: radial-gradient(ellipse 80% 78% at 52% 52%, transparent 52%, #000 100%);
 }
 
 /* ---- Reduced motion: no pinning or 3D, a plain vertical stack ------------- */
@@ -968,6 +955,11 @@ a:focus-visible {
 
   .hero-mark__name {
     font-size: 15px;
+  }
+
+  .wave-lines--hero {
+    -webkit-mask-image: radial-gradient(ellipse 88% 72% at 50% 58%, transparent 52%, #000 100%);
+    mask-image: radial-gradient(ellipse 88% 72% at 50% 58%, transparent 52%, #000 100%);
   }
 
   .hero-intro {
