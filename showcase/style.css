@@ -1,0 +1,484 @@
+:root {
+  --ink: #f5f3f0;
+  --ink-soft: rgba(245, 243, 240, 0.66);
+  --ink-faint: rgba(245, 243, 240, 0.42);
+  --night: #0b0b0e;
+  /* Updated from JS as the environment changes (space-separated RGB). */
+  --accent-rgb: 255 122 56;
+  --accent: rgb(var(--accent-rgb));
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+  display: block;
+  max-width: none;
+}
+
+/* ---------- Scroll track + pinned stage ---------- */
+
+.kb-hero {
+  position: relative;
+  /* One viewport to pin, plus scroll distance for each board change. */
+  height: calc(100vh + 2 * 130vh + 30vh);
+  height: calc(100svh + 2 * 130svh + 30svh);
+}
+
+.kb-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 70% at 50% 60%, rgb(var(--accent-rgb) / 0.12), transparent 70%),
+    var(--night);
+  opacity: 0;
+  transition: opacity 1.2s var(--ease);
+}
+
+.is-ready .kb-sticky {
+  opacity: 1;
+}
+
+/* ---------- Scene (photo pixel space) ---------- */
+
+.kb-scene {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* Size and offset are written by main.js (cover-fit to the photo). */
+  width: var(--sw, 100vw);
+  height: var(--sh, 56vw);
+  transform: translate3d(var(--sx, 0px), var(--sy, 0px), 0);
+}
+
+.kb-env,
+.kb-hands {
+  position: absolute;
+  inset: 0;
+}
+
+.kb-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  will-change: opacity;
+}
+
+.kb-bg:first-child {
+  opacity: 1;
+}
+
+/* The hands layer is a second copy of the photo stack, cut to the hand and
+   forearm silhouettes. It sits above the keyboards, so they pass under. */
+.kb-hands {
+  -webkit-mask-image: url(assets/hands-mask.png);
+  mask-image: url(assets/hands-mask.png);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  pointer-events: none;
+}
+
+/* Soft key-light pooled on the mat under the active board. */
+.kb-spot {
+  position: absolute;
+  left: 51.8%;
+  top: 81.6%;
+  width: 62%;
+  height: 46%;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(closest-side, rgb(var(--accent-rgb) / 0.55), rgb(var(--accent-rgb) / 0.16) 55%, transparent),
+    radial-gradient(closest-side, rgba(255, 255, 255, 0.10), transparent 70%);
+  mix-blend-mode: screen;
+  opacity: var(--spot, 1);
+  pointer-events: none;
+}
+
+/* ---------- Keyboards ---------- */
+
+.kb-boards {
+  position: absolute;
+  inset: 0;
+}
+
+.kb-board {
+  position: absolute;
+  /* left / top / width in % of the photo are set by main.js */
+  transform-origin: 50% 60%;
+  will-change: transform, opacity;
+}
+
+.kb-board img {
+  position: relative;
+  width: 100%;
+  height: auto;
+  filter:
+    drop-shadow(0 0 0.6em rgb(var(--accent-rgb) / var(--glow, 0)))
+    drop-shadow(0 0.35em 0.5em rgba(0, 0, 0, 0.55));
+}
+
+/* Contact shadow so the board sits *on* the mat rather than floating. */
+.kb-shadow {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: -9%;
+  height: 34%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.35) 60%, transparent);
+  filter: blur(6px);
+  transform: scaleY(var(--lift-shadow, 1));
+  opacity: calc(0.9 - var(--lift, 0) * 0.5);
+}
+
+/* Specular sweep, clipped to the board's own silhouette. */
+.kb-sheen {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: var(--kb);
+  mask-image: var(--kb);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  background: linear-gradient(105deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.0) 40%,
+      rgba(255, 255, 255, 0.38) 50%,
+      rgba(255, 255, 255, 0.0) 60%,
+      transparent 65%);
+  background-size: 250% 100%;
+  background-position: var(--sheen-x, 150%) 0;
+  background-repeat: no-repeat;
+  mix-blend-mode: overlay;
+  opacity: var(--sheen, 0);
+  pointer-events: none;
+}
+
+/* Gentle idle shimmer on whichever board is in focus. */
+.kb-board.is-active .kb-sheen {
+  animation: kb-idle-sheen 7s var(--ease) 1.2s infinite;
+}
+
+@keyframes kb-idle-sheen {
+  0%   { background-position: 150% 0; opacity: 0; }
+  8%   { opacity: 0.85; }
+  30%  { background-position: -50% 0; opacity: 0; }
+  100% { background-position: -50% 0; opacity: 0; }
+}
+
+/* ---------- Legibility + focus shading ---------- */
+
+.kb-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(6, 6, 9, 0.86) 0%, rgba(6, 6, 9, 0.55) 16%, rgba(6, 6, 9, 0) 34%),
+    radial-gradient(85% 75% at 52% 82%, transparent 45%, rgba(4, 4, 6, 0.55) 100%);
+}
+
+/* ---------- Copy ---------- */
+
+.kb-headline {
+  position: absolute;
+  left: 50%;
+  top: clamp(20px, 4.2vh, 44px);
+  transform: translateX(-50%);
+  margin: 0;
+  white-space: nowrap;
+  text-align: center;
+  font-size: clamp(30px, 3.4vw, 54px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+}
+
+.kb-headline-serif {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin-left: 0.12em;
+  font-size: 1.12em;
+}
+
+.kb-info {
+  position: absolute;
+  left: 50%;
+  top: calc(clamp(20px, 4.2vh, 44px) + clamp(30px, 3.4vw, 54px) + clamp(10px, 1.8vh, 20px));
+  width: min(560px, 92vw);
+  transform: translateX(-50%);
+  display: grid;
+}
+
+.kb-product {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+  will-change: opacity, transform, filter;
+  pointer-events: none;
+}
+
+.kb-product.is-active {
+  pointer-events: auto;
+}
+
+.kb-name {
+  margin: 0;
+  font-size: clamp(19px, 1.55vw, 26px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.kb-specs {
+  margin: 6px 0 0;
+  font-size: clamp(13px, 0.95vw, 15px);
+  color: var(--ink-soft);
+  letter-spacing: 0.005em;
+}
+
+.kb-specs i {
+  font-style: normal;
+  margin: 0 0.35em;
+  color: var(--ink-faint);
+}
+
+.kb-buy {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: clamp(10px, 1.4vh, 16px);
+}
+
+.kb-price {
+  margin: 0;
+  font-size: clamp(16px, 1.15vw, 19px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.kb-price s {
+  margin-left: 6px;
+  font-weight: 400;
+  font-size: 0.8em;
+  color: var(--ink-faint);
+}
+
+.kb-cta {
+  --pad: 22px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 var(--pad);
+  border-radius: 999px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: 0 0 0 0 rgb(var(--accent-rgb) / 0), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: background 0.4s var(--ease), border-color 0.4s var(--ease), box-shadow 0.5s var(--ease);
+}
+
+.kb-cta span {
+  transition: transform 0.45s var(--ease);
+}
+
+.kb-cta:hover,
+.kb-cta:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgb(var(--accent-rgb) / 0.75);
+  box-shadow: 0 0 28px -4px rgb(var(--accent-rgb) / 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  outline: none;
+}
+
+.kb-cta:hover span,
+.kb-cta:focus-visible span {
+  transform: translateX(4px);
+}
+
+/* ---------- Progress ---------- */
+
+.kb-progress {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(16px, 3.2vh, 32px);
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+.kb-progress button {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 8px 4px;
+  margin: 0;
+  cursor: pointer;
+  color: var(--ink-faint);
+  font: 500 11px/1 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  white-space: nowrap;
+  transition: color 0.5s var(--ease);
+}
+
+.kb-progress button.is-active,
+.kb-progress button:hover,
+.kb-progress button:focus-visible {
+  color: var(--ink);
+  outline: none;
+}
+
+.kb-progress-bar {
+  display: block;
+  width: clamp(56px, 6vw, 84px);
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.kb-progress-bar span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  box-shadow: 0 0 10px rgb(var(--accent-rgb) / 0.9);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--fill, 0));
+}
+
+.kb-hint {
+  position: absolute;
+  right: clamp(16px, 2.5vw, 36px);
+  bottom: clamp(22px, 3.6vh, 38px);
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  opacity: var(--hint, 1);
+  transition: opacity 0.6s var(--ease);
+}
+
+/* ---------- Outro ---------- */
+
+.kb-outro {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 80px 16px;
+  text-align: center;
+  background: linear-gradient(to bottom, var(--night), #121216);
+}
+
+.kb-outro-eyebrow {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(28px, 4vw, 52px);
+  letter-spacing: -0.01em;
+}
+
+.kb-cta-lg {
+  height: 52px;
+  font-size: 16px;
+  --pad: 28px;
+}
+
+/* ---------- Portrait / phones ---------- */
+
+@media (max-aspect-ratio: 1/1) {
+  /* The photo is framed around the keyboard band with copy above and below
+     (like the reference layout), so feather its top and bottom edges. */
+  .kb-scene {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 86%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 86%, transparent 100%);
+  }
+
+  .kb-shade {
+    background:
+      linear-gradient(to bottom, rgba(6, 6, 9, 0.8) 0%, rgba(6, 6, 9, 0) 26%),
+      radial-gradient(120% 60% at 50% 55%, transparent 50%, rgba(4, 4, 6, 0.5) 100%);
+  }
+
+  .kb-headline {
+    top: max(28px, env(safe-area-inset-top));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: clamp(36px, 10.5vw, 60px);
+    line-height: 1;
+  }
+
+  .kb-headline-serif {
+    margin-left: 0;
+  }
+
+  .kb-info {
+    top: auto;
+    bottom: calc(clamp(16px, 3.2vh, 32px) + 54px);
+  }
+
+  .kb-name {
+    font-size: 24px;
+  }
+
+  .kb-specs {
+    font-size: 14px;
+  }
+
+  .kb-buy {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .kb-hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-board.is-active .kb-sheen {
+    animation: none;
+  }
+}
