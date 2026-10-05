@@ -447,42 +447,6 @@ body.is-loading div.Product {
     transform: translate3d(0, -50%, 0);
 }
 
-/* ----------------------------------------------------------------- Next */
-
-section.Next {
-    position: relative;
-    min-height: 90vh;
-    display: grid;
-    place-items: center;
-    padding: 10vh 6vw;
-    background: var(--tint);
-}
-
-div.Next-inner {
-    max-width: 640px;
-    text-align: center;
-}
-
-p.Next-eyebrow {
-    font-size: 12px;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-}
-
-section.Next h2 {
-    margin: 0 0 18px;
-    font-size: clamp(30px, 4.4vw, 56px);
-    font-weight: 600;
-    letter-spacing: -0.035em;
-    line-height: 1.05;
-}
-
-section.Next p {
-    line-height: 1.6;
-    color: var(--ink-soft);
-}
-
 /* -------------------------------------------------------------- Mobile */
 
 @media (max-width: 760px) {
