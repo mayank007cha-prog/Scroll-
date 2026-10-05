@@ -415,12 +415,17 @@ function floorCubes(plane: HTMLElement, frame: HTMLElement) {
   let active = false;
   let busy = false;
   let up = false;
+  let rising = false;
   let height = 0;
   let lastCell = "";
   let popTimer = 0;
   if (!cube || !probe) return { setActive() {}, destroy() {} };
+  // Fade the faces, never the cube itself: opacity below 1 on a 3D parent
+  // flattens it, so the cube would lie flat until the fade ended.
+  const faces = gsap.utils.toArray<HTMLElement>(".floor-cube__face", cube);
 
-  gsap.set(cube, { opacity: 0, "--s": `${cell}px`, "--h": "0px" });
+  gsap.set(cube, { "--s": `${cell}px`, "--h": "0px" });
+  gsap.set(faces, { opacity: 0 });
   gsap.set(probe, { width: cell, height: cell });
 
   // Floor cells that sit fully in the lower right of the frame.
@@ -453,39 +458,44 @@ function floorCubes(plane: HTMLElement, frame: HTMLElement) {
     const options = heights.filter((h) => h !== height);
     height = options[Math.floor(Math.random() * options.length)];
     lastCell = pick.key;
-    busy = true;
+    // Clickable (top and sides) from the moment it starts to rise.
+    up = true;
+    rising = true;
+    cube.classList.add("is-up");
     gsap.set(cube, { left: pick.c * cell, top: pick.r * cell, "--h": "0px" });
-    gsap.to(cube, { opacity: 1, duration: 0.6, ease: "sine.out" });
-    // A long, soft rise that glides to a stop.
-    setHeight(height, 1.8, "power3.out", () => {
-      busy = false;
-      up = true;
-      cube.classList.add("is-up");
+    gsap.to(faces, { opacity: 1, duration: 0.7, ease: "sine.out", overwrite: true });
+    // A long, soft rise: eases in from the floor and glides to a stop.
+    setHeight(height, 1.9, "power2.inOut", () => {
+      rising = false;
       if (cube.matches(":hover")) onEnter();
     });
   };
 
   // Touch feedback: the cube lifts a little under the pointer.
   const onEnter = () => {
-    if (!up || busy) return;
+    if (!up || busy || rising) return;
     setHeight(height + 16, 0.6, "power2.out");
   };
   const onLeave = () => {
-    if (!up || busy) return;
+    if (!up || busy || rising) return;
     setHeight(height, 0.7, "power2.out");
   };
 
   const sink = (then?: () => void) => {
     busy = true;
     up = false;
+    rising = false;
     cube.classList.remove("is-up");
     gsap.killTweensOf(cube);
+    gsap.killTweensOf(faces);
+    gsap.set(faces, { opacity: 1 });
+    const now = parseFloat(cube.style.getPropertyValue("--h")) || 0; // may still be rising
     // A gentle press, then it settles back into the floor.
     gsap
       .timeline({ onComplete: () => { busy = false; then?.(); } })
-      .to(cube, { "--h": `${Math.max(height * 0.9, height - 24)}px`, duration: 0.22, ease: "power2.out" })
+      .to(cube, { "--h": `${Math.max(now * 0.9, now - 24)}px`, duration: 0.22, ease: "power2.out" })
       .to(cube, { "--h": "0px", duration: 1.2, ease: "power3.inOut" })
-      .to(cube, { opacity: 0, duration: 0.35, ease: "sine.in" }, "-=0.3");
+      .to(faces, { opacity: 0, duration: 0.4, ease: "sine.in" }, "-=0.35");
   };
 
   const onClick = () => {
@@ -512,6 +522,7 @@ function floorCubes(plane: HTMLElement, frame: HTMLElement) {
       cube.removeEventListener("pointerenter", onEnter);
       cube.removeEventListener("pointerleave", onLeave);
       gsap.killTweensOf(cube);
+      gsap.killTweensOf(faces);
     },
   };
 }
