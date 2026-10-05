@@ -18,6 +18,7 @@
   const sceneImgs = [...document.querySelectorAll('.Hero-scene')]
   const kbImgs = [...document.querySelectorAll('.Product-kb')]
   const items = [...document.querySelectorAll('.Product-item')]
+  const moods = [...document.querySelectorAll('.Mood-word')]
   const cta = document.querySelector('.Product-cta')
   const counters = [...document.querySelectorAll('.Pager-current span')]
   const bars = [...document.querySelectorAll('.Pager-bars button')]
@@ -273,13 +274,14 @@
       css(img).visibility = opacity > 0 ? 'visible' : 'hidden'
     })
 
-    items.forEach((el, k) => {
+    // Product copy and the mood word above the headline roll together.
+    ;[items, moods].forEach((list) => list.forEach((el, k) => {
       const d = s - k
       const ad = Math.abs(d)
       css(el).opacity = clamp(1 - ad * 1.8, 0, 1).toFixed(4)
       css(el).transform = `translate3d(0, ${(-d * 110).toFixed(2)}%, 0)`
       css(el).filter = ad > 0.01 ? `blur(${(ad * 4).toFixed(2)}px)` : 'none'
-    })
+    }))
   }
 
   function renderPager (s, i, e) {

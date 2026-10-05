@@ -198,6 +198,64 @@ div.Product {
     transform: translate3d(calc(var(--mx) * 10px), calc(-50% + var(--my) * 8px), 0);
 }
 
+/* Headline block that sits above the keyboard in the same column. */
+div.Product-head {
+    margin-bottom: clamp(28px, 4vh, 44px);
+}
+
+p.Mood {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+/* Small glowing dot in the scene's accent colour. */
+p.Mood i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    flex: none;
+}
+
+span.Mood-words {
+    display: grid;
+    overflow: hidden;
+}
+
+span.Mood-word {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+span.Mood-word:first-child {
+    opacity: 1;
+}
+
+h1.Title {
+    margin: 0;
+    font-size: clamp(40px, 4.4vw, 70px);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    white-space: nowrap;
+}
+
+h1.Title em {
+    font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
 div.Product-stack {
     position: relative;
     aspect-ratio: 960 / 338;
@@ -450,6 +508,28 @@ body.is-loading div.Product {
 /* -------------------------------------------------------------- Mobile */
 
 @media (max-width: 760px) {
+    /* Soft fade in the scene colour behind the text block on small screens. */
+    div.Hero-stage::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 62%;
+        background: linear-gradient(to top, var(--tint) 30%, transparent);
+        opacity: 0.85;
+        pointer-events: none;
+        z-index: 3;
+    }
+
+    h1.Title {
+        font-size: 34px;
+    }
+
+    div.Product-head {
+        margin-bottom: 20px;
+    }
+
     nav.Nav-links {
         display: none;
     }
