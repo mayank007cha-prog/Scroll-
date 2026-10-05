@@ -157,33 +157,18 @@ div.Nav-inner {
 }
 
 a.Nav-brand {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    width: 112px;
+    display: block;
     flex: none;
     margin-left: 9px;
 }
 
-span.Nav-word {
-    font-weight: 300;
-    font-size: 20px;
-    line-height: 1;
-    letter-spacing: 0.08em;
-}
-
-svg.Nav-mark {
-    width: 100px;
+/* 112 × 56 in the Figma frame; the paths fill with the header colour. */
+svg.Nav-logo {
+    display: block;
+    width: 112px;
     height: auto;
-    aspect-ratio: 172 / 16;
-}
-
-svg.Nav-mark path {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.2;
-    stroke-linejoin: round;
+    aspect-ratio: 283.5 / 141.7;
+    fill: currentColor;
 }
 
 nav.Nav-links {
@@ -609,6 +594,10 @@ section.Next p {
 
     a.Nav-brand {
         margin-left: 0;
+    }
+
+    svg.Nav-logo {
+        width: 96px;
     }
 
     div.Hero-scenes {
