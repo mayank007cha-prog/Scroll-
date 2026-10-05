@@ -218,6 +218,8 @@
     setVar('--tint', rgb(tint))
     setVar('--ink', rgb(ink))
     setVar('--ink-soft', rgb(ink, 0.62))
+    // Text that sits on an ink-coloured chip (the cart count).
+    setVar('--ink-contrast', ink[0] > 128 ? '#111111' : '#f4f5f7')
     setVar('--accent', rgb(accent))
     setVar('--line', rgb(line, line[3]))
   }
