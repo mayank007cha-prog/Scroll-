@@ -18,7 +18,6 @@
   const sceneImgs = [...document.querySelectorAll('.Hero-scene')]
   const kbImgs = [...document.querySelectorAll('.Product-kb')]
   const items = [...document.querySelectorAll('.Product-item')]
-  const moods = [...document.querySelectorAll('.Mood-word')]
   const keycap = document.querySelector('.Keycap')
   const caps = [...document.querySelectorAll('.Keycap-cap')]
   const cta = document.querySelector('.Product-cta')
@@ -284,14 +283,13 @@
     })
     css(keycap).transform = `translate3d(0, ${(press * 4).toFixed(2)}px, 0) scale(${(1 - press * 0.06).toFixed(4)})`
 
-    // Product copy and the mood word above the headline roll together.
-    ;[items, moods].forEach((list) => list.forEach((el, k) => {
+    items.forEach((el, k) => {
       const d = s - k
       const ad = Math.abs(d)
       css(el).opacity = clamp(1 - ad * 1.8, 0, 1).toFixed(4)
       css(el).transform = `translate3d(0, ${(-d * 110).toFixed(2)}%, 0)`
       css(el).filter = ad > 0.01 ? `blur(${(ad * 4).toFixed(2)}px)` : 'none'
-    }))
+    })
   }
 
   function renderPager (s, i, e) {

@@ -297,29 +297,6 @@ span.Keycap--sunset {
     --cap-glow: rgba(255, 140, 90, 0.35);
 }
 
-/* Same italic serif as "Your vibe.", so the mood reads as part of it. */
-span.Mood-words {
-    display: grid;
-    overflow: hidden;
-    padding: 2px 0;
-    font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
-    font-style: italic;
-    font-size: 22px;
-    line-height: 1.1;
-    color: var(--ink-soft);
-}
-
-span.Mood-word {
-    grid-area: 1 / 1;
-    white-space: nowrap;
-    opacity: 0;
-    will-change: transform, opacity;
-}
-
-span.Mood-word:first-child {
-    opacity: 1;
-}
-
 h1.Title {
     margin: 0;
     font-size: clamp(40px, 4.4vw, 70px);
