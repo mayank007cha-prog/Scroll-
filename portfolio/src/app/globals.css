@@ -416,8 +416,8 @@ a:focus-visible {
 }
 
 /* Floor cubes: a plane laid exactly over the floor (same box and
-   transform), holding one cube that rises out of a cell. Line style like
-   the other objects; the side facing the viewer wears the CTA violet. */
+   transform), holding one cube that rises out of a cell and fills it. Line
+   style like the other objects; the top wears the CTA violet. */
 .depth-cubes {
   position: absolute;
   top: 100%;
@@ -432,8 +432,6 @@ a:focus-visible {
 
 .floor-cube__probe {
   position: absolute;
-  width: calc(240px - 72px);
-  height: calc(240px - 72px);
   visibility: hidden;
 }
 
@@ -453,19 +451,36 @@ a:focus-visible {
 
 .floor-cube__face {
   position: absolute;
-  border: 1.5px solid rgb(var(--fg) / 0.4);
-  background: rgb(20 20 24 / 0.94);
-  transition: border-color 0.3s;
+  border: 1.5px solid rgb(var(--fg) / 0.36);
+  background: rgb(20 20 24);
+  transition: border-color 0.6s ease, filter 0.6s ease;
 }
 
 .floor-cube.is-up:hover .floor-cube__face {
-  border-color: rgb(var(--fg) / 0.6);
+  border-color: rgb(var(--fg) / 0.55);
 }
 
+/* Top: the CTA violet, with the same grain as the button. */
 .floor-cube__face--top {
   inset: 0;
-  background: rgb(34 34 40 / 0.96);
+  overflow: hidden;
+  border-color: rgb(255 255 255 / 0.22);
+  background: linear-gradient(160deg, rgb(112 96 214), rgb(76 62 170));
   transform: translateZ(var(--h));
+}
+
+.floor-cube__face--top::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise);
+  background-size: 120px;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+}
+
+.floor-cube.is-up:hover .floor-cube__face--top {
+  filter: brightness(1.14);
 }
 
 /* Side walls stand up from the cube's footprint (+z is "up" off the floor). */
@@ -479,23 +494,7 @@ a:focus-visible {
 }
 
 .floor-cube__face--back { top: 0; }
-.floor-cube__face--front {
-  top: 100%;
-  overflow: hidden;
-  border-color: rgb(255 255 255 / 0.22);
-  background: linear-gradient(0deg, rgb(104 88 206), rgb(76 62 170));
-}
-
-/* Same grain as the CTA button. */
-.floor-cube__face--front::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: var(--noise);
-  background-size: 120px;
-  opacity: 0.3;
-  mix-blend-mode: overlay;
-}
+.floor-cube__face--front { top: 100%; }
 
 .floor-cube__face--left,
 .floor-cube__face--right {

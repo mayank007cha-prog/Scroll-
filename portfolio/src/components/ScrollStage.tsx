@@ -402,27 +402,28 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
 
 /**
  * A small game on the floor at the end of the row: one cube rises out of a
- * floor cell; click it and it sinks back while another rises in a different
- * cell, at a different height. Cells are picked from those visible in the
- * lower right of the frame, so they work at any viewport size.
+ * floor cell, filling it exactly; click it and it settles back into the
+ * floor while another rises in a different cell, at a different height.
+ * Cells are picked from those visible in the lower right of the frame, so it
+ * works at any viewport size. All motion is slow and eased for a calm feel.
  */
 function floorCubes(plane: HTMLElement, frame: HTMLElement) {
   const cube = plane.querySelector<HTMLElement>("[data-cube]");
   const probe = plane.querySelector<HTMLElement>("[data-cube-probe]");
-  const cell = GRID;
-  const inset = 36; // gap between the cube and its cell's lines
+  const cell = GRID; // the cube's footprint is one whole grid cell
   const heights = [90, 130, 170, 210, 250, 290];
   let active = false;
   let busy = false;
   let up = false;
+  let height = 0;
   let lastCell = "";
-  let lastHeight = 0;
   let popTimer = 0;
   if (!cube || !probe) return { setActive() {}, destroy() {} };
 
-  gsap.set(cube, { opacity: 0, "--s": `${cell - inset * 2}px`, "--h": "0px" });
+  gsap.set(cube, { opacity: 0, "--s": `${cell}px`, "--h": "0px" });
+  gsap.set(probe, { width: cell, height: cell });
 
-  // Floor cells whose footprint sits fully in the lower right of the frame.
+  // Floor cells that sit fully in the lower right of the frame.
   const visibleCells = () => {
     const f = frame.getBoundingClientRect();
     const cols = Math.floor(plane.offsetWidth / cell);
@@ -430,11 +431,11 @@ function floorCubes(plane: HTMLElement, frame: HTMLElement) {
     const found = [];
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        probe.style.left = `${c * cell + inset}px`;
-        probe.style.top = `${r * cell + inset}px`;
+        probe.style.left = `${c * cell}px`;
+        probe.style.top = `${r * cell}px`;
         const b = probe.getBoundingClientRect();
         const inside =
-          b.left > f.left + f.width * 0.6 && b.right < f.right - 16 && b.bottom < f.bottom - 12 && b.top > f.top + f.height * 0.55;
+          b.left > f.left + f.width * 0.58 && b.right < f.right - 16 && b.bottom < f.bottom - 12 && b.top > f.top + f.height * 0.55;
         if (inside) found.push({ key: `${c}:${r}`, c, r, size: b.width * b.height });
       }
     }
@@ -442,27 +443,36 @@ function floorCubes(plane: HTMLElement, frame: HTMLElement) {
     return found.sort((a, b) => b.size - a.size).slice(0, 6);
   };
 
+  const setHeight = (h: number, duration: number, ease: string, onComplete?: () => void) =>
+    gsap.to(cube, { "--h": `${h}px`, duration, ease, overwrite: "auto", onComplete });
+
   const pop = () => {
     const cells = visibleCells().filter((k) => k.key !== lastCell);
     if (!cells.length) return;
     const pick = cells[Math.floor(Math.random() * cells.length)];
-    const options = heights.filter((h) => h !== lastHeight);
-    const h = options[Math.floor(Math.random() * options.length)];
+    const options = heights.filter((h) => h !== height);
+    height = options[Math.floor(Math.random() * options.length)];
     lastCell = pick.key;
-    lastHeight = h;
     busy = true;
-    gsap.set(cube, { left: pick.c * cell + inset, top: pick.r * cell + inset, "--h": "0px" });
-    gsap.to(cube, { opacity: 1, duration: 0.35, ease: "power1.out" });
-    gsap.to(cube, {
-      "--h": `${h}px`,
-      duration: 1.2,
-      ease: "expo.out",
-      onComplete: () => {
-        busy = false;
-        up = true;
-        cube.classList.add("is-up");
-      },
+    gsap.set(cube, { left: pick.c * cell, top: pick.r * cell, "--h": "0px" });
+    gsap.to(cube, { opacity: 1, duration: 0.6, ease: "sine.out" });
+    // A long, soft rise that glides to a stop.
+    setHeight(height, 1.8, "power3.out", () => {
+      busy = false;
+      up = true;
+      cube.classList.add("is-up");
+      if (cube.matches(":hover")) onEnter();
     });
+  };
+
+  // Touch feedback: the cube lifts a little under the pointer.
+  const onEnter = () => {
+    if (!up || busy) return;
+    setHeight(height + 16, 0.6, "power2.out");
+  };
+  const onLeave = () => {
+    if (!up || busy) return;
+    setHeight(height, 0.7, "power2.out");
   };
 
   const sink = (then?: () => void) => {
@@ -470,37 +480,37 @@ function floorCubes(plane: HTMLElement, frame: HTMLElement) {
     up = false;
     cube.classList.remove("is-up");
     gsap.killTweensOf(cube);
-    gsap.to(cube, {
-      "--h": "0px",
-      duration: 0.7,
-      ease: "power2.inOut",
-      onComplete: () => {
-        gsap.to(cube, { opacity: 0, duration: 0.2 });
-        busy = false;
-        then?.();
-      },
-    });
+    // A gentle press, then it settles back into the floor.
+    gsap
+      .timeline({ onComplete: () => { busy = false; then?.(); } })
+      .to(cube, { "--h": `${Math.max(height * 0.9, height - 24)}px`, duration: 0.22, ease: "power2.out" })
+      .to(cube, { "--h": "0px", duration: 1.2, ease: "power3.inOut" })
+      .to(cube, { opacity: 0, duration: 0.35, ease: "sine.in" }, "-=0.3");
   };
 
   const onClick = () => {
     if (busy || !up) return;
     sink(() => {
-      popTimer = window.setTimeout(() => active && pop(), 180);
+      popTimer = window.setTimeout(() => active && pop(), 350);
     });
   };
   cube.addEventListener("click", onClick);
+  cube.addEventListener("pointerenter", onEnter);
+  cube.addEventListener("pointerleave", onLeave);
 
   return {
     setActive(next: boolean) {
       if (next === active) return;
       active = next;
       window.clearTimeout(popTimer);
-      if (active) popTimer = window.setTimeout(() => active && !up && !busy && pop(), 450);
+      if (active) popTimer = window.setTimeout(() => active && !up && !busy && pop(), 500);
       else if (up || busy) sink();
     },
     destroy() {
       window.clearTimeout(popTimer);
       cube.removeEventListener("click", onClick);
+      cube.removeEventListener("pointerenter", onEnter);
+      cube.removeEventListener("pointerleave", onLeave);
       gsap.killTweensOf(cube);
     },
   };
