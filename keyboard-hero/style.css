@@ -9,7 +9,6 @@
     --tint: #18181e;
     --ink: #f4f5f7;
     --ink-soft: rgba(244, 245, 247, 0.62);
-    --ink-contrast: #111111;
     --accent: #7fd8ff;
     --line: rgba(255, 255, 255, 0.22);
     --mx: 0;
@@ -131,41 +130,28 @@ div.Hero-grain {
 
 /* ----------------------------------------------------------------- Nav */
 
-/* Store header from the Figma "Navigation" frame: no background, a
-   1170px centred container, Poppins menu. Its colour follows the scene's
-   ink (white over the dark setup, near-black over the light ones). */
 header.Nav {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 60px;
-    display: flex;
-    justify-content: center;
-    padding: 0 16px;
-    color: var(--ink);
-    font-family: "Poppins", var(--font);
-    z-index: 6;
-}
-
-div.Nav-inner {
     display: flex;
     align-items: center;
-    width: 100%;
-    max-width: 1170px;
-    padding: 0 15px;
+    justify-content: space-between;
+    padding: 28px 5vw;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    z-index: 5;
 }
 
 a.Nav-brand {
     display: block;
-    flex: none;
-    margin-left: 9px;
 }
 
-/* 112 × 56 in the Figma frame; the paths fill with the header colour. */
+/* The supplied logo, filled with the scene's text colour. */
 svg.Nav-logo {
     display: block;
-    width: 112px;
+    width: 84px;
     height: auto;
     aspect-ratio: 283.5 / 141.7;
     fill: currentColor;
@@ -173,95 +159,29 @@ svg.Nav-logo {
 
 nav.Nav-links {
     display: flex;
-    align-items: center;
-    gap: 28px;
-    margin-left: auto;
-    padding-right: 19px;
+    gap: 34px;
 }
 
-nav.Nav-links a {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 22.4px;
-    text-transform: uppercase;
-    white-space: nowrap;
-    transition: opacity 0.25s ease;
+nav.Nav-links a,
+a.Nav-cart {
+    color: var(--ink-soft);
+    transition: color 0.3s ease;
 }
 
 nav.Nav-links a:hover,
-div.Nav-icons a:hover {
-    opacity: 0.65;
+a.Nav-cart:hover {
+    color: var(--ink);
 }
 
-svg.Nav-chev {
-    width: 7px;
-    height: 5px;
-}
-
-svg.Nav-chev path {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-}
-
-div.Nav-icons {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex: none;
-    padding-right: 10px;
-}
-
-div.Nav-icons a,
-button.Nav-menu {
-    position: relative;
-    display: grid;
-    place-items: center;
-    color: inherit;
-    transition: opacity 0.25s ease;
-}
-
-div.Nav-icons svg {
-    width: 15px;
-    height: 15px;
-    fill: currentColor;
-}
-
-/* Small count tag: the inverse of the header colour. */
 a.Nav-cart span {
-    position: absolute;
-    left: 16px;
-    top: 8px;
-    padding: 3px;
-    border-radius: 3px;
-    background: var(--ink);
-    color: var(--ink-contrast);
-    font-size: 8.4px;
-    font-weight: 800;
-    line-height: 8.4px;
-}
-
-button.Nav-menu {
-    display: none;
-    padding: 0;
-    border: 0;
-    background: none;
-    cursor: pointer;
-}
-
-button.Nav-menu svg {
+    display: inline-grid;
+    place-items: center;
     width: 20px;
     height: 20px;
-}
-
-header.Nav a:focus-visible,
-header.Nav button:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 4px;
-    border-radius: 2px;
+    margin-left: 6px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    font-size: 11px;
 }
 
 /* ------------------------------------------------------------- Product */
@@ -505,10 +425,7 @@ div.Hint.is-hidden {
 
 /* ---------------------------------------------------------------- Intro */
 
-body.is-loading header.Nav {
-    opacity: 0;
-}
-
+body.is-loading header.Nav,
 body.is-loading div.Product,
 body.is-loading div.Pager,
 body.is-loading div.Hint {
@@ -568,36 +485,13 @@ section.Next p {
 
 /* -------------------------------------------------------------- Mobile */
 
-/* The menu needs about 1180px; below that it folds into the menu button. */
-@media (max-width: 1180px) {
-    nav.Nav-links {
-        display: none;
-    }
-
-    div.Nav-icons {
-        margin-left: auto;
-    }
-
-    button.Nav-menu {
-        display: grid;
-    }
-}
-
 @media (max-width: 760px) {
     nav.Nav-links {
         display: none;
     }
 
     header.Nav {
-        padding: 0 4px;
-    }
-
-    a.Nav-brand {
-        margin-left: 0;
-    }
-
-    svg.Nav-logo {
-        width: 96px;
+        padding: 22px 6vw;
     }
 
     div.Hero-scenes {
@@ -617,7 +511,7 @@ section.Next p {
     }
 
     div.Pager {
-        top: 80px;
+        top: 76px;
         bottom: auto;
         right: 6vw;
     }
