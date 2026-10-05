@@ -18,6 +18,7 @@
   const sceneImgs = [...document.querySelectorAll('.Hero-scene')]
   const kbImgs = [...document.querySelectorAll('.Product-kb')]
   const items = [...document.querySelectorAll('.Product-item')]
+  const cta = document.querySelector('.Product-cta')
   const counters = [...document.querySelectorAll('.Pager-current span')]
   const bars = [...document.querySelectorAll('.Pager-bars button')]
   const hint = document.querySelector('.Hint')
@@ -304,6 +305,8 @@
   }
 
   function renderPager (s, i, e) {
+    const href = items[Math.round(s)].dataset.href
+    if (cta.getAttribute('href') !== href) cta.setAttribute('href', href)
     counters.forEach((el, k) => {
       el.style.transform = `translate3d(0, ${((k - s) * 100).toFixed(2)}%, 0)`
     })
