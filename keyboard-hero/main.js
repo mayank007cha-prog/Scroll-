@@ -9,7 +9,7 @@
   ]
   const COUNT = SCENES.length
   // Scroll distance (in viewport heights) spent on each scene change.
-  const STEP_VH = 110
+  const STEP_VH = 140
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -30,7 +30,7 @@
 
   let lenis = null
   if (!reduceMotion && window.Lenis) {
-    lenis = new window.Lenis({ lerp: 0.085, wheelMultiplier: 0.9, smoothWheel: true })
+    lenis = new window.Lenis({ lerp: 0.07, wheelMultiplier: 0.85, touchMultiplier: 1.2, smoothWheel: true })
   }
 
   let trackTop = 0
@@ -52,27 +52,6 @@
     const y = trackTop + (index / (COUNT - 1)) * trackLen
     if (lenis) lenis.scrollTo(y, { duration, easing: easeInOutCubic })
     else window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' })
-  }
-
-  // Gentle snapping: once the wheel/finger rests inside the hero, glide to
-  // the nearest scene so you never stop halfway through a crossfade.
-  let lastScrollAt = performance.now()
-  let snapping = false
-  const markScroll = () => { lastScrollAt = performance.now() }
-  if (lenis) lenis.on('scroll', markScroll)
-  window.addEventListener('scroll', markScroll, { passive: true })
-
-  function maybeSnap (now) {
-    if (snapping || now - lastScrollAt < 160) return
-    if (lenis && lenis.isScrolling) return
-    const y = scrollY()
-    if (y < trackTop - 2 || y > trackTop + trackLen + 2) return
-    const raw = rawProgress()
-    const nearest = Math.round(raw)
-    if (Math.abs(raw - nearest) * (trackLen / (COUNT - 1)) < 2) return
-    snapping = true
-    scrollToScene(nearest, 1.1)
-    setTimeout(() => { snapping = false; lastScrollAt = performance.now() }, 1150)
   }
 
   bars.forEach((bar, i) => bar.addEventListener('click', () => scrollToScene(i)))
@@ -193,23 +172,23 @@
 
     if (lenis) lenis.raf(now)
 
-    // Lenis already smooths wheel input; this extra ease also smooths
-    // touch, keyboard and scrollbar drags so visuals never jump.
+    // Lenis already eases wheel input, so follow it closely; the light
+    // ease only matters for native input such as touch or a scrollbar drag.
     const target = rawProgress()
-    shown = reduceMotion ? target : damp(shown, target, 7, dt)
+    shown = reduceMotion ? target : damp(shown, target, lenis ? 18 : 9, dt)
     if (Math.abs(shown - target) < 0.0005) shown = target
 
-    // Hold each scene for a while, then cross quickly: the scene value
-    // only moves through the middle 70% of every scroll step.
+    // A short hold on each scene, then a long, even crossfade through the
+    // middle 80% of every scroll step.
     const i = Math.min(COUNT - 2, Math.floor(shown))
     const local = shown - i
-    const e = smoothstep(0.15, 0.85, local)
+    const e = smoothstep(0.1, 0.9, local)
     const s = i + e
 
     pointer.x = damp(pointer.x, pointer.tx, 3, dt)
     pointer.y = damp(pointer.y, pointer.ty, 3, dt)
-    root.style.setProperty('--mx', pointer.x.toFixed(4))
-    root.style.setProperty('--my', pointer.y.toFixed(4))
+    setVar('--mx', pointer.x.toFixed(3))
+    setVar('--my', pointer.y.toFixed(3))
 
     if (ready) intro = reduceMotion ? 0 : damp(intro, 0, 1.5, dt)
 
@@ -226,7 +205,6 @@
       fog.draw(now / 1000, amount, s * 0.35, lerpArr(SCENES[i].fog, SCENES[i + 1].fog, e))
     }
 
-    maybeSnap(now)
     requestAnimationFrame(render)
   }
 
@@ -237,11 +215,11 @@
     const ink = lerpArr(a.ink, b.ink, e)
     const accent = lerpArr(a.accent, b.accent, e)
     const line = lerpArr(a.line, b.line, e)
-    root.style.setProperty('--tint', rgb(tint))
-    root.style.setProperty('--ink', rgb(ink))
-    root.style.setProperty('--ink-soft', rgb(ink, 0.62))
-    root.style.setProperty('--accent', rgb(accent))
-    root.style.setProperty('--line', rgb(line, line[3]))
+    setVar('--tint', rgb(tint))
+    setVar('--ink', rgb(ink))
+    setVar('--ink-soft', rgb(ink, 0.62))
+    setVar('--accent', rgb(accent))
+    setVar('--line', rgb(line, line[3]))
   }
 
   function renderScenes (i, e) {
@@ -254,25 +232,25 @@
         // Outgoing: drifts back and softens under the incoming one.
         opacity = 1
         scale = 1 + e * 0.07
-        blur = e * 8
+        blur = e * 5
         y = -e * 1.5
       } else if (k === i + 1) {
         // Incoming: settles in from slightly closer and out of focus.
         opacity = easeInOutCubic(e)
         scale = 1.1 - e * 0.1
-        blur = (1 - e) * 12
+        blur = (1 - e) * 7
         y = (1 - e) * 1.5
       }
       if (k === i + 1 && e === 0) opacity = 0
       // On load the first photo resolves out of the fog.
       opacity *= 1 - intro * 0.85
       scale += intro * 0.14
-      blur += intro * 16
-      img.style.opacity = opacity.toFixed(4)
-      img.style.zIndex = k === i + 1 ? 2 : 1
-      img.style.transform = `translate3d(0, ${y.toFixed(3)}%, 0) scale(${scale.toFixed(4)})`
-      img.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : 'none'
-      img.style.visibility = opacity > 0 ? 'visible' : 'hidden'
+      blur += intro * 12
+      css(img).opacity = opacity.toFixed(4)
+      css(img).zIndex = k === i + 1 ? 2 : 1
+      css(img).transform = `translate3d(0, ${y.toFixed(3)}%, 0) scale(${scale.toFixed(4)})`
+      css(img).filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : 'none'
+      css(img).visibility = opacity > 0 ? 'visible' : 'hidden'
     })
   }
 
@@ -288,19 +266,19 @@
       const rotX = d * 38
       const rotZ = d * -4
       const scale = 1 - ad * 0.12
-      img.style.opacity = opacity.toFixed(4)
-      img.style.transform =
+      css(img).opacity = opacity.toFixed(4)
+      css(img).transform =
         `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) rotateX(${rotX.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) scale(${scale.toFixed(4)})`
-      img.style.filter = `drop-shadow(0 18px 22px rgba(0,0,0,${(0.35 * opacity).toFixed(3)})) blur(${(ad * 6).toFixed(2)}px)`
-      img.style.visibility = opacity > 0 ? 'visible' : 'hidden'
+      css(img).filter = `drop-shadow(0 18px 22px rgba(0,0,0,${(0.35 * opacity).toFixed(3)})) blur(${(ad * 6).toFixed(2)}px)`
+      css(img).visibility = opacity > 0 ? 'visible' : 'hidden'
     })
 
     items.forEach((el, k) => {
       const d = s - k
       const ad = Math.abs(d)
-      el.style.opacity = clamp(1 - ad * 1.8, 0, 1).toFixed(4)
-      el.style.transform = `translate3d(0, ${(-d * 110).toFixed(2)}%, 0)`
-      el.style.filter = ad > 0.01 ? `blur(${(ad * 4).toFixed(2)}px)` : 'none'
+      css(el).opacity = clamp(1 - ad * 1.8, 0, 1).toFixed(4)
+      css(el).transform = `translate3d(0, ${(-d * 110).toFixed(2)}%, 0)`
+      css(el).filter = ad > 0.01 ? `blur(${(ad * 4).toFixed(2)}px)` : 'none'
     })
   }
 
@@ -308,16 +286,40 @@
     const href = items[Math.round(s)].dataset.href
     if (cta.getAttribute('href') !== href) cta.setAttribute('href', href)
     counters.forEach((el, k) => {
-      el.style.transform = `translate3d(0, ${((k - s) * 100).toFixed(2)}%, 0)`
+      css(el).transform = `translate3d(0, ${((k - s) * 100).toFixed(2)}%, 0)`
     })
     bars.forEach((bar, k) => {
       const fill = clamp(1 - Math.abs(s - k), 0, 1)
-      bar.firstElementChild.style.transform = `scaleX(${fill.toFixed(4)})`
+      css(bar.firstElementChild).transform = `scaleX(${fill.toFixed(4)})`
       bar.setAttribute('aria-current', Math.round(s) === k ? 'true' : 'false')
     })
   }
 
   /* ------------------------------------------------------------- Utils */
+
+  // Only touch the DOM when a value actually changes, so idle frames and
+  // settled elements cost nothing.
+  const written = new Map()
+  function setVar (name, value) {
+    if (written.get(name) === value) return
+    written.set(name, value)
+    root.style.setProperty(name, value)
+  }
+  const proxies = new WeakMap()
+  function css (el) {
+    let p = proxies.get(el)
+    if (!p) {
+      const last = {}
+      p = new Proxy({}, {
+        set (_, prop, value) {
+          if (last[prop] !== value) { last[prop] = value; el.style[prop] = value }
+          return true
+        }
+      })
+      proxies.set(el, p)
+    }
+    return p
+  }
 
   function clamp (v, min, max) { return Math.min(max, Math.max(min, v)) }
   function damp (a, b, lambda, dt) { return a + (b - a) * (1 - Math.exp(-lambda * dt)) }

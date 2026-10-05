@@ -3,7 +3,7 @@
 Open `index.html` through any static server (e.g. `npx serve keyboard-hero`),
 no build step needed.
 
-- `main.js` – scroll progress → scene blend, keyboard card, fog, pager, snapping.
+- `main.js` – scroll progress → scene blend, keyboard card, fog and pager.
   Per-scene colours live in `SCENES` at the top.
 - `style.css` – layout (based on the Figma frames) and the edge-fade mask.
 - `assets/` – backgrounds (`bg-*.jpg`) and transparent keyboard cut-outs (`kb-*.png`).
