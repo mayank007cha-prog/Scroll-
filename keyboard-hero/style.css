@@ -99,7 +99,7 @@ canvas.Hero-fog {
 div.Hero-glow {
     position: absolute;
     left: -6vw;
-    top: 50%;
+    top: calc(50% - 23vw);
     width: 46vw;
     height: 46vw;
     border-radius: 50%;
@@ -181,13 +181,14 @@ a.Nav-cart span {
 
 /* Bottom-left product card, positioned after the Figma frames
    (keyboard at ≈x 5–8%, y 63–69%). */
+/* Product card sits on the left edge, centred vertically in the fold. */
 div.Product {
     position: absolute;
     left: 5vw;
-    top: 61%;
+    top: 50%;
     width: clamp(220px, 23vw, 380px);
     z-index: 4;
-    transform: translate3d(calc(var(--mx) * 10px), calc(var(--my) * 8px), 0);
+    transform: translate3d(calc(var(--mx) * 10px), calc(-50% + var(--my) * 8px), 0);
 }
 
 div.Product-stack {
@@ -436,7 +437,7 @@ div.Product {
 }
 
 body.is-loading div.Product {
-    transform: none;
+    transform: translate3d(0, -50%, 0);
 }
 
 /* ----------------------------------------------------------------- Next */
@@ -495,6 +496,11 @@ section.Next p {
         top: auto;
         bottom: 7%;
         width: min(62vw, 300px);
+        transform: translate3d(calc(var(--mx) * 10px), calc(var(--my) * 8px), 0);
+    }
+
+    body.is-loading div.Product {
+        transform: none;
     }
 
     div.Pager {
@@ -508,7 +514,7 @@ section.Next p {
     }
 
     div.Hero-glow {
-        top: 62%;
+        top: 50%;
         width: 90vw;
         height: 90vw;
     }
