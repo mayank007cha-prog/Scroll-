@@ -3,8 +3,8 @@
   // top of it, the accent glow behind the keyboard and the fog colour used
   // while crossing into or out of it.
   const SCENES = [
-    { tint: [22, 22, 28], ink: [244, 245, 247], accent: [120, 200, 255], fog: [58, 60, 78], line: [255, 255, 255, 0.2] },
-    { tint: [182, 196, 202], ink: [22, 30, 36], accent: [110, 230, 255], fog: [232, 243, 247], line: [20, 40, 52, 0.28] },
+    { tint: [22, 22, 28], ink: [244, 245, 247], accent: [170, 110, 255], fog: [58, 60, 78], line: [255, 255, 255, 0.2] },
+    { tint: [182, 196, 202], ink: [22, 30, 36], accent: [110, 220, 255], fog: [232, 243, 247], line: [20, 40, 52, 0.28] },
     { tint: [128, 136, 150], ink: [20, 24, 32], accent: [255, 160, 110], fog: [214, 220, 228], line: [20, 24, 32, 0.24] }
   ]
   const COUNT = SCENES.length
@@ -20,8 +20,6 @@
   const items = [...document.querySelectorAll('.Product-item')]
   const counters = [...document.querySelectorAll('.Pager-current span')]
   const bars = [...document.querySelectorAll('.Pager-bars button')]
-  const glints = [...document.querySelectorAll('.Hero-arc--glint')]
-  const arcs = document.querySelector('.Hero-arcs')
   const hint = document.querySelector('.Hint')
   const fogCanvas = document.querySelector('.Hero-fog')
 
@@ -218,11 +216,6 @@
     renderScenes(i, e)
     renderProduct(s)
     renderPager(s, i, e)
-
-    // Arcs swing a touch and their glints travel with scroll.
-    arcs.style.rotate = `${(s - 1) * 1.2}deg`
-    glints[0].style.strokeDashoffset = (-0.18 - s * 0.11).toFixed(4)
-    glints[1].style.strokeDashoffset = (0.32 + s * 0.11).toFixed(4)
 
     hint.classList.toggle('is-hidden', scrollY() > trackTop + 40)
 
