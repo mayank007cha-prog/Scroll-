@@ -105,6 +105,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const room = depthField?.querySelector<HTMLElement>("[data-room]");
   const spinners = depthField ? gsap.utils.toArray<HTMLElement>("[data-spin]", depthField) : [];
   const depthFaders = depthField ? gsap.utils.toArray<HTMLElement>(".depth-obj, .depth-floor, .depth-wall", depthField) : [];
+  const cubesPlane = depthField?.querySelector<HTMLElement>("[data-cubes]");
+
+  // Cubes on the floor: only with the horizontal row (desktop).
+  const cubes = cubesPlane && config.axis === "x" ? floorCubes(cubesPlane, frame) : null;
 
   gsap.set(frame, { perspective: config.perspective });
   gsap.set(hero, { transformOrigin: "50% 50%", force3D: true });
@@ -231,6 +235,12 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       const left = cardLeft(x);
       if (left >= minLeft - 0.5) break;
       x += (minLeft - left) / trackFactor;
+    }
+
+    // The floor cubes come out once the footer is (nearly) centred.
+    if (cubes && items.length) {
+      const endX = half - centers[items.length - 1];
+      cubes.setActive(Math.abs(x - endX) < frameWidth * 0.06);
     }
 
     gsap.set(track, { [AX]: x, z: config.trackDepth });
@@ -382,9 +392,116 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   }
 
   return () => {
+    cubes?.destroy();
     window.clearTimeout(settleTimer);
     gsap.ticker.remove(raf);
     lenis.destroy();
     video?.pause();
+  };
+}
+
+/**
+ * A small game on the floor at the end of the row: one cube rises out of a
+ * floor cell; click it and it sinks back while another rises in a different
+ * cell, at a different height. Cells are picked from those visible in the
+ * lower right of the frame, so they work at any viewport size.
+ */
+function floorCubes(plane: HTMLElement, frame: HTMLElement) {
+  const cube = plane.querySelector<HTMLElement>("[data-cube]");
+  const probe = plane.querySelector<HTMLElement>("[data-cube-probe]");
+  const cell = GRID;
+  const inset = 36; // gap between the cube and its cell's lines
+  const heights = [90, 130, 170, 210, 250, 290];
+  let active = false;
+  let busy = false;
+  let up = false;
+  let lastCell = "";
+  let lastHeight = 0;
+  let popTimer = 0;
+  if (!cube || !probe) return { setActive() {}, destroy() {} };
+
+  gsap.set(cube, { opacity: 0, "--s": `${cell - inset * 2}px`, "--h": "0px" });
+
+  // Floor cells whose footprint sits fully in the lower right of the frame.
+  const visibleCells = () => {
+    const f = frame.getBoundingClientRect();
+    const cols = Math.floor(plane.offsetWidth / cell);
+    const rows = Math.floor(plane.offsetHeight / cell);
+    const found = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        probe.style.left = `${c * cell + inset}px`;
+        probe.style.top = `${r * cell + inset}px`;
+        const b = probe.getBoundingClientRect();
+        const inside =
+          b.left > f.left + f.width * 0.6 && b.right < f.right - 16 && b.bottom < f.bottom - 12 && b.top > f.top + f.height * 0.55;
+        if (inside) found.push({ key: `${c}:${r}`, c, r, size: b.width * b.height });
+      }
+    }
+    // The six largest on screen (nearest the viewer).
+    return found.sort((a, b) => b.size - a.size).slice(0, 6);
+  };
+
+  const pop = () => {
+    const cells = visibleCells().filter((k) => k.key !== lastCell);
+    if (!cells.length) return;
+    const pick = cells[Math.floor(Math.random() * cells.length)];
+    const options = heights.filter((h) => h !== lastHeight);
+    const h = options[Math.floor(Math.random() * options.length)];
+    lastCell = pick.key;
+    lastHeight = h;
+    busy = true;
+    gsap.set(cube, { left: pick.c * cell + inset, top: pick.r * cell + inset, "--h": "0px" });
+    gsap.to(cube, { opacity: 1, duration: 0.35, ease: "power1.out" });
+    gsap.to(cube, {
+      "--h": `${h}px`,
+      duration: 1.2,
+      ease: "expo.out",
+      onComplete: () => {
+        busy = false;
+        up = true;
+        cube.classList.add("is-up");
+      },
+    });
+  };
+
+  const sink = (then?: () => void) => {
+    busy = true;
+    up = false;
+    cube.classList.remove("is-up");
+    gsap.killTweensOf(cube);
+    gsap.to(cube, {
+      "--h": "0px",
+      duration: 0.7,
+      ease: "power2.inOut",
+      onComplete: () => {
+        gsap.to(cube, { opacity: 0, duration: 0.2 });
+        busy = false;
+        then?.();
+      },
+    });
+  };
+
+  const onClick = () => {
+    if (busy || !up) return;
+    sink(() => {
+      popTimer = window.setTimeout(() => active && pop(), 180);
+    });
+  };
+  cube.addEventListener("click", onClick);
+
+  return {
+    setActive(next: boolean) {
+      if (next === active) return;
+      active = next;
+      window.clearTimeout(popTimer);
+      if (active) popTimer = window.setTimeout(() => active && !up && !busy && pop(), 450);
+      else if (up || busy) sink();
+    },
+    destroy() {
+      window.clearTimeout(popTimer);
+      cube.removeEventListener("click", onClick);
+      gsap.killTweensOf(cube);
+    },
   };
 }

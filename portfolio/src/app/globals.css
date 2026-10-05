@@ -415,6 +415,100 @@ a:focus-visible {
   mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 100%);
 }
 
+/* Floor cubes: a plane laid exactly over the floor (same box and
+   transform), holding one cube that rises out of a cell. Line style like
+   the other objects; the side facing the viewer wears the CTA violet. */
+.depth-cubes {
+  position: absolute;
+  top: 100%;
+  left: -150%;
+  width: 400%;
+  height: 1440px;
+  transform: translateZ(-1100px) rotateX(90deg);
+  transform-origin: 50% 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.floor-cube__probe {
+  position: absolute;
+  width: calc(240px - 72px);
+  height: calc(240px - 72px);
+  visibility: hidden;
+}
+
+.floor-cube {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.floor-cube.is-up,
+.floor-cube.is-up .floor-cube__face {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.floor-cube__face {
+  position: absolute;
+  border: 1.5px solid rgb(var(--fg) / 0.4);
+  background: rgb(20 20 24 / 0.94);
+  transition: border-color 0.3s;
+}
+
+.floor-cube.is-up:hover .floor-cube__face {
+  border-color: rgb(var(--fg) / 0.6);
+}
+
+.floor-cube__face--top {
+  inset: 0;
+  background: rgb(34 34 40 / 0.96);
+  transform: translateZ(var(--h));
+}
+
+/* Side walls stand up from the cube's footprint (+z is "up" off the floor). */
+.floor-cube__face--back,
+.floor-cube__face--front {
+  left: 0;
+  width: 100%;
+  height: var(--h);
+  transform-origin: 50% 0;
+  transform: rotateX(90deg);
+}
+
+.floor-cube__face--back { top: 0; }
+.floor-cube__face--front {
+  top: 100%;
+  overflow: hidden;
+  border-color: rgb(255 255 255 / 0.22);
+  background: linear-gradient(0deg, rgb(104 88 206), rgb(76 62 170));
+}
+
+/* Same grain as the CTA button. */
+.floor-cube__face--front::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise);
+  background-size: 120px;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+}
+
+.floor-cube__face--left,
+.floor-cube__face--right {
+  top: 0;
+  width: var(--h);
+  height: 100%;
+  transform-origin: 0 50%;
+  transform: rotateY(-90deg);
+}
+
+.floor-cube__face--left { left: 0; }
+.floor-cube__face--right { left: 100%; }
+
 /* Wireframe cube */
 .d-cube {
   position: relative;
@@ -759,6 +853,16 @@ a:focus-visible {
   border-radius: var(--radius);
 }
 
+/* Only the footer's links take clicks, so the floor cubes behind its box
+   stay clickable. */
+.footer-card {
+  pointer-events: none;
+}
+
+.footer-card a {
+  pointer-events: auto;
+}
+
 .footer-card__headline {
   margin: 0;
   max-width: 12ch;
@@ -977,7 +1081,8 @@ a:focus-visible {
 
   /* Phones have no empty band above or below the cards, so keep only the
      grid, guides and light in the background. */
-  .depth-obj {
+  .depth-obj,
+  .depth-cubes {
     display: none;
   }
 
