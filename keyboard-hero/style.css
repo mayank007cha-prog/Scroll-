@@ -203,30 +203,110 @@ div.Product-head {
     margin-bottom: clamp(28px, 4vh, 44px);
 }
 
-p.Mood {
+div.Mood {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin: 0 0 14px;
-    font-size: 11px;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
+    gap: 14px;
+    margin: 0 0 18px;
 }
 
-/* Small glowing dot in the scene's accent colour. */
-p.Mood i {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 10px var(--accent);
+/* A single 1u keycap: darker skirt, dished top, legend in the middle. */
+span.Keycap {
+    position: relative;
+    width: 38px;
+    height: 36px;
     flex: none;
+    will-change: transform;
 }
 
+span.Keycap-cap {
+    position: absolute;
+    inset: 0;
+    border-radius: 7px;
+    background: var(--cap-skirt);
+    box-shadow:
+        inset 0 -3px 0 rgba(0, 0, 0, 0.28),
+        0 6px 14px var(--cap-glow),
+        0 2px 3px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    will-change: opacity;
+}
+
+span.Keycap-cap:first-child {
+    opacity: 1;
+}
+
+/* The top surface. */
+span.Keycap-cap::before {
+    content: "";
+    position: absolute;
+    inset: 3px 5px 7px;
+    border-radius: 5px;
+    background: linear-gradient(160deg, var(--cap-top-hi), var(--cap-top));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 2px rgba(0, 0, 0, 0.18);
+}
+
+span.Keycap-cap svg {
+    position: absolute;
+    left: 50%;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: 4px;
+    fill: none;
+    stroke: var(--cap-legend);
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 3px var(--cap-legend-glow));
+}
+
+span.Keycap-cap svg.is-fill {
+    fill: var(--cap-legend);
+    stroke: none;
+}
+
+/* Black ABS cap with shine-through RGB legend. */
+span.Keycap--onyx {
+    --cap-skirt: #141418;
+    --cap-top: #1e1e24;
+    --cap-top-hi: #2c2c34;
+    --cap-legend: #d7a8ff;
+    --cap-legend-glow: rgba(190, 120, 255, 0.95);
+    --cap-glow: rgba(160, 90, 255, 0.45);
+}
+
+/* Ice-blue PBT, like the GX87's caps. */
+span.Keycap--glacier {
+    --cap-skirt: #6b9ccd;
+    --cap-top: #8cb8e4;
+    --cap-top-hi: #b4d4f3;
+    --cap-legend: #f5fbff;
+    --cap-legend-glow: rgba(140, 225, 255, 0.9);
+    --cap-glow: rgba(90, 200, 255, 0.35);
+}
+
+/* Terracotta accent cap, like the Esc on the white board. */
+span.Keycap--sunset {
+    --cap-skirt: #b0603b;
+    --cap-top: #cf7c52;
+    --cap-top-hi: #e39a72;
+    --cap-legend: #fff4e8;
+    --cap-legend-glow: rgba(255, 200, 150, 0.8);
+    --cap-glow: rgba(255, 140, 90, 0.35);
+}
+
+/* Same italic serif as "Your vibe.", so the mood reads as part of it. */
 span.Mood-words {
     display: grid;
     overflow: hidden;
+    padding: 2px 0;
+    font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.1;
+    color: var(--ink-soft);
 }
 
 span.Mood-word {

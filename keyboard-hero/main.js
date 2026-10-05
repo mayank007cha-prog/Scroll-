@@ -19,6 +19,8 @@
   const kbImgs = [...document.querySelectorAll('.Product-kb')]
   const items = [...document.querySelectorAll('.Product-item')]
   const moods = [...document.querySelectorAll('.Mood-word')]
+  const keycap = document.querySelector('.Keycap')
+  const caps = [...document.querySelectorAll('.Keycap-cap')]
   const cta = document.querySelector('.Product-cta')
   const counters = [...document.querySelectorAll('.Pager-current span')]
   const bars = [...document.querySelectorAll('.Pager-bars button')]
@@ -273,6 +275,14 @@
       css(img).filter = `drop-shadow(0 18px 22px rgba(0,0,0,${(0.35 * opacity).toFixed(3)})) blur(${(ad * 6).toFixed(2)}px)`
       css(img).visibility = opacity > 0 ? 'visible' : 'hidden'
     })
+
+    // The keycap swaps colourway at the midpoint and dips while it does,
+    // like a key being pressed and released.
+    const press = Math.pow(Math.sin(Math.PI * (s - Math.floor(s))), 1.5)
+    caps.forEach((el, k) => {
+      css(el).opacity = clamp((0.5 - Math.abs(s - k)) * 6 + 0.5, 0, 1).toFixed(3)
+    })
+    css(keycap).transform = `translate3d(0, ${(press * 4).toFixed(2)}px, 0) scale(${(1 - press * 0.06).toFixed(4)})`
 
     // Product copy and the mood word above the headline roll together.
     ;[items, moods].forEach((list) => list.forEach((el, k) => {
