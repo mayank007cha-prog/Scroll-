@@ -5,7 +5,9 @@
 
 Outputs (in showcase/assets):
   bg-<env>.webp      environment photos (2048x1144)
-  kb-<env>.webp      keyboard cut-outs with alpha
+  bg-<env>@2x.webp   4096x2288 versions for high-DPI screens, built from
+                     assets/src/bg-<env>@2x.png when present (see upscale.py)
+  kb-<env>.webp      keyboard cut-outs with alpha (2x when available)
   hands-mask.png     union of the hand/arm silhouettes of all three photos.
                      The page uses it as a CSS mask over a copy of the
                      background stack, so a board at rest sits *under* the
@@ -69,13 +71,15 @@ ALIGN = {"frost": (0.9851, -11.6)}
 PAD = 24
 
 
-def aligned(env, im):
+def aligned(env, im, scale=1):
     if env not in ALIGN:
         return im
     a, b = ALIGN[env]
+    pad = PAD * scale
     arr = np.asarray(im)
-    padded = Image.fromarray(np.pad(arr, ((PAD, 0), (0, 0), (0, 0)), mode="edge"))
-    return padded.transform((W, H), Image.AFFINE, (1, 0, 0, 0, a, b + PAD), resample=Image.BICUBIC)
+    padded = Image.fromarray(np.pad(arr, ((pad, 0), (0, 0), (0, 0)), mode="edge"))
+    return padded.transform((W * scale, H * scale), Image.AFFINE, (1, 0, 0, 0, a, b * scale + pad),
+                            resample=Image.BICUBIC)
 
 
 def to_aligned(env, pt):
@@ -116,7 +120,14 @@ def main():
     for env in ENVS:
         bg = aligned(env, Image.open(SRC / f"bg-{env}.png").convert("RGB"))
         bg.save(OUT / f"bg-{env}.webp", quality=84, method=6)
-        Image.open(SRC / f"kb-{env}.png").convert("RGBA").save(OUT / f"kb-{env}.webp", quality=90, method=6)
+        hi = SRC / f"bg-{env}@2x.png"
+        if hi.exists():
+            aligned(env, Image.open(hi).convert("RGB"), 2).save(OUT / f"bg-{env}@2x.webp", quality=80, method=6)
+        # Keyboards: ship the 2x cut-out when present (drawn ~1400 device px
+        # wide on large high-DPI screens), else the original export.
+        kb = SRC / f"kb-{env}@2x.png"
+        kb = kb if kb.exists() else SRC / f"kb-{env}.png"
+        Image.open(kb).convert("RGBA").save(OUT / f"kb-{env}.webp", quality=88, method=6)
 
     union = Image.new("L", (W, H), 0)
     for env in ENVS:
