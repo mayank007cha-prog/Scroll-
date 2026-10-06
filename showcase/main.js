@@ -67,6 +67,18 @@
     return v * v * (3 - 2 * v);
   }
 
+  // Quintic ease (zero 1st and 2nd derivative at both ends): no visible
+  // start or stop in the environment dissolve.
+  function smootherstep(v) {
+    v = clamp(v, 0, 1);
+    return v * v * v * (v * (v * 6 - 15) + 10);
+  }
+
+  // Environment blend across a board change: spread over most of the move.
+  function envMix(f) {
+    return smootherstep((f - 0.08) / 0.84);
+  }
+
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
@@ -284,15 +296,15 @@
       board.style.setProperty('--sheen-x', (t > 0 ? lerp(150, -50, settle) : lerp(-50, 150, settle)).toFixed(1) + '%');
     }
 
-    // Environment: each photo dissolves in across the middle of its change.
+    // Environment: each photo dissolves in across almost the whole change.
     for (i = 1; i < count; i++) {
-      w = smoothstep((p - (i - 1) - 0.3) / 0.4);
+      w = envMix(p - (i - 1));
       envLayers[i].style.opacity = w.toFixed(3);
       handLayers[i].style.opacity = w.toFixed(3);
     }
 
     var base = Math.min(Math.floor(p), count - 2);
-    var mix = smoothstep((p - base - 0.3) / 0.4);
+    var mix = envMix(p - base);
     var a = ACCENTS[base];
     var b = ACCENTS[base + 1];
     root.style.setProperty('--accent-rgb',
