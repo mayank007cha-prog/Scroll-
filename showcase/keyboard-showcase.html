@@ -560,8 +560,9 @@ button {
 @media (max-aspect-ratio: 1/1) {
   /* Framed around the keyboard band, with the edges feathered into the night. */
   .kb-scene {
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 84%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 84%, transparent 100%);
+    /* Eased fade at the bottom, so the desk melts into the night. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 76%, rgba(0, 0, 0, 0.82) 83%, rgba(0, 0, 0, 0.5) 90%, rgba(0, 0, 0, 0.2) 95%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 76%, rgba(0, 0, 0, 0.82) 83%, rgba(0, 0, 0, 0.5) 90%, rgba(0, 0, 0, 0.2) 95%, transparent 100%);
   }
 
   .kb-shade {
@@ -593,9 +594,28 @@ button {
   }
 
   .kb-dock::before,
-  .kb-dock::after,
-  .kb-dock-haze {
+  .kb-dock::after {
     display: none;
+  }
+
+  /* Soft blurred fade from the bottom of the desk into the details, so
+     there is no hard edge. --dock-top from main.js. */
+  .kb-dock-haze {
+    left: 0;
+    width: 100%;
+    transform: none;
+    top: calc(var(--dock-top, 70%) - 90px);
+    bottom: 0;
+    height: auto;
+    -webkit-backdrop-filter: blur(8px) brightness(0.85);
+    backdrop-filter: blur(8px) brightness(0.85);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, rgba(0, 0, 0, 0.6) 30%, #000 55%);
+    mask-image: linear-gradient(to bottom, transparent 0, rgba(0, 0, 0, 0.6) 30%, #000 55%);
+  }
+
+  /* Progress rail a touch lower, nearer the details. */
+  .kb-rail {
+    top: calc(var(--dock-top, 70%) - 2px);
   }
 
   .kb-products {
