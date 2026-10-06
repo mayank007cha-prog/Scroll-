@@ -72,6 +72,9 @@
     spinAccel: [130, 220],
     fallScale: 0.1,
 
+    // Sound (synthesised with Web Audio; add ?sound=0 to the URL to mute)
+    soundVolume: 0.8,
+
     // 4. return — starts while the roller is still finishing near the top
     returnAtRoll: 0.45,            // roll progress at which the chat starts coming back
     returnStagger: 18,             // ms between bubbles, newest (bottom) first
@@ -133,6 +136,138 @@
   const enterEase = cubicBezier(...CONFIG.enterEase);
   const rollEase = cubicBezier(...CONFIG.rollEase);
 
+  // ---------------------------------------------------------------- sound
+  // All effects are synthesised live, so they follow the motion exactly:
+  //   roll()  – foam-roller rumble + paper rustle/crackle, driven by roller speed
+  //   flop()  – soft thud when the loose paper falls onto the roller
+  //   swish() – contact tick + falling swish for each knocked-off bubble
+  const sfx = (() => {
+    const enabled = new URLSearchParams(location.search).get('sound') !== '0';
+    let ac = null, master = null, noise = null, roll = null;
+
+    function unlock() {
+      if (!enabled) return;
+      if (!ac) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        ac = new AC();
+        const comp = ac.createDynamicsCompressor();
+        comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 3;
+        master = ac.createGain();
+        master.gain.value = CONFIG.soundVolume;
+        master.connect(comp).connect(ac.destination);
+        noise = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+        const d = noise.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (ac.state === 'suspended') ac.resume();
+    }
+
+    const ready = () => ac && ac.state !== 'closed';
+    const noiseSource = (loop) => { const n = ac.createBufferSource(); n.buffer = noise; n.loop = loop; return n; };
+    const panner = (x) => {
+      if (ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = x; return p; }
+      return ac.createGain();
+    };
+    const filter = (type, freq, q = 0.7) => {
+      const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q; return f;
+    };
+    // quick attack, exponential decay
+    const envelope = (g, t, peak, attack, decay) => {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+    };
+
+    function startRoll() {
+      if (!ready()) return;
+      stopRoll(0.02);
+      const src = noiseSource(true);
+      const rumble = ac.createGain(); rumble.gain.value = 0;
+      const rustle = ac.createGain(); rustle.gain.value = 0;
+      const rustleF = filter('bandpass', 2200, 0.6);
+      src.connect(filter('lowpass', 240)).connect(rumble).connect(master);
+      src.connect(rustleF).connect(rustle).connect(master);
+      // the roller's nap turning: a fast wobble on the rumble
+      const nap = ac.createOscillator(); nap.frequency.value = 14;
+      const napDepth = ac.createGain(); napDepth.gain.value = 0;
+      nap.connect(napDepth).connect(rumble.gain);
+      src.start(); nap.start();
+      roll = { src, nap, napDepth, rumble, rustle, rustleF };
+    }
+
+    function rolling(speed) {
+      if (!roll) return;
+      const k = clamp(Math.abs(speed) / 1700);
+      const t = ac.currentTime;
+      roll.rumble.gain.setTargetAtTime(0.55 * k, t, 0.03);
+      roll.napDepth.gain.setTargetAtTime(0.3 * k, t, 0.03);
+      roll.nap.frequency.setTargetAtTime(9 + 32 * k, t, 0.05);
+      roll.rustle.gain.setTargetAtTime(0.14 * k, t, 0.03);
+      roll.rustleF.frequency.setTargetAtTime(1600 + 1800 * k, t, 0.05);
+      if (Math.random() < k * 0.45) crackle(k);
+    }
+
+    // tiny paper crackle
+    function crackle(k) {
+      const t = ac.currentTime + Math.random() * 0.015;
+      const src = noiseSource(false);
+      const g = ac.createGain();
+      envelope(g, t, 0.05 + 0.1 * k * Math.random(), 0.002, 0.012 + Math.random() * 0.02);
+      src.connect(filter('highpass', 2800 + Math.random() * 2500)).connect(g).connect(panner(Math.random() * 1.2 - 0.6)).connect(master);
+      src.start(t, Math.random() * 1.8);
+      src.stop(t + 0.06);
+    }
+
+    function stopRoll(fade = 0.12) {
+      if (!roll) return;
+      const r = roll; roll = null;
+      const t = ac.currentTime;
+      r.rumble.gain.cancelScheduledValues(t); r.rumble.gain.setTargetAtTime(0, t, fade / 3);
+      r.rustle.gain.cancelScheduledValues(t); r.rustle.gain.setTargetAtTime(0, t, fade / 3);
+      r.napDepth.gain.cancelScheduledValues(t); r.napDepth.gain.setTargetAtTime(0, t, fade / 3);
+      r.src.stop(t + fade + 0.05); r.nap.stop(t + fade + 0.05);
+    }
+
+    // paper falling onto the roller
+    function flop() {
+      if (!ready()) return;
+      const t = ac.currentTime;
+      const o = ac.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(55, t + 0.16);
+      const og = ac.createGain(); envelope(og, t, 0.5, 0.006, 0.2);
+      o.connect(og).connect(master); o.start(t); o.stop(t + 0.25);
+      const n = noiseSource(false);
+      const ng = ac.createGain(); envelope(ng, t, 0.28, 0.004, 0.13);
+      n.connect(filter('lowpass', 700)).connect(ng).connect(master);
+      n.start(t, Math.random()); n.stop(t + 0.2);
+    }
+
+    // a bubble getting knocked off: contact tick + falling swish
+    function swish(side, r) {
+      if (!ready()) return;
+      const t = ac.currentTime;
+      const p = panner(side * 0.6);
+      p.connect(master);
+
+      const n = noiseSource(false);
+      const bp = filter('bandpass', 2800 + r * 900, 1.3);
+      bp.frequency.setValueAtTime(2800 + r * 900, t);
+      bp.frequency.exponentialRampToValueAtTime(450 + r * 250, t + 0.34);
+      const ng = ac.createGain(); envelope(ng, t, 0.3, 0.02, 0.33);
+      n.connect(bp).connect(ng).connect(p);
+      n.start(t, Math.random() * 1.5); n.stop(t + 0.4);
+
+      const o = ac.createOscillator(); o.type = 'triangle';
+      o.frequency.setValueAtTime(820 + r * 520, t);
+      o.frequency.exponentialRampToValueAtTime(340 + r * 160, t + 0.07);
+      const og = ac.createGain(); envelope(og, t, 0.16, 0.003, 0.08);
+      o.connect(og).connect(p); o.start(t); o.stop(t + 0.1);
+    }
+
+    return { unlock, startRoll, rolling, stopRoll, flop, swish };
+  })();
+
   // ---------------------------------------------------------------- DOM
   const stage = document.getElementById('stage');
   const wpBase = document.getElementById('wpBase');
@@ -158,6 +293,7 @@
   // ---------------------------------------------------------------- state
   let phase = 'idle'; // idle | run | done
   let sweepDone = false, returnStart = -1;
+  let flopped = false;
   let flyLayer = null;       // copy of the chat that falls away while the real chat comes back
   let phaseStart = 0;
   let rafId = 0;
@@ -198,6 +334,7 @@
         left: r.left - s.left,
         right: r.right - s.left,
         contact: range(CONFIG.contactRange, rand()),
+        pitch: rand(),
         vx: side * range(CONFIG.sideSpeed, rand()),
         ax: side * range(CONFIG.sideAccel, rand()),
         lift: range(CONFIG.liftFactor, rand()),
@@ -479,6 +616,8 @@
     droopVel += acc * dt;
     droop += droopVel * dt;
     const edgeSpeed = Math.max(0, v);
+    sfx.rolling(line.roll >= 1 ? 0 : v * (1 - smoothstep((line.roll - 0.8) / 0.2)));
+    if (!flopped && t >= CONFIG.enterDuration) { flopped = true; sfx.flop(); }
     last = { now, y: line.y };
 
     // Stuck paper: clipped at the roller line, image fixed to the paper
@@ -509,6 +648,7 @@
           b.t0 = tSec;
           b.vy = -Math.max(300, edgeSpeed) * b.lift;
           b.el.classList.add('is-flying');
+          sfx.swish(b.side, b.pitch);
         } else {
           const k = smoothstep(1 - (gap - b.contact) / CONFIG.nudgeRange);
           if (k > 0) setTransform(b.el, b.side * 3 * k, -CONFIG.nudgeLift * k, b.side * CONFIG.nudgeTilt * k, 1);
@@ -543,6 +683,7 @@
       flapCanvas.classList.remove('is-active');
       roller.classList.remove('is-active');
       sweepDone = true;
+      sfx.stopRoll();
     }
   }
 
@@ -611,6 +752,7 @@
 
   // Back to the very first frame: old wallpaper, chat in place, no paper or roller.
   function resetToInitial() {
+    sfx.stopRoll(0.05);
     wpBase.classList.remove('is-new');
     sheet.classList.remove('is-active');
     flapCanvas.classList.remove('is-active');
@@ -631,6 +773,7 @@
   let starting = false;
   async function play() {
     if (starting || phase === 'run') return;
+    sfx.unlock(); // must happen inside the tap for mobile browsers
     starting = true;
     await paperReady;
     starting = false;
@@ -654,6 +797,8 @@
     flapCanvas.classList.add('is-active');
     roller.classList.add('is-active');
     roller.style.opacity = '1';
+    flopped = false;
+    sfx.startRoll();
 
     phase = 'run';
     phaseStart = performance.now();
