@@ -43,7 +43,7 @@
     // Roller image geometry (Figma asset 205 × 236; roller head centre ≈ 33px from the top)
     rollerHeight: 236,
     rollerHeadCenter: 33,
-    rollerScale: 1.3,              // drawn this much bigger than the Figma asset
+    rollerScale: 1.15,             // drawn this much bigger than the Figma asset
 
     // Loose paper flap
     flapLength: 90,                // px of loose paper above the roller — the roller holds the sheet's top edge
