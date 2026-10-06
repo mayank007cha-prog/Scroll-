@@ -28,17 +28,17 @@
   const ROLLER_IMAGE = 'assets/roller.png';
 
   const CONFIG = {
-    // 1. enter
-    enterDuration: 320,            // ms
-    enterEase: [0.2, 0.8, 0.3, 1],
+    // One continuous roller path (no stop between entering and rolling):
+    // 1. enter – the sheet slides in fast and slows right down as it lands
+    enterDuration: 300,            // ms
     coverOnEnter: 0.2,             // part of the screen the stuck paper covers after entering
-
-    // 2. settle (paper falls onto the roller)
-    settleDuration: 90,            // ms
-
-    // 3. roll
+    landSpeed: 420,                // px/s while the paper lands on the roller (never zero → no hitch)
+    // 2. roll – the roller carries on smoothly up and off the top
     rollDuration: 760,             // ms
-    rollEase: [0.42, 0, 0.32, 1],
+    rollPeakAt: 0.45,              // where in the roll it reaches top speed
+    exitSpeed: 600,                // px/s as it leaves the top
+    // (start and top speeds are solved so the distances fit the durations;
+    //  speeds are per 852px of screen height)
 
     // Roller image geometry (Figma asset 205 × 236; roller head centre ≈ 33px from the top)
     rollerHeight: 236,
@@ -93,27 +93,6 @@
   const range = ([a, b], r) => a + (b - a) * r;
   const rad = (d) => (d * Math.PI) / 180;
 
-  // CSS-style cubic-bezier easing
-  function cubicBezier(x1, y1, x2, y2) {
-    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
-    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
-    const sx = (t) => ((ax * t + bx) * t + cx) * t;
-    const sy = (t) => ((ay * t + by) * t + cy) * t;
-    const dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
-    return (x) => {
-      if (x <= 0) return 0;
-      if (x >= 1) return 1;
-      let t = x;
-      for (let i = 0; i < 8; i++) {
-        const err = sx(t) - x;
-        const d = dx(t);
-        if (Math.abs(err) < 1e-6 || Math.abs(d) < 1e-6) break;
-        t -= err / d;
-      }
-      return sy(clamp(t));
-    };
-  }
-
   // Damped spring, 0 → 1 (closed form)
   function spring(t, { omega, zeta }) {
     if (t <= 0) return 0;
@@ -133,17 +112,29 @@
     };
   }
 
-  const enterEase = cubicBezier(...CONFIG.enterEase);
-  const rollEase = cubicBezier(...CONFIG.rollEase);
+  // Distance travelled while speed eases (smoothstep) from v0 to v1 over dur
+  // seconds, at fraction u. Speed and acceleration stay continuous at every
+  // join, so the roller never jolts.
+  function easedTravel(v0, v1, dur, u) {
+    return v0 * dur * u + (v1 - v0) * dur * (u * u * u - 0.5 * u * u * u * u);
+  }
+  const easeOutCubic = (x) => 1 - Math.pow(1 - clamp(x), 3);
 
   // ---------------------------------------------------------------- sound
-  // All effects are synthesised live, so they follow the motion exactly:
-  //   roll()  – foam-roller rumble + paper rustle/crackle, driven by roller speed
-  //   flop()  – soft thud when the loose paper falls onto the roller
-  //   swish() – contact tick + falling swish for each knocked-off bubble
+  // Small, soft, tonal interaction sounds (synthesised live with Web Audio),
+  // all from one C-major pentatonic scale so they always sound gentle together.
+  //   start()    – a soft rising "whoop" as the paper appears
+  //   flop()     – a low, round "boop" when the paper lands on the roller
+  //   progress() – a quiet rising arpeggio as the roller paints upward,
+  //                then a little chime when the wallpaper is done
+  //   bloop()    – a cute falling "bloop" for each chat that falls off
   const sfx = (() => {
     const enabled = new URLSearchParams(location.search).get('sound') !== '0';
-    let ac = null, master = null, noise = null, roll = null;
+    const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98, 1760]; // C5–A6
+    const ARP_AT = [0.08, 0.28, 0.48, 0.68];
+    const ARP = [523.25, 659.25, 783.99, 1046.5];
+    let ac = null, out = null;
+    let step = 0, chimed = false, nextBloop = 0;
 
     function unlock() {
       if (!enabled) return;
@@ -151,121 +142,115 @@
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
         ac = new AC();
+        // warm bus: soft top end, a touch of room, gentle compression
+        out = ac.createGain();
+        out.gain.value = CONFIG.soundVolume;
+        const tone = ac.createBiquadFilter();
+        tone.type = 'lowpass'; tone.frequency.value = 5000; tone.Q.value = 0.3;
         const comp = ac.createDynamicsCompressor();
-        comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 3;
-        master = ac.createGain();
-        master.gain.value = CONFIG.soundVolume;
-        master.connect(comp).connect(ac.destination);
-        noise = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
-        const d = noise.getChannelData(0);
-        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        comp.threshold.value = -20; comp.knee.value = 18; comp.ratio.value = 2.5;
+        const room = ac.createConvolver();
+        room.buffer = roomImpulse(1.2);
+        const wet = ac.createGain(); wet.gain.value = 0.2;
+        out.connect(tone).connect(comp);
+        tone.connect(room).connect(wet).connect(comp);
+        comp.connect(ac.destination);
       }
       if (ac.state === 'suspended') ac.resume();
     }
 
-    const ready = () => ac && ac.state !== 'closed';
-    const noiseSource = (loop) => { const n = ac.createBufferSource(); n.buffer = noise; n.loop = loop; return n; };
-    const panner = (x) => {
-      if (ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = x; return p; }
-      return ac.createGain();
+    function roomImpulse(sec) {
+      const len = Math.floor(ac.sampleRate * sec);
+      const buf = ac.createBuffer(2, len, ac.sampleRate);
+      for (let c = 0; c < 2; c++) {
+        const d = buf.getChannelData(c);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+      }
+      return buf;
+    }
+
+    const ok = () => ac && ac.state !== 'closed';
+    const panTo = (x) => {
+      const p = ac.createStereoPanner ? ac.createStereoPanner() : ac.createGain();
+      if (p.pan) p.pan.value = x;
+      p.connect(out);
+      return p;
     };
-    const filter = (type, freq, q = 0.7) => {
-      const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q; return f;
-    };
-    // quick attack, exponential decay
-    const envelope = (g, t, peak, attack, decay) => {
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(peak, t + attack);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
-    };
 
-    function startRoll() {
-      if (!ready()) return;
-      stopRoll(0.02);
-      const src = noiseSource(true);
-      const rumble = ac.createGain(); rumble.gain.value = 0;
-      const rustle = ac.createGain(); rustle.gain.value = 0;
-      const rustleF = filter('bandpass', 2200, 0.6);
-      src.connect(filter('lowpass', 240)).connect(rumble).connect(master);
-      src.connect(rustleF).connect(rustle).connect(master);
-      // the roller's nap turning: a fast wobble on the rumble
-      const nap = ac.createOscillator(); nap.frequency.value = 14;
-      const napDepth = ac.createGain(); napDepth.gain.value = 0;
-      nap.connect(napDepth).connect(rumble.gain);
-      src.start(); nap.start();
-      roll = { src, nap, napDepth, rumble, rustle, rustleF };
+    // soft bell: sine with faint upper partials, quick attack, gentle decay
+    function bell(f, t, gain, decay, pan = 0) {
+      const dest = panTo(pan);
+      for (const [mult, level] of [[1, 1], [2, 0.16], [3, 0.04]]) {
+        const o = ac.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = f * mult;
+        const e = ac.createGain();
+        const d = decay / mult;
+        e.gain.setValueAtTime(0.0001, t);
+        e.gain.exponentialRampToValueAtTime(gain * level, t + 0.006);
+        e.gain.exponentialRampToValueAtTime(0.0001, t + d);
+        o.connect(e).connect(dest);
+        o.start(t);
+        o.stop(t + d + 0.05);
+      }
     }
 
-    function rolling(speed) {
-      if (!roll) return;
-      const k = clamp(Math.abs(speed) / 1700);
-      const t = ac.currentTime;
-      roll.rumble.gain.setTargetAtTime(0.55 * k, t, 0.03);
-      roll.napDepth.gain.setTargetAtTime(0.3 * k, t, 0.03);
-      roll.nap.frequency.setTargetAtTime(9 + 32 * k, t, 0.05);
-      roll.rustle.gain.setTargetAtTime(0.14 * k, t, 0.03);
-      roll.rustleF.frequency.setTargetAtTime(1600 + 1800 * k, t, 0.05);
-      if (Math.random() < k * 0.45) crackle(k);
+    // pitch-glide blip: rising = "whoop", falling = "bloop"
+    function glide(f0, f1, t, gain, dur, pan = 0) {
+      const o = ac.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f0, t);
+      o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      const e = ac.createGain();
+      e.gain.setValueAtTime(0.0001, t);
+      e.gain.exponentialRampToValueAtTime(gain, t + 0.008);
+      e.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.06);
+      o.connect(e).connect(panTo(pan));
+      o.start(t);
+      o.stop(t + dur + 0.1);
     }
 
-    // tiny paper crackle
-    function crackle(k) {
-      const t = ac.currentTime + Math.random() * 0.015;
-      const src = noiseSource(false);
-      const g = ac.createGain();
-      envelope(g, t, 0.05 + 0.1 * k * Math.random(), 0.002, 0.012 + Math.random() * 0.02);
-      src.connect(filter('highpass', 2800 + Math.random() * 2500)).connect(g).connect(panner(Math.random() * 1.2 - 0.6)).connect(master);
-      src.start(t, Math.random() * 1.8);
-      src.stop(t + 0.06);
+    function start() {
+      step = 0; chimed = false; nextBloop = 0;
+      if (!ok()) return;
+      glide(392, 784, ac.currentTime + 0.01, 0.09, 0.16);
     }
 
-    function stopRoll(fade = 0.12) {
-      if (!roll) return;
-      const r = roll; roll = null;
-      const t = ac.currentTime;
-      r.rumble.gain.cancelScheduledValues(t); r.rumble.gain.setTargetAtTime(0, t, fade / 3);
-      r.rustle.gain.cancelScheduledValues(t); r.rustle.gain.setTargetAtTime(0, t, fade / 3);
-      r.napDepth.gain.cancelScheduledValues(t); r.napDepth.gain.setTargetAtTime(0, t, fade / 3);
-      r.src.stop(t + fade + 0.05); r.nap.stop(t + fade + 0.05);
-    }
-
-    // paper falling onto the roller
     function flop() {
-      if (!ready()) return;
+      if (!ok()) return;
       const t = ac.currentTime;
-      const o = ac.createOscillator(); o.type = 'sine';
-      o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(55, t + 0.16);
-      const og = ac.createGain(); envelope(og, t, 0.5, 0.006, 0.2);
-      o.connect(og).connect(master); o.start(t); o.stop(t + 0.25);
-      const n = noiseSource(false);
-      const ng = ac.createGain(); envelope(ng, t, 0.28, 0.004, 0.13);
-      n.connect(filter('lowpass', 700)).connect(ng).connect(master);
-      n.start(t, Math.random()); n.stop(t + 0.2);
+      glide(330, 196, t, 0.16, 0.12);
+      bell(392, t + 0.01, 0.04, 0.5);
     }
 
-    // a bubble getting knocked off: contact tick + falling swish
-    function swish(side, r) {
-      if (!ready()) return;
-      const t = ac.currentTime;
-      const p = panner(side * 0.6);
-      p.connect(master);
-
-      const n = noiseSource(false);
-      const bp = filter('bandpass', 2800 + r * 900, 1.3);
-      bp.frequency.setValueAtTime(2800 + r * 900, t);
-      bp.frequency.exponentialRampToValueAtTime(450 + r * 250, t + 0.34);
-      const ng = ac.createGain(); envelope(ng, t, 0.3, 0.02, 0.33);
-      n.connect(bp).connect(ng).connect(p);
-      n.start(t, Math.random() * 1.5); n.stop(t + 0.4);
-
-      const o = ac.createOscillator(); o.type = 'triangle';
-      o.frequency.setValueAtTime(820 + r * 520, t);
-      o.frequency.exponentialRampToValueAtTime(340 + r * 160, t + 0.07);
-      const og = ac.createGain(); envelope(og, t, 0.16, 0.003, 0.08);
-      o.connect(og).connect(p); o.start(t); o.stop(t + 0.1);
+    function progress(roll) {
+      if (!ok()) return;
+      while (step < ARP_AT.length && roll >= ARP_AT[step]) {
+        bell(ARP[step], ac.currentTime, 0.06, 0.9);
+        step++;
+      }
+      if (!chimed && roll >= 0.86) {
+        chimed = true;
+        const t = ac.currentTime;
+        bell(1046.5, t, 0.08, 1.4, -0.15);
+        bell(1318.51, t + 0.07, 0.065, 1.4, 0.15);
+        bell(1567.98, t + 0.14, 0.05, 1.6);
+      }
     }
 
-    return { unlock, startRoll, rolling, stopRoll, flop, swish };
+    function bloop(side, r) {
+      if (!ok()) return;
+      const now = ac.currentTime;
+      if (nextBloop - now > 0.25) return; // never lag far behind the motion
+      const t = Math.max(now, nextBloop);
+      nextBloop = t + 0.045;              // little gaps make the cascade sound tidy
+      const f = PENTA[5 + Math.floor(r * 5)];
+      glide(f, f * 0.62, t, 0.08, 0.09, side * 0.5);
+    }
+
+    function reset() { step = 0; chimed = false; nextBloop = 0; }
+
+    return { unlock, start, flop, progress, bloop, reset };
   })();
 
   // ---------------------------------------------------------------- DOM
@@ -294,7 +279,15 @@
   let phase = 'idle'; // idle | run | done
   let sweepDone = false, returnStart = -1;
   let flopped = false;
-  let flyLayer = null;       // copy of the chat that falls away while the real chat comes back
+  // Copy of the chat that falls away while the real chat comes back. Built once
+  // and reused, so nothing new has to be laid out or painted mid-animation.
+  const flyLayer = chat.cloneNode(true);
+  flyLayer.removeAttribute('id');
+  flyLayer.classList.add('chat--fly', 'is-idle');
+  flyLayer.setAttribute('aria-hidden', 'true');
+  chat.before(flyLayer);
+  const flyUnits = Array.from(flyLayer.querySelectorAll('.unit'));
+  const HIDDEN = '0.001'; // practically invisible, but still painted (no repaint when it fades in)
   let phaseStart = 0;
   let rafId = 0;
   let H = 0, W = 0;
@@ -322,7 +315,6 @@
     flapCanvas.style.height = canvasH + 'px';
     if (flapGL) flapGL.resize();
 
-    const flyUnits = Array.from(flyLayer.querySelectorAll('.unit'));
     bubbles = flyUnits.map((el, i) => {
       const r = el.getBoundingClientRect();
       const rand = seeded(1013 + i * 7919);
@@ -353,22 +345,33 @@
   // Where the roller presses the paper (screen y) and which row of the paper
   // is under it, at time t (ms).
   function rollerLine(t) {
-    const { enterDuration: tIn, settleDuration: tSettle, rollDuration: tRoll } = CONFIG;
+    const tIn = CONFIG.enterDuration / 1000, tRoll = CONFIG.rollDuration / 1000;
+    const tA = tRoll * CONFIG.rollPeakAt, tB = tRoll - tA;
+    const k = H / 852;
     const enterTo = H * (1 - CONFIG.coverOnEnter);
     const enterFrom = H + CONFIG.flapLength + 70;  // everything starts below the screen
     const rollTo = -(CONFIG.rollerHeight - CONFIG.rollerHeadCenter + 30); // roller fully past the top
+    const vLand = CONFIG.landSpeed * k, vExit = CONFIG.exitSpeed * k;
+    // solve the start and top speeds so each segment covers exactly its distance
+    const vIn = (2 * (enterFrom - enterTo)) / tIn - vLand;
+    const vPeak = (2 * (enterTo - rollTo) - vLand * tA - vExit * tB) / (tA + tB);
+    const sec = t / 1000;
 
-    if (t < tIn) {
-      // Sheet slides in with the roller; the paper isn't stuck yet, so its
-      // image travels with it.
-      return { y: lerp(enterFrom, enterTo, enterEase(t / tIn)), paperRow: enterTo, roll: 0 };
+    if (sec < tIn) {
+      const u = sec / tIn;
+      const y = enterFrom - easedTravel(vIn, vLand, tIn, u);
+      // The paper itself eases to a stop as it lands, while the roller keeps
+      // moving and starts rolling over it — no sudden stop in the image.
+      const slide = (enterFrom - enterTo) * (1 - easeOutCubic(u));
+      return { y, paperRow: y - slide, roll: 0 };
     }
-    if (t < tIn + tSettle) return { y: enterTo, paperRow: enterTo, roll: 0 };
 
     // Rolling: paper is stuck below the roller, so screen row = paper row.
-    const p = clamp((t - tIn - tSettle) / tRoll);
-    const y = lerp(enterTo, rollTo, rollEase(p));
-    return { y, paperRow: y, roll: p };
+    const r = sec - tIn;
+    let y;
+    if (r < tA) y = enterTo - easedTravel(vLand, vPeak, tA, r / tA);
+    else y = enterTo - easedTravel(vLand, vPeak, tA, 1) - easedTravel(vPeak, vExit, tB, Math.min(1, (r - tA) / tB));
+    return { y, paperRow: y, roll: clamp(r / tRoll) };
   }
 
   // ---------------------------------------------------------------- paper flap
@@ -450,7 +453,7 @@
     const uShadow = gl.getUniformLocation(prog, 'uShadow');
     gl.uniform3fv(gl.getUniformLocation(prog, 'uBack'), CONFIG.paperBack.map((c) => c / 255));
 
-    let texReady = false;
+    let texReady = false, texKey = '';
     const tex = gl.createTexture();
     function upload() {
       gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -468,6 +471,7 @@
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       texReady = true;
+      texKey = `${W}x${H}`;
     }
 
     // scratch arrays for the 3D positions
@@ -479,7 +483,7 @@
 
     return {
       resize() {
-        texReady = false;
+        if (texKey !== `${W}x${H}`) texReady = false;
         canvas.width = Math.round(W * dprGL);
         canvas.height = Math.round(canvasH * dprGL);
         gl.viewport(0, 0, canvas.width, canvas.height);
@@ -616,7 +620,7 @@
     droopVel += acc * dt;
     droop += droopVel * dt;
     const edgeSpeed = Math.max(0, v);
-    sfx.rolling(line.roll >= 1 ? 0 : v * (1 - smoothstep((line.roll - 0.8) / 0.2)));
+    sfx.progress(line.roll);
     if (!flopped && t >= CONFIG.enterDuration) { flopped = true; sfx.flop(); }
     last = { now, y: line.y };
 
@@ -647,8 +651,7 @@
           b.flung = true;
           b.t0 = tSec;
           b.vy = -Math.max(300, edgeSpeed) * b.lift;
-          b.el.classList.add('is-flying');
-          sfx.swish(b.side, b.pitch);
+          sfx.bloop(b.side, b.pitch);
         } else {
           const k = smoothstep(1 - (gap - b.contact) / CONFIG.nudgeRange);
           if (k > 0) setTransform(b.el, b.side * 3 * k, -CONFIG.nudgeLift * k, b.side * CONFIG.nudgeTilt * k, 1);
@@ -683,7 +686,6 @@
       flapCanvas.classList.remove('is-active');
       roller.classList.remove('is-active');
       sweepDone = true;
-      sfx.stopRoll();
     }
   }
 
@@ -693,18 +695,22 @@
   // rises a short way into its slot while fading in, cascading up the column.
   // The chat sits above the new paper (still under the flap and roller) so it
   // can come in while the roller is finishing at the top.
-  function startReturn(t) {
-    returnStart = t;
+  // The real chat is already parked (lowered, nearly transparent) from the tap
+  // on, so starting the return only changes transforms and opacity.
+  function parkChat() {
     chat.classList.add('is-over');
-    chat.classList.remove('is-waiting');
     const rise = H * CONFIG.returnRise;
     const order = bubbles.filter((b) => b.bottom > 0).sort((a, b) => b.bottom - a.bottom);
-    bubbles.forEach((b) => { b.delay = -1; b.home.style.transform = ''; b.home.style.opacity = ''; });
+    bubbles.forEach((b) => { b.delay = -1; b.home.style.transform = ''; b.home.style.opacity = HIDDEN; });
     order.forEach((b, i) => {
       b.delay = i * CONFIG.returnStagger;
       b.home.style.transform = `translate3d(0, ${rise}px, 0)`;
-      b.home.style.opacity = '0';
     });
+  }
+
+  function startReturn(t) {
+    returnStart = t;
+    bubbles.forEach((b) => { if (b.delay < 0) b.home.style.opacity = ''; });
   }
 
   function updateReturn(t) {
@@ -717,7 +723,7 @@
       const y = rise * (1 - k);
       if (local < CONFIG.returnFade || Math.abs(y) > 0.3) settled = false;
       b.home.style.transform = `translate3d(0, ${snap(y).toFixed(2)}px, 0)`;
-      b.home.style.opacity = clamp(local / CONFIG.returnFade).toFixed(3);
+      b.home.style.opacity = Math.max(0.001, clamp(local / CONFIG.returnFade)).toFixed(3);
     }
     return settled;
   }
@@ -740,8 +746,7 @@
       const settled = returnStart >= 0 && updateReturn(t);
       if (sweepDone && settled && t - returnStart > CONFIG.flyFadeOut + 120) {
         units.forEach((el) => { el.style.transform = ''; el.style.opacity = ''; });
-        chat.classList.remove('is-over');
-        if (flyLayer) { flyLayer.remove(); flyLayer = null; }
+        flyLayer.classList.add('is-idle');
         setPhase('done', now);
       }
     }
@@ -752,19 +757,19 @@
 
   // Back to the very first frame: old wallpaper, chat in place, no paper or roller.
   function resetToInitial() {
-    sfx.stopRoll(0.05);
+    sfx.reset();
     wpBase.classList.remove('is-new');
     sheet.classList.remove('is-active');
     flapCanvas.classList.remove('is-active');
     roller.classList.remove('is-active');
-    if (flyLayer) { flyLayer.remove(); flyLayer = null; }
-    chat.classList.remove('is-over', 'is-waiting');
-    units.forEach((el) => {
+    chat.classList.remove('is-over');
+    flyLayer.classList.add('is-idle');
+    flyLayer.style.opacity = '';
+    for (const el of [...units, ...flyUnits]) {
       el.style.transform = '';
       el.style.visibility = '';
       el.style.opacity = '';
-      el.classList.remove('is-flying');
-    });
+    }
     phase = 'idle';
   }
 
@@ -779,16 +784,10 @@
     starting = false;
     resetToInitial();
 
-    // The copy does the falling; the real chat waits hidden and comes back.
-    if (flyLayer) flyLayer.remove();
-    flyLayer = chat.cloneNode(true);
-    flyLayer.removeAttribute('id');
-    flyLayer.classList.add('chat--fly');
-    flyLayer.setAttribute('aria-hidden', 'true');
-    chat.before(flyLayer);
-    chat.classList.add('is-waiting');
-
     measure();
+    // The copy does the falling; the real chat is parked and comes back later.
+    flyLayer.classList.remove('is-idle');
+    parkChat();
     hint.classList.add('is-hidden');
     last = null; droop = 0; droopVel = 0;
     sweepDone = false; returnStart = -1;
@@ -798,7 +797,7 @@
     roller.classList.add('is-active');
     roller.style.opacity = '1';
     flopped = false;
-    sfx.startRoll();
+    sfx.start();
 
     phase = 'run';
     phaseStart = performance.now();
@@ -810,6 +809,14 @@
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); play(); }
   });
+
+  // Prepare everything up front (layout, texture upload, shader compile) so the
+  // first frames after a tap are as light as the rest.
+  Promise.all([paperReady, document.fonts ? document.fonts.ready : null]).then(() => {
+    measure();
+    if (flapGL) flapGL.draw(H + 2000, H, 0);
+  });
+  window.addEventListener('resize', () => { if (phase !== 'run') measure(); });
 
   // Expose for tweaking from the console
   window.wallpaperRoller = { CONFIG, play };

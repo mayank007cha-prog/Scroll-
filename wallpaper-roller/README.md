@@ -9,10 +9,11 @@ playing are ignored. Once the wallpaper has changed, the next tap replays the
 whole sequence from the start (old wallpaper).
 
 - `?speed=0.25` in the URL plays it in slow motion.
-- Sound effects are synthesised with Web Audio: a roller rumble and paper
-  rustle that follow the roller's speed, a soft thud when the paper lands on
-  the roller, and a tick plus swish for each chat that falls off. Add
-  `?sound=0` to mute them.
+- Sound effects are small, soft tones synthesised with Web Audio, all from one
+  pentatonic scale: a gentle "whoop" as the paper appears, a round "boop"
+  when it lands on the roller, a quiet rising arpeggio while the roller
+  climbs, a little chime when the wallpaper is done, and a cute "bloop" for
+  each chat that falls off. Add `?sound=0` to mute them.
 - All timing/physics lives in `CONFIG` at the top of `app.js`.
 
 How it works: the new wallpaper is a sheet of paper laid over the chat. It
