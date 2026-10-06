@@ -2,3 +2,6 @@
 .DS_Store
 node_modules/
 public/
+
+# Real-ESRGAN intermediates (regenerate with showcase/tools/upscale.py)
+showcase/assets/src/*@2x.png

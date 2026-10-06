@@ -81,6 +81,9 @@ class RRDBNet(nn.Module):
 def upscale(model, img, tile=256, pad=16):
     """Tiled inference so memory stays flat; tiles overlap by `pad`."""
     x = torch.from_numpy(np.asarray(img, dtype=np.float32) / 255).permute(2, 0, 1)[None]
+    # The x2 model works on 2x2 pixel blocks: pad odd edges, crop after.
+    oh, ow = x.shape[-2:]
+    x = F.pad(x, (0, ow % 2, 0, oh % 2), mode="replicate")
     _, _, h, w = x.shape
     out = torch.zeros(1, 3, h * 2, w * 2)
     for y0 in range(0, h, tile):
@@ -92,6 +95,7 @@ def upscale(model, img, tile=256, pad=16):
             oy, ox = (y0 - py0) * 2, (x0 - px0) * 2
             out[:, :, y0 * 2:y1 * 2, x0 * 2:x1 * 2] = res[:, :, oy:oy + (y1 - y0) * 2, ox:ox + (x1 - x0) * 2]
         print(f"  row {y0 // tile + 1}/{(h + tile - 1) // tile}", flush=True)
+    out = out[:, :, :oh * 2, :ow * 2]
     arr = (out[0].clamp(0, 1).permute(1, 2, 0).numpy() * 255).round().astype(np.uint8)
     return Image.fromarray(arr)
 
@@ -103,13 +107,15 @@ def main(weights):
     model.eval()
     for env in ENVS:
         print(env, flush=True)
-        img = Image.open(SRC / f"bg-{env}.png").convert("RGB")
-        upscale(model, img).save(SRC / f"bg-{env}@2x.png")
+        if not (SRC / f"bg-{env}@2x.png").exists():
+            img = Image.open(SRC / f"bg-{env}.png").convert("RGB")
+            upscale(model, img).save(SRC / f"bg-{env}@2x.png")
 
-        kb = Image.open(SRC / f"kb-{env}.png").convert("RGBA")
-        big = upscale(model, kb.convert("RGB"))
-        big.putalpha(kb.getchannel("A").resize(big.size, Image.LANCZOS))
-        big.save(SRC / f"kb-{env}@2x.png")
+        if not (SRC / f"kb-{env}@2x.png").exists():
+            kb = Image.open(SRC / f"kb-{env}.png").convert("RGBA")
+            big = upscale(model, kb.convert("RGB"))
+            big.putalpha(kb.getchannel("A").resize(big.size, Image.LANCZOS))
+            big.save(SRC / f"kb-{env}@2x.png")
 
 
 if __name__ == "__main__":
