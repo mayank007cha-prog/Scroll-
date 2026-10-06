@@ -4,8 +4,9 @@ Mobile prototype of the "paint roller" wallpaper change, built from the Figma
 file *Interactions-motion → Chat Background Change animation*.
 
 Open `index.html` through any static server (e.g. `python3 -m http.server`) and
-**tap the screen** to play. Every tap replays the whole sequence from the start
-(old wallpaper), even mid-animation.
+**tap the screen** to play. A tap plays the change once, and taps while it is
+playing are ignored. Once the wallpaper has changed, the next tap replays the
+whole sequence from the start (old wallpaper).
 
 - `?speed=0.25` in the URL plays it in slow motion.
 - All timing/physics lives in `CONFIG` at the top of `app.js`.

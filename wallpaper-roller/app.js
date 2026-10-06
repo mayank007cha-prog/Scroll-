@@ -626,10 +626,11 @@
     phase = 'idle';
   }
 
-  // Every tap plays the whole sequence from the start, even mid-animation.
+  // A tap plays the whole sequence once; taps while it is playing are ignored.
+  // After the wallpaper has changed, the next tap replays it from the start.
   let starting = false;
   async function play() {
-    if (starting) return;
+    if (starting || phase === 'run') return;
     starting = true;
     await paperReady;
     starting = false;
