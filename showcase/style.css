@@ -276,49 +276,6 @@ button {
   cursor: pointer;
 }
 
-/* "Next" tag above the waiting board. */
-.kb-next {
-  position: absolute;
-  left: 11.7%;
-  top: 77.5%;
-  transform: translate(-50%, -100%);
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 8px 14px;
-  border: 1px solid var(--glass-edge);
-  border-radius: 999px;
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  font-size: 13px;
-  white-space: nowrap;
-  cursor: pointer;
-  opacity: var(--next, 0);
-  visibility: var(--next-vis, hidden);
-  transition: border-color 0.4s var(--ease);
-}
-
-.kb-next:hover,
-.kb-next:focus-visible {
-  border-color: rgba(255, 255, 255, 0.4);
-  outline: none;
-}
-
-.kb-next-label {
-  font-size: 10px;
-  font-weight: 600;
-  font-stretch: 125%;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
-.kb-next-name {
-  font-weight: 500;
-  color: var(--ink);
-}
-
 /* ---------- Shading ---------- */
 
 .kb-shade {
@@ -552,9 +509,6 @@ button {
     justify-content: center;
   }
 
-  .kb-next {
-    display: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -10,14 +10,14 @@
   var REST_Y = 934;
 
   // Waiting board: set down on the desk at the left, smaller and dimmed.
-  var PEEK_DX = -821;
+  var PEEK_DX = -846;
   var PEEK_DY = 22;
-  var PEEK_SCALE = 0.6;
+  var PEEK_SCALE = 0.48;
   // Previous board: set down on the right of the desk, between the right
   // hand and the PC case, smaller and dimmed (mirrors the waiting board).
-  var PREV_DX = 809;
+  var PREV_DX = 826;
   var PREV_DY = -9;
-  var PREV_SCALE = 0.55;
+  var PREV_SCALE = 0.46;
   // While travelling, a board is lifted toward the camera, over the hands.
   var LIFT_Y = 78;
   var LIFT_SCALE = 0.07;
@@ -45,8 +45,6 @@
   var ticks = [].slice.call(document.querySelectorAll('.kb-rail button'));
   var cta = document.getElementById('cta');
   var dock = document.querySelector('.kb-dock');
-  var nextBtn = document.getElementById('next');
-  var nextName = nextBtn.querySelector('.kb-next-name');
   var root = document.documentElement;
   var count = boards.length;
   var names = products.map(function (p) { return p.querySelector('strong').textContent; });
@@ -352,19 +350,12 @@
       ticks[i].querySelector('span').style.setProperty('--on', (1 - smoothstep(Math.abs(p - i))).toFixed(3));
     }
 
-    // "Next" tag over the waiting board, only while things are at rest.
-    var rest = 1 - smoothstep(Math.abs(p - Math.round(p)) / 0.12);
-    var hasNext = Math.round(p) < count - 1;
-    var nextO = hasNext ? rest : 0;
-    scene.style.setProperty('--next', nextO.toFixed(3));
-    scene.style.setProperty('--next-vis', nextO < 0.01 ? 'hidden' : 'visible');
 
     var nextActive = Math.round(p);
     if (nextActive !== activeIndex) {
       activeIndex = nextActive;
       cta.href = products[activeIndex].getAttribute('data-href');
       cta.setAttribute('aria-label', 'Shop ' + names[activeIndex] + ' on Meckeys');
-      if (activeIndex < count - 1) nextName.textContent = names[activeIndex + 1];
       for (i = 0; i < count; i++) {
         var on = i === activeIndex;
         products[i].setAttribute('aria-hidden', on ? 'false' : 'true');
@@ -410,7 +401,6 @@
   ticks.forEach(function (btn, i) {
     btn.addEventListener('click', function () { goTo(i); });
   });
-  nextBtn.addEventListener('click', function () { goTo(Math.min(activeIndex + 1, count - 1)); });
   boards.forEach(function (board, i) {
     board.addEventListener('click', function () {
       if (board.classList.contains('is-peek')) goTo(i);
