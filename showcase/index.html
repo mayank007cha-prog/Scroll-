@@ -19,8 +19,9 @@
       .kb-scene is laid out in the photos' own pixel space (2048x1144) and
       scaled to cover the viewport, so keyboards, light and the hand mask line
       up with the photo at every screen size.
-      Layer order (bottom → top): environment photos, key-light, the board at
-      rest, hands (masked copy of the photos), mist, boards in motion.
+      Layer order (bottom → top): environment photos, monitor screen, key-light,
+      the board at rest, hands (masked copy of the photos), depth of field,
+      mist, boards in motion.
     -->
     <section class="kb-hero" id="showcase" aria-label="Keyboard showcase">
       <div class="kb-sticky">
@@ -31,6 +32,10 @@
             <img class="kb-bg" src="assets/bg-prism.webp" srcset="assets/bg-prism.webp 2048w, assets/bg-prism@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
           </div>
 
+          <!-- Calm ambient display over the monitor, so the screen sits back
+               in the scene instead of competing with the keyboard. -->
+          <div class="kb-screen" aria-hidden="true"></div>
+
           <div class="kb-spot" aria-hidden="true"></div>
 
           <div class="kb-layer" id="layer-rest"></div>
@@ -40,6 +45,10 @@
             <img class="kb-bg" src="assets/bg-frost.webp" srcset="assets/bg-frost.webp 2048w, assets/bg-frost@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
             <img class="kb-bg" src="assets/bg-prism.webp" srcset="assets/bg-prism.webp 2048w, assets/bg-prism@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
           </div>
+
+          <!-- Depth of field: the room softly blurred and dimmed around a
+               clear zone on the keyboard, hands and desk. -->
+          <div class="kb-dof" aria-hidden="true"></div>
 
           <div class="kb-mist" aria-hidden="true">
             <div class="kb-mist-sheet kb-mist-a"></div>
@@ -105,7 +114,6 @@
     </section>
   </main>
 
-  <script src="vendor/lenis.min.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

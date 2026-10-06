@@ -2,8 +2,8 @@
 
     python3 showcase/tools/build_standalone.py
 
-Writes showcase/keyboard-showcase.html: index.html with style.css, the
-vendored Lenis, main.js and every asset inlined (images as data URIs), so
+Writes showcase/keyboard-showcase.html: index.html with style.css,
+main.js and every asset inlined (images as data URIs), so
 it opens straight from disk or any host with no other files. Only the
 Archivo web font is still fetched from Google Fonts (system fallback
 offline).
@@ -30,7 +30,6 @@ def main():
     html = (ROOT / "index.html").read_text()
     css = (ROOT / "style.css").read_text()
     js = (ROOT / "main.js").read_text()
-    lenis = (ROOT / "vendor" / "lenis.min.js").read_text()
 
     # Each keyboard image is used three times (img + two masks). Set the mask
     # once per board as an inherited CSS variable instead of repeating the
@@ -62,8 +61,6 @@ def main():
         css = css.replace(f"url({src})", f"var(--asset-{i})")
     css = ":root {\n" + "".join(f"  --asset-{i}: url({src});\n" for i, src in enumerate(shared)) + "}\n" + css
     html = html.replace('<link rel="stylesheet" href="style.css">', "<style>\n" + inline_assets(css) + "\n</style>")
-    html = html.replace('<script src="vendor/lenis.min.js"></script>',
-                        "<script>/* Lenis 1.3.26, MIT, darkroom.engineering */\n" + lenis + "\n</script>")
     html = html.replace('<script src="main.js"></script>', copy_js + "<script>\n" + js + "\n</script>")
     html = inline_assets(html)
 

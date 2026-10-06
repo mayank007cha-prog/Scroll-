@@ -45,6 +45,7 @@
   var ticks = [].slice.call(document.querySelectorAll('.kb-rail button'));
   var cta = document.getElementById('cta');
   var dock = document.querySelector('.kb-dock');
+  var railEl = document.querySelector('.kb-rail');
   var root = document.documentElement;
   var count = boards.length;
   var names = products.map(function (p) { return p.querySelector('strong').textContent; });
@@ -85,46 +86,14 @@
     return a + (b - a) * t;
   }
 
-  // ---------- Smooth scroll (Lenis) with fallback to native ----------
+  // ---------- Scrolling: native, with a directional settle ----------
 
-  var lenis = null;
-  if (window.Lenis && !reduceMotion) {
-    lenis = new window.Lenis({
-      lerp: 0.07,
-      wheelMultiplier: 0.9,
-      smoothWheel: true,
-      syncTouch: false,
-      // Wheel and swipe input inside the showcase is turned into one-board
-      // steps (see onGesture) instead of free scrolling.
-      virtualScroll: function (e) { return onGesture(e); }
-    });
-    (function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    })(performance.now());
-  }
-
+  // The page scrolls natively (wheel, trackpad, touch momentum all feel
+  // normal). When a scroll comes to rest between boards, it eases on to the
+  // next board in the direction you were scrolling, so a short scroll is
+  // enough to change keyboards. Nothing intercepts or holds input.
   function scrollY() {
-    return lenis ? lenis.scroll : window.pageYOffset;
-  }
-
-  function scrollToY(y, slow, done) {
-    if (lenis) {
-      lenis.scrollTo(y, {
-        // Steps (gestures, keys, rail, clicks) ease in and out; snaps carry
-        // on from existing motion, so they only ease out.
-        duration: slow ? 1.6 : 1.4,
-        easing: slow
-          ? function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
-          : function (t) { return 1 - Math.pow(1 - t, 3); },
-        force: true,
-        onComplete: function () { snapping = false; if (done) done(); }
-      });
-    } else {
-      window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
-      snapping = false;
-      if (done) done();
-    }
+    return window.pageYOffset;
   }
 
   // ---------- Layout: cover-fit the photo, framed on the keyboard ----------
@@ -165,9 +134,10 @@
     // clears the floating dock. Any strip this opens at the bottom is
     // feathered into the night by the scene's mask.
     var dockTop = dock.getBoundingClientRect().top - sticky.getBoundingClientRect().top;
-    // The phone layout parks the progress rail just above the dock.
+    // The progress rail sits just above the dock.
     sticky.style.setProperty('--dock-top', dockTop + 'px');
-    var limit = dockTop - DOCK_GAP;
+    // Keep the resting board clear of the dock and the progress rail above it.
+    var limit = dockTop - DOCK_GAP - railEl.offsetHeight;
     var boardBottom = sy + BOARD_BOTTOM * k;
     if (boardBottom > limit) sy -= boardBottom - limit;
 
@@ -194,7 +164,7 @@
     var u = t.distance > 0 ? clamp((scrollY() - t.top) / t.distance, 0, 1) : 0;
     var q = u * (count - 1);
     var i = Math.min(Math.floor(q), count - 2);
-    return i + smoothstep((q - i - 0.1) / 0.8);
+    return i + smoothstep((q - i - 0.04) / 0.92);
   }
 
   function restY(i) {
@@ -202,126 +172,68 @@
     return t.top + (t.distance * i) / (count - 1);
   }
 
-  function goTo(i, done) {
-    settledIndex = i;
-    snapping = true;
-    scrollToY(restY(i), true, done);
-  }
-
-  // ---------- One gesture = one board ----------
-
-  // Inside the showcase, a wheel flick, trackpad swipe or touch swipe moves
-  // exactly one board, then input is held until the glide has finished AND
-  // the gesture has gone quiet (trackpads keep sending inertia events for a
-  // second or so), so a single gesture can never skip a board.
-  var gestureLock = false;
-  var lastGesture = 0;
-  var touchAccum = 0;
-  var touchFired = false;
-  var lastDelta = 0;
-  var QUIET_MS = 220;
-  var TAIL_MS = 700;
-
-  function releaseWhenQuiet() {
-    if (performance.now() - lastGesture > QUIET_MS) gestureLock = false;
-    else setTimeout(releaseWhenQuiet, 60);
-  }
-
-  function step(dir) {
-    var dest = clamp(settledIndex + dir, 0, count - 1);
-    if (dest === settledIndex) return;
-    gestureLock = true;
-    goTo(dest, releaseWhenQuiet);
-  }
-
-  function onGesture(e) {
-    var ev = e.event;
+  function nearestIndex() {
     var t = track();
-    var y = scrollY();
-    if (y < t.top - 2 || y > t.top + t.distance + 2) return true; // outside: scroll normally
-    // Block native scrolling for moves and wheels, never for touchstart
-    // (that would also swallow taps on the dock and rail).
-    if (ev.cancelable && ev.type !== 'touchstart') ev.preventDefault();
-
-    if (ev.type.indexOf('touch') === 0) {
-      if (ev.type === 'touchstart') {
-        touchAccum = 0;
-        touchFired = false;
-      } else if (ev.type === 'touchmove') {
-        lastGesture = performance.now();
-        touchAccum += e.deltaY;
-        if (!touchFired && !gestureLock && Math.abs(touchAccum) > 24) {
-          touchFired = true;
-          step(touchAccum > 0 ? 1 : -1);
-        }
-      }
-      return false;
-    }
-
-    // Wheel / trackpad. Once unlocked, an event only starts a new step if it
-    // is stronger than the one before it, or is a real push after a pause; a
-    // fading inertia tail (small, shrinking deltas) never does.
-    var now = performance.now();
-    var gap = now - lastGesture;
-    var mag = Math.abs(e.deltaY);
-    var fresh = mag > Math.abs(lastDelta) * 1.3 + 4 || (gap > TAIL_MS && mag >= 8);
-    lastGesture = now;
-    lastDelta = e.deltaY;
-    if (!gestureLock && mag > 1 && fresh) step(e.deltaY > 0 ? 1 : -1);
-    return false;
+    return Math.round(clamp((scrollY() - t.top) / t.distance, 0, 1) * (count - 1));
   }
 
-  // Snap: once scrolling settles inside the pinned range, glide on to the
-  // board you were heading for, so each one lands exactly in its place. A
-  // nudge of ~12% of a step is enough to commit to the next board.
-  var snapping = false;
-  var idleTimer = 0;
   var settledIndex = 0;
-  var COMMIT = 0.12;
+  var touching = false;
+  var settleTimer = 0;
+  var COMMIT = 0.04; // fraction of a step that counts as "meant to move"
 
-  function maybeSnap() {
-    if (snapping || reduceMotion) return;
-    // Wait until the wheel's own easing has finished, or it would override
-    // the snap mid-way.
-    if (lenis && lenis.isScrolling) {
-      idleTimer = setTimeout(maybeSnap, 80);
-      return;
-    }
+  // While our own glide runs, the settle stands down (slow frames can leave
+  // gaps between scroll events that look like "stopped"). Any new wheel,
+  // touch or key input hands control straight back to the reader.
+  var gliding = false;
+  var glideTimer = 0;
+
+  function endGlide() {
+    gliding = false;
+    clearTimeout(glideTimer);
+  }
+
+  function goTo(i) {
+    settledIndex = clamp(i, 0, count - 1);
+    gliding = !reduceMotion;
+    clearTimeout(glideTimer);
+    glideTimer = setTimeout(endGlide, 1500);
+    window.scrollTo({ top: restY(settledIndex), behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+
+  window.addEventListener('scrollend', function () { if (gliding) endGlide(); });
+  window.addEventListener('wheel', endGlide, { passive: true });
+  window.addEventListener('keydown', endGlide);
+
+  function settle() {
+    if (touching || gliding) return;
     var t = track();
     var y = scrollY();
     if (y < t.top - 2 || y > t.top + t.distance + 2) return;
     var q = clamp((y - t.top) / t.distance, 0, 1) * (count - 1);
-    var dest;
+    var dest = settledIndex;
     if (q > settledIndex + COMMIT) dest = Math.ceil(q - COMMIT);
     else if (q < settledIndex - COMMIT) dest = Math.floor(q + COMMIT);
-    else dest = settledIndex;
-    dest = clamp(dest, 0, count - 1);
-    settledIndex = dest;
-    if (Math.abs(restY(dest) - y) < 2) return;
-    snapping = true;
-    scrollToY(restY(dest), false);
+    if (Math.abs(restY(dest) - y) < 1.5) { settledIndex = dest; return; }
+    goTo(dest);
   }
 
-  // Fresh input takes over from an in-flight snap (Lenis retargets on its
-  // own), so clear the flag or the interrupted snap would block later ones.
-  function onInput() {
-    snapping = false;
-  }
-  window.addEventListener('wheel', onInput, { passive: true });
-  window.addEventListener('touchstart', onInput, { passive: true });
-  window.addEventListener('keydown', onInput);
+  window.addEventListener('touchstart', function () { touching = true; endGlide(); }, { passive: true });
+  window.addEventListener('touchend', function () {
+    touching = false;
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(settle, 140);
+  }, { passive: true });
 
-  // Keyboard: arrows / Page keys step between boards while the showcase is
-  // on screen. Past either end, keys fall through to normal scrolling.
-  var NEXT_KEYS = { ArrowRight: 1, ArrowDown: 1, PageDown: 1 };
+  // Keyboard: arrows / Page keys step one board at a time while the
+  // showcase is on screen.
+  var NEXT_KEYS = { ArrowRight: 1, ArrowDown: 1, PageDown: 1, ' ': 1 };
   var PREV_KEYS = { ArrowLeft: 1, ArrowUp: 1, PageUp: 1 };
   window.addEventListener('keydown', function (e) {
     if (e.altKey || e.ctrlKey || e.metaKey || e.defaultPrevented) return;
+    if (e.target && /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(e.target.tagName) && e.key === ' ') return;
     var dir = NEXT_KEYS[e.key] ? 1 : PREV_KEYS[e.key] ? -1 : 0;
     if (!dir) return;
-    var t = track();
-    var y = scrollY();
-    if (y < t.top - 2 || y > t.top + t.distance + 2) return;
     var dest = settledIndex + dir;
     if (dest < 0 || dest > count - 1) return;
     e.preventDefault();
@@ -330,8 +242,10 @@
 
   function onScroll() {
     kick();
-    clearTimeout(idleTimer);
-    idleTimer = setTimeout(maybeSnap, lenis ? 140 : 220);
+    if (gliding && Math.abs(scrollY() - restY(settledIndex)) < 1.5) endGlide();
+    // Settle once the scroll (including momentum) has stopped.
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(settle, 130);
   }
 
   // ---------- Render ----------
@@ -447,9 +361,9 @@
     if (reduceMotion) {
       current = target;
     } else {
-      // Lenis already smooths the scroll; this adds a light, frame-rate
-      // independent follow so the boards glide rather than track 1:1.
-      current += (target - current) * (1 - Math.exp(-dt * (lenis ? 7 : 5.5)));
+      // A light, frame-rate independent follow, so the boards glide rather
+      // than track the scroll position 1:1.
+      current += (target - current) * (1 - Math.exp(-dt * 8));
     }
 
     if (Math.abs(target - current) < 0.0004) current = target;
@@ -480,8 +394,7 @@
     });
   });
 
-  if (lenis) lenis.on('scroll', onScroll);
-  else window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('scroll', onScroll, { passive: true });
 
   // Lock the stage height. Touch browsers change the viewport height as
   // their toolbars slide in and out while scrolling; following that would
@@ -565,7 +478,7 @@
   lockStage();
   layout();
   current = target = readScroll();
-  settledIndex = Math.round(current);
+  settledIndex = nearestIndex();
   render(current);
 
   // Reveal once the first environment + board are decoded.
