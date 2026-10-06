@@ -4,8 +4,13 @@
   --ink-soft: rgba(246, 245, 242, 0.8);
   --ink-faint: rgba(246, 245, 242, 0.56);
   --night: #0a0b0f;
-  --glass: rgba(12, 13, 18, 0.62);
+  /* Frosted glass: a faint white tint over a dimmed, heavily blurred
+     backdrop, lit from the top edge. */
+  --glass: rgba(14, 15, 20, 0.4);
+  --glass-tint: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0.05));
+  --glass-blur: blur(28px) saturate(170%) brightness(0.88);
   --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-rim: linear-gradient(160deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.1) 32%, rgba(255, 255, 255, 0.04) 64%, rgba(255, 255, 255, 0.3));
   /* Updated from JS as the environment changes (space-separated RGB). */
   --accent-rgb: 255 122 56;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -338,7 +343,13 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 0;
+  padding: 8px 0;
+  border-radius: 999px;
+  background: var(--glass-tint), var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 12px 30px -12px rgba(0, 0, 0, 0.7);
 }
 
 .kb-rail button {
@@ -357,7 +368,7 @@ button {
   border-radius: 2px;
   background: rgba(255, 255, 255, calc(0.42 + var(--on, 0) * 0.58));
   /* Dark halo keeps the hairlines legible over the glowing PC fans. */
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 8px 2px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 calc(var(--on, 0) * 8px) rgba(255, 255, 255, 0.5);
 }
 
 .kb-rail button:hover span {
@@ -382,11 +393,57 @@ button {
   gap: 28px;
   padding: 8px 8px 8px 28px;
   border-radius: 999px;
-  border: 1px solid var(--glass-edge);
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
-  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  /* Room light reflected up into the bottom of the glass. */
+  background:
+    var(--glass-tint),
+    radial-gradient(70% 120% at 50% 130%, rgb(var(--accent-rgb) / 0.22), transparent 70%),
+    var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow:
+    0 24px 60px -24px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Specular rim: a 1px gradient border, brightest top-left. */
+.kb-dock::before,
+.kb-rail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--glass-rim);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+
+/* Slow light sweep across the glass. */
+.kb-dock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.09) 50%, transparent 58%);
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  animation: kb-glass-sweep 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes kb-glass-sweep {
+  0%, 55% { background-position: 120% 0; }
+  100%    { background-position: -20% 0; }
+}
+
+.kb-products,
+.kb-cta {
+  position: relative;
+  z-index: 1;
 }
 
 .kb-products {
@@ -427,12 +484,17 @@ button {
   padding: 0 24px;
   border-radius: 999px;
   color: var(--night);
-  background: var(--ink);
+  /* Glossy glass-white: bright top, a touch cooler below, lit edge. */
+  background: linear-gradient(180deg, #ffffff 0%, #f1f0ed 55%, #e2e1de 100%);
   text-decoration: none;
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
-  transition: background 0.4s var(--ease), box-shadow 0.5s var(--ease);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 8px 20px -10px rgba(0, 0, 0, 0.7);
+  transition: box-shadow 0.5s var(--ease), filter 0.4s var(--ease);
 }
 
 .kb-cta span {
@@ -441,8 +503,11 @@ button {
 
 .kb-cta:hover,
 .kb-cta:focus-visible {
-  background: #fff;
-  box-shadow: 0 0 30px -6px rgb(var(--accent-rgb) / 0.7);
+  filter: brightness(1.04);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 0 30px -6px rgb(var(--accent-rgb) / 0.7);
   outline: none;
 }
 
@@ -512,7 +577,8 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kb-mist-sheet {
+  .kb-mist-sheet,
+  .kb-dock::after {
     animation: none;
   }
 }
