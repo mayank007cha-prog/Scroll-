@@ -80,7 +80,7 @@
     fallSoundDelay: 90,            // ms after a chat is knocked off before its tick (when it visibly falls)
 
     // 4. return — starts while the roller is still finishing near the top
-    holdNewWallpaper: 1500,        // ms to show the clean new wallpaper before the chat comes back
+    holdNewWallpaper: 800,         // ms to show the clean new wallpaper before the chat comes back
     returnStagger: 18,             // ms between bubbles, newest (bottom) first
     returnRise: 0.1,               // × screen height each bubble rises from
     returnFade: 160,               // ms fade-in while rising
