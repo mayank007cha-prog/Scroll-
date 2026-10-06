@@ -39,8 +39,7 @@
   var envLayers = [].slice.call(scene.querySelectorAll('.kb-env .kb-bg'));
   var handLayers = [].slice.call(scene.querySelectorAll('.kb-hands .kb-bg'));
   var products = [].slice.call(document.querySelectorAll('.kb-product'));
-  var ticks = [].slice.call(document.querySelectorAll('.kb-ticks button'));
-  var countEl = document.getElementById('count');
+  var ticks = [].slice.call(document.querySelectorAll('.kb-rail button'));
   var cta = document.getElementById('cta');
   var dock = document.querySelector('.kb-dock');
   var nextBtn = document.getElementById('next');
@@ -326,7 +325,7 @@
       products[i].style.opacity = o.toFixed(3);
       products[i].style.transform = 'translate3d(0,' + (-clamp(d, -0.6, 0.6) * 30).toFixed(2) + 'px,0)';
       products[i].style.visibility = o < 0.01 ? 'hidden' : 'visible';
-      ticks[i].querySelector('span').style.setProperty('--fill', clamp(p - i + 1, 0, 1).toFixed(3));
+      ticks[i].querySelector('span').style.setProperty('--on', (1 - smoothstep(Math.abs(p - i))).toFixed(3));
     }
 
     // "Next" tag over the waiting board, only while things are at rest.
@@ -339,7 +338,6 @@
     var nextActive = Math.round(p);
     if (nextActive !== activeIndex) {
       activeIndex = nextActive;
-      countEl.textContent = '0' + (activeIndex + 1);
       cta.href = products[activeIndex].getAttribute('data-href');
       cta.setAttribute('aria-label', 'Shop ' + names[activeIndex] + ' on Meckeys');
       if (activeIndex < count - 1) nextName.textContent = names[activeIndex + 1];
