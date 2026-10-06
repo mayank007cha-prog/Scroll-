@@ -570,15 +570,31 @@ button {
 
 
 
+  /* Phones: the details sit right under the keyboard, with no glass box,
+     so they read as a caption to the product. --dock-top from main.js. */
   .kb-dock {
     left: 50%;
     right: auto;
+    top: var(--dock-top, 70%);
+    bottom: auto;
     width: min(250px, calc(100% - 64px));
     transform: translateX(-50%);
     flex-direction: column;
     gap: 10px;
-    padding: 12px 14px;
-    border-radius: 18px;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    overflow: visible;
+  }
+
+  .kb-dock::before,
+  .kb-dock::after,
+  .kb-dock-haze {
+    display: none;
   }
 
   .kb-products {
@@ -859,9 +875,31 @@ button {
       sy = vh * 0.58 - REST_Y * k;
     }
 
-    // Lift the frame so the resting board (and its contact shadow) always
-    // clears the floating dock. Any strip this opens at the bottom is
-    // feathered into the night by the scene's mask.
+    if (vw / vh <= 1) {
+      // Portrait: the progress rail and product details sit right under the
+      // keyboard. Lift the scene only if the group would run off the screen.
+      var railH = railEl.offsetHeight;
+      var below = 2 + railH + 10 + dock.offsetHeight + 28;
+      // Settle the group so the details end ~10% above the bottom edge.
+      var bottomNow = sy + BOARD_BOTTOM * k;
+      sy += vh * 0.9 - (bottomNow + below - 28);
+      bottomNow = sy + BOARD_BOTTOM * k;
+      if (bottomNow + below > vh) sy -= bottomNow + below - vh;
+      var top = sy + BOARD_BOTTOM * k + 2 + railH + 10;
+      sticky.style.setProperty('--dock-top', top + 'px');
+      sticky.classList.add('is-portrait');
+      scene.style.setProperty('--sw', IMG_W * k + 'px');
+      scene.style.setProperty('--sh', IMG_H * k + 'px');
+      scene.style.setProperty('--sx', sx + 'px');
+      scene.style.setProperty('--sy', sy + 'px');
+      scene.style.fontSize = 40 * k + 'px';
+      return;
+    }
+    sticky.classList.remove('is-portrait');
+
+    // Landscape: lift the frame so the resting board (and its contact
+    // shadow) always clears the floating dock. Any strip this opens at the
+    // bottom is feathered into the night by the scene's mask.
     var dockTop = dock.getBoundingClientRect().top - sticky.getBoundingClientRect().top;
     // The progress rail sits just above the dock.
     sticky.style.setProperty('--dock-top', dockTop + 'px');

@@ -554,15 +554,31 @@ button {
 
 
 
+  /* Phones: the details sit right under the keyboard, with no glass box,
+     so they read as a caption to the product. --dock-top from main.js. */
   .kb-dock {
     left: 50%;
     right: auto;
+    top: var(--dock-top, 70%);
+    bottom: auto;
     width: min(250px, calc(100% - 64px));
     transform: translateX(-50%);
     flex-direction: column;
     gap: 10px;
-    padding: 12px 14px;
-    border-radius: 18px;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    overflow: visible;
+  }
+
+  .kb-dock::before,
+  .kb-dock::after,
+  .kb-dock-haze {
+    display: none;
   }
 
   .kb-products {
