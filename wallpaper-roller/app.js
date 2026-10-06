@@ -46,17 +46,19 @@
     rollerScale: 1.3,              // drawn this much bigger than the Figma asset
 
     // Loose paper flap
-    flapLength: 72,                // px of loose paper above the roller — the roller holds the sheet's top edge
-    flapBaseAngle: 20,             // deg it leans forward at the roller
-    flapTipAngle: 80,              // deg at the tip when resting on the roller
-    flapCurl: 2.1,                 // how much the bend concentrates towards the tip
+    flapLength: 90,                // px of loose paper above the roller — the roller holds the sheet's top edge
+    flapBaseAngle: 6,              // deg it leans forward where it rises behind the roller head
+    flapTipAngle: 205,             // deg at the tip: folds over and droops onto the roller (>180 = hangs down)
+    flapCurl: 2.0,                 // how much the bend concentrates towards the tip
+    flapMaxAngle: 235,             // never curl further than this, even when moving fast
+    rollerFrontZ: 22,              // paper further forward than this (px) is drawn over the roller
     perspective: 820,              // px camera distance
     droopPerSpeed: 0.013,          // deg of extra droop per px/s of roller speed
     droopMax: 46,
     flapStiffness: 130,            // spring (soft paper wobble)
     flapDamping: 9.5,
     flutter: 2.2,                  // deg of idle flutter
-    cornerSag: 26,                 // deg extra curl at the corners (arched top edge)
+    cornerSag: 22,                 // deg extra curl at the corners (arched top edge)
     twist: 5,                      // deg of slow left/right wobble
     paperBack: [246, 244, 240],    // colour of the back of the paper
 
@@ -412,6 +414,7 @@
     const STRIDE = 9;
     const verts = new Float32Array((NU + 1) * (NS + 1) * STRIDE);
     const shadowVerts = new Float32Array(verts.length);
+    const maskVerts = new Float32Array(20 * 3 * STRIDE);
     const idx = [];
     for (let i = 0; i < NS; i++) {
       for (let j = 0; j < NU; j++) {
@@ -471,11 +474,11 @@
       },
 
       // Returns the highest (smallest y) screen point of the paper.
-      draw(lineY, paperRow, tSec) {
+      draw(lineY, paperRow, tSec, rollerX = 0) {
         if (!texReady) upload();
         const len = CONFIG.flapLength;
         const persp = CONFIG.perspective;
-        const cx = W / 2, cy = H * 0.45;
+        const cx = W / 2, cy = lineY; // perspective centred on the roller, so the fold drops onto it
         const base = CONFIG.flapBaseAngle;
         const tip = CONFIG.flapTipAngle + droop + Math.sin(tSec * 7.3) * CONFIG.flutter;
         const sag = CONFIG.cornerSag + droop * 0.25;
@@ -498,7 +501,7 @@
               const sm = Math.max(0, s - ds * 0.5);
               const f = Math.pow(sm / len, CONFIG.flapCurl);
               const lean = base * smoothstep(sm / (len * 0.16)); // soft crease at the roller, not a hard fold
-              const phi = rad(lean + (tip - base) * f + sag * xn * xn * f + twist * xn * f);
+              const phi = rad(Math.min(CONFIG.flapMaxAngle, lean + (tip - base) * f + sag * xn * xn * f + twist * xn * f));
               y -= Math.cos(phi) * ds;
               z += Math.sin(phi) * ds;
             }
@@ -566,18 +569,53 @@
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         const count = NS * NU * 6;
 
-        // shadow (no depth write, blended)
-        gl.disable(gl.DEPTH_TEST);
+        // roller head as a depth-only mask: this canvas sits above the roller,
+        // so paper still behind the head (small z) is hidden by it, while the
+        // part that folds over in front of the head is drawn on top of it
+        const rs = CONFIG.rollerScale;
+        const hx0 = W / 2 + (14 - 102.5) * rs + rollerX, hx1 = W / 2 + (180 - 102.5) * rs + rollerX;
+        const hy0 = lineY + (13 - CONFIG.rollerHeadCenter) * rs, hy1 = lineY + (54 - CONFIG.rollerHeadCenter) * rs;
+        const maskZ = -CONFIG.rollerFrontZ / (maxZ * 2);
+        let m = 0;
+        const ring = [];
+        const rad0 = 7 * rs; // rounded ends of the roller sleeve
+        for (const [cx0, cy0, a0] of [[hx1 - rad0, hy0 + rad0, -90], [hx1 - rad0, hy1 - rad0, 0], [hx0 + rad0, hy1 - rad0, 90], [hx0 + rad0, hy0 + rad0, 180]]) {
+          for (let k = 0; k <= 4; k++) {
+            const a = rad(a0 + k * 22.5);
+            ring.push([cx0 + Math.cos(a) * rad0, cy0 + Math.sin(a) * rad0]);
+          }
+        }
+        const cxm = (hx0 + hx1) / 2, cym = (hy0 + hy1) / 2;
+        const put = (X, Y) => {
+          maskVerts[m++] = (X / W) * 2 - 1;
+          maskVerts[m++] = 1 - ((Y - offY) / canvasH) * 2;
+          maskVerts[m++] = maskZ;
+          m += STRIDE - 3;
+        };
+        for (let k = 0; k < ring.length; k++) {
+          const a = ring[k], b = ring[(k + 1) % ring.length];
+          put(cxm, cym); put(a[0], a[1]); put(b[0], b[1]);
+        }
+        gl.disable(gl.BLEND);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.depthMask(true);
+        gl.colorMask(false, false, false, false);
+        gl.bufferData(gl.ARRAY_BUFFER, maskVerts, gl.DYNAMIC_DRAW);
+        gl.drawArrays(gl.TRIANGLES, 0, ring.length * 3);
+        gl.colorMask(true, true, true, true);
+
+        // shadow (blended, no depth write; hidden where the roller head is)
+        gl.depthMask(false);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.uniform1f(uShadow, 1);
         gl.bufferData(gl.ARRAY_BUFFER, shadowVerts, gl.DYNAMIC_DRAW);
         gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0);
 
-        // paper (depth tested so the curl overlaps itself correctly)
+        // paper (depth tested so the curl overlaps itself and the roller correctly)
         gl.disable(gl.BLEND);
-        gl.enable(gl.DEPTH_TEST);
-        gl.depthFunc(gl.LEQUAL);
+        gl.depthMask(true);
         gl.uniform1f(uShadow, 0);
         gl.bufferData(gl.ARRAY_BUFFER, verts, gl.DYNAMIC_DRAW);
         gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0);
@@ -611,14 +649,13 @@
 
     // Loose flap
     flapCanvas.style.transform = `translate3d(0, ${snap(line.y - canvasHinge)}px, 0)`;
-    const edge = (flapGL ? flapGL.draw(line.y, line.paperRow, tSec) : line.y) - 2;
+    const sway = Math.sin(tSec * 6.5) * 1.4;
+    const edge = (flapGL ? flapGL.draw(line.y, line.paperRow, tSec, sway) : line.y) - 2;
 
     // Roller: head on the roller line, tiny hand sway, lifts off at the very end
-    const sway = Math.sin(tSec * 6.5) * 1.4;
-    const tilt = Math.sin(tSec * 5.1 + 0.4) * 0.8;
     const lift = smoothstep((line.roll - 0.84) / 0.16);
     roller.style.transform =
-      `translate3d(${sway.toFixed(2)}px, ${snap(line.y - CONFIG.rollerHeadCenter * CONFIG.rollerScale)}px, 0) rotate(${tilt.toFixed(2)}deg) scale(${(1 + lift * 0.05).toFixed(4)})`;
+      `translate3d(${sway.toFixed(2)}px, ${snap(line.y - CONFIG.rollerHeadCenter * CONFIG.rollerScale)}px, 0) scale(${(1 + lift * 0.05).toFixed(4)})`;
     roller.style.opacity = (1 - lift).toFixed(3);
 
     // Bubbles get knocked off by the paper's top edge

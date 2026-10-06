@@ -124,7 +124,7 @@ body {
   pointer-events: none;
 }
 
-.flap { z-index: 5; }
+.flap { z-index: 7; } /* above the roller: paper that folds over the roller head is drawn on top of it */
 
 .sheet.is-active,
 .flap.is-active { visibility: visible; }
