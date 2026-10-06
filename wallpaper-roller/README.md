@@ -9,11 +9,18 @@ Open `index.html` through any static server (e.g. `python3 -m http.server`) and
 - `?speed=0.25` in the URL plays it in slow motion.
 - All timing/physics lives in `CONFIG` at the top of `app.js`.
 
-How it works: one `requestAnimationFrame` loop moves the roller; the paint edge
-(new wallpaper reveal) is derived from the roller position, and each chat bubble
-reacts to that edge — it gets nudged, then knocked off sideways with a little
-lift, spin and gravity. After a 2s hold on the clean wallpaper the chat column
-rises back from the bottom on a damped spring.
+How it works: the new wallpaper is a sheet of paper laid over the chat. It
+slides in from the bottom with the roller, covering about a quarter of the
+screen. Its loose upper part flops onto the roller, and then the roller rolls
+up and presses it flat. Below the roller, the stuck paper is a DOM layer. The
+loose flap above the roller is a small WebGL mesh that bends in perspective,
+with lighting, a curled lip showing the back of the paper, and a cast shadow.
+A soft spring that reacts to the roller's speed drives the flap. The flap's
+top edge knocks the chat bubbles off as it reaches them. After a 2s hold on
+the clean wallpaper, the chat column rises back from the bottom on a damped
+spring.
+
+Layers, bottom to top: old wallpaper, chat, new paper, roller.
 
 Assets in `assets/` were exported from Figma: the roller image, the original
 chat wallpaper and the new wallpaper.

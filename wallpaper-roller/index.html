@@ -27,15 +27,7 @@
     <!-- 1. Current wallpaper (base layer) -->
     <div class="wallpaper wallpaper--base" id="wpBase"></div>
 
-    <!-- 2. New wallpaper, revealed by the moving paint edge.
-         The sheet moves with the edge; the image inside counter-moves so it stays fixed to the screen. -->
-    <div class="paint" id="paint" aria-hidden="true">
-      <div class="paint__image" id="paintImage"></div>
-      <div class="paint__lip"></div>
-      <div class="paint__sheen"></div>
-    </div>
-
-    <!-- 3. Chat (each .unit = one bubble + its reaction, animated independently) -->
+    <!-- 2. Chat (each .unit = one bubble + its reaction, animated independently) -->
     <section class="chat" id="chat">
       <div class="row me"><div class="unit">
         <div class="bubble tail"><p class="text">Hey, hey, Doc, where are you?</p><i class="pad-b"></i>
@@ -118,6 +110,14 @@
           <span class="time">08:24<svg><use href="#check"/></svg></span></div>
       </div></div>
     </section>
+
+    <!-- 3. New wallpaper as a sheet of paper laid over the chat.
+         .sheet = the part already stuck down (clipped at the roller line);
+         #flap  = the loose paper above the roller, drawn in perspective. -->
+    <div class="sheet" id="sheet" aria-hidden="true">
+      <div class="sheet__image" id="sheetImage"></div>
+    </div>
+    <canvas class="flap" id="flap" aria-hidden="true"></canvas>
 
     <!-- 4. Paint roller (Figma asset) — drives the whole transition -->
     <img class="roller" id="roller" src="assets/roller.png" alt="" width="205" height="236" draggable="false">
