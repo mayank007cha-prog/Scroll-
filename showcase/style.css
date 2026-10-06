@@ -63,16 +63,20 @@ button {
 
 .kb-hero {
   position: relative;
-  /* One viewport to pin, plus scroll distance for each board change. */
-  height: calc(100vh + 2 * 110vh);
-  height: calc(100svh + 2 * 110svh);
+  /* Scroll track only: one screen, plus scroll distance for each board
+     change. Nothing in it moves; the stage below is fixed. */
+  height: calc(var(--stage-h, 100vh) + 2 * 110vh);
 }
 
+/* The stage is fixed to the viewport, so the frame never moves: scrolling
+   only drives the boards, the lighting and the copy. Its height is locked
+   by main.js (touch browsers resize the viewport as their toolbars hide). */
 .kb-sticky {
-  position: sticky;
+  position: fixed;
+  left: 0;
   top: 0;
-  height: 100vh;
-  height: 100svh;
+  width: 100%;
+  height: var(--stage-h, 100vh);
   overflow: hidden;
   background: var(--night);
   opacity: 0;
@@ -92,8 +96,7 @@ button {
   /* Size and offset are written by main.js (cover-fit to the photo). */
   width: var(--sw, 100vw);
   height: var(--sh, 56vw);
-  /* --px/--py: pointer parallax (main.js), on top of the layout offset. */
-  transform: translate3d(calc(var(--sx, 0px) + var(--px, 0px)), calc(var(--sy, 0px) + var(--py, 0px)), 0);
+  transform: translate3d(var(--sx, 0px), var(--sy, 0px), 0);
   /* Soft bottom edge, for when the frame is lifted clear of the dock. */
   -webkit-mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
@@ -150,7 +153,6 @@ button {
    lifted across, so the pass over the hands reads as soft and deliberate. */
 .kb-mist {
   position: absolute;
-  transform: translate3d(var(--mx, 0px), 0, 0);
   left: 0;
   right: 0;
   top: 56%;
@@ -221,12 +223,6 @@ button {
   width: 100%;
   height: auto;
   filter: brightness(var(--bright, 1)) saturate(var(--sat, 1));
-}
-
-/* Keyboard layers sit closer to the camera than the room: they drift a
-   little further with the pointer (--bx/--by, set by main.js). */
-.kb-layer {
-  transform: translate3d(var(--bx, 0px), var(--by, 0px), 0);
 }
 
 /* Gentle wiggle: the board leans toward the cursor on a soft spring
@@ -559,14 +555,31 @@ button {
     font-size: clamp(24px, 7vw, 34px);
   }
 
+  /* Phones: the rail turns horizontal and sits centred just above the
+     dock (name, price, Shop now). --dock-top comes from main.js. */
   .kb-rail {
-    right: 2px;
+    right: auto;
+    left: 50%;
+    top: calc(var(--dock-top, 80%) - 14px);
+    transform: translate(-50%, -100%);
+    flex-direction: row;
+    padding: 0 8px;
+  }
+
+  .kb-rail button {
+    padding: 10px 5px;
+  }
+
+  .kb-rail span {
+    width: calc(14px + var(--on, 0) * 22px);
+    height: 2px;
   }
 
   .kb-dock {
-    left: 16px;
-    right: 16px;
-    transform: none;
+    left: 50%;
+    right: auto;
+    width: min(480px, calc(100% - 32px));
+    transform: translateX(-50%);
     flex-direction: column;
     gap: 16px;
     padding: 20px;

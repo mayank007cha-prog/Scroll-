@@ -23,6 +23,12 @@ python3 showcase/tools/build_standalone.py
 
 ## How it works
 
+- The stage is `position: fixed` and its height is locked (on touch devices it only re-measures
+  when the width changes), so the frame never moves: scrolling only swaps the keyboard, the room
+  lighting and the copy.
+- One gesture = one board: wheel flicks, trackpad swipes (including their inertia tail) and touch
+  swipes each move exactly one board with a 1.6 s eased glide; arrow / Page keys do the same.
+
 - `.kb-scene` is laid out in the photos' own pixel space (2048×1144) and scaled to cover
   the viewport (portrait screens frame the keyboard band instead), so the boards, glow and
   hand mask stay aligned at every size.
@@ -32,8 +38,7 @@ python3 showcase/tools/build_standalone.py
   lifted toward the camera and passes over the hands; its shadow stays on the mat and
   spreads with the height, and the mist thickens around the hands while it moves.
 - Smooth scrolling uses [Lenis](https://github.com/darkroomengineering/lenis) (vendored in
-  `vendor/`, MIT). With a mouse, the room, keyboards and mist drift by different amounts for
-  depth, and the centre board leans toward the cursor on a soft spring. When scrolling settles, the page glides on to the board you were
+  `vendor/`, MIT). With a mouse, the centre board leans toward the cursor on a soft spring. When scrolling settles, the page glides on to the board you were
   heading for, so every board lands exactly in place. `prefers-reduced-motion` turns
   smoothing, snapping and easing off.
 

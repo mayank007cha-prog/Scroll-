@@ -50,7 +50,8 @@
   var names = products.map(function (p) { return p.querySelector('strong').textContent; });
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reduceMotion;
+  var finePointerDevice = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  var finePointer = finePointerDevice && !reduceMotion;
 
   var k = 1;           // photo px → CSS px
   var current = 0;     // rendered position (0 … count-1)
@@ -92,7 +93,10 @@
       lerp: 0.07,
       wheelMultiplier: 0.9,
       smoothWheel: true,
-      syncTouch: false
+      syncTouch: false,
+      // Wheel and swipe input inside the showcase is turned into one-board
+      // steps (see onGesture) instead of free scrolling.
+      virtualScroll: function (e) { return onGesture(e); }
     });
     (function raf(time) {
       lenis.raf(time);
@@ -104,20 +108,22 @@
     return lenis ? lenis.scroll : window.pageYOffset;
   }
 
-  function scrollToY(y, slow) {
+  function scrollToY(y, slow, done) {
     if (lenis) {
       lenis.scrollTo(y, {
-        // Jumps (keys, rail, clicks) ease in and out; snaps carry on from
-        // the wheel's motion, so they only ease out.
-        duration: slow ? 1.8 : 1.4,
+        // Steps (gestures, keys, rail, clicks) ease in and out; snaps carry
+        // on from existing motion, so they only ease out.
+        duration: slow ? 1.6 : 1.4,
         easing: slow
           ? function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
           : function (t) { return 1 - Math.pow(1 - t, 3); },
-        onComplete: function () { snapping = false; }
+        force: true,
+        onComplete: function () { snapping = false; if (done) done(); }
       });
     } else {
       window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
       snapping = false;
+      if (done) done();
     }
   }
 
@@ -143,14 +149,14 @@
 
     if (vw / vh > 1) {
       // Landscape: cover the viewport, centred.
-      // 2% over-scan so the pointer parallax never reveals an edge.
-      k = Math.max(vw / IMG_W, vh / IMG_H) * (finePointer ? 1.02 : 1);
+      k = Math.max(vw / IMG_W, vh / IMG_H);
       sx = (vw - IMG_W * k) / 2;
       sy = (vh - IMG_H * k) / 2;
     } else {
       // Portrait: keep the keyboard ~75% of the width and centre on it,
       // leaving room for the headline above and the dock below.
-      k = (vw * 2.2) / IMG_W;
+      // Capped by height so tablets in portrait see more of the room.
+      k = Math.min(vw * 2.2, vh * 1.15) / IMG_W;
       sx = vw / 2 - REST_X * k;
       sy = vh * 0.58 - REST_Y * k;
     }
@@ -159,6 +165,8 @@
     // clears the floating dock. Any strip this opens at the bottom is
     // feathered into the night by the scene's mask.
     var dockTop = dock.getBoundingClientRect().top - sticky.getBoundingClientRect().top;
+    // The phone layout parks the progress rail just above the dock.
+    sticky.style.setProperty('--dock-top', dockTop + 'px');
     var limit = dockTop - DOCK_GAP;
     var boardBottom = sy + BOARD_BOTTOM * k;
     if (boardBottom > limit) sy -= boardBottom - limit;
@@ -194,10 +202,73 @@
     return t.top + (t.distance * i) / (count - 1);
   }
 
-  function goTo(i) {
+  function goTo(i, done) {
     settledIndex = i;
     snapping = true;
-    scrollToY(restY(i), true);
+    scrollToY(restY(i), true, done);
+  }
+
+  // ---------- One gesture = one board ----------
+
+  // Inside the showcase, a wheel flick, trackpad swipe or touch swipe moves
+  // exactly one board, then input is held until the glide has finished AND
+  // the gesture has gone quiet (trackpads keep sending inertia events for a
+  // second or so), so a single gesture can never skip a board.
+  var gestureLock = false;
+  var lastGesture = 0;
+  var touchAccum = 0;
+  var touchFired = false;
+  var lastDelta = 0;
+  var QUIET_MS = 220;
+  var TAIL_MS = 700;
+
+  function releaseWhenQuiet() {
+    if (performance.now() - lastGesture > QUIET_MS) gestureLock = false;
+    else setTimeout(releaseWhenQuiet, 60);
+  }
+
+  function step(dir) {
+    var dest = clamp(settledIndex + dir, 0, count - 1);
+    if (dest === settledIndex) return;
+    gestureLock = true;
+    goTo(dest, releaseWhenQuiet);
+  }
+
+  function onGesture(e) {
+    var ev = e.event;
+    var t = track();
+    var y = scrollY();
+    if (y < t.top - 2 || y > t.top + t.distance + 2) return true; // outside: scroll normally
+    // Block native scrolling for moves and wheels, never for touchstart
+    // (that would also swallow taps on the dock and rail).
+    if (ev.cancelable && ev.type !== 'touchstart') ev.preventDefault();
+
+    if (ev.type.indexOf('touch') === 0) {
+      if (ev.type === 'touchstart') {
+        touchAccum = 0;
+        touchFired = false;
+      } else if (ev.type === 'touchmove') {
+        lastGesture = performance.now();
+        touchAccum += e.deltaY;
+        if (!touchFired && !gestureLock && Math.abs(touchAccum) > 24) {
+          touchFired = true;
+          step(touchAccum > 0 ? 1 : -1);
+        }
+      }
+      return false;
+    }
+
+    // Wheel / trackpad. Once unlocked, an event only starts a new step if it
+    // is stronger than the one before it, or is a real push after a pause; a
+    // fading inertia tail (small, shrinking deltas) never does.
+    var now = performance.now();
+    var gap = now - lastGesture;
+    var mag = Math.abs(e.deltaY);
+    var fresh = mag > Math.abs(lastDelta) * 1.3 + 4 || (gap > TAIL_MS && mag >= 8);
+    lastGesture = now;
+    lastDelta = e.deltaY;
+    if (!gestureLock && mag > 1 && fresh) step(e.deltaY > 0 ? 1 : -1);
+    return false;
   }
 
   // Snap: once scrolling settles inside the pinned range, glide on to the
@@ -412,33 +483,45 @@
   if (lenis) lenis.on('scroll', onScroll);
   else window.addEventListener('scroll', onScroll, { passive: true });
 
+  // Lock the stage height. Touch browsers change the viewport height as
+  // their toolbars slide in and out while scrolling; following that would
+  // re-frame the scene mid-scroll. So on touch devices the height is only
+  // re-measured when the width changes (rotation); with a mouse it follows
+  // the window.
+  var lockedW = 0;
+  var lockedH = 0;
+  function lockStage() {
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    if (!lockedW || w !== lockedW || (finePointerDevice && h !== lockedH)) {
+      lockedW = w;
+      lockedH = h;
+      root.style.setProperty('--stage-h', h + 'px');
+      return true;
+    }
+    return false;
+  }
+
   window.addEventListener('resize', function () {
+    if (!lockStage()) return;
     layout();
     render(current);
     kick();
   });
 
-  // ---------- Pointer depth + wiggle (mouse only) ----------
+  // ---------- Keyboard wiggle (mouse only) ----------
 
-  // The room, the keyboards and the mist drift by different amounts as the
-  // pointer moves (parallax depth). The centre board also leans toward the
-  // cursor on an under-damped spring, so it sways a little and settles.
+  // The frame stays still; only the centre board leans toward the cursor on
+  // an under-damped spring, so it sways a little and settles.
   if (finePointer) {
-    var DEPTH = { room: [10, 6], boards: [8, 5], mist: [14, 0] }; // px at the screen edge
     var aim = { x: 0, y: 0 };
-    var eye = { x: 0, y: 0 };
     var lean = { a: 0, v: 0, y: 0, vy: 0 };
-    var depthRunning = false;
-    var lastDepth = 0;
+    var wiggleRunning = false;
+    var lastWiggle = 0;
 
-    var depthFrame = function (now) {
-      var dt = lastDepth ? Math.min((now - lastDepth) / 1000, 0.05) : 1 / 60;
-      lastDepth = now;
-
-      // Eased follow for the parallax.
-      var f = 1 - Math.exp(-dt * 4);
-      eye.x += (aim.x - eye.x) * f;
-      eye.y += (aim.y - eye.y) * f;
+    var wiggleFrame = function (now) {
+      var dt = lastWiggle ? Math.min((now - lastWiggle) / 1000, 0.05) : 1 / 60;
+      lastWiggle = now;
 
       // Springs for the lean, driven by the raw pointer so a move gives a
       // soft overshoot and settle (stiffness 70, damping 7: ratio ~0.4).
@@ -447,27 +530,22 @@
       lean.vy += (-70 * (lean.y - aim.y * 3) - 7 * lean.vy) * dt;
       lean.y += lean.vy * dt;
 
-      scene.style.setProperty('--px', (-eye.x * DEPTH.room[0]).toFixed(2) + 'px');
-      scene.style.setProperty('--py', (-eye.y * DEPTH.room[1]).toFixed(2) + 'px');
-      scene.style.setProperty('--bx', (-eye.x * DEPTH.boards[0]).toFixed(2) + 'px');
-      scene.style.setProperty('--by', (-eye.y * DEPTH.boards[1]).toFixed(2) + 'px');
-      scene.style.setProperty('--mx', (-eye.x * DEPTH.mist[0]).toFixed(2) + 'px');
       for (var i = 0; i < count; i++) {
         var on = i === activeIndex;
         boards[i].style.setProperty('--wig', on ? lean.a.toFixed(3) + 'deg' : '0deg');
         boards[i].style.setProperty('--wy', on ? lean.y.toFixed(2) + 'px' : '0px');
       }
 
-      var moving = Math.abs(aim.x - eye.x) + Math.abs(aim.y - eye.y) > 0.001 ||
+      var moving = Math.abs(lean.a - aim.x * 1.1) + Math.abs(lean.y - aim.y * 3) > 0.002 ||
         Math.abs(lean.v) + Math.abs(lean.vy) > 0.002;
-      if (moving) requestAnimationFrame(depthFrame);
-      else { depthRunning = false; lastDepth = 0; }
+      if (moving) requestAnimationFrame(wiggleFrame);
+      else { wiggleRunning = false; lastWiggle = 0; }
     };
 
     var wake = function () {
-      if (!depthRunning) {
-        depthRunning = true;
-        requestAnimationFrame(depthFrame);
+      if (!wiggleRunning) {
+        wiggleRunning = true;
+        requestAnimationFrame(wiggleFrame);
       }
     };
 
@@ -484,6 +562,7 @@
     });
   }
 
+  lockStage();
   layout();
   current = target = readScroll();
   settledIndex = Math.round(current);
