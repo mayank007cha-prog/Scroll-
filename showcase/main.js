@@ -134,7 +134,7 @@
       // Portrait: the progress rail and product details sit right under the
       // keyboard. Lift the scene only if the group would run off the screen.
       var railH = railEl.offsetHeight;
-      var below = 2 + railH + 10 + dock.offsetHeight + 28;
+      var below = 2 + railH + 10 + 18 + dock.offsetHeight + 28;
       // Settle the group so the details end ~10% above the bottom edge.
       var bottomNow = sy + BOARD_BOTTOM * k;
       sy += vh * 0.9 - (bottomNow + below - 28);

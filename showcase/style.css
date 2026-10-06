@@ -559,7 +559,8 @@ button {
   .kb-dock {
     left: 50%;
     right: auto;
-    top: var(--dock-top, 70%);
+    /* 18px of air between the progress rail and the product name. */
+    top: calc(var(--dock-top, 70%) + 18px);
     bottom: auto;
     width: min(250px, calc(100% - 64px));
     transform: translateX(-50%);
