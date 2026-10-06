@@ -80,12 +80,11 @@
     fallSoundDelay: 90,            // ms after a chat is knocked off before its tick (when it visibly falls)
 
     // 4. return — starts while the roller is still finishing near the top
-    returnAtRoll: 0.45,            // roll progress at which the chat starts coming back
+    holdNewWallpaper: 1500,        // ms to show the clean new wallpaper before the chat comes back
     returnStagger: 18,             // ms between bubbles, newest (bottom) first
     returnRise: 0.1,               // × screen height each bubble rises from
     returnFade: 160,               // ms fade-in while rising
     returnSpring: { omega: 14, zeta: 1 }, // critically damped: glides in, no bounce
-    flyFadeOut: 200,               // ms: leftover falling bubbles fade once the chat returns
   };
 
   const speed = Math.max(0.05, parseFloat(new URLSearchParams(location.search).get('speed')) || 1);
@@ -258,7 +257,7 @@
 
   // ---------------------------------------------------------------- state
   let phase = 'idle'; // idle | run | done
-  let sweepDone = false, returnStart = -1;
+  let sweepDone = false, returnStart = -1, paperDoneAt = 0, sweepDoneAt = 0;
   let flopped = false;
   let finished = false, returnEnd = 0;
   // Copy of the chat that falls away while the real chat comes back. Built once
@@ -682,7 +681,6 @@
       const rot = b.side * CONFIG.nudgeTilt + b.spin * tau + 0.5 * b.spinAccel * tau * tau;
       const scale = 1 - CONFIG.fallScale * smoothstep(tau / 0.55);
       setTransform(b.el, x, y, rot, scale);
-      if (returnStart >= 0) b.el.style.opacity = (1 - clamp((t - returnStart) / CONFIG.flyFadeOut)).toFixed(3);
 
       // Off-screen, or fallen under the stuck paper
       const under = b.top + y > line.y + 20;
@@ -694,24 +692,29 @@
       }
     }
 
-    if (returnStart < 0 && line.roll >= CONFIG.returnAtRoll) startReturn(t);
-    if (returnStart >= 0) flyLayer.style.opacity = (1 - clamp((t - returnStart - CONFIG.flyFadeOut) / 120)).toFixed(3);
-
+    // Roller gone: the new wallpaper becomes the base. The sweep ends once the
+    // last falling chat has left the screen too (with a safety cap).
     if (line.roll >= 1) {
-      wpBase.classList.add('is-new');
-      sheet.classList.remove('is-active');
-      flapCanvas.classList.remove('is-active');
-      roller.classList.remove('is-active');
-      sweepDone = true;
+      if (!wpBase.classList.contains('is-new')) {
+        wpBase.classList.add('is-new');
+        sheet.classList.remove('is-active');
+        flapCanvas.classList.remove('is-active');
+        roller.classList.remove('is-active');
+        paperDoneAt = t;
+      }
+      const allGone = bubbles.every((b) => b.gone || b.bottom <= 0);
+      if (allGone || t - paperDoneAt > 900) {
+        flyLayer.classList.add('is-idle');
+        sweepDone = true;
+        sweepDoneAt = t;
+      }
     }
   }
 
   // ---------------------------------------------------------------- return
-  // The real chat comes back while a copy of it is still falling away, so the
-  // return never waits on a flying bubble. Newest message first: each bubble
-  // rises a short way into its slot while fading in, cascading up the column.
-  // The chat sits above the new paper (still under the flap and roller) so it
-  // can come in while the roller is finishing at the top.
+  // After a short hold on the clean new wallpaper, the real chat comes back
+  // (a copy of it did the falling). Newest message first: each bubble rises a
+  // short way into its slot while fading in, cascading up the column.
   // The real chat is already parked (lowered, nearly transparent) from the tap
   // on, so starting the return only changes transforms and opacity.
   function parkChat() {
@@ -762,9 +765,11 @@
     if (phase === 'run') {
       const t = (now - phaseStart) * speed;
       if (!sweepDone) updateSweep(now);
+      // hold on the clean new wallpaper, then bring the chat back
+      if (sweepDone && returnStart < 0 && t - sweepDoneAt >= CONFIG.holdNewWallpaper) startReturn(t);
       const settled = returnStart >= 0 && updateReturn(t);
       if (returnStart >= 0 && !finished && t - returnStart >= returnEnd) { finished = true; sfx.finish(); }
-      if (sweepDone && settled && t - returnStart > CONFIG.flyFadeOut + 120) {
+      if (sweepDone && settled) {
         units.forEach((el) => { el.style.transform = ''; el.style.opacity = ''; });
         flyLayer.classList.add('is-idle');
         setPhase('done', now);
