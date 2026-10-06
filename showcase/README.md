@@ -1,8 +1,10 @@
 # Keyboard showcase — "Your board. Your vibe."
 
 A scroll-driven hero. As you scroll, the next keyboard (waiting, dimmed, on the left of
-the desk) is lifted over the hands and set down on the mat, while the whole setup relights
-to match it (ember → frost → prism). Product names and prices come from meckeys.com.
+the desk) is lifted over the hands and set down on the mat, the one you just passed moves
+over to the right of the desk, and the whole setup relights to match (ember → frost →
+prism). Arrow keys (and Page Up / Down) step between boards. Product names and prices come
+from meckeys.com.
 
 Open `index.html` directly, or serve the folder with any static server:
 

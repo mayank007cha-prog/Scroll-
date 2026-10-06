@@ -13,8 +13,11 @@
   var PEEK_DX = -821;
   var PEEK_DY = 22;
   var PEEK_SCALE = 0.6;
-  // Finished board: lifted away to the right, off the frame.
-  var EXIT_DX = 1560;
+  // Previous board: set down on the right of the desk, between the right
+  // hand and the PC case, smaller and dimmed (mirrors the waiting board).
+  var PREV_DX = 809;
+  var PREV_DY = -9;
+  var PREV_SCALE = 0.55;
   // While travelling, a board is lifted toward the camera, over the hands.
   var LIFT_Y = 78;
   var LIFT_SCALE = 0.07;
@@ -87,7 +90,7 @@
   var lenis = null;
   if (window.Lenis && !reduceMotion) {
     lenis = new window.Lenis({
-      lerp: 0.085,
+      lerp: 0.07,
       wheelMultiplier: 0.9,
       smoothWheel: true,
       syncTouch: false
@@ -105,8 +108,12 @@
   function scrollToY(y, slow) {
     if (lenis) {
       lenis.scrollTo(y, {
-        duration: slow ? 1.6 : 1.15,
-        easing: function (t) { return 1 - Math.pow(1 - t, 4); },
+        // Jumps (keys, rail, clicks) ease in and out; snaps carry on from
+        // the wheel's motion, so they only ease out.
+        duration: slow ? 1.8 : 1.4,
+        easing: slow
+          ? function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+          : function (t) { return 1 - Math.pow(1 - t, 3); },
         onComplete: function () { snapping = false; }
       });
     } else {
@@ -233,6 +240,23 @@
   window.addEventListener('touchstart', onInput, { passive: true });
   window.addEventListener('keydown', onInput);
 
+  // Keyboard: arrows / Page keys step between boards while the showcase is
+  // on screen. Past either end, keys fall through to normal scrolling.
+  var NEXT_KEYS = { ArrowRight: 1, ArrowDown: 1, PageDown: 1 };
+  var PREV_KEYS = { ArrowLeft: 1, ArrowUp: 1, PageUp: 1 };
+  window.addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.defaultPrevented) return;
+    var dir = NEXT_KEYS[e.key] ? 1 : PREV_KEYS[e.key] ? -1 : 0;
+    if (!dir) return;
+    var t = track();
+    var y = scrollY();
+    if (y < t.top - 2 || y > t.top + t.distance + 2) return;
+    var dest = settledIndex + dir;
+    if (dest < 0 || dest > count - 1) return;
+    e.preventDefault();
+    goTo(dest);
+  });
+
   function onScroll() {
     kick();
     clearTimeout(idleTimer);
@@ -242,7 +266,7 @@
   // ---------- Render ----------
 
   function poseFor(t) {
-    // t = 0 at rest, +1 waiting on the left, -1 gone to the right.
+    // t = 0 at rest, +1 waiting on the left, -1 just passed (on the right).
     var a = Math.abs(t);
     var near = clamp(a, 0, 1);
     var far = clamp(a - 1, 0, 1.5);
@@ -256,11 +280,11 @@
       o = 1 - clamp(far * 1.6, 0, 1);
       dim = smoothstep(near);
     } else {
-      x = EXIT_DX * near;
-      y = PEEK_DY * near;
-      s = lerp(1, PEEK_SCALE + 0.1, near);
-      o = 1 - smoothstep((near - 0.6) / 0.4);
-      dim = smoothstep(near) * 0.6;
+      x = PREV_DX * near + 900 * far;
+      y = PREV_DY * near;
+      s = lerp(1, PREV_SCALE, near) - 0.1 * far;
+      o = 1 - clamp(far * 1.6, 0, 1);
+      dim = smoothstep(near);
     }
 
     y -= lift * LIFT_Y;
@@ -287,7 +311,7 @@
       // waiting at the side) is lifted above the hands.
       var layer = Math.abs(t) < 0.02 ? layerRest : layerMove;
       if (board.parentNode !== layer) layer.appendChild(board);
-      board.classList.toggle('is-peek', Math.abs(t - 1) < 0.02);
+      board.classList.toggle('is-peek', Math.abs(Math.abs(t) - 1) < 0.02);
 
       // One specular pass as the board comes down into place.
       var settle = clamp(1 - Math.abs(t) * 1.6, 0, 1);
@@ -361,7 +385,7 @@
     } else {
       // Lenis already smooths the scroll; this adds a light, frame-rate
       // independent follow so the boards glide rather than track 1:1.
-      current += (target - current) * (1 - Math.exp(-dt * (lenis ? 9 : 5.5)));
+      current += (target - current) * (1 - Math.exp(-dt * (lenis ? 7 : 5.5)));
     }
 
     if (Math.abs(target - current) < 0.0004) current = target;
