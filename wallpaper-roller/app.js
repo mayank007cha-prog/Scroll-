@@ -74,10 +74,11 @@
 
     // 4. return — starts while the roller is still finishing near the top
     returnAtRoll: 0.45,            // roll progress at which the chat starts coming back
-    returnStagger: 16,             // ms between bubbles, newest (bottom) first
-    returnRise: 0.16,              // × screen height each bubble rises from
-    returnFade: 120,               // ms fade-in while rising
-    returnSpring: { omega: 15, zeta: 0.84 },
+    returnStagger: 18,             // ms between bubbles, newest (bottom) first
+    returnRise: 0.1,               // × screen height each bubble rises from
+    returnFade: 160,               // ms fade-in while rising
+    returnSpring: { omega: 14, zeta: 1 }, // critically damped: glides in, no bounce
+    flyFadeOut: 200,               // ms: leftover falling bubbles fade once the chat returns
   };
 
   const speed = Math.max(0.05, parseFloat(new URLSearchParams(location.search).get('speed')) || 1);
@@ -113,6 +114,7 @@
   // Damped spring, 0 → 1 (closed form)
   function spring(t, { omega, zeta }) {
     if (t <= 0) return 0;
+    if (zeta >= 1) return 1 - Math.exp(-omega * t) * (1 + omega * t); // critically damped
     const wd = omega * Math.sqrt(1 - zeta * zeta);
     const e = Math.exp(-zeta * omega * t);
     return 1 - e * (Math.cos(wd * t) + (zeta * omega / wd) * Math.sin(wd * t));
@@ -156,6 +158,7 @@
   // ---------------------------------------------------------------- state
   let phase = 'idle'; // idle | run | done
   let sweepDone = false, returnStart = -1;
+  let flyLayer = null;       // copy of the chat that falls away while the real chat comes back
   let phaseStart = 0;
   let rafId = 0;
   let H = 0, W = 0;
@@ -183,12 +186,13 @@
     flapCanvas.style.height = canvasH + 'px';
     if (flapGL) flapGL.resize();
 
-    bubbles = units.map((el, i) => {
+    const flyUnits = Array.from(flyLayer.querySelectorAll('.unit'));
+    bubbles = flyUnits.map((el, i) => {
       const r = el.getBoundingClientRect();
       const rand = seeded(1013 + i * 7919);
       const side = el.closest('.me') ? 1 : -1;
       return {
-        el, side,
+        el, side, home: units[i],
         top: r.top - s.top,
         bottom: r.bottom - s.top,
         left: r.left - s.left,
@@ -518,6 +522,7 @@
       const rot = b.side * CONFIG.nudgeTilt + b.spin * tau + 0.5 * b.spinAccel * tau * tau;
       const scale = 1 - CONFIG.fallScale * smoothstep(tau / 0.55);
       setTransform(b.el, x, y, rot, scale);
+      if (returnStart >= 0) b.el.style.opacity = (1 - clamp((t - returnStart) / CONFIG.flyFadeOut)).toFixed(3);
 
       // Off-screen, or fallen under the stuck paper
       const under = b.top + y > line.y + 20;
@@ -530,6 +535,7 @@
     }
 
     if (returnStart < 0 && line.roll >= CONFIG.returnAtRoll) startReturn(t);
+    if (returnStart >= 0) flyLayer.style.opacity = (1 - clamp((t - returnStart - CONFIG.flyFadeOut) / 120)).toFixed(3);
 
     if (line.roll >= 1) {
       wpBase.classList.add('is-new');
@@ -541,42 +547,36 @@
   }
 
   // ---------------------------------------------------------------- return
-  // Newest message first: each bubble rises a short way into its slot while
-  // fading in, cascading up the column. The chat layer is lifted above the new
-  // paper (still under the flap and roller) so it can come in while the roller
-  // is finishing at the top. A bubble that is still flying waits until it has
-  // left the screen.
+  // The real chat comes back while a copy of it is still falling away, so the
+  // return never waits on a flying bubble. Newest message first: each bubble
+  // rises a short way into its slot while fading in, cascading up the column.
+  // The chat sits above the new paper (still under the flap and roller) so it
+  // can come in while the roller is finishing at the top.
   function startReturn(t) {
     returnStart = t;
     chat.classList.add('is-over');
+    chat.classList.remove('is-waiting');
+    const rise = H * CONFIG.returnRise;
     const order = bubbles.filter((b) => b.bottom > 0).sort((a, b) => b.bottom - a.bottom);
-    order.forEach((b, i) => { b.delay = i * CONFIG.returnStagger; });
-    bubbles.forEach((b) => { if (b.bottom <= 0) b.delay = -1; }); // above the screen: just reset
+    bubbles.forEach((b) => { b.delay = -1; b.home.style.transform = ''; b.home.style.opacity = ''; });
+    order.forEach((b, i) => {
+      b.delay = i * CONFIG.returnStagger;
+      b.home.style.transform = `translate3d(0, ${rise}px, 0)`;
+      b.home.style.opacity = '0';
+    });
   }
 
   function updateReturn(t) {
     const rise = H * CONFIG.returnRise;
     let settled = true;
     for (const b of bubbles) {
-      if (b.delay < 0) {
-        if (b.gone || !b.flung) { b.el.style.transform = ''; b.el.style.visibility = ''; b.el.style.opacity = ''; b.back = true; b.settled = true; }
-        else settled = false;
-        continue;
-      }
-      if (!b.back) {
-        const ready = t >= returnStart + b.delay && (b.gone || !b.flung);
-        if (!ready) { settled = false; continue; }
-        b.back = true;
-        b.backAt = Math.max(returnStart + b.delay, b.goneAt || 0);
-        b.el.classList.remove('is-flying');
-        b.el.style.visibility = '';
-      }
-      const local = (t - b.backAt) / 1000;
-      const y = rise * (1 - spring(local, CONFIG.returnSpring));
-      const op = clamp((t - b.backAt) / CONFIG.returnFade);
-      if (local < 0.6 || Math.abs(y) > 0.3) settled = false;
-      b.el.style.transform = `translate3d(0, ${snap(y).toFixed(2)}px, 0)`;
-      b.el.style.opacity = op.toFixed(3);
+      if (b.delay < 0) continue; // above the screen: already in place
+      const local = Math.max(0, t - returnStart - b.delay);
+      const k = spring(local / 1000, CONFIG.returnSpring);
+      const y = rise * (1 - k);
+      if (local < CONFIG.returnFade || Math.abs(y) > 0.3) settled = false;
+      b.home.style.transform = `translate3d(0, ${snap(y).toFixed(2)}px, 0)`;
+      b.home.style.opacity = clamp(local / CONFIG.returnFade).toFixed(3);
     }
     return settled;
   }
@@ -597,9 +597,10 @@
       const t = (now - phaseStart) * speed;
       if (!sweepDone) updateSweep(now);
       const settled = returnStart >= 0 && updateReturn(t);
-      if (sweepDone && settled) {
-        bubbles.forEach((b) => { b.el.style.transform = ''; b.el.style.opacity = ''; });
+      if (sweepDone && settled && t - returnStart > CONFIG.flyFadeOut + 120) {
+        units.forEach((el) => { el.style.transform = ''; el.style.opacity = ''; });
         chat.classList.remove('is-over');
+        if (flyLayer) { flyLayer.remove(); flyLayer = null; }
         setPhase('done', now);
       }
     }
@@ -610,7 +611,7 @@
 
   function resetToInitial() {
     wpBase.classList.remove('is-new');
-    chat.classList.remove('is-over');
+    chat.classList.remove('is-over', 'is-waiting');
     units.forEach((el) => {
       el.style.transform = '';
       el.style.visibility = '';
@@ -626,6 +627,15 @@
     await paperReady;
     starting = false;
     if (phase === 'done') resetToInitial();
+
+    // The copy does the falling; the real chat waits hidden and comes back.
+    if (flyLayer) flyLayer.remove();
+    flyLayer = chat.cloneNode(true);
+    flyLayer.removeAttribute('id');
+    flyLayer.classList.add('chat--fly');
+    flyLayer.setAttribute('aria-hidden', 'true');
+    chat.before(flyLayer);
+    chat.classList.add('is-waiting');
 
     measure();
     hint.classList.add('is-hidden');

@@ -145,6 +145,8 @@ body {
 
 /* While the chat comes back it sits above the new paper, under the flap and roller */
 .chat.is-over { z-index: 4; }
+.chat.is-waiting { visibility: hidden; }
+.chat--fly { pointer-events: none; }
 
 .row {
   display: flex;
