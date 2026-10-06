@@ -34,7 +34,7 @@
     coverOnEnter: 0.24,            // part of the screen the stuck paper covers after entering
     landSpeed: 420,                // px/s while the paper lands on the roller (never zero → no hitch)
     // 2. roll – the roller carries on smoothly up and off the top
-    rollDuration: 760,             // ms
+    rollDuration: 1260,            // ms
     rollPeakAt: 0.45,              // where in the roll it reaches top speed
     exitSpeed: 600,                // px/s as it leaves the top
     // (start and top speeds are solved so the distances fit the durations;
@@ -77,10 +77,10 @@
 
     // Sound (synthesised with Web Audio; add ?sound=0 to the URL to mute)
     soundVolume: 0.8,
-    fallSoundDelay: 90,            // ms after a chat is knocked off before its tick (when it visibly falls)
+    tickMerge: 60,                 // ms: chats knocked off closer together than this share one tick
 
     // 4. return — starts while the roller is still finishing near the top
-    holdNewWallpaper: 500,         // ms to show the clean new wallpaper before the chat comes back
+    holdNewWallpaper: 0,           // ms to show the clean new wallpaper before the chat comes back
     returnStagger: 40,             // ms between bubbles, newest (bottom) first — one after another
     returnRise: 0.12,              // × screen height each bubble comes up from
     returnSide: 0.45,              // × screen width it comes in from its own side (green: right, white: left)
@@ -129,13 +129,12 @@
   // Short, muted gesture sounds (synthesised live with Web Audio) — closer to
   // system UI feedback than to music. Nothing plays until the chats start
   // falling, so the sound follows what you see.
-  //   bloop()  – a tiny muted tick for each chat as it falls off
-  //   flop()   – a short, quiet muffled thud when the paper lands on the roller
+  //   bloop()  – a tiny muted tick the moment a chat is knocked off
   //   finish() – one light, short tone as the chat settles back
   const sfx = (() => {
     const enabled = new URLSearchParams(location.search).get('sound') !== '0';
     let ac = null, out = null;
-    let nextTick = 0;
+    let lastTick = -1;
 
     function unlock() {
       if (!enabled) return;
@@ -207,12 +206,7 @@
       o.stop(t + attack + decay + 0.05);
     }
 
-    function start() { nextTick = 0; }
-
-    function flop() {
-      if (!ok()) return;
-      tone(140, 85, ac.currentTime, 0.13, 0.08);
-    }
+    function start() { lastTick = -1; }
 
     function finish() {
       if (!ok()) return;
@@ -220,19 +214,20 @@
       pad(523.25, t, 0.05, 0.012, 0.3); // one light, simple tone (C5) with a short soft fade
     }
 
+    // plays the instant the chat is knocked off (no queue, no delay), so it
+    // lands on the same frame you see it go; near-simultaneous knocks share one tick
     function bloop(side, r) {
       if (!ok()) return;
-      const now = ac.currentTime + CONFIG.fallSoundDelay / 1000;
-      if (nextTick - now > 0.12) return;   // never lag behind the motion
-      const t = Math.max(now, nextTick);
-      nextTick = t + 0.035;
+      const now = ac.currentTime;
+      if (now - lastTick < CONFIG.tickMerge / 1000) return;
+      lastTick = now;
       const f = 440 * (0.95 + r * 0.1);    // nearly the same pitch every time
-      tone(f, f * 0.7, t, 0.07, 0.04, side * 0.4);
+      tone(f, f * 0.7, now, 0.06, 0.04, side * 0.4);
     }
 
-    function reset() { nextTick = 0; }
+    function reset() { lastTick = -1; }
 
-    return { unlock, start, flop, finish, bloop, reset };
+    return { unlock, start, finish, bloop, reset };
   })();
 
   // ---------------------------------------------------------------- DOM
@@ -260,7 +255,6 @@
   // ---------------------------------------------------------------- state
   let phase = 'idle'; // idle | run | done
   let sweepDone = false, returnStart = -1, paperDoneAt = 0, sweepDoneAt = 0;
-  let flopped = false;
   let finished = false, returnEnd = 0;
   // Copy of the chat that falls away while the real chat comes back. Built once
   // and reused, so nothing new has to be laid out or painted mid-animation.
@@ -640,7 +634,6 @@
     droopVel += acc * dt;
     droop += droopVel * dt;
     const edgeSpeed = Math.max(0, v);
-    if (!flopped && t >= CONFIG.enterDuration) { flopped = true; sfx.flop(); }
     last = { now, y: line.y };
 
     // Stuck paper: clipped at the roller line, image fixed to the paper
@@ -826,7 +819,6 @@
     flapCanvas.classList.add('is-active');
     roller.classList.add('is-active');
     roller.style.opacity = '1';
-    flopped = false;
     sfx.start();
 
     phase = 'run';
