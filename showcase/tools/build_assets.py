@@ -12,6 +12,8 @@ Outputs (in showcase/assets):
                      fingertips that overlap its edge.
   mist.png           horizontally tileable soft-noise mist (white + alpha),
                      drifted along the bottom of the frame around the hands.
+  smoke.png          tileable (both axes) billowing smoke (white + alpha) for
+                     the blue haze framing all four edges of the screen.
 """
 from pathlib import Path
 
@@ -112,6 +114,22 @@ def mist(w=1024, h=512, seed=7):
     return img
 
 
+def smoke(size=768, seed=11):
+    """Tileable billowing smoke: two octaves of FFT-filtered noise."""
+    rng = np.random.default_rng(seed)
+    f1 = np.fft.fftfreq(size)
+    f = np.sqrt(f1[:, None] ** 2 + f1[None, :] ** 2)
+    f[0, 0] = 1
+    def octave(power):
+        n = np.real(np.fft.ifft2(np.fft.fft2(rng.standard_normal((size, size))) / f ** power))
+        return (n - n.min()) / (n.max() - n.min())
+    field = octave(2.1) * 0.75 + octave(1.4) * 0.25
+    field = np.clip((field - 0.32) / 0.5, 0, 1) ** 1.5
+    img = Image.new("RGBA", (size, size), (255, 255, 255, 0))
+    img.putalpha(Image.fromarray((field * 235).astype(np.uint8)))
+    return img
+
+
 def main():
     for env in ENVS:
         bg = aligned(env, Image.open(SRC / f"bg-{env}.png").convert("RGB"))
@@ -127,6 +145,7 @@ def main():
     rgba.save(OUT / "hands-mask.png", optimize=True)
 
     mist().save(OUT / "mist.png", optimize=True)
+    smoke().save(OUT / "smoke.png", optimize=True)
 
 
 if __name__ == "__main__":

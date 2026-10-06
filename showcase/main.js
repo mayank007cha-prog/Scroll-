@@ -192,6 +192,12 @@
 
   function maybeSnap() {
     if (snapping || reduceMotion) return;
+    // Wait until the wheel's own easing has finished, or it would override
+    // the snap mid-way.
+    if (lenis && lenis.isScrolling) {
+      idleTimer = setTimeout(maybeSnap, 80);
+      return;
+    }
     var t = track();
     var y = scrollY();
     if (y < t.top - 2 || y > t.top + t.distance + 2) return;
@@ -206,6 +212,15 @@
     snapping = true;
     scrollToY(restY(dest), false);
   }
+
+  // Fresh input takes over from an in-flight snap (Lenis retargets on its
+  // own), so clear the flag or the interrupted snap would block later ones.
+  function onInput() {
+    snapping = false;
+  }
+  window.addEventListener('wheel', onInput, { passive: true });
+  window.addEventListener('touchstart', onInput, { passive: true });
+  window.addEventListener('keydown', onInput);
 
   function onScroll() {
     kick();
@@ -289,6 +304,7 @@
     var travel = Math.sin(Math.PI * (p - Math.floor(p)));
     scene.style.setProperty('--spot', (1 - travel * 0.5).toFixed(3));
     scene.style.setProperty('--mist', (0.6 + travel * 0.4).toFixed(3));
+    sticky.style.setProperty('--smoke', (0.8 + travel * 0.2).toFixed(3));
 
     // Product line in the dock: cross-fade with a short vertical drift.
     for (i = 0; i < count; i++) {

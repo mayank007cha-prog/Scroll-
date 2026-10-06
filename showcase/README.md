@@ -20,6 +20,8 @@ python3 -m http.server --directory showcase 8080
   the resting board's edge), drifting mist, then boards in motion. A travelling board is
   lifted toward the camera and passes over the hands; its shadow stays on the mat and
   spreads with the height, and the mist thickens around the hands while it moves.
+- A blue smoke frame (`assets/smoke.png`, two drifting sheets screened over the scene)
+  billows around all four edges of the screen; a radial mask keeps the centre clear.
 - Smooth scrolling uses [Lenis](https://github.com/darkroomengineering/lenis) (vendored in
   `vendor/`, MIT). When scrolling settles, the page glides on to the board you were
   heading for, so every board lands exactly in place. `prefers-reduced-motion` turns
@@ -30,7 +32,7 @@ python3 -m http.server --directory showcase 8080
 `assets/src` holds the Figma exports. `tools/build_assets.py` converts them to WebP,
 aligns the frost photo to the other two (it was shot slightly higher, which caused a
 double image during the cross-fade), and draws the feathered hand mask from traced
-outlines, and generates the tileable mist texture. Re-run it after you replace any image:
+outlines, and generates the tileable mist and smoke textures. Re-run it after you replace any image:
 
 ```sh
 pip install pillow numpy

@@ -326,6 +326,71 @@ button {
     radial-gradient(90% 80% at 52% 80%, transparent 50%, rgba(4, 4, 6, 0.5) 100%);
 }
 
+/* ---------- Smoke frame ---------- */
+
+/* Two sheets of tileable smoke drift in opposite directions, screened over
+   the scene in blue. A radial mask keeps them to the edges of the screen so
+   the keyboard and the middle of the desk stay crisp. */
+.kb-smoke {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: var(--smoke, 0.85);
+  -webkit-mask-image: radial-gradient(ellipse 68% 64% at 50% 54%, transparent 42%, rgba(0, 0, 0, 0.7) 70%, #000 92%);
+  mask-image: radial-gradient(ellipse 68% 64% at 50% 54%, transparent 42%, rgba(0, 0, 0, 0.7) 70%, #000 92%);
+}
+
+/* Even blue glow under the smoke, so the border reads as a soft frame. */
+.kb-smoke::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 75% 70% at 50% 54%, transparent 50%, rgba(40, 110, 230, 0.5) 100%);
+}
+
+.kb-smoke-sheet {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  -webkit-mask-image: url(assets/smoke.png);
+  mask-image: url(assets/smoke.png);
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  will-change: transform;
+}
+
+.kb-smoke-a {
+  left: -720px;
+  top: -720px;
+  background: rgb(78, 150, 255);
+  -webkit-mask-size: 720px 720px;
+  mask-size: 720px 720px;
+  opacity: 1;
+  animation: kb-smoke-a 60s linear infinite;
+}
+
+.kb-smoke-b {
+  left: -1100px;
+  top: -1100px;
+  background: rgb(150, 205, 255);
+  -webkit-mask-size: 1100px 1100px;
+  mask-size: 1100px 1100px;
+  opacity: 0.65;
+  animation: kb-smoke-b 95s linear infinite;
+}
+
+@keyframes kb-smoke-a {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(720px, 720px, 0); }
+}
+
+@keyframes kb-smoke-b {
+  from { transform: translate3d(1100px, 0, 0); }
+  to   { transform: translate3d(0, 1100px, 0); }
+}
+
 /* ---------- Top bar ---------- */
 
 .kb-top {
@@ -554,7 +619,8 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kb-mist-sheet {
+  .kb-mist-sheet,
+  .kb-smoke-sheet {
     animation: none;
   }
 }
