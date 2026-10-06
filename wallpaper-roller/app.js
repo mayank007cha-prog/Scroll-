@@ -121,20 +121,16 @@
   const easeOutCubic = (x) => 1 - Math.pow(1 - clamp(x), 3);
 
   // ---------------------------------------------------------------- sound
-  // Small, soft, tonal interaction sounds (synthesised live with Web Audio),
-  // all from one C-major pentatonic scale so they always sound gentle together.
-  //   start()    – a soft rising "whoop" as the paper appears
-  //   flop()     – a low, round "boop" when the paper lands on the roller
-  //   progress() – a quiet rising arpeggio as the roller paints upward,
-  //                then a little chime when the wallpaper is done
-  //   bloop()    – a cute falling "bloop" for each chat that falls off
+  // Short, muted gesture sounds (synthesised live with Web Audio) — closer to
+  // system UI feedback than to music: low soft ticks and taps, no melodies.
+  //   start()    – a soft low "tap" as the paper comes in
+  //   flop()     – a short muffled thud when the paper lands on the roller
+  //   progress() – one quiet confirmation "tock" when the wallpaper is done
+  //   bloop()    – a tiny muted tick for each chat that falls off
   const sfx = (() => {
     const enabled = new URLSearchParams(location.search).get('sound') !== '0';
-    const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98, 1760]; // C5–A6
-    const ARP_AT = [0.08, 0.28, 0.48, 0.68];
-    const ARP = [523.25, 659.25, 783.99, 1046.5];
     let ac = null, out = null;
-    let step = 0, chimed = false, nextBloop = 0;
+    let done = false, nextTick = 0;
 
     function unlock() {
       if (!enabled) return;
@@ -142,16 +138,16 @@
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
         ac = new AC();
-        // warm bus: soft top end, a touch of room, gentle compression
+        // muted bus: soft top end, a hint of room, gentle compression
         out = ac.createGain();
         out.gain.value = CONFIG.soundVolume;
         const tone = ac.createBiquadFilter();
-        tone.type = 'lowpass'; tone.frequency.value = 5000; tone.Q.value = 0.3;
+        tone.type = 'lowpass'; tone.frequency.value = 3200; tone.Q.value = 0.4;
         const comp = ac.createDynamicsCompressor();
-        comp.threshold.value = -20; comp.knee.value = 18; comp.ratio.value = 2.5;
+        comp.threshold.value = -22; comp.knee.value = 16; comp.ratio.value = 3;
         const room = ac.createConvolver();
-        room.buffer = roomImpulse(1.2);
-        const wet = ac.createGain(); wet.gain.value = 0.2;
+        room.buffer = roomImpulse(0.45);
+        const wet = ac.createGain(); wet.gain.value = 0.07;
         out.connect(tone).connect(comp);
         tone.connect(room).connect(wet).connect(comp);
         comp.connect(ac.destination);
@@ -164,7 +160,7 @@
       const buf = ac.createBuffer(2, len, ac.sampleRate);
       for (let c = 0; c < 2; c++) {
         const d = buf.getChannelData(c);
-        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
       }
       return buf;
     }
@@ -177,78 +173,51 @@
       return p;
     };
 
-    // soft bell: sine with faint upper partials, quick attack, gentle decay
-    function bell(f, t, gain, decay, pan = 0) {
-      const dest = panTo(pan);
-      for (const [mult, level] of [[1, 1], [2, 0.16], [3, 0.04]]) {
-        const o = ac.createOscillator();
-        o.type = 'sine';
-        o.frequency.value = f * mult;
-        const e = ac.createGain();
-        const d = decay / mult;
-        e.gain.setValueAtTime(0.0001, t);
-        e.gain.exponentialRampToValueAtTime(gain * level, t + 0.006);
-        e.gain.exponentialRampToValueAtTime(0.0001, t + d);
-        o.connect(e).connect(dest);
-        o.start(t);
-        o.stop(t + d + 0.05);
-      }
-    }
-
-    // pitch-glide blip: rising = "whoop", falling = "bloop"
-    function glide(f0, f1, t, gain, dur, pan = 0) {
+    // one short sine tone that glides from f0 to f1 — the building block of every sound
+    function tone(f0, f1, t, gain, dur, pan = 0) {
       const o = ac.createOscillator();
       o.type = 'sine';
       o.frequency.setValueAtTime(f0, t);
       o.frequency.exponentialRampToValueAtTime(f1, t + dur);
       const e = ac.createGain();
       e.gain.setValueAtTime(0.0001, t);
-      e.gain.exponentialRampToValueAtTime(gain, t + 0.008);
-      e.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.06);
+      e.gain.exponentialRampToValueAtTime(gain, t + 0.004);
+      e.gain.exponentialRampToValueAtTime(0.0001, t + dur);
       o.connect(e).connect(panTo(pan));
       o.start(t);
-      o.stop(t + dur + 0.1);
+      o.stop(t + dur + 0.02);
     }
 
     function start() {
-      step = 0; chimed = false; nextBloop = 0;
+      done = false; nextTick = 0;
       if (!ok()) return;
-      glide(392, 784, ac.currentTime + 0.01, 0.09, 0.16);
+      tone(260, 200, ac.currentTime + 0.005, 0.12, 0.06);
     }
 
     function flop() {
       if (!ok()) return;
-      const t = ac.currentTime;
-      glide(330, 196, t, 0.16, 0.12);
-      bell(392, t + 0.01, 0.04, 0.5);
+      tone(150, 85, ac.currentTime, 0.22, 0.08);
     }
 
     function progress(roll) {
-      if (!ok()) return;
-      while (step < ARP_AT.length && roll >= ARP_AT[step]) {
-        bell(ARP[step], ac.currentTime, 0.06, 0.9);
-        step++;
-      }
-      if (!chimed && roll >= 0.86) {
-        chimed = true;
-        const t = ac.currentTime;
-        bell(1046.5, t, 0.08, 1.4, -0.15);
-        bell(1318.51, t + 0.07, 0.065, 1.4, 0.15);
-        bell(1567.98, t + 0.14, 0.05, 1.6);
-      }
+      if (!ok() || done || roll < 0.86) return;
+      done = true;
+      const t = ac.currentTime;
+      tone(587, 560, t, 0.06, 0.12);        // soft, neutral confirmation (fifth, played together)
+      tone(880, 840, t, 0.035, 0.1);
     }
 
     function bloop(side, r) {
       if (!ok()) return;
       const now = ac.currentTime;
-      if (nextBloop - now > 0.25) return; // never lag far behind the motion
-      const t = Math.max(now, nextBloop);
-      nextBloop = t + 0.045;              // little gaps make the cascade sound tidy
-      const f = PENTA[5 + Math.floor(r * 5)];
-      glide(f, f * 0.62, t, 0.08, 0.09, side * 0.5);
+      if (nextTick - now > 0.12) return;   // never lag behind the motion
+      const t = Math.max(now, nextTick);
+      nextTick = t + 0.035;
+      const f = 440 * (0.95 + r * 0.1);    // nearly the same pitch every time
+      tone(f, f * 0.7, t, 0.07, 0.04, side * 0.4);
     }
 
-    function reset() { step = 0; chimed = false; nextBloop = 0; }
+    function reset() { done = false; nextTick = 0; }
 
     return { unlock, start, flop, progress, bloop, reset };
   })();
