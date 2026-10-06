@@ -41,7 +41,8 @@ python3 showcase/tools/build_standalone.py
   the resting board's edge), a light top blur, drifting mist, then boards in motion. A travelling board is
   lifted toward the camera and passes over the hands; its shadow stays on the mat and
   spreads with the height, and the mist thickens around the hands while it moves.
-- With a mouse, the centre board leans toward the cursor on a soft spring.
+- With a mouse, the centre board leans toward the cursor on a soft spring; after 1.5 s with no
+  interaction it sways gently on its own (all devices, off under reduced motion).
 
 ## Assets
 

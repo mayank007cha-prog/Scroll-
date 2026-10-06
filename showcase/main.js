@@ -134,13 +134,13 @@
       // Portrait: the progress rail and product details sit right under the
       // keyboard. Lift the scene only if the group would run off the screen.
       var railH = railEl.offsetHeight;
-      var below = 2 + railH + 10 + 18 + dock.offsetHeight + 28;
-      // Settle the group so the details end ~10% above the bottom edge.
+      var below = 14 + railH + 10 + 18 + dock.offsetHeight + 28;
+      // Settle the group so the details end ~6% above the bottom edge.
       var bottomNow = sy + BOARD_BOTTOM * k;
-      sy += vh * 0.9 - (bottomNow + below - 28);
+      sy += vh * 0.94 - (bottomNow + below - 28);
       bottomNow = sy + BOARD_BOTTOM * k;
       if (bottomNow + below > vh) sy -= bottomNow + below - vh;
-      var top = sy + BOARD_BOTTOM * k + 2 + railH + 10;
+      var top = sy + BOARD_BOTTOM * k + 14 + railH + 10;
       sticky.style.setProperty('--dock-top', top + 'px');
       sticky.classList.add('is-portrait');
       scene.style.setProperty('--sw', IMG_W * k + 'px');
@@ -462,22 +462,34 @@
     kick();
   });
 
-  // ---------- Keyboard wiggle (mouse only) ----------
+  // ---------- Keyboard wiggle ----------
 
-  // The frame stays still; only the centre board leans toward the cursor on
-  // an under-damped spring, so it sways a little and settles.
-  if (finePointer) {
+  // The frame stays still; only the centre board moves. With a mouse it
+  // leans toward the cursor on an under-damped spring (sways and settles).
+  // After 1.5 s with no interaction it starts a slow, subtle idle sway on its
+  // own (all devices), and any input hands control straight back.
+  if (!reduceMotion) {
     var aim = { x: 0, y: 0 };
     var lean = { a: 0, v: 0, y: 0, vy: 0 };
     var wiggleRunning = false;
     var lastWiggle = 0;
+    var lastInput = performance.now();
+    var idle = false;
+    var IDLE_MS = 1500;
 
     var wiggleFrame = function (now) {
       var dt = lastWiggle ? Math.min((now - lastWiggle) / 1000, 0.05) : 1 / 60;
       lastWiggle = now;
 
-      // Springs for the lean, driven by the raw pointer so a move gives a
-      // soft overshoot and settle (stiffness 70, damping 7: ratio ~0.4).
+      if (idle) {
+        // ~4 s sway: about ±0.4 deg and ±0.7 px, fading in over a second.
+        var t = (now - lastInput - IDLE_MS) / 1000;
+        var fade = Math.min(t, 1);
+        aim.x = 0.38 * fade * Math.sin(t * 1.55);
+        aim.y = 0.22 * fade * Math.sin(t * 1.05 + 0.8);
+      }
+
+      // Springs for the lean (stiffness 70, damping 7: ratio ~0.4).
       lean.v += (-70 * (lean.a - aim.x * 1.1) - 7 * lean.v) * dt;
       lean.a += lean.v * dt;
       lean.vy += (-70 * (lean.y - aim.y * 3) - 7 * lean.vy) * dt;
@@ -489,7 +501,7 @@
         boards[i].style.setProperty('--wy', on ? lean.y.toFixed(2) + 'px' : '0px');
       }
 
-      var moving = Math.abs(lean.a - aim.x * 1.1) + Math.abs(lean.y - aim.y * 3) > 0.002 ||
+      var moving = idle || Math.abs(lean.a - aim.x * 1.1) + Math.abs(lean.y - aim.y * 3) > 0.002 ||
         Math.abs(lean.v) + Math.abs(lean.vy) > 0.002;
       if (moving) requestAnimationFrame(wiggleFrame);
       else { wiggleRunning = false; lastWiggle = 0; }
@@ -502,17 +514,39 @@
       }
     };
 
-    sticky.addEventListener('pointermove', function (e) {
-      var r = sticky.getBoundingClientRect();
-      aim.x = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
-      aim.y = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
-      wake();
+    var onActivity = function () {
+      lastInput = performance.now();
+      if (idle) {
+        idle = false;
+        aim.x = 0;
+        aim.y = 0;
+        wake();
+      }
+    };
+    ['pointerdown', 'wheel', 'touchstart', 'keydown', 'scroll'].forEach(function (type) {
+      window.addEventListener(type, onActivity, { passive: true });
     });
-    sticky.addEventListener('pointerleave', function () {
-      aim.x = 0;
-      aim.y = 0;
-      wake();
-    });
+    setInterval(function () {
+      if (!idle && performance.now() - lastInput > IDLE_MS) {
+        idle = true;
+        wake();
+      }
+    }, 250);
+
+    if (finePointer) {
+      sticky.addEventListener('pointermove', function (e) {
+        onActivity();
+        var r = sticky.getBoundingClientRect();
+        aim.x = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
+        aim.y = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
+        wake();
+      });
+      sticky.addEventListener('pointerleave', function () {
+        aim.x = 0;
+        aim.y = 0;
+        wake();
+      });
+    }
   }
 
   lockStage();
