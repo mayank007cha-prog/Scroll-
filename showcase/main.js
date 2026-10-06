@@ -41,6 +41,7 @@
   var boards = [].slice.call(scene.querySelectorAll('.kb-board'));
   var envLayers = [].slice.call(scene.querySelectorAll('.kb-env .kb-bg'));
   var handLayers = [].slice.call(scene.querySelectorAll('.kb-hands .kb-bg'));
+  var screenLayers = [].slice.call(scene.querySelectorAll('.kb-screen .kb-bg'));
   var products = [].slice.call(document.querySelectorAll('.kb-product'));
   var ticks = [].slice.call(document.querySelectorAll('.kb-rail button'));
   var cta = document.getElementById('cta');
@@ -309,6 +310,7 @@
       w = envMix(p - (i - 1));
       envLayers[i].style.opacity = w.toFixed(3);
       handLayers[i].style.opacity = w.toFixed(3);
+      screenLayers[i].style.opacity = w.toFixed(3);
     }
 
     var base = Math.min(Math.floor(p), count - 2);

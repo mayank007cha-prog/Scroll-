@@ -48,12 +48,13 @@ def main():
     html = re.sub(r'\s*<link rel="preload"[^>]*>', "", html)
     html = re.sub(r' srcset="assets/(bg-[\w-]+)\.webp 2048w, assets/[\w@.-]+ 4096w" sizes="[^"]*"',
                   r' srcset="assets/\1@2x.webp 2x"', html)
-    hands = re.search(r'<div class="kb-hands"[^>]*>(.*?)</div>', html, re.S)
-    stripped = re.sub(r'<img class="kb-bg" [^>]*>', '<img class="kb-bg" alt="" decoding="async">', hands.group(1))
-    html = html[:hands.start(1)] + stripped + html[hands.end(1):]  # this block only; the scene's is identical
+    for cls in ("kb-hands", "kb-screen"):
+        block = re.search(r'<div class="' + cls + r'"[^>]*>(.*?)</div>', html, re.S)
+        stripped = re.sub(r'<img class="kb-bg" [^>]*>', '<img class="kb-bg" alt="" decoding="async">', block.group(1))
+        html = html[:block.start(1)] + stripped + html[block.end(1):]  # this block only
     copy_js = ("<script>(function(){var s=document.querySelectorAll('.kb-env .kb-bg'),"
-               "d=document.querySelectorAll('.kb-hands .kb-bg');"
-               "for(var i=0;i<d.length;i++){d[i].srcset=s[i].getAttribute('srcset');d[i].src=s[i].getAttribute('src');}})();"
+               "d=document.querySelectorAll('.kb-hands .kb-bg, .kb-screen .kb-bg');"
+               "for(var i=0;i<d.length;i++){var o=s[i%s.length];d[i].srcset=o.getAttribute('srcset');d[i].src=o.getAttribute('src');}})();"
                "</script>\n  ")
     # Mask images are referenced twice (-webkit- and standard): embed once.
     shared = sorted(set(re.findall(r"url\((assets/[\w@.-]+\.(?:png|svg))\)", css)))
