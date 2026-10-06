@@ -141,9 +141,10 @@ button {
   pointer-events: none;
 }
 
-/* Monitor: a dark circuit-board wallpaper (vector, assets/screen-circuit.svg,
-   so it stays sharp at any size) instead of the game footage, with a faint
-   glass reflection. Clipped to the curved panel (photo px / 2048 x 1144).
+/* Monitor: a plain near-black display with the headline as its content,
+   centred on the curved panel, plus a faint glass reflection. Clipped to
+   the panel (photo px / 2048 x 1144); type is sized in scene em
+   (1em = 40 photo px) so it scales with the monitor at every screen size.
    Sits above the depth-of-field layer so it is never blurred. */
 .kb-screen {
   position: absolute;
@@ -151,10 +152,8 @@ button {
   clip-path: polygon(31.35% 25.17%, 40.53% 25.96%, 49.8% 26.31%, 59.08% 25.96%, 69.24% 25.26%,
     69.04% 54.46%, 59.08% 53.5%, 49.8% 53.06%, 40.53% 53.5%, 31.64% 54.63%);
   background:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.045) 0 34%, transparent 34.4%),
-    linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18)),
-    url(assets/screen-circuit.svg) 50.3% 39.8% / 38.4% 30% no-repeat,
-    #05060a;
+    linear-gradient(115deg, rgba(255, 255, 255, 0.04) 0 34%, transparent 34.4%),
+    radial-gradient(60% 70% at 50% 45%, #10121a, #05060a 75%);
   pointer-events: none;
 }
 
@@ -326,41 +325,34 @@ button {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(55% 50% at 0% 0%, rgba(5, 5, 8, 0.82), transparent 72%),
-    radial-gradient(14% 40% at 100% 50%, rgba(5, 5, 8, 0.6), transparent 80%),
-    linear-gradient(to bottom, rgba(5, 5, 8, 0.5), rgba(5, 5, 8, 0) 24%),
+    linear-gradient(to bottom, rgba(5, 5, 8, 0.35), rgba(5, 5, 8, 0) 20%),
     radial-gradient(90% 80% at 52% 80%, transparent 50%, rgba(4, 4, 6, 0.5) 100%);
 }
 
 /* ---------- Top bar ---------- */
 
-.kb-top {
-  position: absolute;
-  top: var(--gutter);
-  left: var(--gutter);
-  right: var(--gutter);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  pointer-events: none;
-}
-
-/* Expanded caps: heavy first line, light second line. Text stays neutral;
-   the room colour lives in the scene, not the type. */
 .kb-headline {
+  position: absolute;
+  left: 50.3%;
+  top: 39.8%;
+  transform: translate(-50%, -50%);
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.06em;
-  font-size: clamp(24px, 2.4vw, 40px);
+  align-items: center;
+  gap: 0.08em;
+  font-size: 1.75em;
   font-stretch: 125%;
   font-weight: 800;
-  line-height: 0.92;
-  letter-spacing: -0.025em;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-align: center;
   text-transform: uppercase;
+  white-space: nowrap;
   word-spacing: 0;
-  text-shadow: 0 2px 28px rgba(0, 0, 0, 0.55);
+  color: var(--ink);
+  /* Soft screen glow, as if the type is emitting light. */
+  text-shadow: 0 0 0.35em rgba(255, 255, 255, 0.18);
 }
 
 .kb-headline-alt {
@@ -557,17 +549,6 @@ button {
     background: linear-gradient(to bottom, rgba(6, 6, 9, 0.6), rgba(6, 6, 9, 0) 24%);
   }
 
-  .kb-top {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 14px;
-  }
-
-  .kb-headline {
-    align-items: center;
-    font-size: clamp(24px, 7vw, 34px);
-  }
 
 
   .kb-dock {

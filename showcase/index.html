@@ -21,7 +21,7 @@
       up with the photo at every screen size.
       Layer order (bottom → top): environment photos, key-light, the board at
       rest, hands (masked copy of the photos), depth of field, monitor
-      wallpaper, mist, boards in motion.
+      (headline on screen), mist, boards in motion.
     -->
     <section class="kb-hero" id="showcase" aria-label="Keyboard showcase">
       <div class="kb-sticky">
@@ -46,8 +46,14 @@
                clear zone on the keyboard, hands and desk. -->
           <div class="kb-dof" aria-hidden="true"></div>
 
-          <!-- Monitor wallpaper, above the depth of field so it stays sharp. -->
-          <div class="kb-screen" aria-hidden="true"></div>
+          <!-- Monitor: the headline is the screen content. Above the depth of
+               field so it stays sharp. -->
+          <div class="kb-screen">
+            <h1 class="kb-headline">
+              <span>Your board.</span>
+              <span class="kb-headline-alt">Your vibe.</span>
+            </h1>
+          </div>
 
           <div class="kb-mist" aria-hidden="true">
             <div class="kb-mist-sheet kb-mist-a"></div>
@@ -80,13 +86,6 @@
         </div>
 
         <div class="kb-shade" aria-hidden="true"></div>
-
-        <header class="kb-top">
-          <h1 class="kb-headline">
-            <span>Your board.</span>
-            <span class="kb-headline-alt">Your vibe.</span>
-          </h1>
-        </header>
 
         <!-- Minimal progress rail: one hairline per board, the active one grows. -->
         <nav class="kb-rail" aria-label="Keyboards">
