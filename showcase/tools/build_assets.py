@@ -1,12 +1,15 @@
 """Builds the optimised showcase assets from the Figma exports in assets/src.
 
-    pip install pillow numpy
+    pip install pillow numpy opencv-python-headless
     python3 showcase/tools/build_assets.py
 
 Outputs (in showcase/assets):
   bg-<env>.webp      environment photos (2048x1144)
   bg-<env>@2x.webp   4096x2288 versions for high-DPI screens, built from
-                     assets/src/bg-<env>@2x.png when present (see upscale.py)
+                     assets/src/bg-<env>@2x.png when present (see upscale.py).
+                     When the 2x source exists, the felt texture and JPEG
+                     noise on the dark hex wall are smoothed (clean_wall) and
+                     the 1x file is downscaled from that cleaned image.
   kb-<env>.webp      keyboard cut-outs with alpha (2x when available)
   hands-mask.png     union of the hand/arm silhouettes of all three photos.
                      The page uses it as a CSS mask over a copy of the
@@ -19,6 +22,7 @@ from pathlib import Path
 
 import numpy as np
 
+import cv2
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -99,6 +103,32 @@ def hand_mask(env):
     return big.resize((W, H), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.6))
 
 
+def clean_wall(im):
+    """Smooth the dark hex panels without touching the lit strips.
+
+    Non-local-means removes the fine grain, then two bilateral passes flatten
+    the blotchy felt while keeping edges. The result is blended in only on
+    dark pixels of the wall (top of the frame, away from the monitor and PC);
+    the lit strips are bright, so they stay untouched. Feathered, no seam.
+    """
+    bgr = cv2.cvtColor(np.asarray(im), cv2.COLOR_RGB2BGR)
+    smooth = cv2.fastNlMeansDenoisingColored(bgr, None, 12, 12, 7, 35)
+    for _ in range(2):
+        smooth = cv2.bilateralFilter(smooth, 15, 20, 9)
+
+    h, w = bgr.shape[:2]
+    k = w / W  # mask boxes below are in 1x photo px
+    value = bgr.max(axis=2).astype(np.float32) / 255
+    dark = np.clip((0.46 - value) / 0.12, 0, 1)
+    region = np.zeros((h, w), np.float32)
+    region[: int(560 * k), :] = 1
+    region[int(250 * k): int(640 * k), int(600 * k): int(1420 * k)] = 0  # monitor
+    region[: int(900 * k), int(1520 * k):] = 0  # PC case
+    m = cv2.GaussianBlur(dark * region, (0, 0), 6 * k)[..., None]
+    out = bgr * (1 - m) + smooth * m
+    return Image.fromarray(cv2.cvtColor(out.round().astype(np.uint8), cv2.COLOR_BGR2RGB))
+
+
 def mist(w=1024, h=512, seed=7):
     """Tileable fractal mist: low-pass filtered noise (periodic via FFT)."""
     rng = np.random.default_rng(seed)
@@ -118,11 +148,14 @@ def mist(w=1024, h=512, seed=7):
 
 def main():
     for env in ENVS:
-        bg = aligned(env, Image.open(SRC / f"bg-{env}.png").convert("RGB"))
-        bg.save(OUT / f"bg-{env}.webp", quality=84, method=6)
         hi = SRC / f"bg-{env}@2x.png"
         if hi.exists():
-            aligned(env, Image.open(hi).convert("RGB"), 2).save(OUT / f"bg-{env}@2x.webp", quality=80, method=6)
+            big = aligned(env, clean_wall(Image.open(hi).convert("RGB")), 2)
+            big.save(OUT / f"bg-{env}@2x.webp", quality=82, method=6)
+            bg = big.resize((W, H), Image.LANCZOS)
+        else:
+            bg = aligned(env, Image.open(SRC / f"bg-{env}.png").convert("RGB"))
+        bg.save(OUT / f"bg-{env}.webp", quality=86, method=6)
         # Keyboards: ship the 2x cut-out when present (drawn ~1400 device px
         # wide on large high-DPI screens), else the original export.
         kb = SRC / f"kb-{env}@2x.png"
