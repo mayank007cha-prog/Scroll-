@@ -31,7 +31,7 @@
     // One continuous roller path (no stop between entering and rolling):
     // 1. enter – the sheet slides in fast and slows right down as it lands
     enterDuration: 300,            // ms
-    coverOnEnter: 0.2,             // part of the screen the stuck paper covers after entering
+    coverOnEnter: 0.24,            // part of the screen the stuck paper covers after entering
     landSpeed: 420,                // px/s while the paper lands on the roller (never zero → no hitch)
     // 2. roll – the roller carries on smoothly up and off the top
     rollDuration: 760,             // ms
@@ -43,9 +43,10 @@
     // Roller image geometry (Figma asset 205 × 236; roller head centre ≈ 33px from the top)
     rollerHeight: 236,
     rollerHeadCenter: 33,
+    rollerScale: 1.3,              // drawn this much bigger than the Figma asset
 
     // Loose paper flap
-    flapLength: 190,               // px of loose paper above the roller
+    flapLength: 72,                // px of loose paper above the roller — the roller holds the sheet's top edge
     flapBaseAngle: 20,             // deg it leans forward at the roller
     flapTipAngle: 80,              // deg at the tip when resting on the roller
     flapCurl: 2.1,                 // how much the bend concentrates towards the tip
@@ -281,6 +282,7 @@
     W = s.width;
     H = s.height;
     sheet.style.setProperty('--sheet-h', H + 'px');
+    stage.style.setProperty('--roller-scale', CONFIG.rollerScale);
 
     // background-size: cover, centred — same mapping for the DOM layer and the canvas
     const iw = paperImg.naturalWidth || 1601, ih = paperImg.naturalHeight || 2400;
@@ -329,7 +331,7 @@
     const k = H / 852;
     const enterTo = H * (1 - CONFIG.coverOnEnter);
     const enterFrom = H + CONFIG.flapLength + 70;  // everything starts below the screen
-    const rollTo = -(CONFIG.rollerHeight - CONFIG.rollerHeadCenter + 30); // roller fully past the top
+    const rollTo = -((CONFIG.rollerHeight - CONFIG.rollerHeadCenter) * CONFIG.rollerScale + 30); // roller fully past the top
     const vLand = CONFIG.landSpeed * k, vExit = CONFIG.exitSpeed * k;
     // solve the start and top speeds so each segment covers exactly its distance
     const vIn = (2 * (enterFrom - enterTo)) / tIn - vLand;
@@ -616,7 +618,7 @@
     const tilt = Math.sin(tSec * 5.1 + 0.4) * 0.8;
     const lift = smoothstep((line.roll - 0.84) / 0.16);
     roller.style.transform =
-      `translate3d(${sway.toFixed(2)}px, ${snap(line.y - CONFIG.rollerHeadCenter)}px, 0) rotate(${tilt.toFixed(2)}deg) scale(${(1 + lift * 0.05).toFixed(4)})`;
+      `translate3d(${sway.toFixed(2)}px, ${snap(line.y - CONFIG.rollerHeadCenter * CONFIG.rollerScale)}px, 0) rotate(${tilt.toFixed(2)}deg) scale(${(1 + lift * 0.05).toFixed(4)})`;
     roller.style.opacity = (1 - lift).toFixed(3);
 
     // Bubbles get knocked off by the paper's top edge
