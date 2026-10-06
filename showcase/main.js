@@ -304,7 +304,6 @@
     var travel = Math.sin(Math.PI * (p - Math.floor(p)));
     scene.style.setProperty('--spot', (1 - travel * 0.5).toFixed(3));
     scene.style.setProperty('--mist', (0.6 + travel * 0.4).toFixed(3));
-    sticky.style.setProperty('--smoke', (0.8 + travel * 0.2).toFixed(3));
 
     // Product line in the dock: cross-fade with a short vertical drift.
     for (i = 0; i < count; i++) {
