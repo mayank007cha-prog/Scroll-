@@ -29,15 +29,15 @@
 
   const CONFIG = {
     // 1. enter
-    enterDuration: 440,            // ms
+    enterDuration: 320,            // ms
     enterEase: [0.2, 0.8, 0.3, 1],
     coverOnEnter: 0.2,             // part of the screen the stuck paper covers after entering
 
     // 2. settle (paper falls onto the roller)
-    settleDuration: 170,           // ms
+    settleDuration: 90,            // ms
 
     // 3. roll
-    rollDuration: 1080,            // ms
+    rollDuration: 760,             // ms
     rollEase: [0.42, 0, 0.32, 1],
 
     // Roller image geometry (Figma asset 205 × 236; roller head centre ≈ 33px from the top)
@@ -64,21 +64,20 @@
     nudgeLift: 10,
     nudgeTilt: 3,
     contactRange: [14, 34],
-    sideSpeed: [260, 420],
-    sideAccel: [1500, 2100],
+    sideSpeed: [320, 480],
+    sideAccel: [1900, 2500],
     liftFactor: [0.5, 0.75],
     gravity: 2600,
     spin: [36, 70],
     spinAccel: [130, 220],
     fallScale: 0.1,
 
-    // 4. hold
-    holdDuration: 2000,
-
-    // 5. return
-    returnStagger: 22,
-    returnSpring: { omega: 9, zeta: 0.88 },
-    returnOffsetExtra: 40,
+    // 4. return — starts while the roller is still finishing near the top
+    returnAtRoll: 0.45,            // roll progress at which the chat starts coming back
+    returnStagger: 16,             // ms between bubbles, newest (bottom) first
+    returnRise: 0.16,              // × screen height each bubble rises from
+    returnFade: 120,               // ms fade-in while rising
+    returnSpring: { omega: 15, zeta: 0.84 },
   };
 
   const speed = Math.max(0.05, parseFloat(new URLSearchParams(location.search).get('speed')) || 1);
@@ -140,6 +139,7 @@
   const flapCanvas = document.getElementById('flap');
   const roller = document.getElementById('roller');
   const hint = document.getElementById('hint');
+  const chat = document.getElementById('chat');
   const units = Array.from(document.querySelectorAll('.unit'));
 
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
@@ -154,7 +154,8 @@
   if (rollerImg.decode) rollerImg.decode().catch(() => {});
 
   // ---------------------------------------------------------------- state
-  let phase = 'idle'; // idle | sweep | hold | return | done
+  let phase = 'idle'; // idle | run | done
+  let sweepDone = false, returnStart = -1;
   let phaseStart = 0;
   let rafId = 0;
   let H = 0, W = 0;
@@ -198,7 +199,7 @@
         lift: range(CONFIG.liftFactor, rand()),
         spin: side * range(CONFIG.spin, rand()),
         spinAccel: side * range(CONFIG.spinAccel, rand()),
-        flung: false, t0: 0, vy: 0, gone: false,
+        flung: false, t0: 0, vy: 0, gone: false, goneAt: 0, back: false, backAt: 0, delay: 0,
       };
     });
   }
@@ -495,7 +496,7 @@
 
     // Bubbles get knocked off by the paper's top edge
     for (const b of bubbles) {
-      if (b.gone) continue;
+      if (b.gone || b.back) continue;
       const gap = edge - b.bottom; // > 0 while the paper is still below the bubble
 
       if (!b.flung) {
@@ -523,55 +524,61 @@
       const offscreen = b.left + x > W + 40 || b.right + x < -40 || b.top + y > H + 40;
       if (offscreen || under) {
         b.gone = true;
+        b.goneAt = t;
         b.el.style.visibility = 'hidden';
       }
     }
 
-    const allGone = bubbles.every((b) => b.gone || b.bottom < 0);
-    if (line.roll >= 1 && allGone) {
+    if (returnStart < 0 && line.roll >= CONFIG.returnAtRoll) startReturn(t);
+
+    if (line.roll >= 1) {
       wpBase.classList.add('is-new');
       sheet.classList.remove('is-active');
       flapCanvas.classList.remove('is-active');
       roller.classList.remove('is-active');
-      bubbles.forEach((b) => { b.el.style.visibility = 'hidden'; b.el.classList.remove('is-flying'); });
-      setPhase('hold', now);
+      sweepDone = true;
     }
   }
 
   // ---------------------------------------------------------------- return
-  function startReturn(now) {
-    // The column starts just below the screen and rises with the top bubble
-    // leading; a shared offset + top-first stagger means bubbles never cross.
-    const visible = bubbles.filter((b) => b.bottom > 0).sort((a, b) => a.top - b.top);
-    const offset = H + CONFIG.returnOffsetExtra - Math.min(0, visible.length ? visible[0].top : 0);
-    bubbles.forEach((b) => {
-      b.delay = 0;
-      b.offset = 0;
-      b.el.style.transform = '';
-      b.el.style.visibility = '';
-    });
-    visible.forEach((b, i) => {
-      b.delay = i * CONFIG.returnStagger;
-      b.offset = offset;
-      b.el.style.transform = `translate3d(0, ${offset}px, 0)`;
-    });
-    setPhase('return', now);
+  // Newest message first: each bubble rises a short way into its slot while
+  // fading in, cascading up the column. The chat layer is lifted above the new
+  // paper (still under the flap and roller) so it can come in while the roller
+  // is finishing at the top. A bubble that is still flying waits until it has
+  // left the screen.
+  function startReturn(t) {
+    returnStart = t;
+    chat.classList.add('is-over');
+    const order = bubbles.filter((b) => b.bottom > 0).sort((a, b) => b.bottom - a.bottom);
+    order.forEach((b, i) => { b.delay = i * CONFIG.returnStagger; });
+    bubbles.forEach((b) => { if (b.bottom <= 0) b.delay = -1; }); // above the screen: just reset
   }
 
-  function updateReturn(now) {
-    const t = (now - phaseStart) * speed;
+  function updateReturn(t) {
+    const rise = H * CONFIG.returnRise;
     let settled = true;
     for (const b of bubbles) {
-      const local = (t - b.delay) / 1000;
-      const k = spring(local, CONFIG.returnSpring);
-      const y = b.offset * (1 - k);
-      if (local < 1.1 || Math.abs(y) > 0.3) settled = false;
+      if (b.delay < 0) {
+        if (b.gone || !b.flung) { b.el.style.transform = ''; b.el.style.visibility = ''; b.el.style.opacity = ''; b.back = true; b.settled = true; }
+        else settled = false;
+        continue;
+      }
+      if (!b.back) {
+        const ready = t >= returnStart + b.delay && (b.gone || !b.flung);
+        if (!ready) { settled = false; continue; }
+        b.back = true;
+        b.backAt = Math.max(returnStart + b.delay, b.goneAt || 0);
+        b.el.classList.remove('is-flying');
+        b.el.style.visibility = '';
+      }
+      const local = (t - b.backAt) / 1000;
+      const y = rise * (1 - spring(local, CONFIG.returnSpring));
+      const op = clamp((t - b.backAt) / CONFIG.returnFade);
+      if (local < 0.6 || Math.abs(y) > 0.3) settled = false;
       b.el.style.transform = `translate3d(0, ${snap(y).toFixed(2)}px, 0)`;
+      b.el.style.opacity = op.toFixed(3);
     }
-    if (settled) {
-      bubbles.forEach((b) => { b.el.style.transform = ''; });
-      setPhase('done', now);
-    }
+    return settled;
   }
 
   // ---------------------------------------------------------------- loop
@@ -586,9 +593,16 @@
 
   function tick() {
     const now = performance.now(); // one clock for phase starts and frames
-    if (phase === 'sweep') updateSweep(now);
-    else if (phase === 'hold' && (now - phaseStart) * speed >= CONFIG.holdDuration) startReturn(now);
-    else if (phase === 'return') updateReturn(now);
+    if (phase === 'run') {
+      const t = (now - phaseStart) * speed;
+      if (!sweepDone) updateSweep(now);
+      const settled = returnStart >= 0 && updateReturn(t);
+      if (sweepDone && settled) {
+        bubbles.forEach((b) => { b.el.style.transform = ''; b.el.style.opacity = ''; });
+        chat.classList.remove('is-over');
+        setPhase('done', now);
+      }
+    }
 
     if (phase === 'done' || phase === 'idle') { rafId = 0; return; }
     rafId = requestAnimationFrame(tick);
@@ -596,16 +610,18 @@
 
   function resetToInitial() {
     wpBase.classList.remove('is-new');
+    chat.classList.remove('is-over');
     units.forEach((el) => {
       el.style.transform = '';
       el.style.visibility = '';
+      el.style.opacity = '';
       el.classList.remove('is-flying');
     });
   }
 
   let starting = false;
   async function play() {
-    if (starting || phase === 'sweep' || phase === 'hold' || phase === 'return') return;
+    if (starting || phase === 'run') return;
     starting = true;
     await paperReady;
     starting = false;
@@ -614,13 +630,14 @@
     measure();
     hint.classList.add('is-hidden');
     last = null; droop = 0; droopVel = 0;
+    sweepDone = false; returnStart = -1;
 
     sheet.classList.add('is-active');
     flapCanvas.classList.add('is-active');
     roller.classList.add('is-active');
     roller.style.opacity = '1';
 
-    phase = 'sweep';
+    phase = 'run';
     phaseStart = performance.now();
     updateSweep(phaseStart); // position everything before the first paint
     if (!rafId) rafId = requestAnimationFrame(tick);

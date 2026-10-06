@@ -16,9 +16,9 @@ up and presses it flat. Below the roller, the stuck paper is a DOM layer. The
 loose flap above the roller is a small WebGL mesh that bends in perspective,
 with lighting, a curled lip showing the back of the paper, and a cast shadow.
 A soft spring that reacts to the roller's speed drives the flap. The flap's
-top edge knocks the chat bubbles off as it reaches them. After a 2s hold on
-the clean wallpaper, the chat column rises back from the bottom on a damped
-spring.
+top edge knocks the chat bubbles off as it reaches them. As soon as the paper
+reaches the top, the chat comes back from the bottom, newest message first,
+while the roller finishes. The whole sequence takes about 1.3s.
 
 Layers, bottom to top: old wallpaper, chat, new paper, roller.
 

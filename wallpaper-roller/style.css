@@ -124,6 +124,8 @@ body {
   pointer-events: none;
 }
 
+.flap { z-index: 5; }
+
 .sheet.is-active,
 .flap.is-active { visibility: visible; }
 
@@ -140,6 +142,9 @@ body {
   padding-bottom: var(--chat-bottom);
   z-index: 2;
 }
+
+/* While the chat comes back it sits above the new paper, under the flap and roller */
+.chat.is-over { z-index: 4; }
 
 .row {
   display: flex;
@@ -273,7 +278,7 @@ body {
   left: calc(50% - 102.5px);
   width: 205px;
   height: 236px;
-  z-index: 5;
+  z-index: 6;
   pointer-events: none;
   transform: translate3d(0, 120vh, 0);
   visibility: hidden;
@@ -289,7 +294,7 @@ body {
   position: absolute;
   left: 50%;
   bottom: calc(26px + env(safe-area-inset-bottom));
-  z-index: 6;
+  z-index: 7;
   padding: 7px 14px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.55);
