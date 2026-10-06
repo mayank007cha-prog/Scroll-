@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "keyboard-showcase.html"
-MIME = {".webp": "image/webp", ".png": "image/png"}
+MIME = {".webp": "image/webp", ".png": "image/png", ".svg": "image/svg+xml"}
 
 
 def data_uri(rel):
@@ -23,7 +23,7 @@ def data_uri(rel):
 
 
 def inline_assets(text):
-    return re.sub(r"assets/[\w@.-]+\.(?:webp|png)", lambda m: data_uri(m.group(0)), text)
+    return re.sub(r"assets/[\w@.-]+\.(?:webp|png|svg)", lambda m: data_uri(m.group(0)), text)
 
 
 def main():
@@ -56,7 +56,7 @@ def main():
                "for(var i=0;i<d.length;i++){d[i].srcset=s[i].getAttribute('srcset');d[i].src=s[i].getAttribute('src');}})();"
                "</script>\n  ")
     # Mask images are referenced twice (-webkit- and standard): embed once.
-    shared = sorted(set(re.findall(r"url\((assets/[\w@.-]+\.png)\)", css)))
+    shared = sorted(set(re.findall(r"url\((assets/[\w@.-]+\.(?:png|svg))\)", css)))
     for i, src in enumerate(shared):
         css = css.replace(f"url({src})", f"var(--asset-{i})")
     css = ":root {\n" + "".join(f"  --asset-{i}: url({src});\n" for i, src in enumerate(shared)) + "}\n" + css

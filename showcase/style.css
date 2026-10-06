@@ -141,20 +141,20 @@ button {
   pointer-events: none;
 }
 
-/* Monitor: the game footage pulled focus from the product, so the screen
-   shows a calm, dark ambient display tinted by the room light, with a
-   faint glass reflection. Clipped to the curved panel (photo px / 2048 x
-   1144). */
+/* Monitor: a dark circuit-board wallpaper (vector, assets/screen-circuit.svg,
+   so it stays sharp at any size) instead of the game footage, with a faint
+   glass reflection. Clipped to the curved panel (photo px / 2048 x 1144).
+   Sits above the depth-of-field layer so it is never blurred. */
 .kb-screen {
   position: absolute;
   inset: 0;
   clip-path: polygon(31.35% 25.17%, 40.53% 25.96%, 49.8% 26.31%, 59.08% 25.96%, 69.24% 25.26%,
     69.04% 54.46%, 59.08% 53.5%, 49.8% 53.06%, 40.53% 53.5%, 31.64% 54.63%);
   background:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0 34%, transparent 34.4%),
-    radial-gradient(40% 55% at 36% 30%, rgb(var(--accent-rgb) / 0.26), transparent 70%),
-    radial-gradient(45% 60% at 64% 52%, rgb(var(--accent-rgb) / 0.14), transparent 72%),
-    linear-gradient(170deg, #15161c, #0a0b0f 70%);
+    linear-gradient(115deg, rgba(255, 255, 255, 0.045) 0 34%, transparent 34.4%),
+    linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18)),
+    url(assets/screen-circuit.svg) 50.3% 39.8% / 38.4% 30% no-repeat,
+    #05060a;
   pointer-events: none;
 }
 
