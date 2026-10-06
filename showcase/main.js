@@ -50,6 +50,7 @@
   var names = products.map(function (p) { return p.querySelector('strong').textContent; });
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reduceMotion;
 
   var k = 1;           // photo px → CSS px
   var current = 0;     // rendered position (0 … count-1)
@@ -142,7 +143,8 @@
 
     if (vw / vh > 1) {
       // Landscape: cover the viewport, centred.
-      k = Math.max(vw / IMG_W, vh / IMG_H);
+      // 2% over-scan so the pointer parallax never reveals an edge.
+      k = Math.max(vw / IMG_W, vh / IMG_H) * (finePointer ? 1.02 : 1);
       sx = (vw - IMG_W * k) / 2;
       sy = (vh - IMG_H * k) / 2;
     } else {
@@ -415,6 +417,72 @@
     render(current);
     kick();
   });
+
+  // ---------- Pointer depth + wiggle (mouse only) ----------
+
+  // The room, the keyboards and the mist drift by different amounts as the
+  // pointer moves (parallax depth). The centre board also leans toward the
+  // cursor on an under-damped spring, so it sways a little and settles.
+  if (finePointer) {
+    var DEPTH = { room: [10, 6], boards: [8, 5], mist: [14, 0] }; // px at the screen edge
+    var aim = { x: 0, y: 0 };
+    var eye = { x: 0, y: 0 };
+    var lean = { a: 0, v: 0, y: 0, vy: 0 };
+    var depthRunning = false;
+    var lastDepth = 0;
+
+    var depthFrame = function (now) {
+      var dt = lastDepth ? Math.min((now - lastDepth) / 1000, 0.05) : 1 / 60;
+      lastDepth = now;
+
+      // Eased follow for the parallax.
+      var f = 1 - Math.exp(-dt * 4);
+      eye.x += (aim.x - eye.x) * f;
+      eye.y += (aim.y - eye.y) * f;
+
+      // Springs for the lean, driven by the raw pointer so a move gives a
+      // soft overshoot and settle (stiffness 70, damping 7: ratio ~0.4).
+      lean.v += (-70 * (lean.a - aim.x * 1.1) - 7 * lean.v) * dt;
+      lean.a += lean.v * dt;
+      lean.vy += (-70 * (lean.y - aim.y * 3) - 7 * lean.vy) * dt;
+      lean.y += lean.vy * dt;
+
+      scene.style.setProperty('--px', (-eye.x * DEPTH.room[0]).toFixed(2) + 'px');
+      scene.style.setProperty('--py', (-eye.y * DEPTH.room[1]).toFixed(2) + 'px');
+      scene.style.setProperty('--bx', (-eye.x * DEPTH.boards[0]).toFixed(2) + 'px');
+      scene.style.setProperty('--by', (-eye.y * DEPTH.boards[1]).toFixed(2) + 'px');
+      scene.style.setProperty('--mx', (-eye.x * DEPTH.mist[0]).toFixed(2) + 'px');
+      for (var i = 0; i < count; i++) {
+        var on = i === activeIndex;
+        boards[i].style.setProperty('--wig', on ? lean.a.toFixed(3) + 'deg' : '0deg');
+        boards[i].style.setProperty('--wy', on ? lean.y.toFixed(2) + 'px' : '0px');
+      }
+
+      var moving = Math.abs(aim.x - eye.x) + Math.abs(aim.y - eye.y) > 0.001 ||
+        Math.abs(lean.v) + Math.abs(lean.vy) > 0.002;
+      if (moving) requestAnimationFrame(depthFrame);
+      else { depthRunning = false; lastDepth = 0; }
+    };
+
+    var wake = function () {
+      if (!depthRunning) {
+        depthRunning = true;
+        requestAnimationFrame(depthFrame);
+      }
+    };
+
+    sticky.addEventListener('pointermove', function (e) {
+      var r = sticky.getBoundingClientRect();
+      aim.x = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
+      aim.y = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
+      wake();
+    });
+    sticky.addEventListener('pointerleave', function () {
+      aim.x = 0;
+      aim.y = 0;
+      wake();
+    });
+  }
 
   layout();
   current = target = readScroll();

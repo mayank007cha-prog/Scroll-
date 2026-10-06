@@ -92,7 +92,8 @@ button {
   /* Size and offset are written by main.js (cover-fit to the photo). */
   width: var(--sw, 100vw);
   height: var(--sh, 56vw);
-  transform: translate3d(var(--sx, 0px), var(--sy, 0px), 0);
+  /* --px/--py: pointer parallax (main.js), on top of the layout offset. */
+  transform: translate3d(calc(var(--sx, 0px) + var(--px, 0px)), calc(var(--sy, 0px) + var(--py, 0px)), 0);
   /* Soft bottom edge, for when the frame is lifted clear of the dock. */
   -webkit-mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
@@ -149,6 +150,7 @@ button {
    lifted across, so the pass over the hands reads as soft and deliberate. */
 .kb-mist {
   position: absolute;
+  transform: translate3d(var(--mx, 0px), 0, 0);
   left: 0;
   right: 0;
   top: 56%;
@@ -219,6 +221,22 @@ button {
   width: 100%;
   height: auto;
   filter: brightness(var(--bright, 1)) saturate(var(--sat, 1));
+}
+
+/* Keyboard layers sit closer to the camera than the room: they drift a
+   little further with the pointer (--bx/--by, set by main.js). */
+.kb-layer {
+  transform: translate3d(var(--bx, 0px), var(--by, 0px), 0);
+}
+
+/* Gentle wiggle: the board leans toward the cursor on a soft spring
+   (--wig degrees, --wy px). Image, tint and sheen share one box, so they
+   move as one; the shadows stay on the mat. */
+.kb-board > img,
+.kb-board > .kb-tint,
+.kb-board > .kb-sheen {
+  transform: translateY(var(--wy, 0px)) rotate(var(--wig, 0deg));
+  transform-origin: 50% 75%;
 }
 
 /* Soft cast shadow. It stays on the mat while the board lifts (translate

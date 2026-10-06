@@ -12,6 +12,15 @@ Open `index.html` directly, or serve the folder with any static server:
 python3 -m http.server --directory showcase 8080
 ```
 
+## Single-file version
+
+`keyboard-showcase.html` is the whole page in one file (CSS, JS, Lenis and every image
+inlined), for opening straight from disk or dropping onto any host. Rebuild it after changes:
+
+```sh
+python3 showcase/tools/build_standalone.py
+```
+
 ## How it works
 
 - `.kb-scene` is laid out in the photos' own pixel space (2048×1144) and scaled to cover
@@ -23,7 +32,8 @@ python3 -m http.server --directory showcase 8080
   lifted toward the camera and passes over the hands; its shadow stays on the mat and
   spreads with the height, and the mist thickens around the hands while it moves.
 - Smooth scrolling uses [Lenis](https://github.com/darkroomengineering/lenis) (vendored in
-  `vendor/`, MIT). When scrolling settles, the page glides on to the board you were
+  `vendor/`, MIT). With a mouse, the room, keyboards and mist drift by different amounts for
+  depth, and the centre board leans toward the cursor on a soft spring. When scrolling settles, the page glides on to the board you were
   heading for, so every board lands exactly in place. `prefers-reduced-motion` turns
   smoothing, snapping and easing off.
 
