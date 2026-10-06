@@ -8,7 +8,10 @@ Outputs (in showcase/assets):
   kb-<env>.webp      keyboard cut-outs with alpha
   hands-mask.png     union of the hand/arm silhouettes of all three photos.
                      The page uses it as a CSS mask over a copy of the
-                     background stack, so keyboards slide *under* the hands.
+                     background stack, so a board at rest sits *under* the
+                     fingertips that overlap its edge.
+  mist.png           horizontally tileable soft-noise mist (white + alpha),
+                     drifted along the bottom of the frame around the hands.
 """
 from pathlib import Path
 
@@ -92,6 +95,23 @@ def hand_mask(env):
     return big.resize((W, H), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.6))
 
 
+def mist(w=1024, h=512, seed=7):
+    """Tileable fractal mist: low-pass filtered noise (periodic via FFT)."""
+    rng = np.random.default_rng(seed)
+    fy = np.fft.fftfreq(h)[:, None]
+    fx = np.fft.fftfreq(w)[None, :]
+    f = np.sqrt((fx * 2.4) ** 2 + (fy * 0.8) ** 2)  # wide, low-lying banks
+    f[0, 0] = 1
+    field = np.real(np.fft.ifft2(np.fft.fft2(rng.standard_normal((h, w))) / f ** 1.9))
+    field = (field - field.min()) / (field.max() - field.min())
+    field = np.clip((field - 0.3) / 0.6, 0, 1) ** 1.2
+    ramp = np.linspace(0, 1, h)[:, None] ** 1.6  # denser towards the bottom
+    alpha = (field * ramp * 0.6 + ramp ** 3 * 0.2) * 255
+    img = Image.new("RGBA", (w, h), (255, 255, 255, 0))
+    img.putalpha(Image.fromarray(alpha.astype(np.uint8)))
+    return img
+
+
 def main():
     for env in ENVS:
         bg = aligned(env, Image.open(SRC / f"bg-{env}.png").convert("RGB"))
@@ -105,6 +125,8 @@ def main():
     rgba = Image.new("RGBA", (W, H), (255, 255, 255, 0))
     rgba.putalpha(union)
     rgba.save(OUT / "hands-mask.png", optimize=True)
+
+    mist().save(OUT / "mist.png", optimize=True)
 
 
 if __name__ == "__main__":

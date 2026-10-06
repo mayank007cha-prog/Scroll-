@@ -9,36 +9,44 @@
   var REST_X = 1061;
   var REST_Y = 934;
 
-  // Off-centre poses, in photo px. "Waiting" boards peek in from the left at
-  // 75% size (as in the Figma frames); finished boards slide out to the right,
-  // under the right hand and off the frame.
-  var SIDE_DX = 1054;
+  // Waiting board: set down on the desk at the left, smaller and dimmed.
+  var PEEK_DX = -821;
+  var PEEK_DY = 22;
+  var PEEK_SCALE = 0.6;
+  // Finished board: lifted away to the right, off the frame.
   var EXIT_DX = 1560;
-  var SIDE_DY = 8;
-  var SIDE_SCALE = 0.75;
-  var LIFT = 22; // how far a board rises while it travels
+  // While travelling, a board is lifted toward the camera, over the hands.
+  var LIFT_Y = 78;
+  var LIFT_SCALE = 0.07;
 
   var ACCENTS = [
     [255, 122, 56],  // ember
-    [70, 182, 255],  // frost
-    [176, 112, 255]  // prism
+    [70, 170, 255],  // frost
+    [168, 120, 255]  // prism
   ];
 
   var section = document.getElementById('showcase');
   var sticky = section.querySelector('.kb-sticky');
   var scene = document.getElementById('scene');
+  var layerRest = document.getElementById('layer-rest');
+  var layerMove = document.getElementById('layer-move');
   var boards = [].slice.call(scene.querySelectorAll('.kb-board'));
   var envLayers = [].slice.call(scene.querySelectorAll('.kb-env .kb-bg'));
   var handLayers = [].slice.call(scene.querySelectorAll('.kb-hands .kb-bg'));
   var products = [].slice.call(document.querySelectorAll('.kb-product'));
-  var steps = [].slice.call(document.querySelectorAll('.kb-progress button'));
+  var ticks = [].slice.call(document.querySelectorAll('.kb-ticks button'));
+  var countEl = document.getElementById('count');
+  var cta = document.getElementById('cta');
+  var nextBtn = document.getElementById('next');
+  var nextName = nextBtn.querySelector('.kb-next-name');
   var root = document.documentElement;
   var count = boards.length;
+  var names = products.map(function (p) { return p.querySelector('strong').textContent; });
 
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var k = 1;           // photo px → CSS px
-  var current = 0;     // smoothed position (0 … count-1)
+  var current = 0;     // rendered position (0 … count-1)
   var target = 0;      // position the scroll asks for
   var activeIndex = -1;
   var lastTime = 0;
@@ -55,6 +63,39 @@
 
   function lerp(a, b, t) {
     return a + (b - a) * t;
+  }
+
+  // ---------- Smooth scroll (Lenis) with fallback to native ----------
+
+  var lenis = null;
+  if (window.Lenis && !reduceMotion) {
+    lenis = new window.Lenis({
+      lerp: 0.085,
+      wheelMultiplier: 0.9,
+      smoothWheel: true,
+      syncTouch: false
+    });
+    (function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    })(performance.now());
+  }
+
+  function scrollY() {
+    return lenis ? lenis.scroll : window.pageYOffset;
+  }
+
+  function scrollToY(y, slow) {
+    if (lenis) {
+      lenis.scrollTo(y, {
+        duration: slow ? 1.6 : 1.15,
+        easing: function (t) { return 1 - Math.pow(1 - t, 4); },
+        onComplete: function () { snapping = false; }
+      });
+    } else {
+      window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
+      snapping = false;
+    }
   }
 
   // ---------- Layout: cover-fit the photo, framed on the keyboard ----------
@@ -84,42 +125,78 @@
       sy = (vh - IMG_H * k) / 2;
     } else {
       // Portrait: keep the keyboard ~75% of the width and centre on it,
-      // leaving room for the headline above and product details below.
-      k = (vw * 2.05) / IMG_W;
+      // leaving room for the headline above and the dock below.
+      k = (vw * 2.2) / IMG_W;
       sx = vw / 2 - REST_X * k;
-      sy = vh * 0.54 - REST_Y * k;
+      sy = vh * 0.58 - REST_Y * k;
     }
 
     scene.style.setProperty('--sw', IMG_W * k + 'px');
     scene.style.setProperty('--sh', IMG_H * k + 'px');
     scene.style.setProperty('--sx', sx + 'px');
     scene.style.setProperty('--sy', sy + 'px');
-    // Size-relative units for glow/blur inside the scene.
+    // 1em = 40 photo px, for blur/offsets inside the scene.
     scene.style.fontSize = 40 * k + 'px';
   }
 
   // ---------- Scroll → position ----------
 
-  // Each board change gets an equal slice of the scroll. Inside a slice the
-  // first and last ~18% are "holds", so a board settles and stays put a
-  // moment before the next one starts moving.
-  function readScroll() {
-    var rect = section.getBoundingClientRect();
-    var distance = section.offsetHeight - sticky.clientHeight;
-    var u = distance > 0 ? clamp(-rect.top / distance, 0, 1) : 0;
-    var q = u * (count - 1);
-    var i = Math.min(Math.floor(q), count - 2);
-    var f = q - i;
-    return i + smoothstep((f - 0.18) / 0.64);
-  }
-
-  function scrollToIndex(i) {
+  function track() {
     var distance = section.offsetHeight - sticky.clientHeight;
     var top = section.getBoundingClientRect().top + window.pageYOffset;
-    window.scrollTo({
-      top: top + (distance * i) / (count - 1),
-      behavior: reduceMotion.matches ? 'auto' : 'smooth'
-    });
+    return { top: top, distance: distance };
+  }
+
+  // Each board change gets an equal slice of the scroll, with a short hold at
+  // either end so a board settles before the next one lifts.
+  function readScroll() {
+    var t = track();
+    var u = t.distance > 0 ? clamp((scrollY() - t.top) / t.distance, 0, 1) : 0;
+    var q = u * (count - 1);
+    var i = Math.min(Math.floor(q), count - 2);
+    return i + smoothstep((q - i - 0.1) / 0.8);
+  }
+
+  function restY(i) {
+    var t = track();
+    return t.top + (t.distance * i) / (count - 1);
+  }
+
+  function goTo(i) {
+    settledIndex = i;
+    snapping = true;
+    scrollToY(restY(i), true);
+  }
+
+  // Snap: once scrolling settles inside the pinned range, glide on to the
+  // board you were heading for, so each one lands exactly in its place. A
+  // nudge of ~12% of a step is enough to commit to the next board.
+  var snapping = false;
+  var idleTimer = 0;
+  var settledIndex = 0;
+  var COMMIT = 0.12;
+
+  function maybeSnap() {
+    if (snapping || reduceMotion) return;
+    var t = track();
+    var y = scrollY();
+    if (y < t.top - 2 || y > t.top + t.distance + 2) return;
+    var q = clamp((y - t.top) / t.distance, 0, 1) * (count - 1);
+    var dest;
+    if (q > settledIndex + COMMIT) dest = Math.ceil(q - COMMIT);
+    else if (q < settledIndex - COMMIT) dest = Math.floor(q + COMMIT);
+    else dest = settledIndex;
+    dest = clamp(dest, 0, count - 1);
+    settledIndex = dest;
+    if (Math.abs(restY(dest) - y) < 2) return;
+    snapping = true;
+    scrollToY(restY(dest), false);
+  }
+
+  function onScroll() {
+    kick();
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(maybeSnap, lenis ? 140 : 220);
   }
 
   // ---------- Render ----------
@@ -127,21 +204,33 @@
   function poseFor(t) {
     // t = 0 at rest, +1 waiting on the left, -1 gone to the right.
     var a = Math.abs(t);
-    var dir = t > 0 ? -1 : 1;
     var near = clamp(a, 0, 1);
     var far = clamp(a - 1, 0, 1.5);
+    var lift = Math.sin(Math.PI * near);
+    var x, y, s, o, dim;
 
-    var x = dir * ((t > 0 ? SIDE_DX : EXIT_DX) * near + 760 * far);
-    var y = SIDE_DY * near + 30 * far - Math.sin(Math.PI * near) * LIFT;
-    var s = lerp(1, SIDE_SCALE, near) - 0.12 * far;
-    var o = t > 0 ? 1 - clamp(far * 1.4, 0, 1) : 1 - smoothstep((near - 0.55) / 0.45);
-    return { x: x, y: y, s: s, o: o, lift: Math.sin(Math.PI * near) };
+    if (t >= 0) {
+      x = PEEK_DX * near - 900 * far;
+      y = PEEK_DY * near;
+      s = lerp(1, PEEK_SCALE, near) - 0.1 * far;
+      o = 1 - clamp(far * 1.6, 0, 1);
+      dim = smoothstep(near);
+    } else {
+      x = EXIT_DX * near;
+      y = PEEK_DY * near;
+      s = lerp(1, PEEK_SCALE + 0.1, near);
+      o = 1 - smoothstep((near - 0.6) / 0.4);
+      dim = smoothstep(near) * 0.6;
+    }
+
+    y -= lift * LIFT_Y;
+    s *= 1 + lift * LIFT_SCALE;
+    return { x: x, y: y, s: s, o: o, lift: lift, dim: dim };
   }
 
   function render(p) {
     var i, t, pose, board, d, w;
 
-    // Boards.
     for (i = 0; i < count; i++) {
       board = boards[i];
       t = i - p;
@@ -151,15 +240,19 @@
       board.style.opacity = pose.o.toFixed(3);
       board.style.visibility = pose.o < 0.01 ? 'hidden' : 'visible';
       board.style.setProperty('--lift', pose.lift.toFixed(3));
-      board.style.setProperty('--lift-shadow', (1 + pose.lift * 0.35).toFixed(3));
+      board.style.setProperty('--bright', (1 - pose.dim * 0.42).toFixed(3));
+      board.style.setProperty('--sat', (1 - pose.dim * 0.35).toFixed(3));
 
-      // Highlight: rim glow in the scene's accent while in focus, plus a
-      // specular sweep across the keys as the board glides into place.
-      var focus = 1 - smoothstep(Math.abs(t) * 1.6);
-      board.style.setProperty('--glow', (0.55 * focus).toFixed(3));
-      var sweep = clamp(1 - Math.abs(t) * 1.4, 0, 1);
-      board.style.setProperty('--sheen', (Math.sin(Math.PI * sweep) * 0.9).toFixed(3));
-      board.style.setProperty('--sheen-x', (t > 0 ? lerp(150, -50, sweep) : lerp(-50, 150, sweep)).toFixed(1) + '%');
+      // A board at rest sits under the fingertips; anything in motion (or
+      // waiting at the side) is lifted above the hands.
+      var layer = Math.abs(t) < 0.02 ? layerRest : layerMove;
+      if (board.parentNode !== layer) layer.appendChild(board);
+      board.classList.toggle('is-peek', Math.abs(t - 1) < 0.02);
+
+      // One specular pass as the board comes down into place.
+      var settle = clamp(1 - Math.abs(t) * 1.6, 0, 1);
+      board.style.setProperty('--sheen', (Math.sin(Math.PI * settle) * 0.8).toFixed(3));
+      board.style.setProperty('--sheen-x', (t > 0 ? lerp(150, -50, settle) : lerp(-50, 150, settle)).toFixed(1) + '%');
     }
 
     // Environment: each photo dissolves in across the middle of its change.
@@ -169,7 +262,6 @@
       handLayers[i].style.opacity = w.toFixed(3);
     }
 
-    // Accent colour follows the same dissolve.
     var base = Math.min(Math.floor(p), count - 2);
     var mix = smoothstep((p - base - 0.3) / 0.4);
     var a = ACCENTS[base];
@@ -179,39 +271,42 @@
       Math.round(lerp(a[1], b[1], mix)) + ' ' +
       Math.round(lerp(a[2], b[2], mix)));
 
-    // The key-light dims a little while boards are in motion.
+    // In motion: key-light dims, mist gathers around the hands.
     var travel = Math.sin(Math.PI * (p - Math.floor(p)));
-    scene.style.setProperty('--spot', (1 - travel * 0.45).toFixed(3));
+    scene.style.setProperty('--spot', (1 - travel * 0.5).toFixed(3));
+    scene.style.setProperty('--mist', (0.6 + travel * 0.4).toFixed(3));
 
-    // Product copy: cross-fade with a soft drift + blur.
+    // Product line in the dock: cross-fade with a short vertical drift.
     for (i = 0; i < count; i++) {
       d = p - i;
-      var o = 1 - smoothstep(Math.abs(d) / 0.42);
-      var el = products[i];
-      el.style.opacity = o.toFixed(3);
-      el.style.transform = 'translate3d(0,' + (-d * 26).toFixed(2) + 'px,0)';
-      el.style.filter = o > 0.98 ? 'none' : 'blur(' + ((1 - o) * 8).toFixed(2) + 'px)';
-      el.style.visibility = o < 0.01 ? 'hidden' : 'visible';
+      // Sequenced hand-off around the midpoint: the old name rolls out just
+      // before the new one rolls in, so they never overlap.
+      var o = 1 - smoothstep((Math.abs(d) - 0.3) / 0.2);
+      products[i].style.opacity = o.toFixed(3);
+      products[i].style.transform = 'translate3d(0,' + (-clamp(d, -0.6, 0.6) * 30).toFixed(2) + 'px,0)';
+      products[i].style.visibility = o < 0.01 ? 'hidden' : 'visible';
+      ticks[i].querySelector('span').style.setProperty('--fill', clamp(p - i + 1, 0, 1).toFixed(3));
     }
 
-    // Progress bars fill as you travel towards each board.
-    for (i = 0; i < count; i++) {
-      steps[i].querySelector('.kb-progress-bar span').style.setProperty('--fill', clamp(p - i + 1, 0, 1).toFixed(3));
-    }
-
-    sticky.style.setProperty('--hint', (1 - clamp(p * 3, 0, 1)).toFixed(3));
+    // "Next" tag over the waiting board, only while things are at rest.
+    var rest = 1 - smoothstep(Math.abs(p - Math.round(p)) / 0.12);
+    var hasNext = Math.round(p) < count - 1;
+    var nextO = hasNext ? rest : 0;
+    scene.style.setProperty('--next', nextO.toFixed(3));
+    scene.style.setProperty('--next-vis', nextO < 0.01 ? 'hidden' : 'visible');
 
     var nextActive = Math.round(p);
     if (nextActive !== activeIndex) {
       activeIndex = nextActive;
+      countEl.textContent = '0' + (activeIndex + 1);
+      cta.href = products[activeIndex].getAttribute('data-href');
+      cta.setAttribute('aria-label', 'Shop ' + names[activeIndex] + ' on Meckeys');
+      if (activeIndex < count - 1) nextName.textContent = names[activeIndex + 1];
       for (i = 0; i < count; i++) {
         var on = i === activeIndex;
-        boards[i].classList.toggle('is-active', on);
-        products[i].classList.toggle('is-active', on);
         products[i].setAttribute('aria-hidden', on ? 'false' : 'true');
-        steps[i].classList.toggle('is-active', on);
-        if (on) steps[i].setAttribute('aria-current', 'true');
-        else steps[i].removeAttribute('aria-current');
+        if (on) ticks[i].setAttribute('aria-current', 'true');
+        else ticks[i].removeAttribute('aria-current');
       }
     }
   }
@@ -222,12 +317,12 @@
     var dt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 1 / 60;
     lastTime = now;
 
-    if (reduceMotion.matches) {
+    if (reduceMotion) {
       current = target;
     } else {
-      // Critically-damped-feeling exponential approach: gentle, frame-rate
-      // independent, and never overshoots.
-      current += (target - current) * (1 - Math.exp(-dt * 5.5));
+      // Lenis already smooths the scroll; this adds a light, frame-rate
+      // independent follow so the boards glide rather than track 1:1.
+      current += (target - current) * (1 - Math.exp(-dt * (lenis ? 9 : 5.5)));
     }
 
     if (Math.abs(target - current) < 0.0004) current = target;
@@ -249,11 +344,19 @@
     }
   }
 
-  steps.forEach(function (btn, i) {
-    btn.addEventListener('click', function () { scrollToIndex(i); });
+  ticks.forEach(function (btn, i) {
+    btn.addEventListener('click', function () { goTo(i); });
+  });
+  nextBtn.addEventListener('click', function () { goTo(Math.min(activeIndex + 1, count - 1)); });
+  boards.forEach(function (board, i) {
+    board.addEventListener('click', function () {
+      if (board.classList.contains('is-peek')) goTo(i);
+    });
   });
 
-  window.addEventListener('scroll', kick, { passive: true });
+  if (lenis) lenis.on('scroll', onScroll);
+  else window.addEventListener('scroll', onScroll, { passive: true });
+
   window.addEventListener('resize', function () {
     layout();
     render(current);
@@ -262,6 +365,7 @@
 
   layout();
   current = target = readScroll();
+  settledIndex = Math.round(current);
   render(current);
 
   // Reveal once the first environment + board are decoded.

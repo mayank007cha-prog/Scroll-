@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Your board. Your vibe.</title>
-  <meta name="description" content="Scroll to slide a new mechanical keyboard under your hands — the whole setup relights to match.">
+  <title>Your Board, Your Vibe</title>
+  <meta name="description" content="Scroll to lift a new mechanical keyboard onto the desk — the whole setup relights to match.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="assets/bg-ember.webp">
   <link rel="preload" as="image" href="assets/kb-ember.webp">
   <link rel="stylesheet" href="style.css">
@@ -17,10 +17,10 @@
     <!--
       Scroll-driven keyboard showcase.
       .kb-scene is laid out in the photos' own pixel space (2048x1144) and
-      scaled to cover the viewport, so keyboards, glow and the hand mask
-      line up with the photo at every screen size.
-      Layer order (bottom → top): environment photos, highlight, keyboards,
-      hands (a masked copy of the photos, so boards slide *under* them).
+      scaled to cover the viewport, so keyboards, light and the hand mask line
+      up with the photo at every screen size.
+      Layer order (bottom → top): environment photos, key-light, the board at
+      rest, hands (masked copy of the photos), mist, boards in motion.
     -->
     <section class="kb-hero" id="showcase" aria-label="Keyboard showcase">
       <div class="kb-sticky">
@@ -33,81 +33,90 @@
 
           <div class="kb-spot" aria-hidden="true"></div>
 
-          <div class="kb-boards">
-            <div class="kb-board" data-w="732">
-              <div class="kb-shadow"></div>
-              <img src="assets/kb-ember.webp" alt="Royal Kludge RK R87 Pro keyboard" decoding="async">
-              <div class="kb-sheen" style="--kb: url(assets/kb-ember.webp)"></div>
-            </div>
-            <div class="kb-board" data-w="741">
-              <div class="kb-shadow"></div>
-              <img src="assets/kb-frost.webp" alt="Royal Kludge RK G87 keyboard" decoding="async">
-              <div class="kb-sheen" style="--kb: url(assets/kb-frost.webp)"></div>
-            </div>
-            <div class="kb-board" data-w="719">
-              <div class="kb-shadow"></div>
-              <img src="assets/kb-prism.webp" alt="Keychron V1 keyboard" decoding="async">
-              <div class="kb-sheen" style="--kb: url(assets/kb-prism.webp)"></div>
-            </div>
-          </div>
+          <div class="kb-layer" id="layer-rest"></div>
 
           <div class="kb-hands" aria-hidden="true">
             <img class="kb-bg" src="assets/bg-ember.webp" alt="" decoding="async">
             <img class="kb-bg" src="assets/bg-frost.webp" alt="" decoding="async">
             <img class="kb-bg" src="assets/bg-prism.webp" alt="" decoding="async">
           </div>
+
+          <div class="kb-mist" aria-hidden="true">
+            <div class="kb-mist-sheet kb-mist-a"></div>
+            <div class="kb-mist-sheet kb-mist-b"></div>
+          </div>
+
+          <div class="kb-layer" id="layer-move">
+            <div class="kb-board" data-w="732">
+              <div class="kb-shadow"></div>
+              <div class="kb-ao"></div>
+              <img src="assets/kb-ember.webp" alt="Royal Kludge RK R87 Pro keyboard" decoding="async">
+              <div class="kb-tint" style="--kb: url(assets/kb-ember.webp)"></div>
+              <div class="kb-sheen" style="--kb: url(assets/kb-ember.webp)"></div>
+            </div>
+            <div class="kb-board" data-w="741">
+              <div class="kb-shadow"></div>
+              <div class="kb-ao"></div>
+              <img src="assets/kb-frost.webp" alt="Royal Kludge RK G87 keyboard" decoding="async">
+              <div class="kb-tint" style="--kb: url(assets/kb-frost.webp)"></div>
+              <div class="kb-sheen" style="--kb: url(assets/kb-frost.webp)"></div>
+            </div>
+            <div class="kb-board" data-w="719">
+              <div class="kb-shadow"></div>
+              <div class="kb-ao"></div>
+              <img src="assets/kb-prism.webp" alt="Keychron V1 keyboard" decoding="async">
+              <div class="kb-tint" style="--kb: url(assets/kb-prism.webp)"></div>
+              <div class="kb-sheen" style="--kb: url(assets/kb-prism.webp)"></div>
+            </div>
+          </div>
+
+          <button class="kb-next" type="button" id="next">
+            <span class="kb-next-label">Next</span>
+            <span class="kb-next-name"></span>
+          </button>
         </div>
 
         <div class="kb-shade" aria-hidden="true"></div>
 
-        <h1 class="kb-headline">
-          <span class="kb-headline-sans">Your board.</span>
-          <span class="kb-headline-serif">Your vibe.</span>
-        </h1>
+        <header class="kb-top">
+          <h1 class="kb-headline">
+            <span>Your board.</span>
+            <em>Your vibe.</em>
+          </h1>
+          <nav class="kb-progress" aria-label="Keyboards">
+            <span class="kb-count"><b id="count">01</b> / 03</span>
+            <span class="kb-ticks">
+              <button type="button" aria-label="Royal Kludge RK R87 Pro"><span></span></button>
+              <button type="button" aria-label="Royal Kludge RK G87"><span></span></button>
+              <button type="button" aria-label="Keychron V1"><span></span></button>
+            </span>
+          </nav>
+        </header>
 
-        <div class="kb-info" aria-live="polite">
-          <article class="kb-product">
-            <h2 class="kb-name">Royal Kludge RK R87 Pro</h2>
-            <p class="kb-specs">80% TKL <i>·</i> Gasket mount <i>·</i> CNC metal knob</p>
-            <div class="kb-buy">
-              <p class="kb-price">From ₹5,599 <s>₹10,500</s></p>
-              <a class="kb-cta" href="https://meckeys.com/shop/keyboard/80-keyboard/royal-kludge-rk-r87-pro/" target="_blank" rel="noopener">Shop now <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-          <article class="kb-product">
-            <h2 class="kb-name">Royal Kludge RK G87</h2>
-            <p class="kb-specs">80% TKL <i>·</i> Gateron switches <i>·</i> RGB backlight</p>
-            <div class="kb-buy">
-              <p class="kb-price">From ₹3,799</p>
-              <a class="kb-cta" href="https://meckeys.com/shop/keyboard/80-keyboard/royal-kludge-rk-g87/" target="_blank" rel="noopener">Shop now <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-          <article class="kb-product">
-            <h2 class="kb-name">Keychron V1</h2>
-            <p class="kb-specs">75% <i>·</i> Hot-swappable <i>·</i> Volume knob</p>
-            <div class="kb-buy">
-              <p class="kb-price">From ₹5,999</p>
-              <a class="kb-cta" href="https://meckeys.com/shop/keyboard/75-keyboard/keychron-v1/" target="_blank" rel="noopener">Shop now <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
+        <div class="kb-dock">
+          <div class="kb-products" aria-live="polite">
+            <p class="kb-product" data-href="https://meckeys.com/shop/keyboard/80-keyboard/royal-kludge-rk-r87-pro/">
+              <strong>Royal Kludge RK R87 Pro</strong><span>From ₹5,599</span>
+            </p>
+            <p class="kb-product" data-href="https://meckeys.com/shop/keyboard/80-keyboard/royal-kludge-rk-g87/">
+              <strong>Royal Kludge RK G87</strong><span>From ₹3,799</span>
+            </p>
+            <p class="kb-product" data-href="https://meckeys.com/shop/keyboard/75-keyboard/keychron-v1/">
+              <strong>Keychron V1</strong><span>From ₹5,999</span>
+            </p>
+          </div>
+          <a class="kb-cta" id="cta" href="https://meckeys.com/shop/keyboard/80-keyboard/royal-kludge-rk-r87-pro/" target="_blank" rel="noopener">Shop now <span aria-hidden="true">→</span></a>
         </div>
-
-        <nav class="kb-progress" aria-label="Keyboards">
-          <button type="button"><span class="kb-progress-bar"><span></span></span><span class="kb-progress-label">01 Ember</span></button>
-          <button type="button"><span class="kb-progress-bar"><span></span></span><span class="kb-progress-label">02 Frost</span></button>
-          <button type="button"><span class="kb-progress-bar"><span></span></span><span class="kb-progress-label">03 Prism</span></button>
-        </nav>
-
-        <p class="kb-hint" aria-hidden="true">Scroll to switch boards</p>
       </div>
     </section>
 
     <section class="kb-outro">
-      <p class="kb-outro-eyebrow">Find the one that fits your hands</p>
-      <a class="kb-cta kb-cta-lg" href="https://meckeys.com/category/keyboard/" target="_blank" rel="noopener">Browse all keyboards <span aria-hidden="true">→</span></a>
+      <p class="kb-outro-line">Find the one that fits your hands.</p>
+      <a class="kb-cta" href="https://meckeys.com/category/keyboard/" target="_blank" rel="noopener">Browse all keyboards <span aria-hidden="true">→</span></a>
     </section>
   </main>
 
+  <script src="vendor/lenis.min.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

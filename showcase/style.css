@@ -1,14 +1,17 @@
+/* Single dark look: the photos are night scenes, so the page commits to them. */
 :root {
-  --ink: #f5f3f0;
-  --ink-soft: rgba(245, 243, 240, 0.66);
-  --ink-faint: rgba(245, 243, 240, 0.42);
-  --night: #0b0b0e;
+  --ink: #f4f2ee;
+  --ink-soft: rgba(244, 242, 238, 0.62);
+  --ink-faint: rgba(244, 242, 238, 0.38);
+  --night: #0a0b0f;
+  --glass: rgba(18, 19, 25, 0.42);
+  --glass-edge: rgba(255, 255, 255, 0.14);
   /* Updated from JS as the environment changes (space-separated RGB). */
   --accent-rgb: 255 122 56;
-  --accent: rgb(var(--accent-rgb));
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --gutter: clamp(20px, 3.2vw, 48px);
   color-scheme: dark;
 }
 
@@ -28,9 +31,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
 img {
   display: block;
   max-width: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
 }
 
 /* ---------- Scroll track + pinned stage ---------- */
@@ -38,8 +56,8 @@ img {
 .kb-hero {
   position: relative;
   /* One viewport to pin, plus scroll distance for each board change. */
-  height: calc(100vh + 2 * 130vh + 30vh);
-  height: calc(100svh + 2 * 130svh + 30svh);
+  height: calc(100vh + 2 * 110vh);
+  height: calc(100svh + 2 * 110svh);
 }
 
 .kb-sticky {
@@ -48,11 +66,9 @@ img {
   height: 100vh;
   height: 100svh;
   overflow: hidden;
-  background:
-    radial-gradient(120% 70% at 50% 60%, rgb(var(--accent-rgb) / 0.12), transparent 70%),
-    var(--night);
+  background: var(--night);
   opacity: 0;
-  transition: opacity 1.2s var(--ease);
+  transition: opacity 1.4s var(--ease);
 }
 
 .is-ready .kb-sticky {
@@ -72,7 +88,8 @@ img {
 }
 
 .kb-env,
-.kb-hands {
+.kb-hands,
+.kb-layer {
   position: absolute;
   inset: 0;
 }
@@ -90,8 +107,8 @@ img {
   opacity: 1;
 }
 
-/* The hands layer is a second copy of the photo stack, cut to the hand and
-   forearm silhouettes. It sits above the keyboards, so they pass under. */
+/* Copy of the photo stack cut to the hands, above the resting board, so the
+   fingertips that overlap its edge stay on top. */
 .kb-hands {
   -webkit-mask-image: url(assets/hands-mask.png);
   mask-image: url(assets/hands-mask.png);
@@ -100,28 +117,84 @@ img {
   pointer-events: none;
 }
 
-/* Soft key-light pooled on the mat under the active board. */
+/* Key-light pooled on the mat under the active board. */
 .kb-spot {
   position: absolute;
   left: 51.8%;
-  top: 81.6%;
-  width: 62%;
-  height: 46%;
+  top: 82%;
+  width: 58%;
+  height: 40%;
   transform: translate(-50%, -50%);
-  background:
-    radial-gradient(closest-side, rgb(var(--accent-rgb) / 0.55), rgb(var(--accent-rgb) / 0.16) 55%, transparent),
-    radial-gradient(closest-side, rgba(255, 255, 255, 0.10), transparent 70%);
+  background: radial-gradient(closest-side, rgb(var(--accent-rgb) / 0.32), rgb(var(--accent-rgb) / 0.08) 60%, transparent);
   mix-blend-mode: screen;
   opacity: var(--spot, 1);
   pointer-events: none;
 }
 
-/* ---------- Keyboards ---------- */
+/* ---------- Mist ---------- */
 
-.kb-boards {
+/* Low haze along the bottom of the frame, densest around the hands and kept
+   clear in the middle where the board rests. It thickens while boards are
+   lifted across, so the pass over the hands reads as soft and deliberate. */
+.kb-mist {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 56%;
+  bottom: -2%;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: var(--mist, 0.5);
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 24%, rgba(0, 0, 0, 0.25) 40%, rgba(0, 0, 0, 0.25) 60%, #000 76%, #000 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 24%, rgba(0, 0, 0, 0.25) 40%, rgba(0, 0, 0, 0.25) 60%, #000 76%, #000 100%);
+}
+
+.kb-mist::before {
+  content: "";
   position: absolute;
   inset: 0;
+  background: linear-gradient(to top, rgba(6, 8, 14, 0.7), rgba(6, 8, 14, 0) 70%);
 }
+
+.kb-mist-sheet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 200%;
+  background: color-mix(in srgb, rgb(var(--accent-rgb)) 38%, #c9d6ff);
+  -webkit-mask-image: url(assets/mist.png);
+  mask-image: url(assets/mist.png);
+  -webkit-mask-size: 50% 100%;
+  mask-size: 50% 100%;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  will-change: transform;
+}
+
+.kb-mist-a {
+  opacity: 0.95;
+  animation: kb-drift 70s linear infinite;
+}
+
+.kb-mist-b {
+  opacity: 0.6;
+  transform: scaleY(0.8);
+  transform-origin: bottom;
+  animation: kb-drift-back 110s linear infinite;
+}
+
+@keyframes kb-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes kb-drift-back {
+  from { transform: translate3d(-50%, 0, 0) scaleY(0.8); }
+  to   { transform: translate3d(0, 0, 0) scaleY(0.8); }
+}
+
+/* ---------- Keyboards ---------- */
 
 .kb-board {
   position: absolute;
@@ -134,26 +207,39 @@ img {
   position: relative;
   width: 100%;
   height: auto;
-  filter:
-    drop-shadow(0 0 0.6em rgb(var(--accent-rgb) / var(--glow, 0)))
-    drop-shadow(0 0.35em 0.5em rgba(0, 0, 0, 0.55));
+  filter: brightness(var(--bright, 1)) saturate(var(--sat, 1));
 }
 
-/* Contact shadow so the board sits *on* the mat rather than floating. */
+/* Soft cast shadow. It stays on the mat while the board lifts (translate
+   cancels the lift), spreading and fading the higher the board goes. */
 .kb-shadow {
   position: absolute;
-  left: 3%;
-  right: 3%;
-  bottom: -9%;
-  height: 34%;
+  left: 2%;
+  right: 2%;
+  bottom: -16%;
+  height: 46%;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.35) 60%, transparent);
-  filter: blur(6px);
-  transform: scaleY(var(--lift-shadow, 1));
-  opacity: calc(0.9 - var(--lift, 0) * 0.5);
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4) 55%, transparent);
+  filter: blur(calc(0.25em + var(--lift, 0) * 0.7em));
+  transform: translateY(calc(var(--lift, 0) * 1.9em)) scale(calc(1 + var(--lift, 0) * 0.12), calc(1 + var(--lift, 0) * 0.3));
+  opacity: calc(0.9 - var(--lift, 0) * 0.2);
 }
 
-/* Specular sweep, clipped to the board's own silhouette. */
+/* Tight contact shadow where the case meets the mat; gone once lifted. */
+.kb-ao {
+  position: absolute;
+  left: 1.5%;
+  right: 1.5%;
+  bottom: -2.5%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.9), transparent);
+  filter: blur(0.08em);
+  opacity: calc(1 - var(--lift, 0) * 2.2);
+}
+
+/* Room light on the board itself, so the cut-out picks up the scene's colour. */
+.kb-tint,
 .kb-sheen {
   position: absolute;
   inset: 0;
@@ -161,155 +247,225 @@ img {
   mask-image: var(--kb);
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
-  background: linear-gradient(105deg,
-      transparent 35%,
-      rgba(255, 255, 255, 0.0) 40%,
-      rgba(255, 255, 255, 0.38) 50%,
-      rgba(255, 255, 255, 0.0) 60%,
-      transparent 65%);
-  background-size: 250% 100%;
+  pointer-events: none;
+}
+
+.kb-tint {
+  background: linear-gradient(to bottom, rgb(var(--accent-rgb) / 0.55), rgb(var(--accent-rgb) / 0.15) 60%, rgba(0, 0, 0, 0.35));
+  mix-blend-mode: soft-light;
+  opacity: 0.6;
+}
+
+/* One specular pass across the keys as the board settles. */
+.kb-sheen {
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.32) 50%, transparent 62%);
+  background-size: 260% 100%;
   background-position: var(--sheen-x, 150%) 0;
   background-repeat: no-repeat;
   mix-blend-mode: overlay;
   opacity: var(--sheen, 0);
-  pointer-events: none;
 }
 
-/* Gentle idle shimmer on whichever board is in focus. */
-.kb-board.is-active .kb-sheen {
-  animation: kb-idle-sheen 7s var(--ease) 1.2s infinite;
+.kb-board.is-peek {
+  cursor: pointer;
 }
 
-@keyframes kb-idle-sheen {
-  0%   { background-position: 150% 0; opacity: 0; }
-  8%   { opacity: 0.85; }
-  30%  { background-position: -50% 0; opacity: 0; }
-  100% { background-position: -50% 0; opacity: 0; }
+/* "Next" tag above the waiting board. */
+.kb-next {
+  position: absolute;
+  left: 11.7%;
+  top: 77.5%;
+  transform: translate(-50%, -100%);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: var(--next, 0);
+  visibility: var(--next-vis, hidden);
+  transition: border-color 0.4s var(--ease);
 }
 
-/* ---------- Legibility + focus shading ---------- */
+.kb-next:hover,
+.kb-next:focus-visible {
+  border-color: rgba(255, 255, 255, 0.4);
+  outline: none;
+}
+
+.kb-next-label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.kb-next-name {
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* ---------- Shading ---------- */
 
 .kb-shade {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(to bottom, rgba(6, 6, 9, 0.86) 0%, rgba(6, 6, 9, 0.55) 16%, rgba(6, 6, 9, 0) 34%),
-    radial-gradient(85% 75% at 52% 82%, transparent 45%, rgba(4, 4, 6, 0.55) 100%);
+    radial-gradient(60% 45% at 0% 0%, rgba(6, 6, 9, 0.7), transparent 70%),
+    linear-gradient(to bottom, rgba(6, 6, 9, 0.45), rgba(6, 6, 9, 0) 22%),
+    radial-gradient(90% 80% at 52% 80%, transparent 50%, rgba(4, 4, 6, 0.5) 100%);
 }
 
-/* ---------- Copy ---------- */
+/* ---------- Top bar ---------- */
+
+.kb-top {
+  position: absolute;
+  top: var(--gutter);
+  left: var(--gutter);
+  right: var(--gutter);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  pointer-events: none;
+}
 
 .kb-headline {
-  position: absolute;
-  left: 50%;
-  top: clamp(20px, 4.2vh, 44px);
-  transform: translateX(-50%);
   margin: 0;
-  white-space: nowrap;
-  text-align: center;
-  font-size: clamp(30px, 3.4vw, 54px);
-  line-height: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(26px, 2.5vw, 40px);
+  line-height: 1.02;
+  font-weight: 600;
   letter-spacing: -0.035em;
-  font-weight: 700;
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
 }
 
-.kb-headline-serif {
+.kb-headline em {
   font-family: var(--serif);
   font-style: italic;
   font-weight: 400;
-  letter-spacing: -0.01em;
-  margin-left: 0.12em;
   font-size: 1.12em;
+  letter-spacing: -0.01em;
+  color: var(--ink-soft);
 }
 
-.kb-info {
+.kb-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  padding-top: 6px;
+  pointer-events: auto;
+}
+
+.kb-count {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.kb-count b {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.kb-ticks {
+  display: flex;
+  gap: 6px;
+}
+
+.kb-ticks button {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 8px 0;
+  background: none;
+  cursor: pointer;
+}
+
+.kb-ticks button span {
+  display: block;
+  width: 28px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--ink) calc(var(--fill, 0) * 100%), rgba(255, 255, 255, 0.2) 0);
+}
+
+.kb-ticks button:focus-visible {
+  outline: 1px solid var(--ink-soft);
+  outline-offset: 2px;
+}
+
+/* ---------- Dock ---------- */
+
+.kb-dock {
   position: absolute;
   left: 50%;
-  top: calc(clamp(20px, 4.2vh, 44px) + clamp(30px, 3.4vw, 54px) + clamp(10px, 1.8vh, 20px));
-  width: min(560px, 92vw);
+  bottom: max(clamp(14px, 2.2vh, 26px), env(safe-area-inset-bottom));
   transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 8px 8px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-edge);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.kb-products {
   display: grid;
+  overflow: hidden;
+  padding-block: 4px;
 }
 
 .kb-product {
   grid-area: 1 / 1;
+  margin: 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: baseline;
+  gap: 12px;
+  white-space: nowrap;
   opacity: 0;
-  will-change: opacity, transform, filter;
-  pointer-events: none;
+  will-change: opacity, transform;
 }
 
-.kb-product.is-active {
-  pointer-events: auto;
-}
-
-.kb-name {
-  margin: 0;
-  font-size: clamp(19px, 1.55vw, 26px);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-.kb-specs {
-  margin: 6px 0 0;
-  font-size: clamp(13px, 0.95vw, 15px);
-  color: var(--ink-soft);
-  letter-spacing: 0.005em;
-}
-
-.kb-specs i {
-  font-style: normal;
-  margin: 0 0.35em;
-  color: var(--ink-faint);
-}
-
-.kb-buy {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-top: clamp(10px, 1.4vh, 16px);
-}
-
-.kb-price {
-  margin: 0;
-  font-size: clamp(16px, 1.15vw, 19px);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+.kb-product strong {
+  font-size: 15px;
+  font-weight: 500;
   letter-spacing: -0.01em;
 }
 
-.kb-price s {
-  margin-left: 6px;
-  font-weight: 400;
-  font-size: 0.8em;
-  color: var(--ink-faint);
+.kb-product span {
+  font-size: 14px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
 }
 
 .kb-cta {
-  --pad: 22px;
-  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  height: 44px;
-  padding: 0 var(--pad);
+  height: 42px;
+  padding: 0 20px;
   border-radius: 999px;
-  color: var(--ink);
+  color: var(--night);
+  background: var(--ink);
   text-decoration: none;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  backdrop-filter: blur(14px) saturate(140%);
-  box-shadow: 0 0 0 0 rgb(var(--accent-rgb) / 0), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  transition: background 0.4s var(--ease), border-color 0.4s var(--ease), box-shadow 0.5s var(--ease);
+  white-space: nowrap;
+  transition: background 0.4s var(--ease), box-shadow 0.5s var(--ease);
 }
 
 .kb-cta span {
@@ -318,167 +474,107 @@ img {
 
 .kb-cta:hover,
 .kb-cta:focus-visible {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgb(var(--accent-rgb) / 0.75);
-  box-shadow: 0 0 28px -4px rgb(var(--accent-rgb) / 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  background: #fff;
+  box-shadow: 0 0 30px -6px rgb(var(--accent-rgb) / 0.7);
   outline: none;
 }
 
 .kb-cta:hover span,
 .kb-cta:focus-visible span {
-  transform: translateX(4px);
-}
-
-/* ---------- Progress ---------- */
-
-.kb-progress {
-  position: absolute;
-  left: 50%;
-  bottom: clamp(16px, 3.2vh, 32px);
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-}
-
-.kb-progress button {
-  appearance: none;
-  border: 0;
-  background: none;
-  padding: 8px 4px;
-  margin: 0;
-  cursor: pointer;
-  color: var(--ink-faint);
-  font: 500 11px/1 var(--sans);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 9px;
-  white-space: nowrap;
-  transition: color 0.5s var(--ease);
-}
-
-.kb-progress button.is-active,
-.kb-progress button:hover,
-.kb-progress button:focus-visible {
-  color: var(--ink);
-  outline: none;
-}
-
-.kb-progress-bar {
-  display: block;
-  width: clamp(56px, 6vw, 84px);
-  height: 2px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.18);
-  overflow: hidden;
-}
-
-.kb-progress-bar span {
-  display: block;
-  height: 100%;
-  background: var(--ink);
-  box-shadow: 0 0 10px rgb(var(--accent-rgb) / 0.9);
-  transform-origin: 0 50%;
-  transform: scaleX(var(--fill, 0));
-}
-
-.kb-hint {
-  position: absolute;
-  right: clamp(16px, 2.5vw, 36px);
-  bottom: clamp(22px, 3.6vh, 38px);
-  margin: 0;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  opacity: var(--hint, 1);
-  transition: opacity 0.6s var(--ease);
+  transform: translateX(3px);
 }
 
 /* ---------- Outro ---------- */
 
 .kb-outro {
-  min-height: 60vh;
+  min-height: 56vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: 24px;
   padding: 80px 16px;
   text-align: center;
-  background: linear-gradient(to bottom, var(--night), #121216);
+  background: var(--night);
 }
 
-.kb-outro-eyebrow {
+.kb-outro-line {
   margin: 0;
   font-family: var(--serif);
   font-style: italic;
-  font-size: clamp(28px, 4vw, 52px);
+  font-size: clamp(28px, 3.6vw, 48px);
   letter-spacing: -0.01em;
-}
-
-.kb-cta-lg {
-  height: 52px;
-  font-size: 16px;
-  --pad: 28px;
+  color: var(--ink-soft);
 }
 
 /* ---------- Portrait / phones ---------- */
 
 @media (max-aspect-ratio: 1/1) {
-  /* The photo is framed around the keyboard band with copy above and below
-     (like the reference layout), so feather its top and bottom edges. */
+  /* Framed around the keyboard band, with the edges feathered into the night. */
   .kb-scene {
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 86%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 86%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 84%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 84%, transparent 100%);
   }
 
   .kb-shade {
-    background:
-      linear-gradient(to bottom, rgba(6, 6, 9, 0.8) 0%, rgba(6, 6, 9, 0) 26%),
-      radial-gradient(120% 60% at 50% 55%, transparent 50%, rgba(4, 4, 6, 0.5) 100%);
+    background: linear-gradient(to bottom, rgba(6, 6, 9, 0.6), rgba(6, 6, 9, 0) 24%);
   }
 
-  .kb-headline {
-    top: max(28px, env(safe-area-inset-top));
-    display: flex;
+  .kb-top {
     flex-direction: column;
     align-items: center;
-    font-size: clamp(36px, 10.5vw, 60px);
-    line-height: 1;
-  }
-
-  .kb-headline-serif {
-    margin-left: 0;
-  }
-
-  .kb-info {
-    top: auto;
-    bottom: calc(clamp(16px, 3.2vh, 32px) + 54px);
-  }
-
-  .kb-name {
-    font-size: 24px;
-  }
-
-  .kb-specs {
-    font-size: 14px;
-  }
-
-  .kb-buy {
-    flex-direction: column;
+    text-align: center;
     gap: 14px;
   }
 
-  .kb-hint {
+  .kb-headline {
+    align-items: center;
+    font-size: clamp(34px, 10vw, 52px);
+  }
+
+  .kb-progress {
+    align-items: center;
+    flex-direction: row;
+    gap: 14px;
+    padding-top: 0;
+  }
+
+  .kb-dock {
+    left: 16px;
+    right: 16px;
+    transform: none;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .kb-products {
+    justify-items: center;
+  }
+
+  .kb-product {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .kb-product strong {
+    font-size: 18px;
+  }
+
+  .kb-cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .kb-next {
     display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kb-board.is-active .kb-sheen {
+  .kb-mist-sheet {
     animation: none;
   }
 }
