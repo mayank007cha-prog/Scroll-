@@ -13,8 +13,6 @@
      normal width for UI text. */
   --sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --gutter: clamp(24px, 3vw, 48px);
-  /* Bright tint of the room colour, for text on the dark scene. */
-  --accent-text: color-mix(in srgb, rgb(var(--accent-rgb)) 72%, #fff);
   color-scheme: dark;
 }
 
@@ -313,7 +311,7 @@ button {
   font-stretch: 125%;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent-text);
+  color: var(--ink-faint);
 }
 
 .kb-next-name {
@@ -348,7 +346,8 @@ button {
   pointer-events: none;
 }
 
-/* Expanded caps: heavy first line, light second line in the room colour. */
+/* Expanded caps: heavy first line, light second line. Text stays neutral;
+   the room colour lives in the scene, not the type. */
 .kb-headline {
   margin: 0;
   display: flex;
@@ -367,7 +366,7 @@ button {
 .kb-headline-alt {
   font-weight: 300;
   letter-spacing: -0.01em;
-  color: var(--accent-text);
+  color: var(--ink-soft);
 }
 
 .kb-progress {
@@ -464,8 +463,8 @@ button {
 
 .kb-product span {
   font-size: 15px;
-  font-weight: 500;
-  color: var(--accent-text);
+  font-weight: 400;
+  color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
 }
 
