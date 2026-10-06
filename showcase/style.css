@@ -141,28 +141,16 @@ button {
   pointer-events: none;
 }
 
-/* Monitor: the screen (black panel + headline) is part of the background
-   images, built from the Figma frames. .kb-screen repeats the photo stack
-   clipped to the panel, above the depth-of-field layer, so it stays sharp.
-   Polygon in photo px / 2048 x 1144. */
-.kb-screen {
-  position: absolute;
-  inset: 0;
-  clip-path: polygon(31.35% 25.17%, 40.53% 25.96%, 49.8% 26.31%, 59.08% 25.96%, 69.24% 25.26%,
-    69.04% 54.46%, 59.08% 53.5%, 49.8% 53.06%, 40.53% 53.5%, 31.64% 54.63%);
-  pointer-events: none;
-}
-
-/* Depth of field: everything outside a clear zone on the keyboard, hands
-   and desk is softly blurred and dimmed, so the product reads first. */
+/* A light blur at the very top of the wall, fading out above the monitor.
+   No dimming: the scene keeps the Figma frames' look. */
 .kb-dof {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  -webkit-backdrop-filter: blur(0.1em) brightness(0.68) saturate(0.82);
-  backdrop-filter: blur(0.1em) brightness(0.68) saturate(0.82);
-  -webkit-mask-image: radial-gradient(ellipse 44% 36% at 51.8% 84%, transparent 50%, #000 100%);
-  mask-image: radial-gradient(ellipse 44% 36% at 51.8% 84%, transparent 50%, #000 100%);
+  -webkit-backdrop-filter: blur(0.07em);
+  backdrop-filter: blur(0.07em);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 8%, transparent 21%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 8%, transparent 21%);
 }
 
 /* ---------- Mist ---------- */
@@ -321,8 +309,7 @@ button {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(to bottom, rgba(5, 5, 8, 0.35), rgba(5, 5, 8, 0) 20%),
-    radial-gradient(90% 80% at 52% 80%, transparent 50%, rgba(4, 4, 6, 0.5) 100%);
+    radial-gradient(100% 90% at 52% 75%, transparent 60%, rgba(4, 4, 6, 0.3) 100%);
 }
 
 /* ---------- Top bar ---------- */
@@ -383,7 +370,7 @@ button {
 .kb-dock {
   position: absolute;
   left: 50%;
-  bottom: max(clamp(14px, 2.2vh, 26px), env(safe-area-inset-bottom));
+  bottom: max(clamp(28px, 6vh, 64px), env(safe-area-inset-bottom));
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -402,6 +389,23 @@ button {
     0 24px 60px -24px rgba(0, 0, 0, 0.8),
     inset 0 1px 0 rgba(255, 255, 255, 0.3),
     inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Frosted haze behind the dock: a gentle blur that fades out in every
+   direction, so the dock reads clearly without a hard band. It stays below
+   the keyboard (the scene is lifted clear of the dock). */
+.kb-dock-haze {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(1100px, 100%);
+  height: calc(max(clamp(28px, 6vh, 64px), env(safe-area-inset-bottom)) + 150px);
+  transform: translateX(-50%);
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(10px) brightness(0.82);
+  backdrop-filter: blur(10px) brightness(0.82);
+  -webkit-mask-image: radial-gradient(50% 60% at 50% 62%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(50% 60% at 50% 62%, #000 35%, transparent 100%);
 }
 
 /* Specular rim: a 1px gradient border, brightest top-left. */

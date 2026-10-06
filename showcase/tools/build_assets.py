@@ -3,19 +3,12 @@
     pip install pillow numpy opencv-python-headless
     python3 showcase/tools/build_assets.py
 
-Backgrounds come from the Figma "Keyboard Interaction" frames 1/2/3
-(assets/src/frame-<env>.png: the photo with the monitor screen designed on
-it). Figma only exports them at 2048 px, so for the 2x files the screen is
-cut out of the frame and composited onto the upscaled photo, with its text
-redrawn at 2x in Inter (tools/fonts, OFL) at the frame's exact positions.
+Backgrounds are the Figma "Keyboard Interaction" frames 1/2/3, exactly as
+exported (assets/src/frame-<env>.png, 2048 x 1144), WebP quality 95.
+(frame_2x / clean_wall below are kept for an optional 2x build, unused.)
 
 Outputs (in showcase/assets):
-  bg-<env>.webp      environment photos (2048x1144)
-  bg-<env>@2x.webp   4096x2288 versions for high-DPI screens, built from
-                     assets/src/bg-<env>@2x.png when present (see upscale.py).
-                     When the 2x source exists, the felt texture and JPEG
-                     noise on the dark hex wall are smoothed (clean_wall) and
-                     the 1x file is downscaled from that cleaned image.
+  bg-<env>.webp      the Figma frames (2048x1144)
   kb-<env>.webp      keyboard cut-outs with alpha (2x when available)
   hands-mask.png     union of the hand/arm silhouettes of all three photos.
                      The page uses it as a CSS mask over a copy of the
@@ -104,7 +97,7 @@ def hand_mask(env):
     big = Image.new("L", (W * SS, H * SS), 0)
     draw = ImageDraw.Draw(big)
     for poly in HANDS[env]:
-        pts = [to_aligned(env, pt) for pt in poly]
+        pts = poly  # frames are used unaligned
         draw.polygon([(x * SS, y * SS) for x, y in pts], fill=255)
     return big.resize((W, H), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.6))
 
@@ -213,14 +206,9 @@ def mist(w=1024, h=512, seed=7):
 
 def main():
     for env in ENVS:
-        hi = SRC / f"bg-{env}@2x.png"
-        if hi.exists():
-            big = aligned(env, frame_2x(env, clean_wall(Image.open(hi).convert("RGB"))), 2)
-            big.save(OUT / f"bg-{env}@2x.webp", quality=82, method=6)
-            bg = big.resize((W, H), Image.LANCZOS)
-        else:
-            bg = aligned(env, Image.open(SRC / f"frame-{env}.png").convert("RGB"))
-        bg.save(OUT / f"bg-{env}.webp", quality=86, method=6)
+        # Backgrounds: the Figma frames exactly as exported (2048 x 1144), no
+        # upscaling, cleanup or alignment; saved at WebP quality 95 (visually identical).
+        Image.open(SRC / f"frame-{env}.png").convert("RGB").save(OUT / f"bg-{env}.webp", quality=95, method=6)
         # Keyboards: ship the 2x cut-out when present (drawn ~1400 device px
         # wide on large high-DPI screens), else the original export.
         kb = SRC / f"kb-{env}@2x.png"

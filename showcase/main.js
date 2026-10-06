@@ -19,8 +19,8 @@
   var PREV_DY = -9;
   var PREV_SCALE = 0.46;
   // While travelling, a board is lifted toward the camera, over the hands.
-  var LIFT_Y = 78;
-  var LIFT_SCALE = 0.07;
+  var LIFT_Y = 44;
+  var LIFT_SCALE = 0.035;
 
   var ACCENTS = [
     [255, 122, 56],  // ember
@@ -41,7 +41,6 @@
   var boards = [].slice.call(scene.querySelectorAll('.kb-board'));
   var envLayers = [].slice.call(scene.querySelectorAll('.kb-env .kb-bg'));
   var handLayers = [].slice.call(scene.querySelectorAll('.kb-hands .kb-bg'));
-  var screenLayers = [].slice.call(scene.querySelectorAll('.kb-screen .kb-bg'));
   var products = [].slice.call(document.querySelectorAll('.kb-product'));
   var ticks = [].slice.call(document.querySelectorAll('.kb-rail button'));
   var cta = document.getElementById('cta');
@@ -158,14 +157,12 @@
     return { top: top, distance: distance };
   }
 
-  // Each board change gets an equal slice of the scroll, with a short hold at
-  // either end so a board settles before the next one lifts.
+  // Board position follows the scroll linearly; the easing lives in the
+  // glide, so the motion has no sudden start or stop.
   function readScroll() {
     var t = track();
     var u = t.distance > 0 ? clamp((scrollY() - t.top) / t.distance, 0, 1) : 0;
-    var q = u * (count - 1);
-    var i = Math.min(Math.floor(q), count - 2);
-    return i + smoothstep((q - i - 0.04) / 0.92);
+    return u * (count - 1);
   }
 
   function restY(i) {
@@ -186,23 +183,44 @@
   // While our own glide runs, the settle stands down (slow frames can leave
   // gaps between scroll events that look like "stopped"). Any new wheel,
   // touch or key input hands control straight back to the reader.
+  //
+  // The glide is our own eased animation (the browser's built-in smooth
+  // scroll is short and abrupt): a slow ease-in-out, scaled a little with
+  // distance, so boards are set down gently.
   var gliding = false;
-  var glideTimer = 0;
+  var glideRaf = 0;
 
   function endGlide() {
     gliding = false;
-    clearTimeout(glideTimer);
+    cancelAnimationFrame(glideRaf);
+  }
+
+  function easeInOutSine(t) {
+    return -(Math.cos(Math.PI * t) - 1) / 2;
   }
 
   function goTo(i) {
     settledIndex = clamp(i, 0, count - 1);
-    gliding = !reduceMotion;
-    clearTimeout(glideTimer);
-    glideTimer = setTimeout(endGlide, 1500);
-    window.scrollTo({ top: restY(settledIndex), behavior: reduceMotion ? 'auto' : 'smooth' });
+    var to = restY(settledIndex);
+    var from = scrollY();
+    endGlide();
+    if (reduceMotion || Math.abs(to - from) < 1) {
+      window.scrollTo(0, to);
+      return;
+    }
+    var t = track();
+    var steps = Math.abs(to - from) / (t.distance / (count - 1));
+    var duration = 1100 + 450 * Math.min(steps, 2);
+    var start = performance.now();
+    gliding = true;
+    (function step(now) {
+      var p = clamp((now - start) / duration, 0, 1);
+      window.scrollTo(0, from + (to - from) * easeInOutSine(p));
+      if (p < 1) glideRaf = requestAnimationFrame(step);
+      else gliding = false;
+    })(start);
   }
 
-  window.addEventListener('scrollend', function () { if (gliding) endGlide(); });
   window.addEventListener('wheel', endGlide, { passive: true });
   window.addEventListener('keydown', endGlide);
 
@@ -243,7 +261,6 @@
 
   function onScroll() {
     kick();
-    if (gliding && Math.abs(scrollY() - restY(settledIndex)) < 1.5) endGlide();
     // Settle once the scroll (including momentum) has stopped.
     clearTimeout(settleTimer);
     settleTimer = setTimeout(settle, 130);
@@ -310,7 +327,6 @@
       w = envMix(p - (i - 1));
       envLayers[i].style.opacity = w.toFixed(3);
       handLayers[i].style.opacity = w.toFixed(3);
-      screenLayers[i].style.opacity = w.toFixed(3);
     }
 
     var base = Math.min(Math.floor(p), count - 2);
@@ -365,7 +381,7 @@
     } else {
       // A light, frame-rate independent follow, so the boards glide rather
       // than track the scroll position 1:1.
-      current += (target - current) * (1 - Math.exp(-dt * 8));
+      current += (target - current) * (1 - Math.exp(-dt * 5.5));
     }
 
     if (Math.abs(target - current) < 0.0004) current = target;

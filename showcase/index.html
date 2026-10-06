@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,300..800&display=swap" rel="stylesheet">
-  <link rel="preload" as="image" href="assets/bg-ember.webp" imagesrcset="assets/bg-ember.webp 2048w, assets/bg-ember@2x.webp 4096w" imagesizes="(max-aspect-ratio: 1/1) 220vw, 100vw">
+  <link rel="preload" as="image" href="assets/bg-ember.webp">
   <link rel="preload" as="image" href="assets/kb-ember.webp">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -27,9 +27,9 @@
       <div class="kb-sticky">
         <div class="kb-scene" id="scene">
           <div class="kb-env" aria-hidden="true">
-            <img class="kb-bg" src="assets/bg-ember.webp" srcset="assets/bg-ember.webp 2048w, assets/bg-ember@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
-            <img class="kb-bg" src="assets/bg-frost.webp" srcset="assets/bg-frost.webp 2048w, assets/bg-frost@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
-            <img class="kb-bg" src="assets/bg-prism.webp" srcset="assets/bg-prism.webp 2048w, assets/bg-prism@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
+            <img class="kb-bg" src="assets/bg-ember.webp" alt="" decoding="async">
+            <img class="kb-bg" src="assets/bg-frost.webp" alt="" decoding="async">
+            <img class="kb-bg" src="assets/bg-prism.webp" alt="" decoding="async">
           </div>
 
           <div class="kb-spot" aria-hidden="true"></div>
@@ -37,24 +37,15 @@
           <div class="kb-layer" id="layer-rest"></div>
 
           <div class="kb-hands" aria-hidden="true">
-            <img class="kb-bg" src="assets/bg-ember.webp" srcset="assets/bg-ember.webp 2048w, assets/bg-ember@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
-            <img class="kb-bg" src="assets/bg-frost.webp" srcset="assets/bg-frost.webp 2048w, assets/bg-frost@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
-            <img class="kb-bg" src="assets/bg-prism.webp" srcset="assets/bg-prism.webp 2048w, assets/bg-prism@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
+            <img class="kb-bg" src="assets/bg-ember.webp" alt="" decoding="async">
+            <img class="kb-bg" src="assets/bg-frost.webp" alt="" decoding="async">
+            <img class="kb-bg" src="assets/bg-prism.webp" alt="" decoding="async">
           </div>
 
-          <!-- Depth of field: the room softly blurred and dimmed around a
-               clear zone on the keyboard, hands and desk. -->
+          <!-- A light blur at the very top of the wall only; the rest of the
+               scene stays exactly as in the Figma frames. -->
           <div class="kb-dof" aria-hidden="true"></div>
 
-          <!-- Monitor: the headline is designed onto the screen in the
-               background images (Figma frames 1-3). This copy of the photo
-               stack, clipped to the screen, sits above the depth of field so
-               the screen stays sharp. -->
-          <div class="kb-screen" aria-hidden="true">
-            <img class="kb-bg" src="assets/bg-ember.webp" srcset="assets/bg-ember.webp 2048w, assets/bg-ember@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
-            <img class="kb-bg" src="assets/bg-frost.webp" srcset="assets/bg-frost.webp 2048w, assets/bg-frost@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
-            <img class="kb-bg" src="assets/bg-prism.webp" srcset="assets/bg-prism.webp 2048w, assets/bg-prism@2x.webp 4096w" sizes="(max-aspect-ratio: 1/1) 220vw, 100vw" alt="" decoding="async">
-          </div>
 
           <div class="kb-mist" aria-hidden="true">
             <div class="kb-mist-sheet kb-mist-a"></div>
@@ -98,6 +89,9 @@
           <button type="button" aria-label="Royal Kludge RK G87"><span></span></button>
           <button type="button" aria-label="Keychron V1"><span></span></button>
         </nav>
+
+        <!-- Soft frosted haze behind the dock, so it reads clearly. -->
+        <div class="kb-dock-haze" aria-hidden="true"></div>
 
         <div class="kb-dock">
           <div class="kb-products" aria-live="polite">
