@@ -115,6 +115,29 @@ button {
   opacity: 1;
 }
 
+/* The frost frame (2nd photo) was shot ~1.5% higher than the other two.
+   Line it up with them here (y = 1.0151 * y_src + 11.78 photo px) so the
+   room never shifts between keyboards; the image file stays exact. */
+.kb-env .kb-bg:nth-child(2),
+.kb-hands .kb-bg:nth-child(2) {
+  transform-origin: 0 0;
+  transform: translateY(1.0294%) scaleY(1.0151);
+}
+
+/* Screen edges: the scene seen through a light blur, masked to a feathered
+   ring along the monitor's outline. */
+.kb-screen-edge {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(0.09em);
+  backdrop-filter: blur(0.09em);
+  -webkit-mask-image: url(assets/screen-edge.png);
+  mask-image: url(assets/screen-edge.png);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
 /* Copy of the photo stack cut to the hands, above the resting board, so the
    fingertips that overlap its edge stay on top. */
 .kb-hands {

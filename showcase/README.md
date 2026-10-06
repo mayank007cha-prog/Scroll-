@@ -30,8 +30,9 @@ python3 showcase/tools/build_standalone.py
   ease-in-out) on to the next board in the direction you scrolled (one step is 70% of the screen height); arrow / Page keys step
   one board at a time.
 - Backgrounds are the Figma "Keyboard Interaction" frames 1-3 exactly as exported (2048 px; the
-  monitor screen with the headline is designed into them). Only a light blur at the very top of
-  the wall is added.
+  monitor screen with its gradient and headline is designed into them). The frost frame is
+  lined up with the other two in CSS so the room never shifts; the screen edges are softly
+  blurred through a feathered mask (`assets/screen-edge.png`), plus a light blur at the top.
 - `.kb-scene` is laid out in the photos' own pixel space (2048×1144) and scaled to cover
   the viewport (portrait screens frame the keyboard band instead), so the boards, glow and
   hand mask stay aligned at every size.

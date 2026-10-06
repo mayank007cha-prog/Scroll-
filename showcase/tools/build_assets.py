@@ -14,6 +14,8 @@ Outputs (in showcase/assets):
                      The page uses it as a CSS mask over a copy of the
                      background stack, so a board at rest sits *under* the
                      fingertips that overlap its edge.
+  screen-edge.png    feathered ring along the monitor screen's outline, used
+                     as a mask to softly blur the screen edges.
   mist.png           horizontally tileable soft-noise mist (white + alpha),
                      drifted along the bottom of the frame around the hands.
 """
@@ -97,7 +99,7 @@ def hand_mask(env):
     big = Image.new("L", (W * SS, H * SS), 0)
     draw = ImageDraw.Draw(big)
     for poly in HANDS[env]:
-        pts = poly  # frames are used unaligned
+        pts = [to_aligned(env, pt) for pt in poly]  # frost is aligned in CSS
         draw.polygon([(x * SS, y * SS) for x, y in pts], fill=255)
     return big.resize((W, H), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.6))
 
@@ -187,6 +189,21 @@ def frame_2x(env, big_photo):
     return out
 
 
+def screen_edge():
+    """Feathered ring along the monitor screen's outline (ember frame, which
+    the aligned frost and prism frames share). The page blurs the scene
+    through this mask so the screen edges sit softly in the photo."""
+    frame = Image.open(SRC / "frame-ember.png").convert("RGB")
+    photo = Image.open(SRC / "bg-ember.png").convert("RGB")
+    mask = screen_mask(frame, photo)
+    ring = cv2.dilate(mask, np.ones((9, 9), np.uint8)) - cv2.erode(mask, np.ones((9, 9), np.uint8))
+    ring = cv2.GaussianBlur(ring.astype(np.float32), (0, 0), 3)
+    ring = np.clip(ring / max(ring.max(), 1) * 1.6, 0, 1) * 255
+    img = Image.new("RGBA", (W, H), (255, 255, 255, 0))
+    img.putalpha(Image.fromarray(ring.astype(np.uint8)))
+    return img
+
+
 def mist(w=1024, h=512, seed=7):
     """Tileable fractal mist: low-pass filtered noise (periodic via FFT)."""
     rng = np.random.default_rng(seed)
@@ -224,6 +241,7 @@ def main():
     rgba.save(OUT / "hands-mask.png", optimize=True)
 
     mist().save(OUT / "mist.png", optimize=True)
+    screen_edge().save(OUT / "screen-edge.png", optimize=True)
 
 
 if __name__ == "__main__":
