@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#f5f2eb">
+  <title>Wallpaper Roller</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="assets/wallpaper-new.jpg">
+  <link rel="preload" as="image" href="assets/roller.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Reusable SVG symbols: bubble tail + read receipt (drawn from the Figma components) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="tail" viewBox="0 0 15 18">
+      <path d="M0 0H7.5C7.5 7.6 9.6 12.9 14.1 16.5C14.8 17.1 14.5 18 13.6 18H0Z"/>
+    </symbol>
+    <symbol id="check" viewBox="0 0 17 17">
+      <path d="M1.6 9.2l2.9 2.9 6-7.2M7.3 11.4l.7.7 6-7.2" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </svg>
+
+  <main class="stage" id="stage" aria-label="Chat — tap to change wallpaper">
+    <!-- 1. Current wallpaper (base layer) -->
+    <div class="wallpaper wallpaper--base" id="wpBase"></div>
+
+    <!-- 2. New wallpaper, revealed by the moving paint edge.
+         The sheet moves with the edge; the image inside counter-moves so it stays fixed to the screen. -->
+    <div class="paint" id="paint" aria-hidden="true">
+      <div class="paint__image" id="paintImage"></div>
+      <div class="paint__lip"></div>
+      <div class="paint__sheen"></div>
+    </div>
+
+    <!-- 3. Chat (each .unit = one bubble + its reaction, animated independently) -->
+    <section class="chat" id="chat">
+      <div class="row me"><div class="unit">
+        <div class="bubble tail"><p class="text">Hey, hey, Doc, where are you?</p><i class="pad-b"></i>
+          <span class="time">08:21<svg><use href="#check"/></svg></span></div>
+      </div></div>
+
+      <div class="row friend"><div class="unit">
+        <div class="bubble"><p class="text">Thank God I found you.<i class="pad"></i></p>
+          <span class="time">08:21</span></div>
+      </div></div>
+      <div class="row friend grouped"><div class="unit">
+        <div class="bubble tail"><p class="text">Listen, can you meet me at Twin Pines Mall tonight at 1:15? I've made a major breakthrough... I'll need your assistance.<i class="pad"></i></p>
+          <span class="time">08:21</span></div>
+      </div></div>
+
+      <div class="row me"><div class="unit">
+        <div class="bubble tail"><p class="text">Wait a minute, wait a minute. 1:15 in the morning?<i class="pad"></i></p>
+          <span class="time">08:21<svg><use href="#check"/></svg></span></div>
+      </div></div>
+
+      <div class="row friend"><div class="unit">
+        <div class="bubble bubble--quote tail">
+          <div class="quote">
+            <b class="quote__title">You</b>
+            <span class="quote__text">Wait a minute, wait a minute. 1:15 in the morning?</span>
+          </div>
+          <p class="text">Yes. In the morning.<i class="pad pad--wide"></i></p>
+          <span class="time">08:21</span>
+        </div>
+        <div class="reaction">😩</div>
+      </div></div>
+
+      <div class="row me"><div class="unit">
+        <div class="bubble tail"><p class="text">What's goin' on? Where have you been all week?<i class="pad"></i></p>
+          <span class="time">08:22<svg><use href="#check"/></svg></span></div>
+      </div></div>
+
+      <div class="row friend"><div class="unit">
+        <div class="bubble tail"><p class="text">Working.<i class="pad"></i></p>
+          <span class="time">08:22</span></div>
+        <div class="reaction">👍</div>
+      </div></div>
+
+      <div class="row me"><div class="unit">
+        <div class="bubble tail"><p class="text">Where's Einstein, is he with you? 🐶</p><i class="pad-b"></i>
+          <span class="time">08:22<svg><use href="#check"/></svg></span></div>
+      </div></div>
+
+      <div class="row friend"><div class="unit">
+        <div class="bubble tail"><p class="text">Yeah, he's right here.<i class="pad"></i></p>
+          <span class="time">08:22</span></div>
+      </div></div>
+
+      <div class="row me"><div class="unit">
+        <div class="bubble tail"><p class="text">You know, Doc, you left your equipment on all week.<i class="pad"></i></p>
+          <span class="time">08:22<svg><use href="#check"/></svg></span></div>
+      </div></div>
+
+      <div class="row friend"><div class="unit">
+        <div class="bubble"><p class="text">My equipment, that reminds me, Marty, you better not hook up to the amplifier...<i class="pad"></i></p>
+          <span class="time">08:22</span></div>
+      </div></div>
+      <div class="row friend grouped"><div class="unit">
+        <div class="bubble tail"><p class="text">There's a slight possibility for overload ⛔️<i class="pad"></i></p>
+          <span class="time">08:23</span></div>
+      </div></div>
+
+      <div class="row me"><div class="unit">
+        <div class="bubble tail"><p class="text">Yeah, I'll keep that in mind....<i class="pad"></i></p>
+          <span class="time">08:23<svg><use href="#check"/></svg></span></div>
+      </div></div>
+
+      <div class="row friend"><div class="unit">
+        <div class="bubble tail"><p class="text">Good, I'll see you tonight. Don't forget, now, 1:15 a.m., Twin Pines Mall.<i class="pad"></i></p>
+          <span class="time">08:23</span></div>
+      </div></div>
+
+      <div class="row me"><div class="unit">
+        <div class="bubble tail"><p class="text">Right.</p><i class="pad-b"></i>
+          <span class="time">08:24<svg><use href="#check"/></svg></span></div>
+      </div></div>
+    </section>
+
+    <!-- 4. Paint roller (Figma asset) — drives the whole transition -->
+    <img class="roller" id="roller" src="assets/roller.png" alt="" width="205" height="236" draggable="false">
+
+    <!-- Dev affordance -->
+    <div class="hint" id="hint">Tap to change wallpaper</div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

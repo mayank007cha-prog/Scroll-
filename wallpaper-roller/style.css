@@ -1,0 +1,322 @@
+/* ------------------------------------------------------------------
+   Tokens (from the Figma chat components)
+------------------------------------------------------------------ */
+:root {
+  --stage-w: 100vw;
+  --stage-h: 100dvh;
+
+  --bubble-me: #d0fecf;
+  --bubble-friend: #ffffff;
+  --bubble-border: rgba(0, 0, 0, 0.06);
+  --txt-primary: #0a0a0a;
+  --txt-secondary: rgba(0, 0, 0, 0.5);
+  --quote-accent: #d42a66;
+  --quote-text: #232626;
+  --quote-bg: rgba(10, 10, 10, 0.04);
+  --reaction-border: #f0e9df;
+  --icon-active: #007bfc;
+  --base-bg: #f5f2eb;
+
+  --font: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+
+  /* Space under the last bubble (Figma: chat frame ends 77px above the bottom + 8px padding) */
+  --chat-bottom: 85px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--base-bg);
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* ------------------------------------------------------------------
+   Stage — full screen on phones. On anything wider we just show the
+   Figma frame size (393 × 852) so it can be previewed on desktop.
+------------------------------------------------------------------ */
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--base-bg);
+  isolation: isolate;
+}
+
+@media (min-width: 600px) {
+  body { background: #1d1d1f; }
+  .stage {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: 393px;
+    height: 852px;
+    max-height: 100vh;
+    transform: translate(-50%, -50%);
+    border-radius: 44px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Wallpapers
+------------------------------------------------------------------ */
+.wallpaper {
+  position: absolute;
+  inset: 0;
+  background: var(--base-bg) url("assets/wallpaper-old.jpg") center / cover no-repeat;
+}
+
+.wallpaper.is-new,
+.paint__image {
+  background-image: url("assets/wallpaper-new.jpg");
+  background-position: center;
+  background-size: cover;
+  background-color: #3a7bb1;
+}
+
+/* The painted sheet: wider than the screen so its elliptical top
+   reads as a gentle arc (≈9px sag at the screen edges, like the storyboard). */
+.paint {
+  --arc: 36px;
+  position: absolute;
+  top: 0;
+  left: -25%;
+  width: 150%;
+  height: calc(100% + 400px);
+  overflow: hidden;
+  border-radius: 50% 50% 0 0 / var(--arc) var(--arc) 0 0;
+  transform: translate3d(0, 110vh, 0);
+  visibility: hidden;
+  will-change: transform;
+  /* soft contact shadow cast onto the old wallpaper just above the edge */
+  box-shadow: 0 -2px 3px rgba(0, 0, 0, 0.08), 0 -8px 18px rgba(0, 0, 0, 0.10);
+  pointer-events: none;
+}
+
+.paint.is-active { visibility: visible; }
+
+.paint__image {
+  position: absolute;
+  top: 0;
+  left: calc(100% / 6);          /* = 25% of the stage → aligns with the screen */
+  width: calc(100% / 1.5);       /* = stage width */
+  height: var(--paint-h, 100vh); /* = stage height (set from JS) */
+  will-change: transform;
+}
+
+/* Rolled lip of the fresh sheet: a dark crease right at the edge,
+   then a soft highlight — same profile as the "mobile 1" sheet in Figma. */
+.paint__lip,
+.paint__sheen {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 140px;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.paint__lip {
+  top: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 18px 16px -8px rgba(0, 0, 0, 0.36),
+    inset 0 4px 6px -2px rgba(0, 0, 0, 0.18);
+}
+
+.paint__sheen {
+  top: 30px;
+  box-shadow: inset 0 16px 14px -8px rgba(255, 255, 255, 0.42);
+  opacity: 0.9;
+}
+
+/* ------------------------------------------------------------------
+   Chat
+------------------------------------------------------------------ */
+.chat {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-bottom: var(--chat-bottom);
+  z-index: 2;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.row.me     { align-items: flex-end;   padding: 0 16px; }
+.row.friend { align-items: flex-start; padding: 0 16px 0 16px; }
+.row.grouped { margin-top: -8.67px; } /* 3.33px between grouped bubbles instead of 12px */
+
+/* The animated unit = bubble + reaction */
+.unit {
+  display: flex;
+  flex-direction: column;
+  max-width: 287px;
+  will-change: transform;
+  transform-origin: 50% 60%;
+}
+.me .unit     { align-items: flex-end; }
+.friend .unit { align-items: flex-start; }
+
+.bubble {
+  position: relative;
+  max-width: 287px;
+  min-width: 88px;
+  padding: 5.5px 10px 6.5px;
+  border-radius: 12px;
+  border: 0.66px solid var(--bubble-border);
+  box-shadow: 0 0.66px 0 var(--bubble-border);
+  background: var(--bubble-friend);
+  transition: box-shadow 220ms ease-out;
+}
+.me .bubble { background: var(--bubble-me); }
+
+.unit.is-flying .bubble {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Tails */
+.bubble.tail::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 15px;
+  height: 18px;
+  background: inherit;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 18'%3E%3Cpath d='M0 0H7.5C7.5 7.6 9.6 12.9 14.1 16.5C14.8 17.1 14.5 18 13.6 18H0Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 18'%3E%3Cpath d='M0 0H7.5C7.5 7.6 9.6 12.9 14.1 16.5C14.8 17.1 14.5 18 13.6 18H0Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+.me .bubble.tail::after     { right: -7.5px; }
+.friend .bubble.tail::after { left: -7.5px; transform: scaleX(-1); }
+.me .bubble.tail     { border-bottom-right-radius: 4px; }
+.friend .bubble.tail { border-bottom-left-radius: 4px; }
+
+.text {
+  margin: 0;
+  max-width: 267px;
+  font-size: 15.8px;
+  line-height: 21px;
+  letter-spacing: -0.2054px;
+  color: var(--txt-primary);
+  overflow-wrap: break-word;
+}
+
+/* Reserved room for the timestamp on the last line (Figma "Side padding") */
+.pad { display: inline-block; width: 43px; height: 1px; }
+.me .pad, .pad--wide { width: 60px; }
+/* Timestamp on its own line (Figma "Padding bottom") */
+.pad-b { display: block; width: 68px; height: 15px; }
+
+.time {
+  position: absolute;
+  right: 8.11px;
+  bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  line-height: 13px;
+  letter-spacing: 0.55px;
+  color: var(--txt-secondary);
+  white-space: nowrap;
+}
+.friend .time { padding: 2px 3px 2px 0; }
+.time svg { width: 17px; height: 17px; color: var(--icon-active); }
+
+/* Reply / quote bubble */
+.bubble--quote { padding: 4px 4px 6.5px; display: flex; flex-direction: column; gap: 2px; }
+.bubble--quote .text { padding: 3px 6px 0; }
+.bubble--quote .time { bottom: 2.5px; }
+
+.quote {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 88px;
+  max-width: 275px;
+  padding: 9.5px 9px 10.5px 13px;
+  border-radius: 8px;
+  background: var(--quote-bg);
+  box-shadow: inset 4px 0 0 var(--quote-accent);
+}
+.quote__title { font-size: 14px; line-height: 19px; letter-spacing: -0.14px; font-weight: 600; color: var(--quote-accent); }
+.quote__text  { font-size: 12px; line-height: 16px; color: var(--quote-text); }
+
+/* Reactions */
+.reaction {
+  position: relative;
+  height: 24.5px;
+  margin-top: -4px;
+  padding: 4.5px 4.2px 4px 9px;
+  border: 1px solid var(--reaction-border);
+  border-radius: 13px;
+  background: #fff;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 4.8px;
+  filter: drop-shadow(0 0.66px 0 var(--bubble-border));
+}
+.friend .reaction { margin-left: 10px; }
+.me .reaction     { margin-right: 10px; }
+
+/* ------------------------------------------------------------------
+   Roller
+------------------------------------------------------------------ */
+.roller {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 102.5px);
+  width: 205px;
+  height: 236px;
+  z-index: 3;
+  pointer-events: none;
+  transform: translate3d(0, 120vh, 0);
+  visibility: hidden;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.18));
+}
+.roller.is-active { visibility: visible; }
+
+/* ------------------------------------------------------------------
+   Dev hint
+------------------------------------------------------------------ */
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(26px + env(safe-area-inset-bottom));
+  z-index: 4;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+  transition: opacity 260ms ease, transform 260ms ease;
+  pointer-events: none;
+}
+.hint.is-hidden { opacity: 0; transform: translate(-50%, 6px); }
