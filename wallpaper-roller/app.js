@@ -609,8 +609,13 @@
     rafId = requestAnimationFrame(tick);
   }
 
+  // Back to the very first frame: old wallpaper, chat in place, no paper or roller.
   function resetToInitial() {
     wpBase.classList.remove('is-new');
+    sheet.classList.remove('is-active');
+    flapCanvas.classList.remove('is-active');
+    roller.classList.remove('is-active');
+    if (flyLayer) { flyLayer.remove(); flyLayer = null; }
     chat.classList.remove('is-over', 'is-waiting');
     units.forEach((el) => {
       el.style.transform = '';
@@ -618,15 +623,17 @@
       el.style.opacity = '';
       el.classList.remove('is-flying');
     });
+    phase = 'idle';
   }
 
+  // Every tap plays the whole sequence from the start, even mid-animation.
   let starting = false;
   async function play() {
-    if (starting || phase === 'run') return;
+    if (starting) return;
     starting = true;
     await paperReady;
     starting = false;
-    if (phase === 'done') resetToInitial();
+    resetToInitial();
 
     // The copy does the falling; the real chat waits hidden and comes back.
     if (flyLayer) flyLayer.remove();
