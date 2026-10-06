@@ -127,7 +127,7 @@
   // falling, so the sound follows what you see.
   //   bloop()  – a tiny muted tick for each chat as it falls off
   //   flop()   – a short, quiet muffled thud when the paper lands on the roller
-  //   finish() – a soft, warm tone that fades out as the chat settles back
+  //   finish() – one light, short tone as the chat settles back
   const sfx = (() => {
     const enabled = new URLSearchParams(location.search).get('sound') !== '0';
     let ac = null, out = null;
@@ -213,9 +213,7 @@
     function finish() {
       if (!ok()) return;
       const t = ac.currentTime;
-      pad(196, t, 0.045, 0.04, 1.1);   // warm, low and calm (G3 + D4 + G4)
-      pad(293.66, t, 0.035, 0.05, 1.0);
-      pad(392, t + 0.02, 0.022, 0.06, 0.9);
+      pad(523.25, t, 0.05, 0.012, 0.3); // one light, simple tone (C5) with a short soft fade
     }
 
     function bloop(side, r) {

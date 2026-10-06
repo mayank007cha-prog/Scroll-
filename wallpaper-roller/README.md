@@ -11,8 +11,8 @@ whole sequence from the start (old wallpaper).
 - `?speed=0.25` in the URL plays it in slow motion.
 - Sound effects are short, muted gesture sounds synthesised with Web Audio.
   Nothing plays until the chats start falling: each chat gets a tiny tick as
-  it falls, the paper landing on the roller gets a quiet thud, and a soft,
-  warm tone fades out as the last chat settles back. Add `?sound=0` to mute
+  it falls, the paper landing on the roller gets a quiet thud, and one light,
+  short tone plays as the last chat settles back. Add `?sound=0` to mute
   them.
 - All timing/physics lives in `CONFIG` at the top of `app.js`.
 
