@@ -80,11 +80,13 @@
     fallSoundDelay: 90,            // ms after a chat is knocked off before its tick (when it visibly falls)
 
     // 4. return — starts while the roller is still finishing near the top
-    holdNewWallpaper: 800,         // ms to show the clean new wallpaper before the chat comes back
-    returnStagger: 18,             // ms between bubbles, newest (bottom) first
-    returnRise: 0.1,               // × screen height each bubble rises from
-    returnFade: 160,               // ms fade-in while rising
-    returnSpring: { omega: 14, zeta: 1 }, // critically damped: glides in, no bounce
+    holdNewWallpaper: 500,         // ms to show the clean new wallpaper before the chat comes back
+    returnStagger: 40,             // ms between bubbles, newest (bottom) first — one after another
+    returnRise: 0.12,              // × screen height each bubble comes up from
+    returnSide: 0.45,              // × screen width it comes in from its own side (green: right, white: left)
+    returnTilt: 7,                 // deg it starts tilted, straightening as it lands
+    returnFade: 140,               // ms fade-in
+    returnSpring: { omega: 15, zeta: 1 }, // critically damped: glides in, no bounce
   };
 
   const speed = Math.max(0.05, parseFloat(new URLSearchParams(location.search).get('speed')) || 1);
@@ -713,8 +715,9 @@
 
   // ---------------------------------------------------------------- return
   // After a short hold on the clean new wallpaper, the real chat comes back
-  // (a copy of it did the falling). Newest message first: each bubble rises a
-  // short way into its slot while fading in, cascading up the column.
+  // (a copy of it did the falling). Newest message first, one after another:
+  // each bubble comes up from the bottom corner on the side it fell towards
+  // (green from the right, white from the left) and straightens into its slot.
   // The real chat is already parked (lowered, nearly transparent) from the tap
   // on, so starting the return only changes transforms and opacity.
   function parkChat() {
@@ -724,7 +727,7 @@
     bubbles.forEach((b) => { b.delay = -1; b.home.style.transform = ''; b.home.style.opacity = HIDDEN; });
     order.forEach((b, i) => {
       b.delay = i * CONFIG.returnStagger;
-      b.home.style.transform = `translate3d(0, ${rise}px, 0)`;
+      setTransform(b.home, b.side * W * CONFIG.returnSide, rise, b.side * CONFIG.returnTilt, 1);
     });
   }
 
@@ -741,10 +744,12 @@
     for (const b of bubbles) {
       if (b.delay < 0) continue; // above the screen: already in place
       const local = Math.max(0, t - returnStart - b.delay);
-      const k = spring(local / 1000, CONFIG.returnSpring);
-      const y = rise * (1 - k);
-      if (local < CONFIG.returnFade || Math.abs(y) > 0.3) settled = false;
-      b.home.style.transform = `translate3d(0, ${snap(y).toFixed(2)}px, 0)`;
+      const k = 1 - spring(local / 1000, CONFIG.returnSpring); // 1 → 0
+      // comes up from the bottom corner on its own side, straightening as it lands
+      const x = b.side * W * CONFIG.returnSide * k;
+      const y = rise * k;
+      if (local < CONFIG.returnFade || Math.abs(x) > 0.3 || Math.abs(y) > 0.3) settled = false;
+      setTransform(b.home, snap(x), snap(y), b.side * CONFIG.returnTilt * k, 1);
       b.home.style.opacity = Math.max(0.001, clamp(local / CONFIG.returnFade)).toFixed(3);
     }
     return settled;

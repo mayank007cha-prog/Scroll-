@@ -24,9 +24,10 @@ loose flap above the roller is a small WebGL mesh that bends in perspective,
 with lighting, a curled lip showing the back of the paper, and a cast shadow.
 A soft spring that reacts to the roller's speed drives the flap. The flap's
 top edge knocks the chat bubbles off as it reaches them. Once the roller has
-gone, the clean new wallpaper is shown on its own for 0.8s, and then the chat
-comes back from the bottom, newest message first. The whole sequence takes
-about 2.4s.
+gone, the clean new wallpaper is shown on its own for 0.5s, and then the chat
+comes back, newest message first, each chat sliding up from the side it fell
+towards (green from the bottom right, white from the bottom left). The whole sequence takes
+about 2.5s.
 
 Layers, bottom to top: old wallpaper, chat, new paper, roller.
 
