@@ -4,7 +4,8 @@
     python3 showcase/tools/build_assets.py
 
 Backgrounds are the Figma "Keyboard Interaction" frames 1/2/3, exactly as
-exported (assets/src/frame-<env>.png, 2048 x 1144), WebP quality 95.
+exported (assets/src/frame-<env>.png, 2048 x 1144), WebP quality 95, with
+the headline on the screen softened to 85% opacity (soften_title).
 (frame_2x / clean_wall below are kept for an optional 2x build, unused.)
 
 Outputs (in showcase/assets):
@@ -189,6 +190,28 @@ def frame_2x(env, big_photo):
     return out
 
 
+# Headline area in each Figma frame (frame px): x range, y range.
+TITLE_BOX = {
+    "ember": (790, 1260, 368, 525),
+    "frost": (790, 1260, 349, 506),
+    "prism": (790, 1260, 368, 525),
+}
+TITLE_OPACITY = 0.85
+
+
+def soften_title(frame, env):
+    """Render the frame's headline at TITLE_OPACITY: per row, the screen
+    gradient is sampled just left and right of the text, and the text is
+    blended over it (out = text * a + gradient * (1 - a))."""
+    x0, x1, y0, y1 = TITLE_BOX[env]
+    a = np.asarray(frame, np.float32).copy()
+    side = np.concatenate([a[y0:y1, x0 - 60:x0 - 10], a[y0:y1, x1 + 10:x1 + 60]], axis=1)
+    grad = np.median(side, axis=1)[:, None, :]
+    box = a[y0:y1, x0:x1]
+    a[y0:y1, x0:x1] = box * TITLE_OPACITY + grad * (1 - TITLE_OPACITY)
+    return Image.fromarray(a.round().clip(0, 255).astype(np.uint8))
+
+
 def screen_edge():
     """Feathered ring along the monitor screen's outline (ember frame, which
     the aligned frost and prism frames share). The page blurs the scene
@@ -225,7 +248,8 @@ def main():
     for env in ENVS:
         # Backgrounds: the Figma frames exactly as exported (2048 x 1144), no
         # upscaling, cleanup or alignment; saved at WebP quality 95 (visually identical).
-        Image.open(SRC / f"frame-{env}.png").convert("RGB").save(OUT / f"bg-{env}.webp", quality=95, method=6)
+        frame = soften_title(Image.open(SRC / f"frame-{env}.png").convert("RGB"), env)
+        frame.save(OUT / f"bg-{env}.webp", quality=95, method=6)
         # Keyboards: ship the 2x cut-out when present (drawn ~1400 device px
         # wide on large high-DPI screens), else the original export.
         kb = SRC / f"kb-{env}@2x.png"
