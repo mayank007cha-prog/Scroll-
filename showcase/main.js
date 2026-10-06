@@ -25,6 +25,11 @@
     [168, 120, 255]  // prism
   ];
 
+  // Lowest point of a resting board incl. contact shadow, in photo px, and the
+  // breathing room to keep between it and the dock.
+  var BOARD_BOTTOM = 1034;
+  var DOCK_GAP = 28;
+
   var section = document.getElementById('showcase');
   var sticky = section.querySelector('.kb-sticky');
   var scene = document.getElementById('scene');
@@ -37,6 +42,7 @@
   var ticks = [].slice.call(document.querySelectorAll('.kb-ticks button'));
   var countEl = document.getElementById('count');
   var cta = document.getElementById('cta');
+  var dock = document.querySelector('.kb-dock');
   var nextBtn = document.getElementById('next');
   var nextName = nextBtn.querySelector('.kb-next-name');
   var root = document.documentElement;
@@ -130,6 +136,14 @@
       sx = vw / 2 - REST_X * k;
       sy = vh * 0.58 - REST_Y * k;
     }
+
+    // Lift the frame so the resting board (and its contact shadow) always
+    // clears the floating dock. Any strip this opens at the bottom is
+    // feathered into the night by the scene's mask.
+    var dockTop = dock.getBoundingClientRect().top - sticky.getBoundingClientRect().top;
+    var limit = dockTop - DOCK_GAP;
+    var boardBottom = sy + BOARD_BOTTOM * k;
+    if (boardBottom > limit) sy -= boardBottom - limit;
 
     scene.style.setProperty('--sw', IMG_W * k + 'px');
     scene.style.setProperty('--sh', IMG_H * k + 'px');

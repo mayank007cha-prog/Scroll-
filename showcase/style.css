@@ -85,6 +85,9 @@ button {
   width: var(--sw, 100vw);
   height: var(--sh, 56vw);
   transform: translate3d(var(--sx, 0px), var(--sy, 0px), 0);
+  /* Soft bottom edge, for when the frame is lifted clear of the dock. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
 }
 
 .kb-env,
