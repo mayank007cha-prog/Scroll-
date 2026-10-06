@@ -74,6 +74,7 @@
 
     // Sound (synthesised with Web Audio; add ?sound=0 to the URL to mute)
     soundVolume: 0.8,
+    fallSoundDelay: 90,            // ms after a chat is knocked off before its tick (when it visibly falls)
 
     // 4. return — starts while the roller is still finishing near the top
     returnAtRoll: 0.45,            // roll progress at which the chat starts coming back
@@ -122,15 +123,15 @@
 
   // ---------------------------------------------------------------- sound
   // Short, muted gesture sounds (synthesised live with Web Audio) — closer to
-  // system UI feedback than to music: low soft ticks and taps, no melodies.
-  //   start()    – a soft low "tap" as the paper comes in
-  //   flop()     – a short muffled thud when the paper lands on the roller
-  //   progress() – one quiet confirmation "tock" when the wallpaper is done
-  //   bloop()    – a tiny muted tick for each chat that falls off
+  // system UI feedback than to music. Nothing plays until the chats start
+  // falling, so the sound follows what you see.
+  //   bloop()  – a tiny muted tick for each chat as it falls off
+  //   flop()   – a short, quiet muffled thud when the paper lands on the roller
+  //   finish() – a soft, warm tone that fades out as the chat settles back
   const sfx = (() => {
     const enabled = new URLSearchParams(location.search).get('sound') !== '0';
     let ac = null, out = null;
-    let done = false, nextTick = 0;
+    let nextTick = 0;
 
     function unlock() {
       if (!enabled) return;
@@ -188,28 +189,38 @@
       o.stop(t + dur + 0.02);
     }
 
-    function start() {
-      done = false; nextTick = 0;
-      if (!ok()) return;
-      tone(260, 200, ac.currentTime + 0.005, 0.12, 0.06);
+    // soft pad tone: gentle attack and a long, smooth fade
+    function pad(f, t, gain, attack, decay) {
+      const o = ac.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = f;
+      const e = ac.createGain();
+      e.gain.setValueAtTime(0.0001, t);
+      e.gain.exponentialRampToValueAtTime(gain, t + attack);
+      e.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+      o.connect(e).connect(out);
+      o.start(t);
+      o.stop(t + attack + decay + 0.05);
     }
+
+    function start() { nextTick = 0; }
 
     function flop() {
       if (!ok()) return;
-      tone(150, 85, ac.currentTime, 0.22, 0.08);
+      tone(140, 85, ac.currentTime, 0.13, 0.08);
     }
 
-    function progress(roll) {
-      if (!ok() || done || roll < 0.86) return;
-      done = true;
+    function finish() {
+      if (!ok()) return;
       const t = ac.currentTime;
-      tone(587, 560, t, 0.06, 0.12);        // soft, neutral confirmation (fifth, played together)
-      tone(880, 840, t, 0.035, 0.1);
+      pad(196, t, 0.045, 0.04, 1.1);   // warm, low and calm (G3 + D4 + G4)
+      pad(293.66, t, 0.035, 0.05, 1.0);
+      pad(392, t + 0.02, 0.022, 0.06, 0.9);
     }
 
     function bloop(side, r) {
       if (!ok()) return;
-      const now = ac.currentTime;
+      const now = ac.currentTime + CONFIG.fallSoundDelay / 1000;
       if (nextTick - now > 0.12) return;   // never lag behind the motion
       const t = Math.max(now, nextTick);
       nextTick = t + 0.035;
@@ -217,9 +228,9 @@
       tone(f, f * 0.7, t, 0.07, 0.04, side * 0.4);
     }
 
-    function reset() { done = false; nextTick = 0; }
+    function reset() { nextTick = 0; }
 
-    return { unlock, start, flop, progress, bloop, reset };
+    return { unlock, start, flop, finish, bloop, reset };
   })();
 
   // ---------------------------------------------------------------- DOM
@@ -248,6 +259,7 @@
   let phase = 'idle'; // idle | run | done
   let sweepDone = false, returnStart = -1;
   let flopped = false;
+  let finished = false, returnEnd = 0;
   // Copy of the chat that falls away while the real chat comes back. Built once
   // and reused, so nothing new has to be laid out or painted mid-animation.
   const flyLayer = chat.cloneNode(true);
@@ -589,7 +601,6 @@
     droopVel += acc * dt;
     droop += droopVel * dt;
     const edgeSpeed = Math.max(0, v);
-    sfx.progress(line.roll);
     if (!flopped && t >= CONFIG.enterDuration) { flopped = true; sfx.flop(); }
     last = { now, y: line.y };
 
@@ -679,6 +690,8 @@
 
   function startReturn(t) {
     returnStart = t;
+    finished = false;
+    returnEnd = Math.max(0, ...bubbles.map((b) => b.delay)) + CONFIG.returnFade;
     bubbles.forEach((b) => { if (b.delay < 0) b.home.style.opacity = ''; });
   }
 
@@ -713,6 +726,7 @@
       const t = (now - phaseStart) * speed;
       if (!sweepDone) updateSweep(now);
       const settled = returnStart >= 0 && updateReturn(t);
+      if (returnStart >= 0 && !finished && t - returnStart >= returnEnd) { finished = true; sfx.finish(); }
       if (sweepDone && settled && t - returnStart > CONFIG.flyFadeOut + 120) {
         units.forEach((el) => { el.style.transform = ''; el.style.opacity = ''; });
         flyLayer.classList.add('is-idle');
