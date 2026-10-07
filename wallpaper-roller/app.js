@@ -88,8 +88,6 @@
     spinAccel: [130, 220],
     fallScale: 0.1,
 
-    // Sound (synthesised with Web Audio; add ?sound=0 to the URL to mute)
-    soundVolume: 0.8,
 
     // 4. return — starts while the roller is still finishing near the top
     holdNewWallpaper: 0,           // ms to show the clean new wallpaper before the chat comes back
@@ -137,81 +135,6 @@
   }
   const easeOutCubic = (x) => 1 - Math.pow(1 - clamp(x), 3);
 
-  // ---------------------------------------------------------------- sound
-  // Two clean, simple sounds made only from pure tones (no noise):
-  //   roll(speed) – a smooth, low hum, like a roller gliding on a glossy surface
-  //   stick(k)    – a soft, round "tup" when the sheet presses onto the wall
-  const sfx = (() => {
-    const enabled = new URLSearchParams(location.search).get('sound') !== '0';
-    let ac = null, out = null, roller = null;
-
-    function unlock() {
-      if (!enabled) return;
-      if (!ac) {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        ac = new AC();
-        out = ac.createGain();
-        out.gain.value = CONFIG.soundVolume;
-        const tone = ac.createBiquadFilter();
-        tone.type = 'lowpass'; tone.frequency.value = 1800; tone.Q.value = 0.5;
-        out.connect(tone).connect(ac.destination);
-      }
-      if (ac.state === 'suspended') ac.resume();
-    }
-
-    const ok = () => ac && ac.state !== 'closed';
-
-    function start() {
-      if (!ok()) return;
-      stop(0.02);
-      const level = ac.createGain(); level.gain.value = 0;
-      level.connect(out);
-      const base = ac.createOscillator(); base.type = 'sine'; base.frequency.value = 95;
-      const over = ac.createOscillator(); over.type = 'sine'; over.frequency.value = 190;
-      const overLevel = ac.createGain(); overLevel.gain.value = 0.12; // a hint of brightness
-      base.connect(level);
-      over.connect(overLevel).connect(level);
-      base.start(); over.start();
-      roller = { level, base, over };
-    }
-
-    function roll(speed) {
-      if (!roller) return;
-      const k = clamp(speed / 1500);
-      const t = ac.currentTime;
-      const f = 85 + 40 * k;
-      roller.level.gain.setTargetAtTime(0.16 * Math.pow(k, 0.8), t, 0.06);
-      roller.base.frequency.setTargetAtTime(f, t, 0.08);
-      roller.over.frequency.setTargetAtTime(f * 2, t, 0.08);
-    }
-
-    function stop(fade = 0.15) {
-      if (!roller) return;
-      const r = roller; roller = null;
-      const t = ac.currentTime;
-      r.level.gain.cancelScheduledValues(t);
-      r.level.gain.setTargetAtTime(0, t, fade / 3);
-      r.base.stop(t + fade + 0.1); r.over.stop(t + fade + 0.1);
-    }
-
-    function stick(k = 1) {
-      if (!ok()) return;
-      const t = ac.currentTime;
-      const o = ac.createOscillator(); o.type = 'sine';
-      o.frequency.setValueAtTime(210, t);
-      o.frequency.exponentialRampToValueAtTime(120, t + 0.07);
-      const g = ac.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.28 * k, t + 0.006);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
-      o.connect(g).connect(out);
-      o.start(t); o.stop(t + 0.12);
-    }
-
-    return { unlock, start, roll, stop, stick };
-  })();
-
   // ---------------------------------------------------------------- DOM
   const stage = document.getElementById('stage');
   const wpBase = document.getElementById('wpBase');
@@ -237,8 +160,6 @@
   // ---------------------------------------------------------------- state
   let phase = 'idle'; // idle | run | done
   let sweepDone = false, returnStart = -1, paperDoneAt = 0, sweepDoneAt = 0;
-  let finished = false, returnEnd = 0;
-  let stuckIn = false, stuckTop = false;
   // Copy of the chat that falls away while the real chat comes back. Built once
   // and reused, so nothing new has to be laid out or painted mid-animation.
   const flyLayer = chat.cloneNode(true);
@@ -667,9 +588,6 @@
     // the fold rolls back off the roller head as the paper gets stuck down
     coverK = 1 - smoothstep((line.roll - CONFIG.uncoverFrom) / (CONFIG.uncoverTo - CONFIG.uncoverFrom));
     const edgeSpeed = Math.max(0, v);
-    sfx.roll(line.roll >= 1 ? 0 : Math.abs(v) * (1 - smoothstep((line.roll - 0.82) / 0.18)));
-    if (!stuckIn && t >= CONFIG.enterDuration) { stuckIn = true; sfx.stick(1); }      // sheet lands on the wall
-    if (!stuckTop && line.roll >= 0.9) { stuckTop = true; sfx.stick(0.6); }          // last of it pressed flat
     last = { now, y: line.y };
 
     // Stuck paper: clipped at the roller line, image fixed to the paper
@@ -737,7 +655,6 @@
         flyLayer.classList.add('is-idle');
         sweepDone = true;
         sweepDoneAt = t;
-        sfx.stop();
       }
     }
   }
@@ -762,8 +679,6 @@
 
   function startReturn(t) {
     returnStart = t;
-    finished = false;
-    returnEnd = Math.max(0, ...bubbles.map((b) => b.delay)) + CONFIG.returnFade;
     bubbles.forEach((b) => { if (b.delay < 0) b.home.style.opacity = ''; });
   }
 
@@ -815,7 +730,6 @@
 
   // Back to the very first frame: old wallpaper, chat in place, no paper or roller.
   function resetToInitial() {
-    sfx.stop(0.05);
     wpBase.classList.remove('is-new');
     sheet.classList.remove('is-active');
     flapCanvas.classList.remove('is-active');
@@ -836,7 +750,6 @@
   let starting = false;
   async function play() {
     if (starting || phase === 'run') return;
-    sfx.unlock(); // must happen inside the tap for mobile browsers
     starting = true;
     await paperReady;
     starting = false;
@@ -854,8 +767,6 @@
     flapCanvas.classList.add('is-active');
     roller.classList.add('is-active');
     roller.style.opacity = '1';
-    stuckIn = false; stuckTop = false;
-    sfx.start();
 
     phase = 'run';
     phaseStart = performance.now();
