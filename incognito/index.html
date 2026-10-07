@@ -10,6 +10,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap">
     <link rel="stylesheet" href="styles.css">
+    <script>
+        // Full screen on a real phone; an iPhone 17 frame scaled to fit anywhere else.
+        (function () {
+            var root = document.documentElement;
+            var phone = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, innerWidth) < 500;
+            if (phone) return;
+            root.classList.add('is-framed');
+            function fit() {
+                root.style.setProperty('--fit', Math.min(1, (innerWidth - 32) / 422, (innerHeight - 72) / 894));
+            }
+            fit();
+            addEventListener('resize', fit);
+        })();
+    </script>
 </head>
 <body>
 
@@ -32,6 +46,8 @@
 
 <div class="Device">
     <div class="App" data-mode="normal">
+        <div class="Island" aria-hidden="true"></div>
+        <div class="HomeIndicator" aria-hidden="true"></div>
 
         <div class="StatusBar" aria-hidden="true">
             <span class="StatusBar-time">9:41</span>
@@ -240,8 +256,7 @@
 </div>
 
 <p class="Caption">
-    Mobile prototype — open the <strong>⋯</strong> menu and choose <strong>New Incognito tab</strong>.
-    Add <code>?speed=0.25</code> to the URL to review the motion in slow motion.
+    iPhone 17 · tap <strong>⋯</strong> → <strong>New Incognito tab</strong> · tap <strong>Incognito ×</strong> to go back
 </p>
 
 <script src="main.js"></script>

@@ -189,10 +189,13 @@
         return 0;
     }
 
+    // Rect relative to the app, in the app's own CSS pixels — the device
+    // frame may be scaled down to fit the window.
     function relativeRect(el) {
         var a = app.getBoundingClientRect();
         var r = el.getBoundingClientRect();
-        return { left: r.left - a.left, top: r.top - a.top, width: r.width, height: r.height };
+        var s = a.width / app.offsetWidth || 1;
+        return { left: (r.left - a.left) / s, top: (r.top - a.top) / s, width: r.width / s, height: r.height / s };
     }
 
     // Maps the Figma coordinate space onto the app, using the badge's resting
@@ -230,12 +233,12 @@
             };
         });
 
-        var a = app.getBoundingClientRect();
+        var aw = app.offsetWidth, ah = app.offsetHeight;
         var revealMax = Math.max(
             Math.hypot(space.cx, space.cy),
-            Math.hypot(a.width - space.cx, space.cy),
-            Math.hypot(space.cx, a.height - space.cy),
-            Math.hypot(a.width - space.cx, a.height - space.cy)
+            Math.hypot(aw - space.cx, space.cy),
+            Math.hypot(space.cx, ah - space.cy),
+            Math.hypot(aw - space.cx, ah - space.cy)
         );
 
         morphRoot.setAttribute('transform', 'translate(' + space.tx + ' ' + space.ty + ') scale(' + space.k + ')');

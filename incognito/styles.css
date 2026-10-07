@@ -40,8 +40,9 @@ a {
 }
 
 /* ───────────────────────────── Device shell ─────────────────────────────
-   On a phone the app is simply the viewport. On anything wider it is shown
-   inside a phone-sized frame, so the motion can be reviewed at its real size. */
+   On a phone the app is simply the viewport. Everywhere else it is shown in
+   an iPhone 17 frame (402 × 874 pt screen) scaled to fit the window, so the
+   motion is always reviewed at the real device proportions. */
 
 .Device {
     position: relative;
@@ -60,86 +61,109 @@ a {
 }
 
 .StatusBar,
+.Island,
+.HomeIndicator,
 .Caption {
     display: none;
 }
 
-@media (min-width: 640px) and (min-height: 640px) {
-    body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 28px;
-        min-height: 100vh;
-        background: radial-gradient(120% 80% at 50% 0%, #1d1d1f 0%, #0a0a0a 60%) fixed;
-    }
+.is-framed body {
+    overflow: hidden;
+    background: radial-gradient(120% 80% at 50% 0%, #1d1d1f 0%, #0a0a0a 60%) fixed;
+}
 
-    .Device {
-        flex: none;
-        width: 390px;
-        height: min(844px, calc(100vh - 96px));
-        padding: 10px;
-        border-radius: 58px;
-        background: #121212;
-        box-shadow:
-            0 0 0 1.5px #2c2c2e,
-            0 40px 80px -20px rgba(0, 0, 0, .8),
-            inset 0 0 0 1px #000;
-    }
+.is-framed .Device {
+    /* Fixed and centred, so the scaled-down frame never makes the page scroll. */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 422px;
+    height: 894px;
+    margin: -465px 0 0 -211px;
+    padding: 10px;
+    border-radius: 65px;
+    background: #121212;
+    box-shadow:
+        0 0 0 1.5px #2c2c2e,
+        0 40px 80px -20px rgba(0, 0, 0, .8),
+        inset 0 0 0 1px #000;
+    transform: scale(var(--fit, 1));
+}
 
-    .App {
-        border-radius: 48px;
-        transform: translateZ(0);
-    }
+.is-framed .App {
+    --safe-top: 59px;
+    --safe-bottom: 24px;
+    border-radius: 55px;
+    transform: translateZ(0);
+}
 
-    .StatusBar {
-        position: absolute;
-        z-index: 20;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 6px 30px 0 44px;
-        color: #fff;
-        font-size: 16px;
-        font-weight: 500;
-        pointer-events: none;
-    }
+.is-framed .Island {
+    display: block;
+    position: absolute;
+    z-index: 25;
+    top: 11px;
+    left: 50%;
+    width: 126px;
+    height: 37px;
+    margin-left: -63px;
+    border-radius: 19px;
+    background: #000;
+    pointer-events: none;
+}
 
-    .StatusBar-icons {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-    }
+.is-framed .StatusBar {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 59px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 34px 0 54px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 500;
+    pointer-events: none;
+}
 
-    .App {
-        --safe-top: 50px;
-        --safe-bottom: 22px;
-    }
+.StatusBar-icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
 
-    .Caption {
-        display: block;
-        max-width: 390px;
-        margin: 0;
-        text-align: center;
-        font-size: 13px;
-        line-height: 20px;
-        color: #8e8e93;
-    }
+.is-framed .HomeIndicator {
+    display: block;
+    position: absolute;
+    z-index: 25;
+    bottom: 8px;
+    left: 50%;
+    width: 134px;
+    height: 5px;
+    margin-left: -67px;
+    border-radius: 3px;
+    background: #fff;
+    pointer-events: none;
+}
 
-    .Caption strong {
-        color: #d1d1d6;
-        font-weight: 500;
-    }
+.is-framed .Caption {
+    display: block;
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 12px;
+    margin: 0;
+    text-align: center;
+    font-size: 12px;
+    line-height: 18px;
+    color: #8e8e93;
+}
 
-    .Caption code {
-        font-size: 12px;
-        color: #d1d1d6;
-    }
+.Caption strong {
+    color: #d1d1d6;
+    font-weight: 500;
 }
 
 /* ───────────────────────────── Google new tab ───────────────────────────── */

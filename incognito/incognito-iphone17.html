@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>Incognito Transition</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap">
+    <style>
+:root {
+    --home-bg: #000000;
+    --incog-bg: #3c3c3c;
+    --incog-disc: #d9d9d9;
+    --incog-card: #282828;
+    --text: #e3e3e3;
+    --text-dim: #c4c7c5;
+    --link: #a8c7fa;
+    --toolbar-h: 60px;
+    --font: 'Google Sans', 'Product Sans', Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #000;
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+a {
+    color: var(--link);
+}
+
+/* ───────────────────────────── Device shell ─────────────────────────────
+   On a phone the app is simply the viewport. Everywhere else it is shown in
+   an iPhone 17 frame (402 × 874 pt screen) scaled to fit the window, so the
+   motion is always reviewed at the real device proportions. */
+
+.Device {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+}
+
+.App {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--home-bg);
+    isolation: isolate;
+}
+
+.StatusBar,
+.Island,
+.HomeIndicator,
+.Caption {
+    display: none;
+}
+
+.is-framed body {
+    overflow: hidden;
+    background: radial-gradient(120% 80% at 50% 0%, #1d1d1f 0%, #0a0a0a 60%) fixed;
+}
+
+.is-framed .Device {
+    /* Fixed and centred, so the scaled-down frame never makes the page scroll. */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 422px;
+    height: 894px;
+    margin: -465px 0 0 -211px;
+    padding: 10px;
+    border-radius: 65px;
+    background: #121212;
+    box-shadow:
+        0 0 0 1.5px #2c2c2e,
+        0 40px 80px -20px rgba(0, 0, 0, .8),
+        inset 0 0 0 1px #000;
+    transform: scale(var(--fit, 1));
+}
+
+.is-framed .App {
+    --safe-top: 59px;
+    --safe-bottom: 24px;
+    border-radius: 55px;
+    transform: translateZ(0);
+}
+
+.is-framed .Island {
+    display: block;
+    position: absolute;
+    z-index: 25;
+    top: 11px;
+    left: 50%;
+    width: 126px;
+    height: 37px;
+    margin-left: -63px;
+    border-radius: 19px;
+    background: #000;
+    pointer-events: none;
+}
+
+.is-framed .StatusBar {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 59px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 34px 0 54px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.StatusBar-icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.is-framed .HomeIndicator {
+    display: block;
+    position: absolute;
+    z-index: 25;
+    bottom: 8px;
+    left: 50%;
+    width: 134px;
+    height: 5px;
+    margin-left: -67px;
+    border-radius: 3px;
+    background: #fff;
+    pointer-events: none;
+}
+
+.is-framed .Caption {
+    display: block;
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 12px;
+    margin: 0;
+    text-align: center;
+    font-size: 12px;
+    line-height: 18px;
+    color: #8e8e93;
+}
+
+.Caption strong {
+    color: #d1d1d6;
+    font-weight: 500;
+}
+
+/* ───────────────────────────── Google new tab ───────────────────────────── */
+
+.Home {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 8px) 16px calc(var(--toolbar-h) + 24px);
+}
+
+.Home-top {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+    padding-left: 4px;
+}
+
+.Home-links {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+}
+
+.Home-links a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.Avatar {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5b7cfa, #8e5bd8);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.IconButton {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #fff;
+    transition: background-color .2s ease;
+}
+
+.IconButton:disabled {
+    opacity: .38;
+    cursor: default;
+}
+
+.IconButton:not(:disabled):active {
+    background: rgba(255, 255, 255, .12);
+}
+
+.Logo {
+    margin: clamp(40px, 9vh, 76px) 0 28px;
+    font-size: 66px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -1.5px;
+    color: #fff;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.Logo span {
+    display: inline-block;
+}
+
+.Search {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    max-width: 420px;
+    height: 52px;
+    padding: 0 6px 0 16px;
+    border-radius: 26px;
+    background: #fff;
+    color: #1f1f1f;
+}
+
+.Search-plus {
+    color: #444746;
+}
+
+.Search-placeholder {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+    color: #5f6368;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.Search-ai {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 38px;
+    padding: 0 12px 0 10px;
+    border-radius: 19px;
+    background: #f0f4f9;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+    .Search-ai {
+        display: none;
+    }
+}
+
+.Chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    max-width: 420px;
+    margin-top: 12px;
+}
+
+.Chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: #2b2b2d;
+    font-size: 11.5px;
+    line-height: 16px;
+    color: #c4c7c5;
+}
+
+.Chip svg {
+    flex: none;
+    margin-top: 1px;
+    color: #e3e3e3;
+}
+
+.Chip strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #e3e3e3;
+}
+
+.Tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    row-gap: 18px;
+    width: 100%;
+    max-width: 420px;
+    margin: 34px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.Tiles li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #c4c7c5;
+}
+
+.Tile-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--c);
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.Tile-icon--add {
+    background: #2b2b2d;
+    color: #e3e3e3;
+}
+
+.Customise {
+    position: absolute;
+    right: 16px;
+    bottom: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 16px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 18px;
+    background: #1f2a3a;
+    color: #a8c7fa;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* ───────────────────────────── Incognito new tab ───────────────────────────── */
+
+.Incognito {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--incog-bg);
+    visibility: hidden;
+}
+
+.App[data-mode="transition"] .Incognito,
+.App[data-mode="returning"] .Incognito,
+.App[data-mode="incognito"] .Incognito {
+    visibility: visible;
+}
+
+.App[data-mode="incognito"] .Home {
+    visibility: hidden;
+}
+
+.Incognito-inner {
+    display: flex;
+    flex-direction: column;
+    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 8px) 24px calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 32px);
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--text-dim);
+}
+
+.Incognito-top {
+    display: flex;
+    justify-content: flex-end;
+    height: 48px;
+    align-items: center;
+    margin-right: -8px;
+}
+
+.Pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 17px;
+    background: #2a2a2a;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.Pill-close {
+    margin-left: 2px;
+    opacity: .6;
+}
+
+.Badge {
+    align-self: center;
+    margin: clamp(14px, 4vh, 36px) 0 22px;
+}
+
+.Badge-icon {
+    display: block;
+    width: 112px;
+    height: 112px;
+}
+
+.App[data-mode="transition"] .Badge-icon {
+    visibility: hidden;
+}
+
+.Incognito h2 {
+    margin: 0 0 16px;
+    text-align: center;
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 400;
+    color: var(--text);
+}
+
+.Incognito p {
+    margin: 0;
+}
+
+.Lists {
+    display: grid;
+    gap: 18px;
+    margin-top: 22px;
+}
+
+.Lists h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+}
+
+.Lists h3 strong {
+    font-weight: 500;
+}
+
+.Lists ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.Card {
+    margin-top: 26px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--incog-card);
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.Card h3 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* ───────────────────────────── Morph layer ───────────────────────────── */
+
+.Morph {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    overflow: visible;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.App[data-mode="transition"] .Morph {
+    visibility: visible;
+}
+
+.App[data-mode="transition"] .Logo-o {
+    visibility: hidden;
+}
+
+.Morph-disc--fill {
+    fill: var(--incog-disc);
+}
+
+.Morph-glyph {
+    color: #fff;
+}
+
+.Morph-glyph--inverse {
+    color: var(--incog-bg);
+}
+
+/* ───────────────────────────── Toolbar + menu ───────────────────────────── */
+
+.Toolbar {
+    position: absolute;
+    z-index: 10;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
+    padding: 0 8px var(--safe-bottom, env(safe-area-inset-bottom, 0px));
+    background: rgba(16, 16, 16, .92);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .08);
+    transition: background-color .6s cubic-bezier(.2, 0, 0, 1), box-shadow .6s cubic-bezier(.2, 0, 0, 1);
+}
+
+.App.is-incognito-chrome .Toolbar {
+    background: rgba(40, 40, 40, .94);
+    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .06);
+}
+
+.Tabs {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 2px solid currentColor;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.Hint {
+    position: absolute;
+    right: 10px;
+    bottom: calc(100% + 6px);
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #e3e3e3;
+    color: #1f1f1f;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    transform-origin: 90% 100%;
+    animation: hint-in .5s cubic-bezier(.2, 0, 0, 1) 1.2s both;
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+.Hint::after {
+    content: '';
+    position: absolute;
+    right: 22px;
+    top: 100%;
+    border: 6px solid transparent;
+    border-top-color: #e3e3e3;
+}
+
+.Hint.is-gone {
+    opacity: 0;
+    transform: scale(.9);
+}
+
+@keyframes hint-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(.94);
+    }
+}
+
+.Menu {
+    position: absolute;
+    z-index: 30;
+    right: 10px;
+    bottom: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 6px);
+    width: 232px;
+    padding: 8px 0;
+    border-radius: 16px;
+    background: #2b2b2d;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .06);
+    transform-origin: 92% 100%;
+    opacity: 0;
+    transform: scale(.9) translateY(8px);
+    pointer-events: none;
+    transition: opacity .16s ease, transform .22s cubic-bezier(.2, 0, 0, 1);
+}
+
+.Menu.is-open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition: opacity .18s ease, transform .32s cubic-bezier(.2, 0, 0, 1);
+}
+
+.Menu button {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    height: 46px;
+    padding: 0 20px;
+    font-size: 15px;
+    text-align: left;
+    color: var(--text);
+    transition: background-color .15s ease;
+}
+
+.Menu button svg {
+    flex: none;
+    color: #c4c7c5;
+}
+
+.Menu button:active,
+.Menu button.is-pressed {
+    background: rgba(255, 255, 255, .1);
+}
+
+.Menu hr {
+    height: .5px;
+    margin: 6px 0;
+    border: 0;
+    background: rgba(255, 255, 255, .1);
+}
+    </style>
+    <script>
+        // Full screen on a real phone; an iPhone 17 frame scaled to fit anywhere else.
+        (function () {
+            var root = document.documentElement;
+            var phone = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, innerWidth) < 500;
+            if (phone) return;
+            root.classList.add('is-framed');
+            function fit() {
+                root.style.setProperty('--fit', Math.min(1, (innerWidth - 32) / 422, (innerHeight - 72) / 894));
+            }
+            fit();
+            addEventListener('resize', fit);
+        })();
+    </script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <defs>
+        <!-- Incognito glyph in the Figma frame's own coordinate space
+             (frame "5", node 50:147), so every animated part can be keyed
+             straight off the design's numbers. -->
+        <symbol id="glyph" viewBox="682 217 76 72">
+            <path d="M698 246.5L708.6 222.2Q709.3 220.6 711 221L720 223.4L729 221Q730.7 220.6 731.4 222.2L742 246.5Z" fill="currentColor"/>
+            <g fill="none" stroke="currentColor">
+                <path d="M685 253H755" stroke-width="4"/>
+                <path d="M714 272.2Q719.75 270.6 725.5 272.2" stroke-width="3"/>
+                <circle cx="702.77" cy="272.5" r="11.75" stroke-width="3.5"/>
+                <circle cx="737.23" cy="272.5" r="11.75" stroke-width="3.5"/>
+            </g>
+        </symbol>
+    </defs>
+</svg>
+
+<div class="Device">
+    <div class="App" data-mode="normal">
+        <div class="Island" aria-hidden="true"></div>
+        <div class="HomeIndicator" aria-hidden="true"></div>
+
+        <div class="StatusBar" aria-hidden="true">
+            <span class="StatusBar-time">9:41</span>
+            <span class="StatusBar-icons">
+                <svg viewBox="0 0 18 12" width="18" height="12"><path fill="currentColor" d="M1 8h3v4H1zM5.5 6h3v6h-3zM10 3.5h3V12h-3zM14.5 1h3v11h-3z"/></svg>
+                <svg viewBox="0 0 16 12" width="16" height="12"><path fill="currentColor" d="M8 2.6c2.3 0 4.4.9 6 2.4l1.1-1.2A10.2 10.2 0 0 0 8 1C5.3 1 2.8 2 .9 3.8L2 5c1.6-1.5 3.7-2.4 6-2.4Zm0 3.3c1.4 0 2.6.5 3.6 1.4l1.1-1.2A6.8 6.8 0 0 0 8 4.3c-1.8 0-3.4.7-4.7 1.8l1.1 1.2c1-.9 2.2-1.4 3.6-1.4ZM8 9.2c.6 0 1.1.2 1.5.6L8 11.4 6.5 9.8c.4-.4.9-.6 1.5-.6Z"/></svg>
+                <svg viewBox="0 0 27 12" width="27" height="12"><rect x=".5" y=".5" width="23" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="8" rx="2" fill="currentColor"/><path d="M25 4v4a2 2 0 0 0 0-4Z" fill="currentColor" opacity=".4"/></svg>
+            </span>
+        </div>
+
+        <!-- ───────────────────────────── Google new tab ───────────────────────────── -->
+        <main class="Home" aria-label="New tab">
+            <header class="Home-top" data-exit>
+                <button class="IconButton" aria-label="Google apps">
+                    <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M6 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>
+                </button>
+                <div class="Home-links">
+                    <a href="#" tabindex="-1">Gmail</a>
+                    <a href="#" tabindex="-1">Images</a>
+                    <span class="Avatar">M</span>
+                </div>
+            </header>
+
+            <h1 class="Logo" aria-label="Google">
+                <span class="Logo-letter" aria-hidden="true">G</span><span class="Logo-o" aria-hidden="true">o</span><span class="Logo-o" aria-hidden="true">o</span><span class="Logo-letter" aria-hidden="true">g</span><span class="Logo-letter" aria-hidden="true">l</span><span class="Logo-letter" aria-hidden="true">e</span>
+            </h1>
+
+            <div class="Search" data-exit>
+                <svg class="Search-plus" viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+                <span class="Search-placeholder">Ask Google</span>
+                <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5.3-3c0 3-2.5 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.7 6.2 6 6.7V21h2v-3.3c3.3-.5 6-3.3 6-6.7h-1.7Z"/></svg>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V7a3 3 0 0 1 3-3h2M15 4h2a3 3 0 0 1 3 3v2M20 15v2a3 3 0 0 1-3 3h-2M9 20H7a3 3 0 0 1-3-3v-2"/><circle cx="12" cy="12" r="3"/></svg>
+                <span class="Search-ai">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M10 2.5c.4 3.9 3.6 7.1 7.5 7.5-3.9.4-7.1 3.6-7.5 7.5-.4-3.9-3.6-7.1-7.5-7.5 3.9-.4 7.1-3.6 7.5-7.5Zm8 11c.2 1.9 1.6 3.3 3.5 3.5-1.9.2-3.3 1.6-3.5 3.5-.2-1.9-1.6-3.3-3.5-3.5 1.9-.2 3.3-1.6 3.5-3.5Z"/></svg>
+                    AI Mode
+                </span>
+            </div>
+
+            <div class="Chips" data-exit>
+                <div class="Chip">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M10 2.5c.4 3.9 3.6 7.1 7.5 7.5-3.9.4-7.1 3.6-7.5 7.5-.4-3.9-3.6-7.1-7.5-7.5 3.9-.4 7.1-3.6 7.5-7.5Zm8 11c.2 1.9 1.6 3.3 3.5 3.5-1.9.2-3.3 1.6-3.5 3.5-.2-1.9-1.6-3.3-3.5-3.5 1.9-.2 3.3-1.6 3.5-3.5Z"/></svg>
+                    <span><strong>Do more with AI Mode</strong>Summarise, plan</span>
+                </div>
+                <div class="Chip">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v9.6l3.5-3.6 3 3 2-2L18 16.5V6H6Zm9 4.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
+                    <span><strong>Create images</strong>Reimagine, illustrate</span>
+                </div>
+            </div>
+
+            <ul class="Tiles">
+                <li data-exit><span class="Tile-icon" style="--c: #ea4335">Y</span>YouTube</li>
+                <li data-exit><span class="Tile-icon" style="--c: #a259ff">F</span>Figma</li>
+                <li data-exit><span class="Tile-icon" style="--c: #10a37f">C</span>ChatGPT</li>
+                <li data-exit><span class="Tile-icon" style="--c: #ea4c89">D</span>Dribbble</li>
+                <li data-exit><span class="Tile-icon" style="--c: #1769ff">B</span>Behance</li>
+                <li data-exit><span class="Tile-icon" style="--c: #34a853">M</span>Maps</li>
+                <li data-exit><span class="Tile-icon" style="--c: #fbbc04">N</span>News</li>
+                <li data-exit><span class="Tile-icon Tile-icon--add">
+                    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+                </span>Add</li>
+            </ul>
+
+            <button class="Customise" data-exit tabindex="-1">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.33-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.82-1.83Z"/></svg>
+                Customise Chrome
+            </button>
+        </main>
+
+        <!-- ───────────────────────────── Incognito new tab ───────────────────────────── -->
+        <main class="Incognito" aria-label="New Incognito tab" aria-hidden="true">
+            <div class="Incognito-inner">
+                <div class="Incognito-top" data-enter>
+                    <button class="Pill" data-action="exit">
+                        <svg width="18" height="17"><use href="#glyph"/></svg>
+                        Incognito
+                        <svg class="Pill-close" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
+                </div>
+
+                <div class="Badge">
+                    <svg class="Badge-icon" viewBox="659.5 194 121 121" aria-hidden="true">
+                        <circle cx="720" cy="254.5" r="60.5" fill="var(--incog-disc)"/>
+                        <use href="#glyph" x="682" y="217" width="76" height="72" color="var(--incog-bg)"/>
+                    </svg>
+                </div>
+
+                <h2 data-enter>You’ve gone Incognito</h2>
+
+                <p data-enter>
+                    Others who use this device won’t see your activity, so you can browse more privately.
+                    This won’t change how data is collected by websites that you visit and the services
+                    that they use, including Google. Downloads, bookmarks and reading list items will be
+                    saved. <a href="#" tabindex="-1">Learn more</a>
+                </p>
+
+                <div class="Lists">
+                    <div data-enter>
+                        <h3>Chrome won’t save:</h3>
+                        <ul>
+                            <li>Your browsing history</li>
+                            <li>Cookies and site data</li>
+                            <li>Information entered in forms</li>
+                        </ul>
+                    </div>
+                    <div data-enter>
+                        <h3>Your activity <strong>might still be visible</strong> to:</h3>
+                        <ul>
+                            <li>Websites that you visit</li>
+                            <li>Your employer or school</li>
+                            <li>Your Internet service provider</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="Card" data-enter>
+                    <h3>
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 7a5 5 0 0 1 4.64 6.83l2.92 2.92A11.8 11.8 0 0 0 23 12c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7ZM2 4.27l2.28 2.28.46.46A11.8 11.8 0 0 0 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27Zm5.53 5.53 1.55 1.55A3 3 0 0 0 12.65 15l1.55 1.55A5 5 0 0 1 7.53 9.8Zm4.31-.78 3.15 3.15.02-.16a3 3 0 0 0-3.17-3Z"/></svg>
+                        Third-party cookies are blocked
+                    </h3>
+                    <p>
+                        When you’re in Incognito mode, sites can’t use third-party cookies. If a site that
+                        relies on these cookies isn’t working, you can
+                        <a href="#" tabindex="-1">try giving that site temporary access to third-party cookies</a>.
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <!-- The morph layer: the two "o"s of the logo are re-drawn here and
+             built up into the Incognito badge, then handed back to the page. -->
+        <svg class="Morph" aria-hidden="true">
+            <defs>
+                <clipPath id="hat-clip" clipPathUnits="userSpaceOnUse">
+                    <rect x="560" y="120" width="320" height="131"/>
+                </clipPath>
+                <clipPath id="disc-clip" clipPathUnits="userSpaceOnUse">
+                    <circle class="Morph-disc" cx="720" cy="254.5" r="0"/>
+                </clipPath>
+            </defs>
+            <g class="Morph-root">
+                <circle class="Morph-disc Morph-disc--fill" cx="720" cy="254.5" r="0"/>
+                <!-- The glyph is drawn twice: white on the black stage, and a
+                     dark copy clipped to the disc. As the disc grows the glyph
+                     inverts exactly where it is covered — never low contrast. -->
+                <g class="Morph-glyph">
+                    <g id="morph-art" fill="none" stroke="currentColor">
+                        <g clip-path="url(#hat-clip)">
+                            <path class="Morph-hat" d="M698 246.5L708.6 222.2Q709.3 220.6 711 221L720 223.4L729 221Q730.7 220.6 731.4 222.2L742 246.5Z" fill="currentColor" stroke="none"/>
+                        </g>
+                        <path class="Morph-brim" d="M685 253H755" stroke-width="4"/>
+                        <path class="Morph-bridge" d="M714 272.2Q719.75 270.6 725.5 272.2" stroke-width="3"/>
+                        <circle class="Morph-ring"/>
+                        <circle class="Morph-ring"/>
+                    </g>
+                </g>
+                <g class="Morph-glyph Morph-glyph--inverse" clip-path="url(#disc-clip)">
+                    <use href="#morph-art"/>
+                </g>
+            </g>
+        </svg>
+
+        <!-- ───────────────────────────── Toolbar + menu ───────────────────────────── -->
+        <nav class="Toolbar">
+            <button class="IconButton" aria-label="Back" disabled>
+                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg>
+            </button>
+            <button class="IconButton" aria-label="Forward" disabled>
+                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="m12 4-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+            </button>
+            <button class="IconButton" aria-label="New tab">
+                <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+            </button>
+            <button class="IconButton" aria-label="Tabs" data-action="tabs">
+                <span class="Tabs"><span class="Tabs-count">3</span></span>
+            </button>
+            <button class="IconButton IconButton--menu" aria-label="More" aria-haspopup="menu" aria-expanded="false" data-action="menu">
+                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg>
+            </button>
+            <span class="Hint" aria-hidden="true">Try “New Incognito tab”</span>
+        </nav>
+
+        <div class="Menu" role="menu" aria-label="More options">
+            <button role="menuitem" data-action="close">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14v14Zm-8-2h2v-4h4v-2h-4V7h-2v4H7v2h4z"/></svg>
+                New tab
+            </button>
+            <button role="menuitem" data-action="incognito">
+                <svg width="20" height="19"><use href="#glyph"/></svg>
+                New Incognito tab
+            </button>
+            <hr>
+            <button role="menuitem" data-action="close">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z"/></svg>
+                History
+            </button>
+            <button role="menuitem" data-action="close">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2Zm0 15-5-2.18L7 18V5h10z"/></svg>
+                Bookmarks
+            </button>
+            <button role="menuitem" data-action="close">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.1 7.1 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.61l-1.92-3.32a.5.5 0 0 0-.59-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.49-.41h-3.84a.5.5 0 0 0-.48.41l-.36 2.54a7.4 7.4 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.59.22L2.71 8.87a.5.5 0 0 0 .12.61l2.03 1.58a7.3 7.3 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.5.5 0 0 0-.12-.61l-2.01-1.58ZM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2Z"/></svg>
+                Settings
+            </button>
+        </div>
+    </div>
+</div>
+
+<p class="Caption">
+    iPhone 17 · tap <strong>⋯</strong> → <strong>New Incognito tab</strong> · tap <strong>Incognito ×</strong> to go back
+</p>
+
+<script>
+(function () {
+    'use strict';
+
+    // ───────────────────────────── Setup ─────────────────────────────
+
+    var app = document.querySelector('.App');
+    var home = app.querySelector('.Home');
+    var incognito = app.querySelector('.Incognito');
+    var badge = app.querySelector('.Badge-icon');
+    var menu = app.querySelector('.Menu');
+    var menuButton = app.querySelector('[data-action="menu"]');
+    var hint = app.querySelector('.Hint');
+    var tabsCount = app.querySelector('.Tabs-count');
+
+    var morphRoot = app.querySelector('.Morph-root');
+    var discs = toArray(app.querySelectorAll('.Morph-disc'));
+    var hat = app.querySelector('.Morph-hat');
+    var brim = app.querySelector('.Morph-brim');
+    var bridge = app.querySelector('.Morph-bridge');
+    var rings = toArray(app.querySelectorAll('.Morph-ring'));
+
+    var logoOs = toArray(home.querySelectorAll('.Logo-o'));
+    var logoLetters = toArray(home.querySelectorAll('.Logo-letter'));
+    var exitItems = toArray(home.querySelectorAll('[data-exit]'));
+    var enterItems = toArray(incognito.querySelectorAll('[data-enter]'));
+
+    var params = new URLSearchParams(location.search);
+    var speed = Math.max(0.05, parseFloat(params.get('speed')) || 1);
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var busy = false;
+
+    // Geometry of the finished badge, in the Figma frame's coordinates
+    // (frame "5"). The morph layer draws in this space too, so the numbers
+    // below are lifted straight from the design.
+    var FIG = {
+        box: { x: 659.5, y: 194, size: 121 },
+        disc: { cx: 720, cy: 254.5, r: 60.5 },
+        rings: [{ cx: 702.77, cy: 272.5 }, { cx: 737.23, cy: 272.5 }],
+        ringR: 11.75,
+        ringW: 3.5,
+        bridgeCx: 719.75,
+        brimCx: 720,
+        hatDrop: 32
+    };
+
+    // ───────────────────────────── Easing ─────────────────────────────
+
+    function bezier(x1, y1, x2, y2) {
+        var cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+        var cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+
+        function sampleX(t) { return ((ax * t + bx) * t + cx) * t; }
+        function sampleY(t) { return ((ay * t + by) * t + cy) * t; }
+        function slopeX(t) { return (3 * ax * t + 2 * bx) * t + cx; }
+
+        return function (x) {
+            if (x <= 0) return 0;
+            if (x >= 1) return 1;
+
+            var t = x, i, err, d;
+            for (i = 0; i < 8; i++) {
+                err = sampleX(t) - x;
+                if (Math.abs(err) < 1e-6) return sampleY(t);
+                d = slopeX(t);
+                if (Math.abs(d) < 1e-6) break;
+                t -= err / d;
+            }
+
+            var lo = 0, hi = 1;
+            t = x;
+            while (hi - lo > 1e-6) {
+                if (sampleX(t) < x) lo = t; else hi = t;
+                t = (lo + hi) / 2;
+            }
+            return sampleY(t);
+        };
+    }
+
+    var ease = {
+        // Material 3 "emphasized" — fast departure, long soft landing.
+        emphasized: bezier(0.2, 0, 0, 1),
+        // The "o" → lens morph: an unhurried start so the change reads as
+        // a transformation rather than a jump, then a long soft landing.
+        morph: bezier(0.5, 0, 0.1, 1),
+        // Slightly later curve for the vertical axis of the ring travel,
+        // so the "o"s glide on a gentle arc instead of a straight line.
+        arc: bezier(0.6, 0, 0.1, 1),
+        exit: bezier(0.4, 0, 0.6, 1),
+        out: bezier(0.16, 1, 0.3, 1),
+        settle: bezier(0.3, 1.35, 0.5, 1),
+        linear: function (p) { return p; }
+    };
+
+    // ───────────────────────────── Timeline ─────────────────────────────
+
+    // Runs a set of tracks on a single rAF clock. Each track is
+    // { at, dur, ease, update(easedProgress) }; every track is applied at
+    // progress 0 synchronously, so the first painted frame is already correct.
+    function play(tracks) {
+        return new Promise(function (resolve) {
+            var scale = 1 / speed;
+            var end = 0;
+
+            tracks.forEach(function (track) {
+                track.at *= scale;
+                track.dur *= scale;
+                track.last = 0;
+                track.update(0);
+                end = Math.max(end, track.at + track.dur);
+            });
+
+            var start = null;
+
+            function frame(now) {
+                if (start === null) start = now;
+                var t = now - start;
+
+                tracks.forEach(function (track) {
+                    var p = clamp((t - track.at) / track.dur, 0, 1);
+                    if (p === track.last) return;
+                    track.last = p;
+                    track.update((track.ease || ease.linear)(p));
+                });
+
+                if (t < end) requestAnimationFrame(frame);
+                else resolve();
+            }
+
+            requestAnimationFrame(frame);
+        });
+    }
+
+    function wait(ms) {
+        return new Promise(function (resolve) { setTimeout(resolve, ms / speed); });
+    }
+
+    // ───────────────────────────── Measuring ─────────────────────────────
+
+    var measureCanvas = document.createElement('canvas');
+    var measureCtx = measureCanvas.getContext('2d', { willReadFrequently: true });
+
+    // Finds where an "o" of the logo is actually inked: centre, outer radius
+    // and stroke thickness. Uses the font's own metrics plus a raster scan, so
+    // the ring drawn in the morph layer lands exactly on top of the glyph.
+    function measureO(span) {
+        var style = getComputedStyle(span);
+        var size = parseFloat(style.fontSize);
+        var font = style.fontStyle + ' ' + style.fontWeight + ' ' + size + 'px ' + style.fontFamily;
+        var rect = relativeRect(span);
+
+        measureCtx.font = font;
+        var m = measureCtx.measureText('o');
+        var inkLeft = -m.actualBoundingBoxLeft;
+        var inkRight = m.actualBoundingBoxRight;
+        var ascent = m.fontBoundingBoxAscent;
+        var descent = m.fontBoundingBoxDescent;
+        if (typeof ascent !== 'number') { ascent = size * 0.927; descent = size * 0.244; }
+
+        // The box is centred on the font's content area (half-leading), so
+        // this holds for inline and inline-block letters alike.
+        var baseline = rect.top + (rect.height + ascent - descent) / 2;
+        var cx = rect.left + (inkLeft + inkRight) / 2;
+        var cy = baseline - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+        var outer = (inkRight - inkLeft) / 2;
+
+        return { cx: cx, cy: cy, outer: outer, stroke: measureStroke(font, size, m) || outer * 0.38 };
+    }
+
+    function measureStroke(font, size, metrics) {
+        var s = 4;
+        var w = Math.ceil(size * 1.2), h = Math.ceil(size * 1.4);
+        measureCanvas.width = w * s;
+        measureCanvas.height = h * s;
+        measureCtx.setTransform(s, 0, 0, s, 0, 0);
+        measureCtx.clearRect(0, 0, w, h);
+        measureCtx.font = font;
+        measureCtx.fillStyle = '#000';
+        var baseline = size;
+        measureCtx.fillText('o', size * 0.1, baseline);
+
+        var y = Math.round((baseline - (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2) * s);
+        var row = measureCtx.getImageData(0, y, w * s, 1).data;
+        var inStart = -1;
+        for (var x = 0; x < w * s; x++) {
+            var on = row[x * 4 + 3] > 127;
+            if (on && inStart < 0) inStart = x;
+            if (!on && inStart >= 0) return (x - inStart) / s;
+        }
+        return 0;
+    }
+
+    // Rect relative to the app, in the app's own CSS pixels — the device
+    // frame may be scaled down to fit the window.
+    function relativeRect(el) {
+        var a = app.getBoundingClientRect();
+        var r = el.getBoundingClientRect();
+        var s = a.width / app.offsetWidth || 1;
+        return { left: (r.left - a.left) / s, top: (r.top - a.top) / s, width: r.width / s, height: r.height / s };
+    }
+
+    // Maps the Figma coordinate space onto the app, using the badge's resting
+    // place on the Incognito page as the anchor.
+    function badgeSpace() {
+        var r = relativeRect(badge);
+        var k = r.width / FIG.box.size;
+        return {
+            k: k,
+            tx: r.left - FIG.box.x * k,
+            ty: r.top - FIG.box.y * k,
+            cx: r.left + r.width / 2,
+            cy: r.top + r.height / 2
+        };
+    }
+
+    // ───────────────────────────── Forward: Google → Incognito ─────────────────────────────
+
+    function enterIncognito() {
+        if (busy || app.dataset.mode !== 'normal') return;
+        busy = true;
+
+        closeMenu();
+        incognito.scrollTop = 0;
+
+        if (reduceMotion) return crossfadeTo('incognito');
+
+        var space = badgeSpace();
+        var from = logoOs.map(measureO).map(function (o) {
+            return {
+                cx: (o.cx - space.tx) / space.k,
+                cy: (o.cy - space.ty) / space.k,
+                r: (o.outer - o.stroke / 2) / space.k,
+                w: o.stroke / space.k
+            };
+        });
+
+        var aw = app.offsetWidth, ah = app.offsetHeight;
+        var revealMax = Math.max(
+            Math.hypot(space.cx, space.cy),
+            Math.hypot(aw - space.cx, space.cy),
+            Math.hypot(space.cx, ah - space.cy),
+            Math.hypot(aw - space.cx, ah - space.cy)
+        );
+
+        morphRoot.setAttribute('transform', 'translate(' + space.tx + ' ' + space.ty + ') scale(' + space.k + ')');
+
+        var tracks = [];
+
+        // 1 · Everything except the two "o"s clears off the stage.
+        var letterOrder = [1, 2, 0, 3]; // g, l, G, e — closest to the "o"s first
+        logoLetters.forEach(function (letter, i) {
+            tracks.push({
+                at: letterOrder[i] * 24, dur: 240, ease: ease.exit,
+                update: function (p) {
+                    letter.style.opacity = 1 - p;
+                    letter.style.transform = 'scale(' + lerp(1, 0.86, p) + ')';
+                    letter.style.filter = 'blur(' + lerp(0, 6, p) + 'px)';
+                }
+            });
+        });
+
+        exitItems.forEach(function (el, i) {
+            tracks.push({
+                at: 10 + i * 16, dur: 240, ease: ease.exit,
+                update: function (p) {
+                    el.style.opacity = 1 - p;
+                    el.style.transform = 'translateY(' + lerp(0, 14, p) + 'px) scale(' + lerp(1, 0.97, p) + ')';
+                }
+            });
+        });
+
+        // 2 · The "o"s become the glasses: they slide together, lift, shrink
+        //     and thin their stroke down to the icon's weight.
+        rings.forEach(function (ring, i) {
+            var f = from[i], t = FIG.rings[i];
+            tracks.push({
+                at: 40, dur: 520, ease: ease.morph,
+                update: function (p) {
+                    ring.setAttribute('cx', lerp(f.cx, t.cx, p));
+                    ring.setAttribute('r', lerp(f.r, FIG.ringR, p));
+                    ring.setAttribute('stroke-width', lerp(f.w, FIG.ringW, p));
+                }
+            });
+            tracks.push({
+                at: 40, dur: 520, ease: ease.arc,
+                update: function (p) {
+                    ring.setAttribute('cy', lerp(f.cy, t.cy, p));
+                }
+            });
+        });
+
+        // 3 · The bridge snaps in between the lenses.
+        tracks.push({
+            at: 420, dur: 200, ease: ease.out,
+            update: function (p) {
+                bridge.setAttribute('opacity', p > 0 ? 1 : 0);
+                bridge.setAttribute('transform', scaleXAround(FIG.bridgeCx, p));
+            }
+        });
+
+        // 4 · The hat line draws outward from the centre.
+        tracks.push({
+            at: 500, dur: 340, ease: ease.emphasized,
+            update: function (p) {
+                brim.setAttribute('opacity', p > 0 ? 1 : 0);
+                brim.setAttribute('transform', scaleXAround(FIG.brimCx, p));
+            }
+        });
+
+        // 5 · The hat rises out of the line and settles.
+        tracks.push({
+            at: 640, dur: 420, ease: ease.settle,
+            update: function (p) {
+                hat.setAttribute('transform', 'translate(0 ' + lerp(FIG.hatDrop, 0, p) + ')');
+            }
+        });
+
+        // 6 · The grey disc blooms from the centre of the glyph, inverting it
+        //     as it passes, and the Incognito page pours out from behind it.
+        tracks.push({
+            at: 860, dur: 480, ease: ease.emphasized,
+            update: function (p) {
+                var r = lerp(0, FIG.disc.r, p);
+                discs.forEach(function (disc) { disc.setAttribute('r', r); });
+            }
+        });
+        tracks.push({
+            at: 1060, dur: 640, ease: bezier(0.4, 0, 0.1, 1),
+            update: function (p) {
+                // Starts tucked under the disc's edge, so the page seems to
+                // spill out from behind it.
+                var r = p === 0 ? 0 : lerp(space.k * FIG.disc.r * 0.8, revealMax, p);
+                incognito.style.clipPath = 'circle(' + r + 'px at ' + space.cx + 'px ' + space.cy + 'px)';
+            }
+        });
+        tracks.push({
+            at: 1060, dur: 1, ease: ease.linear,
+            update: function (p) {
+                if (p < 1) return;
+                app.classList.add('is-incognito-chrome');
+                swapTabCount('1');
+            }
+        });
+
+        // 7 · The page copy arrives.
+        enterItems.forEach(function (el, i) {
+            tracks.push({
+                at: 1140 + i * 50, dur: 620, ease: ease.out,
+                update: function (p) {
+                    el.style.opacity = p;
+                    el.style.transform = 'translateY(' + lerp(16, 0, p) + 'px)';
+                }
+            });
+        });
+
+        app.dataset.mode = 'transition';
+
+        play(tracks).then(function () {
+            app.dataset.mode = 'incognito';
+            incognito.style.clipPath = '';
+            enterItems.forEach(clearStyle);
+            setPagesHidden(true);
+            busy = false;
+        });
+    }
+
+    // ───────────────────────────── Back: Incognito → Google ─────────────────────────────
+
+    function exitIncognito() {
+        if (busy || app.dataset.mode !== 'incognito') return;
+        busy = true;
+
+        if (reduceMotion) return crossfadeTo('normal');
+
+        app.dataset.mode = 'returning';
+        app.classList.remove('is-incognito-chrome');
+        swapTabCount('3');
+
+        var homeItems = logoLetters.concat(logoOs, exitItems);
+        var tracks = [{
+            at: 0, dur: 220, ease: ease.exit,
+            update: function (p) {
+                incognito.style.opacity = 1 - p;
+                incognito.style.transform = 'scale(' + lerp(1, 1.04, p) + ')';
+            }
+        }];
+
+        homeItems.forEach(function (el, i) {
+            tracks.push({
+                at: 160 + i * 18, dur: 480, ease: ease.out,
+                update: function (p) {
+                    el.style.opacity = p;
+                    el.style.filter = '';
+                    el.style.transform = 'translateY(' + lerp(10, 0, p) + 'px) scale(' + lerp(0.97, 1, p) + ')';
+                }
+            });
+        });
+
+        play(tracks).then(function () {
+            app.dataset.mode = 'normal';
+            homeItems.forEach(clearStyle);
+            clearStyle(incognito);
+            resetMorph();
+            setPagesHidden(false);
+            busy = false;
+        });
+    }
+
+    function crossfadeTo(mode) {
+        var showIncognito = mode === 'incognito';
+        app.dataset.mode = showIncognito ? 'transition' : 'returning';
+        app.classList.toggle('is-incognito-chrome', showIncognito);
+        swapTabCount(showIncognito ? '1' : '3');
+        badge.style.visibility = 'visible';
+
+        play([{
+            at: 0, dur: 220, ease: ease.linear,
+            update: function (p) {
+                incognito.style.opacity = showIncognito ? p : 1 - p;
+            }
+        }]).then(function () {
+            app.dataset.mode = mode;
+            clearStyle(incognito);
+            clearStyle(badge);
+            setPagesHidden(showIncognito);
+            busy = false;
+        });
+    }
+
+    function resetMorph() {
+        [bridge, brim].forEach(function (el) { el.setAttribute('opacity', 0); });
+        discs.forEach(function (disc) { disc.setAttribute('r', 0); });
+        hat.setAttribute('transform', 'translate(0 ' + FIG.hatDrop + ')');
+    }
+
+    function setPagesHidden(isIncognito) {
+        incognito.setAttribute('aria-hidden', String(!isIncognito));
+        home.setAttribute('aria-hidden', String(isIncognito));
+    }
+
+    function swapTabCount(value) {
+        if (tabsCount.textContent === value) return;
+        tabsCount.textContent = value;
+        if (tabsCount.animate && !reduceMotion) {
+            tabsCount.animate([
+                { opacity: 0, transform: 'translateY(4px) scale(.7)' },
+                { opacity: 1, transform: 'none' }
+            ], { duration: 320 / speed, easing: 'cubic-bezier(.2, 0, 0, 1)' });
+        }
+    }
+
+    // ───────────────────────────── Menu ─────────────────────────────
+
+    function openMenu() {
+        menu.classList.add('is-open');
+        menuButton.setAttribute('aria-expanded', 'true');
+        hint.classList.add('is-gone');
+        var first = menu.querySelector('[data-action="incognito"]');
+        if (first) first.focus({ preventScroll: true });
+    }
+
+    function closeMenu() {
+        menu.classList.remove('is-open');
+        menuButton.setAttribute('aria-expanded', 'false');
+    }
+
+    app.addEventListener('click', function (event) {
+        var target = event.target.closest('[data-action]');
+        var action = target && target.getAttribute('data-action');
+
+        if (action !== 'menu' && !event.target.closest('.Menu')) closeMenu();
+        if (!action) return;
+
+        event.preventDefault();
+
+        switch (action) {
+            case 'menu':
+                if (app.dataset.mode !== 'normal') return;
+                menu.classList.contains('is-open') ? closeMenu() : openMenu();
+                break;
+            case 'incognito':
+                // Let the press state register before the stage clears.
+                target.classList.add('is-pressed');
+                closeMenu();
+                wait(110).then(function () {
+                    target.classList.remove('is-pressed');
+                    enterIncognito();
+                });
+                break;
+            case 'exit':
+            case 'tabs':
+                exitIncognito();
+                break;
+            case 'close':
+                closeMenu();
+                break;
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeMenu();
+    });
+
+    // ───────────────────────────── Helpers ─────────────────────────────
+
+    function scaleXAround(cx, s) {
+        return 'translate(' + cx + ' 0) scale(' + Math.max(s, 0.0001) + ' 1) translate(' + (-cx) + ' 0)';
+    }
+
+    function lerp(a, b, p) {
+        return a + (b - a) * p;
+    }
+
+    function clamp(v, min, max) {
+        return v < min ? min : v > max ? max : v;
+    }
+
+    function clearStyle(el) {
+        el.removeAttribute('style');
+    }
+
+    function toArray(list) {
+        return Array.prototype.slice.call(list);
+    }
+
+    resetMorph();
+
+    if (params.has('autoplay')) {
+        (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
+            setTimeout(enterIncognito, 700);
+        });
+    }
+})();
+</script>
+</body>
+</html>
