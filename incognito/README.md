@@ -39,3 +39,14 @@ The "o" rings start exactly on top of the font's glyphs: their centre, radius an
 stroke are measured from the rendered font, so the swap from text to vector cannot
 be seen. The badge geometry uses the Figma frame's own coordinates.
 `prefers-reduced-motion` falls back to a short crossfade.
+
+### Smoothness
+
+- Frames are timed off the vsync timestamp, with a one-frame pre-roll, so
+  the first paint of the new state never costs animation time.
+- All layout reads (font metrics, badge position, reveal distances) are done
+  ahead of time on load, font load and resize — never on the tap.
+- The page reveal is a flat disc scaled on the compositor instead of a
+  per-frame `clip-path`, and every moving element gets its own layer during
+  the transition. No per-frame blur filters, and a solid (not backdrop-blurred)
+  toolbar.

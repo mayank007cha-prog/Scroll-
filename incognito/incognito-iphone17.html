@@ -452,6 +452,38 @@ a {
     visibility: hidden;
 }
 
+/* During the transition the page itself is see-through; its background is
+   the Reveal disc underneath, which only ever changes transform. */
+.App[data-mode="transition"] .Incognito {
+    background: transparent;
+    overflow: hidden;
+}
+
+.Reveal {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--incog-bg);
+    transform: scale(0);
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.App[data-mode="transition"] .Reveal {
+    visibility: visible;
+    will-change: transform;
+}
+
+/* Everything that moves gets its own compositor layer for the duration, so
+   per-frame transform and opacity changes never trigger a repaint. */
+.App[data-mode="transition"] .Logo-letter,
+.App[data-mode="transition"] [data-exit],
+.App[data-mode="transition"] [data-enter],
+.App[data-mode="returning"] .Logo span,
+.App[data-mode="returning"] [data-exit],
+.App[data-mode="returning"] .Incognito {
+    will-change: transform, opacity;
+}
+
 .Incognito h2 {
     margin: 0 0 16px;
     text-align: center;
@@ -552,15 +584,15 @@ a {
     align-items: center;
     height: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
     padding: 0 8px var(--safe-bottom, env(safe-area-inset-bottom, 0px));
-    background: rgba(16, 16, 16, .92);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    /* Solid rather than backdrop-blurred: a blur would have to re-render
+       every frame while the reveal sweeps underneath it. */
+    background: #101010;
     box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .08);
     transition: background-color .6s cubic-bezier(.2, 0, 0, 1), box-shadow .6s cubic-bezier(.2, 0, 0, 1);
 }
 
 .App.is-incognito-chrome .Toolbar {
-    background: rgba(40, 40, 40, .94);
+    background: #282828;
     box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .06);
 }
 
@@ -730,6 +762,10 @@ a {
             </section>
         </main>
 
+        <!-- The Incognito page's background, grown on the compositor during
+             the transition (a flat scaled disc never repaints). -->
+        <div class="Reveal" aria-hidden="true"></div>
+
         <!-- ───────────────────────────── Incognito new tab ───────────────────────────── -->
         <main class="Incognito" aria-label="New Incognito tab" aria-hidden="true">
             <!-- In Incognito there is no in-page search box: the address bar
@@ -890,6 +926,7 @@ a {
     var tabsCount = app.querySelector('.Tabs-count');
 
     var morphRoot = app.querySelector('.Morph-root');
+    var reveal = app.querySelector('.Reveal');
     var discs = toArray(app.querySelectorAll('.Morph-disc'));
     var hat = app.querySelector('.Morph-hat');
     var brim = app.querySelector('.Morph-brim');
@@ -990,6 +1027,8 @@ a {
 
             function frame(now) {
                 if (start === null) start = now;
+                // Frames are timed off the vsync timestamp, so a late frame
+                // lands where it should rather than stuttering the motion.
                 var t = now - start;
 
                 tracks.forEach(function (track) {
@@ -1003,7 +1042,12 @@ a {
                 else resolve();
             }
 
-            requestAnimationFrame(frame);
+            // Pre-roll one frame: the first paint of the new state (layers
+            // being promoted, the Incognito page rasterising) happens before
+            // the clock starts, so it can never show up as a hitch.
+            requestAnimationFrame(function () {
+                requestAnimationFrame(frame);
+            });
         });
     }
 
@@ -1091,14 +1135,13 @@ a {
 
     // ───────────────────────────── Forward: Google → Incognito ─────────────────────────────
 
-    function enterIncognito() {
-        if (busy || app.dataset.mode !== 'normal') return;
-        busy = true;
+    // All layout reads happen here, ahead of time (on load, font load and
+    // resize), so a tap starts the motion without forcing layout or a canvas
+    // read-back on the critical frame.
+    var geometry = null;
 
-        closeMenu();
-        incognito.scrollTop = 0;
-
-        if (reduceMotion) return crossfadeTo('incognito');
+    function measure() {
+        if (app.dataset.mode !== 'normal') return geometry;
 
         var space = badgeSpace();
         var from = logoOs.map(measureO).map(function (o) {
@@ -1118,6 +1161,44 @@ a {
             Math.hypot(aw - space.cx, ah - space.cy)
         );
 
+        // How far each piece of Incognito copy sits from the badge, so it can
+        // fade in exactly as the reveal passes over it.
+        var enterDistance = enterItems.map(function (el) {
+            var r = relativeRect(el);
+            var dx = Math.max(r.left - space.cx, 0, space.cx - (r.left + r.width));
+            var dy = Math.max(r.top - space.cy, 0, space.cy - (r.top + r.height));
+            return Math.hypot(dx, dy);
+        });
+
+        var bar = relativeRect(app.querySelector('.Toolbar'));
+        var toolbarDistance = Math.max(0, bar.top - space.cy);
+
+        geometry = { space: space, from: from, revealMax: revealMax, enterDistance: enterDistance, toolbarDistance: toolbarDistance };
+        return geometry;
+    }
+
+    var remeasureQueued = false;
+    function invalidate() {
+        if (remeasureQueued) return;
+        remeasureQueued = true;
+        requestAnimationFrame(function () {
+            remeasureQueued = false;
+            measure();
+        });
+    }
+
+    function enterIncognito() {
+        if (busy || app.dataset.mode !== 'normal') return;
+        busy = true;
+
+        closeMenu();
+        incognito.scrollTop = 0;
+
+        if (reduceMotion) return crossfadeTo('incognito');
+
+        var g = geometry || measure();
+        var space = g.space, from = g.from, revealMax = g.revealMax;
+
         morphRoot.setAttribute('transform', 'translate(' + space.tx + ' ' + space.ty + ') scale(' + space.k + ')');
 
         var tracks = [];
@@ -1129,8 +1210,7 @@ a {
                 at: letterOrder[i] * 24, dur: 240, ease: ease.exit,
                 update: function (p) {
                     letter.style.opacity = 1 - p;
-                    letter.style.transform = 'scale(' + lerp(1, 0.86, p) + ')';
-                    letter.style.filter = 'blur(' + lerp(0, 6, p) + 'px)';
+                    letter.style.transform = 'translate3d(0,' + lerp(0, 4, p) + 'px,0) scale(' + lerp(1, 0.86, p) + ')';
                 }
             });
         });
@@ -1140,7 +1220,7 @@ a {
                 at: 10 + i * 16, dur: 240, ease: ease.exit,
                 update: function (p) {
                     el.style.opacity = 1 - p;
-                    el.style.transform = 'translateY(' + lerp(0, 14, p) + 'px) scale(' + lerp(1, 0.97, p) + ')';
+                    el.style.transform = 'translate3d(0,' + lerp(0, 14, p) + 'px,0) scale(' + lerp(1, 0.97, p) + ')';
                 }
             });
         });
@@ -1200,17 +1280,28 @@ a {
                 discs.forEach(function (disc) { disc.setAttribute('r', r); });
             }
         });
+        var REVEAL_AT = 1060, REVEAL_DUR = 640, revealEase = bezier(0.4, 0, 0.1, 1);
+        var revealStart = space.k * FIG.disc.r * 0.8;
+        function revealRadius(p) {
+            return lerp(revealStart, revealMax, p);
+        }
+
+        reveal.style.width = reveal.style.height = (revealMax * 2) + 'px';
+        reveal.style.left = (space.cx - revealMax) + 'px';
+        reveal.style.top = (space.cy - revealMax) + 'px';
         tracks.push({
-            at: 1060, dur: 640, ease: bezier(0.4, 0, 0.1, 1),
+            at: REVEAL_AT, dur: REVEAL_DUR, ease: revealEase,
             update: function (p) {
-                // Starts tucked under the disc's edge, so the page seems to
+                // A flat disc scaled on the compositor: no repaint per frame.
+                // Starts tucked under the badge disc, so the page seems to
                 // spill out from behind it.
-                var r = p === 0 ? 0 : lerp(space.k * FIG.disc.r * 0.8, revealMax, p);
-                incognito.style.clipPath = 'circle(' + r + 'px at ' + space.cx + 'px ' + space.cy + 'px)';
+                var s = p === 0 ? 0 : revealRadius(p) / revealMax;
+                reveal.style.transform = 'scale(' + s + ')';
             }
         });
         tracks.push({
-            at: 1060, dur: 1, ease: ease.linear,
+            // The toolbar recolours as the reveal sweeps down to it (CSS eases it).
+            at: Math.max(REVEAL_AT, reachedAt(g.toolbarDistance) - 220), dur: 1, ease: ease.linear,
             update: function (p) {
                 if (p < 1) return;
                 app.classList.add('is-incognito-chrome');
@@ -1219,12 +1310,20 @@ a {
         });
 
         // 7 · The page copy arrives.
+        // Time at which the reveal edge has passed a given distance.
+        function reachedAt(d) {
+            for (var step = 0; step <= 60; step++) {
+                if (revealRadius(revealEase(step / 60)) >= d) return REVEAL_AT + step / 60 * REVEAL_DUR;
+            }
+            return REVEAL_AT + REVEAL_DUR;
+        }
+
         enterItems.forEach(function (el, i) {
             tracks.push({
-                at: 1140 + i * 50, dur: 620, ease: ease.out,
+                at: Math.max(REVEAL_AT + 80 + i * 40, reachedAt(g.enterDistance[i] + 24)), dur: 560, ease: ease.out,
                 update: function (p) {
                     el.style.opacity = p;
-                    el.style.transform = 'translateY(' + lerp(16, 0, p) + 'px)';
+                    el.style.transform = 'translate3d(0,' + lerp(16, 0, p) + 'px,0)';
                 }
             });
         });
@@ -1233,7 +1332,7 @@ a {
 
         play(tracks).then(function () {
             app.dataset.mode = 'incognito';
-            incognito.style.clipPath = '';
+            clearStyle(reveal);
             enterItems.forEach(clearStyle);
             setPagesHidden(true);
             busy = false;
@@ -1257,7 +1356,7 @@ a {
             at: 0, dur: 220, ease: ease.exit,
             update: function (p) {
                 incognito.style.opacity = 1 - p;
-                incognito.style.transform = 'scale(' + lerp(1, 1.04, p) + ')';
+                incognito.style.transform = 'translate3d(0,0,0) scale(' + lerp(1, 1.04, p) + ')';
             }
         }];
 
@@ -1266,8 +1365,7 @@ a {
                 at: 160 + i * 18, dur: 480, ease: ease.out,
                 update: function (p) {
                     el.style.opacity = p;
-                    el.style.filter = '';
-                    el.style.transform = 'translateY(' + lerp(10, 0, p) + 'px) scale(' + lerp(0.97, 1, p) + ')';
+                    el.style.transform = 'translate3d(0,' + lerp(10, 0, p) + 'px,0) scale(' + lerp(0.97, 1, p) + ')';
                 }
             });
         });
@@ -1279,6 +1377,7 @@ a {
             resetMorph();
             setPagesHidden(false);
             busy = false;
+            invalidate();
         });
     }
 
@@ -1358,7 +1457,7 @@ a {
                 // Let the press state register before the stage clears.
                 target.classList.add('is-pressed');
                 closeMenu();
-                wait(110).then(function () {
+                wait(60).then(function () {
                     target.classList.remove('is-pressed');
                     enterIncognito();
                 });
@@ -1403,6 +1502,10 @@ a {
     }
 
     resetMorph();
+
+    (document.fonts ? document.fonts.ready : Promise.resolve()).then(measure);
+    if (document.fonts) document.fonts.addEventListener('loadingdone', invalidate);
+    window.addEventListener('resize', invalidate);
 
     if (params.has('autoplay')) {
         (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {

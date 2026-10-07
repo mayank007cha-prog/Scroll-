@@ -440,6 +440,38 @@ a {
     visibility: hidden;
 }
 
+/* During the transition the page itself is see-through; its background is
+   the Reveal disc underneath, which only ever changes transform. */
+.App[data-mode="transition"] .Incognito {
+    background: transparent;
+    overflow: hidden;
+}
+
+.Reveal {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--incog-bg);
+    transform: scale(0);
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.App[data-mode="transition"] .Reveal {
+    visibility: visible;
+    will-change: transform;
+}
+
+/* Everything that moves gets its own compositor layer for the duration, so
+   per-frame transform and opacity changes never trigger a repaint. */
+.App[data-mode="transition"] .Logo-letter,
+.App[data-mode="transition"] [data-exit],
+.App[data-mode="transition"] [data-enter],
+.App[data-mode="returning"] .Logo span,
+.App[data-mode="returning"] [data-exit],
+.App[data-mode="returning"] .Incognito {
+    will-change: transform, opacity;
+}
+
 .Incognito h2 {
     margin: 0 0 16px;
     text-align: center;
@@ -540,15 +572,15 @@ a {
     align-items: center;
     height: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
     padding: 0 8px var(--safe-bottom, env(safe-area-inset-bottom, 0px));
-    background: rgba(16, 16, 16, .92);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    /* Solid rather than backdrop-blurred: a blur would have to re-render
+       every frame while the reveal sweeps underneath it. */
+    background: #101010;
     box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .08);
     transition: background-color .6s cubic-bezier(.2, 0, 0, 1), box-shadow .6s cubic-bezier(.2, 0, 0, 1);
 }
 
 .App.is-incognito-chrome .Toolbar {
-    background: rgba(40, 40, 40, .94);
+    background: #282828;
     box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .06);
 }
 
