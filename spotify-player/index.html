@@ -596,7 +596,7 @@
     <div class="edge-hint" id="edgeHint"></div>
 
     <!-- Floating player: one element that morphs between card and disc -->
-    <div class="player off" id="player" role="group" aria-label="Now playing: Koi Fariyaad by Jagjit Singh">
+    <div class="player" id="player" role="group" aria-label="Now playing: Koi Fariyaad by Jagjit Singh">
       <div class="clip">
         <div class="card-face" id="cardFace">
           <div class="np-pill">
@@ -765,18 +765,15 @@
 
   const P = (f) => `assets/posters/${f}.jpg`;
   // Media sources in order of preference: the real file if you add it, then the bundled stand-in.
-  const M = (real, standin) => [
-    [`assets/media/${real}.mp3`, 'audio/mpeg'], [`assets/media/${real}.mp4`, 'video/mp4'],
-    ...(standin === 'standin-video'
-      ? [['assets/media/standin-video.mp4', 'video/mp4'], ['assets/media/standin-video.webm', 'video/webm']]
-      : [[`assets/media/${standin}.mp3`, 'audio/mpeg']]),
-  ];
+  const M = (real, standin) => (standin === 'standin-video'
+    ? [[`assets/media/${real}.mp4`, 'video/mp4'], ['assets/media/standin-video.mp4', 'video/mp4'], ['assets/media/standin-video.webm', 'video/webm']]
+    : [[`assets/media/${real}.mp3`, 'audio/mpeg'], [`assets/media/${real}.mp4`, 'video/mp4'], [`assets/media/${standin}.mp3`, 'audio/mpeg']]);
 
   // Every poster is a soundtrack you can play; the player takes on its art and tint.
   const MOVIES = {
     tumbin:       { title: 'Tum Bin', year: 2001, music: 'Nikhil–Vinay', song: 'Koi Fariyaad', by: 'Jagjit Singh', dur: 541, media: M('koi-fariyaad', 'standin-ghazal'), lyric: 'jaagate jaagate ek umr kati ho jaise', img: P('tumbin'), disc: P('tumbin-disc'), tint: ['#7a1d27', '#6b1820', '#4f0f16'] },
     rockstar:     { title: 'Rockstar', year: 2011, music: 'A. R. Rahman', song: 'Kun Faya Kun', by: 'A. R. Rahman, Javed Ali, Mohit Chauhan', dur: 473, img: P('rockstar'), pos: '50% 30%', tint: ['#8a2a1e', '#6e1f17', '#4a130e'] },
-    tamasha:      { title: 'Tamasha', year: 2015, music: 'A. R. Rahman', song: 'Agar Tum Saath Ho', by: 'Alka Yagnik, Arijit Singh', dur: 341, video: true, media: M('tamasha', 'standin-video'), img: P('tamasha'), pos: '50% 35%', tint: ['#8a3b1f', '#70301a', '#4b1e10'] },
+    tamasha:      { title: 'Tamasha', year: 2015, music: 'A. R. Rahman', song: 'Matargashti', by: 'Mohit Chauhan', dur: 20, video: true, media: M('tamasha', 'standin-video'), img: P('tamasha'), pos: '50% 35%', tint: ['#8a3b1f', '#70301a', '#4b1e10'] },
     highway:      { title: 'Highway', year: 2014, music: 'A. R. Rahman', song: 'Patakha Guddi', by: 'Sultana Nooran, Jyoti Nooran', dur: 290, img: P('highway'), pos: '50% 30%', tint: ['#7a5a1c', '#634816', '#43300d'] },
     barfi:        { title: 'Barfi!', year: 2012, music: 'Pritam', song: 'Phir Le Aya Dil', by: 'Arijit Singh', dur: 300, img: P('barfi'), pos: '50% 45%', tint: ['#2f6a5e', '#255649', '#163a31'] },
     queen:        { title: 'Queen', year: 2014, music: 'Amit Trivedi', song: 'London Thumakda', by: 'Labh Janjua, Sonu Kakkar, Neha Kakkar', dur: 230, img: P('queen'), pos: '50% 40%', tint: ['#7d6420', '#66511a', '#463710'] },
@@ -831,7 +828,7 @@
   const tileTitle = { tumbin: 'Koi Fariyaad', tamasha: 'Tamasha · Video' };
   $('quick').innerHTML = QUICK.map((k) => k === 'liked'
     ? `<button class="qtile"><div class="liked">${heart}</div><span class="t">Liked Songs</span></button>`
-    : `<button class="qtile" data-movie="${k}">${k === 'tumbin' ? '<div class="cover-ghazal">Ghazal</div>' : art(MOVIES[k])}<span class="t">${esc(tileTitle[k] || MOVIES[k].title)}</span>${eq}</button>`).join('');
+    : `<button class="qtile" data-movie="${k}">${art(MOVIES[k])}<span class="t">${esc(tileTitle[k] || MOVIES[k].title)}</span>${eq}</button>`).join('');
 
   const posterCard = (k) => { const m = MOVIES[k]; return `
     <button class="card poster" data-movie="${k}">${art(m)}<div class="t">${esc(m.title)}</div><div class="s">${m.year} · ${esc(m.music)}</div></button>`; };
@@ -926,8 +923,8 @@
   let mode = 'card';      // 'card' | 'disc'
   let side = 'right';
   let stick = true;       // follows the tab bar when resting at the bottom
-  let playing = false;
-  let started = false;    // nothing plays until you pick a song
+  let playing = true;
+  let started = true;     // Koi Fariyaad is loaded in the floating player from the start
   let drag = null;
   let suppressClick = false;
   let sheetOpen = false;
@@ -1555,7 +1552,9 @@
   }));
 
   applyTrack(MOVIES[current]);
-  setPlaying(false);
+  loadMedia();
+  setPlaying(true);           // sound starts on the first tap (browser autoplay rules)
+  markPlaying();
 
   /* ─────────────────────────── Controls ─────────────────────────── */
 

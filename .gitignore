@@ -2,3 +2,8 @@
 .DS_Store
 node_modules/
 public/
+
+# Private media for the prototype; never commit copyrighted songs or videos
+spotify-player/assets/media/tamasha.mp4
+spotify-player/assets/media/koi-fariyaad.mp3
+spotify-player/assets/media/koi-fariyaad.mp4
