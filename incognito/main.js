@@ -9,7 +9,6 @@
     var badge = app.querySelector('.Badge-icon');
     var menu = app.querySelector('.Menu');
     var menuButton = app.querySelector('[data-action="menu"]');
-    var hint = app.querySelector('.Hint');
     var tabsCount = app.querySelector('.Tabs-count');
 
     var morphRoot = app.querySelector('.Morph-root');
@@ -453,7 +452,6 @@
     function openMenu() {
         menu.classList.add('is-open');
         menuButton.setAttribute('aria-expanded', 'true');
-        hint.classList.add('is-gone');
         var first = menu.querySelector('[data-action="incognito"]');
         if (first) first.focus({ preventScroll: true });
     }
@@ -474,10 +472,11 @@
 
         switch (action) {
             case 'menu':
-                if (app.dataset.mode !== 'normal') return;
+                if (busy) return;
                 menu.classList.contains('is-open') ? closeMenu() : openMenu();
                 break;
             case 'incognito':
+                if (busy || app.dataset.mode !== 'normal') return closeMenu();
                 // Let the press state register before the stage clears.
                 target.classList.add('is-pressed');
                 closeMenu();
@@ -486,8 +485,11 @@
                     enterIncognito();
                 });
                 break;
-            case 'exit':
             case 'tabs':
+                exitIncognito();
+                break;
+            case 'newtab':
+                closeMenu();
                 exitIncognito();
                 break;
             case 'close':

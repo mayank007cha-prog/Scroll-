@@ -178,7 +178,9 @@ a {
     font-weight: 500;
 }
 
-/* ───────────────────────────── Google new tab ───────────────────────────── */
+/* ───────────────────────────── Google new tab ─────────────────────────────
+   Chrome for iPhone, dark theme: logo, search box, the AI Mode / Incognito
+   shortcuts, Most visited, then the Discover feed. */
 
 .Home {
     position: absolute;
@@ -186,28 +188,15 @@ a {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 8px) 16px calc(var(--toolbar-h) + 24px);
+    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 4px) 16px calc(var(--toolbar-h) + 24px);
 }
 
 .Home-top {
     align-self: stretch;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    height: 48px;
-    padding-left: 4px;
-}
-
-.Home-links {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font-size: 13px;
-}
-
-.Home-links a {
-    color: #fff;
-    text-decoration: none;
+    justify-content: flex-end;
+    height: 44px;
 }
 
 .Avatar {
@@ -242,7 +231,7 @@ a {
 }
 
 .Logo {
-    margin: clamp(40px, 9vh, 76px) 0 28px;
+    margin: clamp(28px, 6vh, 52px) 0 26px;
     font-size: 66px;
     font-weight: 400;
     line-height: 1;
@@ -256,92 +245,67 @@ a {
     display: inline-block;
 }
 
-.Search {
+.Fakebox {
     display: flex;
     align-items: center;
     gap: 14px;
     width: 100%;
-    max-width: 420px;
     height: 52px;
-    padding: 0 6px 0 16px;
+    padding: 0 16px;
     border-radius: 26px;
-    background: #fff;
-    color: #1f1f1f;
+    background: #303134;
+    color: #e3e3e3;
 }
 
-.Search-plus {
-    color: #444746;
-}
-
-.Search-placeholder {
+.Fakebox-placeholder {
     flex: 1;
     min-width: 0;
-    font-size: 16px;
-    color: #5f6368;
+    font-size: 17px;
+    color: #9aa0a6;
     white-space: nowrap;
     overflow: hidden;
 }
 
-.Search-ai {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    height: 38px;
-    padding: 0 12px 0 10px;
-    border-radius: 19px;
-    background: #f0f4f9;
-    font-size: 14px;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-@media (max-width: 360px) {
-    .Search-ai {
-        display: none;
-    }
-}
-
-.Chips {
+.Shortcuts {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     width: 100%;
-    max-width: 420px;
-    margin-top: 12px;
+    margin-top: 10px;
 }
 
-.Chip {
+.Shortcut {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 10px 12px;
-    border-radius: 14px;
-    background: #2b2b2d;
-    font-size: 11.5px;
-    line-height: 16px;
-    color: #c4c7c5;
-}
-
-.Chip svg {
-    flex: none;
-    margin-top: 1px;
+    height: 44px;
+    border-radius: 22px;
+    background: #282a2d;
     color: #e3e3e3;
-}
-
-.Chip strong {
-    display: block;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 500;
-    color: #e3e3e3;
+    transition: background-color .15s ease, transform .15s ease;
+}
+
+.Shortcut:active,
+.Shortcut.is-pressed {
+    background: #3c4043;
+    transform: scale(.97);
+}
+
+.Module {
+    width: 100%;
+    margin-top: 22px;
+    padding: 16px 8px 14px;
+    border-radius: 20px;
+    background: #1c1c1e;
 }
 
 .Tiles {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    row-gap: 18px;
-    width: 100%;
-    max-width: 420px;
-    margin: 34px 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
 }
@@ -358,34 +322,64 @@ a {
 .Tile-icon {
     display: grid;
     place-items: center;
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: #2c2c2e;
+}
+
+.Tile-icon span {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: #fff;
     color: var(--c);
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 500;
 }
 
-.Tile-icon--add {
-    background: #2b2b2d;
+.Feed {
+    width: 100%;
+    margin-top: 22px;
+}
+
+.Feed-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px 12px;
+    font-size: 17px;
+    font-weight: 500;
     color: #e3e3e3;
 }
 
-.Customise {
-    position: absolute;
-    right: 16px;
-    bottom: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 16px);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 36px;
-    padding: 0 14px;
+.Feed-head svg {
+    color: #9aa0a6;
+}
+
+.Story-media {
+    height: 180px;
     border-radius: 18px;
-    background: #1f2a3a;
-    color: #a8c7fa;
-    font-size: 13px;
-    font-weight: 500;
+    background:
+        radial-gradient(70% 90% at 25% 30%, #6d5bd0 0%, transparent 60%),
+        radial-gradient(60% 80% at 80% 70%, #d0705b 0%, transparent 60%),
+        #26262a;
+}
+
+.Story h4 {
+    margin: 12px 4px 6px;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 400;
+    color: #e3e3e3;
+}
+
+.Story-meta {
+    margin: 0 4px;
+    font-size: 12px;
+    color: #9aa0a6;
 }
 
 /* ───────────────────────────── Incognito new tab ───────────────────────────── */
@@ -412,36 +406,35 @@ a {
 .Incognito-inner {
     display: flex;
     flex-direction: column;
-    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 8px) 24px calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 32px);
+    padding: 0 24px calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 32px);
     font-size: 14px;
     line-height: 21px;
     color: var(--text-dim);
 }
 
-.Incognito-top {
-    display: flex;
-    justify-content: flex-end;
-    height: 48px;
-    align-items: center;
-    margin-right: -8px;
+.Omnibox {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 4px) 16px 10px;
+    background: var(--incog-bg);
 }
 
-.Pill {
+.Omnibox-field {
     display: flex;
     align-items: center;
-    gap: 8px;
-    height: 34px;
-    padding: 0 12px;
-    border-radius: 17px;
+    gap: 12px;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 22px;
     background: #2a2a2a;
-    color: var(--text);
-    font-size: 13px;
-    font-weight: 500;
+    color: #e3e3e3;
 }
 
-.Pill-close {
-    margin-left: 2px;
-    opacity: .6;
+.Omnibox-placeholder {
+    flex: 1;
+    font-size: 17px;
+    color: #9aa0a6;
 }
 
 .Badge {
@@ -583,44 +576,6 @@ a {
     line-height: 1;
 }
 
-.Hint {
-    position: absolute;
-    right: 10px;
-    bottom: calc(100% + 6px);
-    padding: 8px 12px;
-    border-radius: 10px;
-    background: #e3e3e3;
-    color: #1f1f1f;
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    pointer-events: none;
-    transform-origin: 90% 100%;
-    animation: hint-in .5s cubic-bezier(.2, 0, 0, 1) 1.2s both;
-    transition: opacity .2s ease, transform .2s ease;
-}
-
-.Hint::after {
-    content: '';
-    position: absolute;
-    right: 22px;
-    top: 100%;
-    border: 6px solid transparent;
-    border-top-color: #e3e3e3;
-}
-
-.Hint.is-gone {
-    opacity: 0;
-    transform: scale(.9);
-}
-
-@keyframes hint-in {
-    from {
-        opacity: 0;
-        transform: translateY(6px) scale(.94);
-    }
-}
-
 .Menu {
     position: absolute;
     z-index: 30;
@@ -726,71 +681,68 @@ a {
         <!-- ───────────────────────────── Google new tab ───────────────────────────── -->
         <main class="Home" aria-label="New tab">
             <header class="Home-top" data-exit>
-                <button class="IconButton" aria-label="Google apps">
-                    <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M6 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>
-                </button>
-                <div class="Home-links">
-                    <a href="#" tabindex="-1">Gmail</a>
-                    <a href="#" tabindex="-1">Images</a>
-                    <span class="Avatar">M</span>
-                </div>
+                <span class="Avatar">M</span>
             </header>
 
             <h1 class="Logo" aria-label="Google">
                 <span class="Logo-letter" aria-hidden="true">G</span><span class="Logo-o" aria-hidden="true">o</span><span class="Logo-o" aria-hidden="true">o</span><span class="Logo-letter" aria-hidden="true">g</span><span class="Logo-letter" aria-hidden="true">l</span><span class="Logo-letter" aria-hidden="true">e</span>
             </h1>
 
-            <div class="Search" data-exit>
-                <svg class="Search-plus" viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
-                <span class="Search-placeholder">Ask Google</span>
+            <!-- Chrome 141+ new tab page: search box, then the AI Mode and
+                 Incognito shortcuts directly under it. -->
+            <div class="Fakebox" data-exit>
+                <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
+                <span class="Fakebox-placeholder">Search or type URL</span>
                 <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5.3-3c0 3-2.5 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.7 6.2 6 6.7V21h2v-3.3c3.3-.5 6-3.3 6-6.7h-1.7Z"/></svg>
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V7a3 3 0 0 1 3-3h2M15 4h2a3 3 0 0 1 3 3v2M20 15v2a3 3 0 0 1-3 3h-2M9 20H7a3 3 0 0 1-3-3v-2"/><circle cx="12" cy="12" r="3"/></svg>
-                <span class="Search-ai">
-                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M10 2.5c.4 3.9 3.6 7.1 7.5 7.5-3.9.4-7.1 3.6-7.5 7.5-.4-3.9-3.6-7.1-7.5-7.5 3.9-.4 7.1-3.6 7.5-7.5Zm8 11c.2 1.9 1.6 3.3 3.5 3.5-1.9.2-3.3 1.6-3.5 3.5-.2-1.9-1.6-3.3-3.5-3.5 1.9-.2 3.3-1.6 3.5-3.5Z"/></svg>
+            </div>
+
+            <div class="Shortcuts" data-exit>
+                <button class="Shortcut" data-action="close">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M9.5 3a6.5 6.5 0 0 1 5.25 10.33l5.46 5.46-1.42 1.42-5.46-5.46A6.5 6.5 0 1 1 9.5 3Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.5-3c.2 1.6 1.4 2.8 3 3-1.6.2-2.8 1.4-3 3-.2-1.6-1.4-2.8-3-3 1.6-.2 2.8-1.4 3-3Z"/></svg>
                     AI Mode
-                </span>
+                </button>
+                <button class="Shortcut" data-action="incognito">
+                    <svg width="19" height="18"><use href="#glyph"/></svg>
+                    Incognito
+                </button>
             </div>
 
-            <div class="Chips" data-exit>
-                <div class="Chip">
-                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M10 2.5c.4 3.9 3.6 7.1 7.5 7.5-3.9.4-7.1 3.6-7.5 7.5-.4-3.9-3.6-7.1-7.5-7.5 3.9-.4 7.1-3.6 7.5-7.5Zm8 11c.2 1.9 1.6 3.3 3.5 3.5-1.9.2-3.3 1.6-3.5 3.5-.2-1.9-1.6-3.3-3.5-3.5 1.9-.2 3.3-1.6 3.5-3.5Z"/></svg>
-                    <span><strong>Do more with AI Mode</strong>Summarise, plan</span>
-                </div>
-                <div class="Chip">
-                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v9.6l3.5-3.6 3 3 2-2L18 16.5V6H6Zm9 4.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
-                    <span><strong>Create images</strong>Reimagine, illustrate</span>
-                </div>
-            </div>
+            <section class="Module" data-exit>
+                <ul class="Tiles">
+                    <li><span class="Tile-icon"><span style="--c: #ea4335">Y</span></span>YouTube</li>
+                    <li><span class="Tile-icon"><span style="--c: #a259ff">F</span></span>Figma</li>
+                    <li><span class="Tile-icon"><span style="--c: #10a37f">C</span></span>ChatGPT</li>
+                    <li><span class="Tile-icon"><span style="--c: #ea4c89">D</span></span>Dribbble</li>
+                </ul>
+            </section>
 
-            <ul class="Tiles">
-                <li data-exit><span class="Tile-icon" style="--c: #ea4335">Y</span>YouTube</li>
-                <li data-exit><span class="Tile-icon" style="--c: #a259ff">F</span>Figma</li>
-                <li data-exit><span class="Tile-icon" style="--c: #10a37f">C</span>ChatGPT</li>
-                <li data-exit><span class="Tile-icon" style="--c: #ea4c89">D</span>Dribbble</li>
-                <li data-exit><span class="Tile-icon" style="--c: #1769ff">B</span>Behance</li>
-                <li data-exit><span class="Tile-icon" style="--c: #34a853">M</span>Maps</li>
-                <li data-exit><span class="Tile-icon" style="--c: #fbbc04">N</span>News</li>
-                <li data-exit><span class="Tile-icon Tile-icon--add">
-                    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
-                </span>Add</li>
-            </ul>
-
-            <button class="Customise" data-exit tabindex="-1">
-                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.33-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.82-1.83Z"/></svg>
-                Customise Chrome
-            </button>
+            <section class="Feed" data-exit>
+                <div class="Feed-head">
+                    <span>Discover</span>
+                    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 17v2h6v-2H3ZM3 5v2h10V5H3Zm10 16v-2h8v-2h-8v-2h-2v6h2ZM7 9v2H3v2h4v2h2V9H7Zm14 4v-2H11v2h10Zm-6-4h2V7h4V5h-4V3h-2v6Z"/></svg>
+                </div>
+                <article class="Story">
+                    <div class="Story-media"></div>
+                    <h4>The quiet craft of motion design: why the best transitions go unnoticed</h4>
+                    <span class="Story-meta">Design Weekly · 2h</span>
+                </article>
+            </section>
         </main>
 
         <!-- ───────────────────────────── Incognito new tab ───────────────────────────── -->
         <main class="Incognito" aria-label="New Incognito tab" aria-hidden="true">
-            <div class="Incognito-inner">
-                <div class="Incognito-top" data-enter>
-                    <button class="Pill" data-action="exit">
-                        <svg width="18" height="17"><use href="#glyph"/></svg>
-                        Incognito
-                        <svg class="Pill-close" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                    </button>
+            <!-- In Incognito there is no in-page search box: the address bar
+                 sits at the top of the tab, as in Chrome today. -->
+            <div class="Omnibox" data-enter>
+                <div class="Omnibox-field">
+                    <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
+                    <span class="Omnibox-placeholder">Search or type URL</span>
+                    <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5.3-3c0 3-2.5 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.7 6.2 6 6.7V21h2v-3.3c3.3-.5 6-3.3 6-6.7h-1.7Z"/></svg>
                 </div>
+            </div>
+
+            <div class="Incognito-inner">
 
                 <div class="Badge">
                     <svg class="Badge-icon" viewBox="659.5 194 121 121" aria-hidden="true">
@@ -891,11 +843,10 @@ a {
             <button class="IconButton IconButton--menu" aria-label="More" aria-haspopup="menu" aria-expanded="false" data-action="menu">
                 <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg>
             </button>
-            <span class="Hint" aria-hidden="true">Try “New Incognito tab”</span>
         </nav>
 
         <div class="Menu" role="menu" aria-label="More options">
-            <button role="menuitem" data-action="close">
+            <button role="menuitem" data-action="newtab">
                 <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14v14Zm-8-2h2v-4h4v-2h-4V7h-2v4H7v2h4z"/></svg>
                 New tab
             </button>
@@ -921,7 +872,7 @@ a {
 </div>
 
 <p class="Caption">
-    iPhone 17 · tap <strong>⋯</strong> → <strong>New Incognito tab</strong> · tap <strong>Incognito ×</strong> to go back
+    iPhone 17 · tap <strong>Incognito</strong> under the search box (or <strong>⋯</strong> → New Incognito tab) · tap the <strong>tabs</strong> button to go back
 </p>
 
 <script>
@@ -936,7 +887,6 @@ a {
     var badge = app.querySelector('.Badge-icon');
     var menu = app.querySelector('.Menu');
     var menuButton = app.querySelector('[data-action="menu"]');
-    var hint = app.querySelector('.Hint');
     var tabsCount = app.querySelector('.Tabs-count');
 
     var morphRoot = app.querySelector('.Morph-root');
@@ -1380,7 +1330,6 @@ a {
     function openMenu() {
         menu.classList.add('is-open');
         menuButton.setAttribute('aria-expanded', 'true');
-        hint.classList.add('is-gone');
         var first = menu.querySelector('[data-action="incognito"]');
         if (first) first.focus({ preventScroll: true });
     }
@@ -1401,10 +1350,11 @@ a {
 
         switch (action) {
             case 'menu':
-                if (app.dataset.mode !== 'normal') return;
+                if (busy) return;
                 menu.classList.contains('is-open') ? closeMenu() : openMenu();
                 break;
             case 'incognito':
+                if (busy || app.dataset.mode !== 'normal') return closeMenu();
                 // Let the press state register before the stage clears.
                 target.classList.add('is-pressed');
                 closeMenu();
@@ -1413,8 +1363,11 @@ a {
                     enterIncognito();
                 });
                 break;
-            case 'exit':
             case 'tabs':
+                exitIncognito();
+                break;
+            case 'newtab':
+                closeMenu();
                 exitIncognito();
                 break;
             case 'close':

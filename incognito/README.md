@@ -2,12 +2,17 @@
 
 A mobile prototype of the "go Incognito" moment, built from the
 [Interactions-motion Figma file](https://www.figma.com/design/drf0JtS2gg4BL55VLqCkHP/Interactions-motion?node-id=46-6312)
-(frames 1 → 5). It needs no build step: serve this folder and open it on a phone,
-or on desktop, where it renders inside a phone frame.
+(frames 1 → 5). It needs no build step: open `incognito-iphone17.html` (a single
+self-contained file), or serve this folder. On a phone it fills the screen;
+anywhere else it renders inside an iPhone 17 frame (402 × 874 pt).
+
+The screens follow Chrome for iPhone (141+): the new tab page has the search
+box with the **AI Mode** and **Incognito** shortcuts under it, Most visited
+and Discover; the Incognito tab has the address bar at the top.
 
 ```sh
 cd incognito && python3 -m http.server 8000
-# open http://localhost:8000            — tap ⋯ → New Incognito tab
+# open http://localhost:8000            — tap Incognito under the search box (tabs button goes back)
 # open http://localhost:8000/?speed=0.25 — slow motion for motion review
 # open http://localhost:8000/?autoplay   — plays once on load
 ```
