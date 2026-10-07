@@ -1522,15 +1522,17 @@
   device.addEventListener('dragstart', (e) => e.preventDefault());
   document.fonts?.ready.then(fitTitle);
 
-  // Picking a song opens its page straight away; minimising it leaves the floating player.
+  // Picking a song plays it in the floating player; the song page opens only from the player.
   let ctxFrom = 'Playing from Home';
   function pick(el, from, name) {
     if (sheetBusy || sheetOpen) return;
     ctxFrom = from; ctx = name;
-    setTrack(el.dataset.movie, 'instant');
+    setTrack(el.dataset.movie);
     $('shFrom').textContent = ctxFrom;
     $('shCtx').textContent = ctx;
-    openSheet(el);
+    // Bring the player out as a card, resting at the bottom.
+    stick = true;
+    if (mode === 'disc') undock();
   }
   $('screen').addEventListener('click', (e) => {
     const al = e.target.closest('[data-album]');
