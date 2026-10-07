@@ -992,7 +992,8 @@
   // Gentle, near-critically-damped motion; a touch softer for the morph.
   const SOFT = reduced ? [600, 50] : [190, 25.5];
   const FOLLOW = [1300, 72];
-  const MORPH = reduced ? [600, 50] : [95, 19.5];   // slow, no overshoot: one smooth turn
+  const MORPH = reduced ? [600, 50] : [95, 19.5];   // docking: slow, no overshoot, one smooth turn
+  const UNFOLD = reduced ? [600, 50] : [150, 24.5];  // disc → card: quicker, still critically damped
 
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -1113,8 +1114,8 @@
 
     // The card quietly fades while its round art grows into the disc, turning once on the way.
     const e = easeInOut(mv), vv = clamp(vm.v, 0, 1);
-    const cardOut = smooth(0.05, 0.6, mv);
-    cardBg.style.opacity = 1 - smooth(0.25, 0.85, mv);
+    const cardOut = smooth(0.1, 0.7, mv);
+    cardBg.style.opacity = 1 - smooth(0.3, 0.9, mv);
     cardFace.style.opacity = (1 - cardOut) * (1 - vv);
     cardFace.style.transform = `scale(${1 - cardOut * 0.03})`;
     cardFace.style.pointerEvents = mv > 0.15 || vv > 0.5 ? 'none' : '';
@@ -1244,6 +1245,7 @@
       if (inward > 80) {
         // Pulled out: becomes a card under the finger and keeps following it.
         mode = 'card';
+        m.set(...UNFOLD); settle.set(...UNFOLD);
         m.t = 0;
         drag.scx = cardBound(side, b) - dx;
         drag.scy = cy.t - dy;
@@ -1330,6 +1332,7 @@
     cx.t = discX(s);
     cy.t = clamp(cy.v + vy * 100, b.cyMin, b.cyMax); cy.vel = vy * 600;
     stick = cy.t >= b.cyMax - 6;
+    m.set(...MORPH); settle.set(...MORPH);
     m.t = 1;
     player.tabIndex = 0;
     player.setAttribute('aria-label', `Now playing: ${MOVIES[current].song}. Activate to expand the player`);
@@ -1339,6 +1342,7 @@
   function undock() {
     const b = bounds();
     mode = 'card';
+    m.set(...UNFOLD); settle.set(...UNFOLD); cx.set(205, 28.6);
     cx.t = cardBound(side, b);
     m.t = 0;
     player.removeAttribute('tabindex');
