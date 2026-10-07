@@ -420,6 +420,51 @@
     opacity: 0; pointer-events: none; will-change: transform, opacity;
   }
 
+  /* ───────── Album page (Tamasha) ───────── */
+
+  .album { position: absolute; inset: 0; z-index: 15; background: var(--bg); --ac: #8a3b1f; }
+  .album-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 50px 16px 0; }
+  .album-scroll::-webkit-scrollbar { display: none; }
+  @media (max-width: 520px) { .album-scroll { padding-top: calc(env(safe-area-inset-top) + 6px); } }
+  .al-glow { position: absolute; inset: 0 0 auto 0; height: 470px; pointer-events: none;
+    background: linear-gradient(180deg, var(--ac) 0%, color-mix(in srgb, var(--ac) 45%, var(--bg)) 55%, var(--bg) 100%); }
+  .al-top { position: relative; display: flex; justify-content: space-between; height: 44px; }
+  .al-btn { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+    background: rgba(0, 0, 0, .22); transition: transform .25s var(--ease-out); }
+  .al-btn:active { transform: scale(.9); }
+  .al-btn svg { width: 22px; height: 22px; }
+  .al-cover { position: relative; width: 236px; aspect-ratio: 1; margin: 8px auto 0; border-radius: 4px; overflow: hidden;
+    box-shadow: 0 24px 50px -12px rgba(0, 0, 0, .65); }
+  .al-cover img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+  .album h1 { position: relative; margin: 22px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.03em; }
+  .al-by { position: relative; display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; font-weight: 700; }
+  .al-by i { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-style: normal;
+    font-size: 9px; font-weight: 800; background: #2b2b2b; color: #fff; }
+  .al-meta { position: relative; margin: 6px 0 0; font-size: 12.5px; color: var(--sub); }
+  .al-actions { position: relative; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+  .al-actions > div { display: flex; align-items: center; gap: 18px; }
+  .al-icon { width: 30px; height: 30px; display: grid; place-items: center; color: #b3b3b3; }
+  .al-icon svg { width: 24px; height: 24px; }
+  .al-play { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: #000;
+    transition: transform .25s var(--ease-out); }
+  .al-play:active { transform: scale(.94); }
+  .al-play svg { width: 24px; height: 24px; }
+  .al-tracks { position: relative; list-style: none; margin: 14px 0 0; padding: 0; }
+  .al-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 0; text-align: left; border-radius: 6px;
+    transition: background-color .2s var(--ease-out); }
+  .al-row:active { background: rgba(255, 255, 255, .06); }
+  .al-row > div { flex: 1; min-width: 0; }
+  .al-row .t { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .al-row.playing .t { color: var(--green); }
+  .al-row .s { margin-top: 3px; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sub); white-space: nowrap; overflow: hidden; }
+  .al-row .s span { overflow: hidden; text-overflow: ellipsis; }
+  .vchip { flex: none; display: inline-flex; align-items: center; gap: 3px; padding: 1px 5px 1px 3px; border-radius: 3px;
+    background: rgba(255, 255, 255, .14); color: #fff; font-size: 10.5px; font-weight: 600; }
+  .vchip svg { width: 10px; height: 10px; }
+  .al-more { width: 24px; height: 24px; flex: none; color: #b3b3b3; }
+  .al-foot { margin: 22px 0 0; font-size: 13px; color: var(--sub); }
+  .al-space { height: 220px; }
+
   /* ───────── Song page ───────── */
 
   .sheet {
@@ -593,6 +638,39 @@
       <div class="footer-space"></div>
     </main>
 
+    <!-- Album page: tapping Tamasha opens its soundtrack -->
+    <section class="album" id="album" aria-label="Tamasha soundtrack" hidden>
+      <div class="album-scroll" id="albumScroll">
+        <div class="al-glow"></div>
+        <header class="al-top">
+          <button class="al-btn" id="alBack" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <button class="al-btn" aria-label="More options">
+            <svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
+          </button>
+        </header>
+        <div class="al-cover"><img src="assets/posters/tamasha.jpg" alt="Tamasha poster"></div>
+        <h1>Tamasha</h1>
+        <div class="al-by"><i>AR</i>A. R. Rahman</div>
+        <p class="al-meta">Album · 2015</p>
+        <div class="al-actions">
+          <div>
+            <button class="al-icon" aria-label="Save to library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9.3"/><path d="M12 8v8M8 12h8"/></svg></button>
+            <button class="al-icon" aria-label="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.3"/><path d="M12 7.5v8.5M8.5 12.8 12 16.3l3.5-3.5"/></svg></button>
+            <button class="al-icon" aria-label="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5.5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="18.5" r="2.4"/><path d="m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1"/></svg></button>
+          </div>
+          <div>
+            <button class="al-icon" aria-label="Shuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7h2.8c1.4 0 2.6.7 3.3 1.9l3.8 6.3c.7 1.1 1.9 1.8 3.3 1.8h3.3M3.5 17h2.8c1.4 0 2.6-.7 3.3-1.9l.5-.8M13.6 8.7l.4-.8c.7-1.1 1.9-1.9 3.3-1.9h3.3M18 3.5 20.7 6 18 8.5M18 14.5l2.7 2.5-2.7 2.5"/></svg></button>
+            <button class="al-play" data-movie="tamasha" aria-label="Play Tamasha"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.9v14.2c0 .8.9 1.3 1.6.9l11-7.1c.6-.4.6-1.4 0-1.8l-11-7.1C7.9 3.6 7 4.1 7 4.9Z"/></svg></button>
+          </div>
+        </div>
+        <ol class="al-tracks" id="alTracks"></ol>
+        <p class="al-foot">2015 · 7 songs</p>
+        <div class="al-space"></div>
+      </div>
+    </section>
+
     <div class="edge-hint" id="edgeHint"></div>
 
     <!-- Floating player: one element that morphs between card and disc -->
@@ -660,7 +738,7 @@
           <button class="sh-icon" id="shClose" aria-label="Minimise player">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 9 7 7 7-7"/></svg>
           </button>
-          <div class="sh-ctx">Playing from Home<b id="shCtx">Bollywood throwback</b></div>
+          <div class="sh-ctx"><span id="shFrom">Playing from Home</span><b id="shCtx">Bollywood throwback</b></div>
           <button class="sh-icon" aria-label="More options">
             <svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
           </button>
@@ -798,6 +876,16 @@
     taare:        { title: 'Taare Zameen Par', year: 2007, music: 'Shankar–Ehsaan–Loy', song: 'Maa', by: 'Shankar Mahadevan', dur: 300, img: P('taare'), pos: '50% 70%', tint: ['#80611d', '#694f18', '#47350f'] },
   };
 
+  // The rest of the Tamasha soundtrack (only Matargashti has media).
+  const TAMASHA = ['tamasha', 't-heer', 't-agar', 't-chali', 't-wat', 't-safar', 't-tukoi'];
+  [['t-heer', 'Heer Toh Badi Sad Hai', 'Mika Singh, Nakash Aziz', 213],
+   ['t-agar', 'Agar Tum Saath Ho', 'Alka Yagnik, Arijit Singh', 341],
+   ['t-chali', 'Chali Kahani', 'Sukhwinder Singh, Haricharan', 263],
+   ['t-wat', 'Wat Wat Wat', 'Arijit Singh, Shashwat Singh', 239],
+   ['t-safar', 'Safarnama', 'Lucky Ali', 291],
+   ['t-tukoi', 'Tu Koi Aur Hai', 'A. R. Rahman, Alma Ferovic, Arjun Chandy', 252]]
+    .forEach(([k, song, by, dur]) => { MOVIES[k] = { ...MOVIES.tamasha, song, by, dur, video: false, media: null }; });
+
   // Swiping the song title walks through this queue.
   const QUEUE = ['tumbin', 'tamasha', 'rockstar', 'barfi', 'highway', 'znmd', 'dilse'];
 
@@ -825,10 +913,10 @@
 
   const $ = (id) => document.getElementById(id);
 
-  const tileTitle = { tumbin: 'Koi Fariyaad', tamasha: 'Tamasha · Video' };
+  const tileTitle = { tumbin: 'Koi Fariyaad' };
   $('quick').innerHTML = QUICK.map((k) => k === 'liked'
     ? `<button class="qtile"><div class="liked">${heart}</div><span class="t">Liked Songs</span></button>`
-    : `<button class="qtile" data-movie="${k}">${art(MOVIES[k])}<span class="t">${esc(tileTitle[k] || MOVIES[k].title)}</span>${eq}</button>`).join('');
+    : `<button class="qtile" ${k === 'tamasha' ? 'data-album="tamasha"' : `data-movie="${k}"`}>${art(MOVIES[k])}<span class="t">${esc(tileTitle[k] || MOVIES[k].title)}</span>${eq}</button>`).join('');
 
   const posterCard = (k) => { const m = MOVIES[k]; return `
     <button class="card poster" data-movie="${k}">${art(m)}<div class="t">${esc(m.title)}</div><div class="s">${m.year} · ${esc(m.music)}</div></button>`; };
@@ -841,6 +929,10 @@
       <div style="position:relative;border-radius:6px;overflow:hidden">${art(MOVIES[x.movie])}<div class="band" style="--band:${x.band}">${esc(x.title)}</div></div>
       <div class="s" style="margin-top:9px">${esc(x.sub)}</div>
     </button>`).join('');
+
+  $('alTracks').innerHTML = TAMASHA.map((k) => { const m = MOVIES[k]; return `
+    <li><button class="al-row" data-movie="${k}"><div><div class="t">${esc(m.song)}</div>
+      <div class="s">${m.video ? '<span class="vchip"><svg viewBox="0 0 10 10" fill="currentColor"><path d="M2.5 1.6v6.8c0 .4.4.6.7.4l5.2-3.4a.5.5 0 0 0 0-.8L3.2 1.2c-.3-.2-.7 0-.7.4Z"/></svg>Video</span>' : ''}<span>${esc(m.by)}</span></div></div><svg class="al-more" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg></button></li>`; }).join('');
 
   $('recent').innerHTML = RECENT.map((k) => { const m = MOVIES[k]; return `
     <button class="card recent" data-movie="${k}">${art(m)}<div class="t">${esc(m.title)}</div><div class="s">Album · ${esc(m.music)}</div></button>`; }).join('');
@@ -1030,28 +1122,37 @@
 
   /* ─────────────────────────── Tab bar on scroll ─────────────────────────── */
 
-  let lastY = 0, acc = 0, tabsHidden = false;
+  let tabsHidden = false;
   function setTabs(hidden) {
     if (hidden === tabsHidden) return;
     tabsHidden = hidden;
     tab.t = hidden ? 1 : 0;
   }
-  screen.addEventListener('scroll', () => {
-    const y = screen.scrollTop;
-    const d = y - lastY;
-    lastY = y;
-    appbar.classList.toggle('scrolled', y > 6);
-    const atEnd = y + screen.clientHeight >= screen.scrollHeight - 2;
-    if (y < 24) { setTabs(false); acc = 0; return; }
-    if (atEnd && d < 0) return;                        // ignore rubber-band bounce
-    if ((d > 0) !== (acc > 0)) acc = 0;
-    acc += d;
-    if (acc > 14) setTabs(true);
-    else if (acc < -14) setTabs(false);
-  }, { passive: true });
+  // Scrolling down hides the tab bar, scrolling up brings it back — on the home feed and the album page.
+  function hideTabsOnScroll(el, onScroll) {
+    let lastY = 0, acc = 0;
+    el.addEventListener('scroll', () => {
+      const y = el.scrollTop;
+      const d = y - lastY;
+      lastY = y;
+      onScroll?.(y);
+      const atEnd = y + el.clientHeight >= el.scrollHeight - 2;
+      if (y < 24) { setTabs(false); acc = 0; return; }
+      if (atEnd && d < 0) return;                        // ignore rubber-band bounce
+      if ((d > 0) !== (acc > 0)) acc = 0;
+      acc += d;
+      if (acc > 14) setTabs(true);
+      else if (acc < -14) setTabs(false);
+    }, { passive: true });
+  }
+  hideTabsOnScroll(screen, (y) => appbar.classList.toggle('scrolled', y > 6));
+  hideTabsOnScroll($('albumScroll'));
 
-  // Scroll the feed when the wheel is over the floating player (desktop).
-  player.addEventListener('wheel', (e) => { screen.scrollBy({ top: e.deltaY }); e.preventDefault(); }, { passive: false });
+  // Scroll whatever page is showing when the wheel is over the floating player (desktop).
+  player.addEventListener('wheel', (e) => {
+    ($('album').hidden ? screen : $('albumScroll')).scrollBy({ top: e.deltaY });
+    e.preventDefault();
+  }, { passive: false });
 
   /* ─────────────────────────── Gestures ─────────────────────────── */
 
@@ -1397,13 +1498,44 @@
   document.fonts?.ready.then(fitTitle);
 
   // Picking a song opens its page straight away; minimising it leaves the floating player.
-  $('screen').addEventListener('click', (e) => {
-    const el = e.target.closest('[data-movie]');
-    if (!el || sheetBusy || sheetOpen) return;
-    ctx = el.closest('.section')?.querySelector('h2')?.textContent || 'Recents';
+  let ctxFrom = 'Playing from Home';
+  function pick(el, from, name) {
+    if (sheetBusy || sheetOpen) return;
+    ctxFrom = from; ctx = name;
     setTrack(el.dataset.movie, 'instant');
+    $('shFrom').textContent = ctxFrom;
+    $('shCtx').textContent = ctx;
     openSheet(el);
+  }
+  $('screen').addEventListener('click', (e) => {
+    if (e.target.closest('[data-album]')) { openAlbum(); return; }
+    const el = e.target.closest('[data-movie]');
+    if (el) pick(el, 'Playing from Home', el.closest('.section')?.querySelector('h2')?.textContent || 'Recents');
   });
+  $('album').addEventListener('click', (e) => {
+    const el = e.target.closest('[data-movie]');
+    if (el) pick(el, 'Playing from album', 'Tamasha');
+  });
+
+  /* ─────────────────────────── Album page ─────────────────────────── */
+
+  const album = $('album');
+  function openAlbum() {
+    if (!album.hidden) return;
+    album.hidden = false;
+    $('albumScroll').scrollTop = 0;
+    setTabs(false);
+    album.animate([{ transform: 'translateX(100%)' }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+    screen.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateX(-24%)', opacity: 0.5 }], { duration: 380, easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'forwards' });
+  }
+  function closeAlbum() {
+    if (album.hidden) return;
+    screen.getAnimations().forEach((a) => a.cancel());
+    screen.animate([{ transform: 'translateX(-24%)', opacity: 0.5 }, { transform: 'none', opacity: 1 }], { duration: 320, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+    album.animate([{ transform: 'none' }, { transform: 'translateX(100%)' }], { duration: 320, easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'forwards' })
+      .finished.then(() => { album.hidden = true; album.getAnimations().forEach((a) => a.cancel()); setTabs(false); });
+  }
+  $('alBack').addEventListener('click', closeAlbum);
 
   /* ─────────────────────────── Song page ─────────────────────────── */
 
@@ -1543,7 +1675,10 @@
   });
 
   $('shClose').addEventListener('click', closeSheet);
-  addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheetOpen) closeSheet(); });
+  addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (sheetOpen) closeSheet(); else closeAlbum();
+  });
   sheet.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => skip(+b.dataset.step)));
   sheet.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
     const on = !b.classList.contains('on');
