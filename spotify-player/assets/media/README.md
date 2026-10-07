@@ -1,9 +1,13 @@
 # Song media
 
-The prototype plays **Koi Fariyaad** from this folder. Add one of:
+Two songs play real media in the prototype. Drop the real files here with these names
+and they're picked up automatically (they take priority over the stand-ins):
 
-- `koi-fariyaad.mp4` – a music video (H.264/AAC). Used for both the audio player and the video variation.
-- `koi-fariyaad.mp3` – audio only. The video variation then shows the poster instead of video.
+| Song | Real file (add yourself) | Bundled stand-in |
+| --- | --- | --- |
+| Koi Fariyaad (audio) | `koi-fariyaad.mp3` or `koi-fariyaad.mp4` | `standin-ghazal.mp3` |
+| Agar Tum Saath Ho, Tamasha (video) | `tamasha.mp4` (H.264/AAC) | `standin-video.mp4` / `standin-video.webm` |
 
-Without a file the player still works; progress is simulated and nothing is heard.
-Browsers only start sound after the first tap on the page.
+The stand-ins are synthesised (generated melody and an animated gradient), so they carry
+no copyright. They exist only so playback, pause/play and the transitions can be tested.
+Browsers start sound only after the first tap on the page.
