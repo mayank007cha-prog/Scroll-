@@ -343,13 +343,13 @@
   @keyframes marquee { 0%, 18% { transform: none; } 50%, 68% { transform: translateX(var(--shift)); } 100% { transform: none; } }
   .np-artist { margin-top: 2px; font-size: 12.5px; color: rgba(255, 255, 255, .68); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  /* Timer line starts behind the disc and runs out from under it */
+  /* Timer line sits on the pill's bottom border: it starts behind the disc and stops where the corner curves */
   .np-progress {
-    position: absolute; left: 32px; top: 55px; width: 123px; height: 2px; border-radius: 1px; z-index: 0;
+    position: absolute; left: 32px; top: 61px; width: 104px; height: 2px; border-radius: 1px; z-index: 0;
     background: rgba(255, 255, 255, .2); overflow: hidden;
   }
   .np-progress i { position: absolute; inset: 0; background: #fff; transform-origin: left; border-radius: inherit;
-    transform: scaleX(calc((24 + 99 * var(--p, 0)) / 123)); }
+    transform: scaleX(calc((10 + 94 * var(--p, 0)) / 104)); }
 
   /* Video variation: the whole card is the video, with a single play/pause */
   .video-face { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
