@@ -993,7 +993,8 @@
   const SOFT = reduced ? [600, 50] : [190, 25.5];
   const FOLLOW = [1300, 72];
   const MORPH = reduced ? [600, 50] : [95, 19.5];   // docking: slow, no overshoot, one smooth turn
-  const UNFOLD = reduced ? [600, 50] : [150, 24.5];  // disc → card: quicker, still critically damped
+  const UNFOLD = reduced ? [600, 50] : [125, 22.4];  // disc → card: quick but soft, no overshoot
+  const TURN = 180;                                   // half a turn between card and disc
 
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -1048,8 +1049,8 @@
   const press = new Spring(1, 520, 34, 0.0005);
   const hint = new Spring(0, 260, 30, 0.001);
   const omega = new Spring(0, 5, 4.6, 0.01);           // disc angular velocity, slow spin-up
-  const settle = new Spring(0, ...MORPH, 0.01);        // eases the spin back upright in step with the unfold
-  let angle = 0, settling = false, unfoldPending = false;
+  let angle = 0, unfoldPending = false;
+  let unfold = null;    // { from, to, e0 }: one eased half-turn back to upright while the disc opens
   const vm = new Spring(0, 200, 28, 0.001);            // 0 audio card → 1 video card
 
   let progress = 298.3 / 541;   // Koi Fariyaad is already part-way through
@@ -1072,26 +1073,17 @@
 
     cx.step(dt); cy.step(dt); m.step(dt); press.step(dt); hint.step(dt); vm.step(dt);
 
-    // Spin only once fully a disc; otherwise glide back to upright.
-    if (mode === 'disc' && m.v > 0.86) {
-      settling = false;
-      omega.t = playing && !reduced ? 42 : 0;
+    // The disc spins slowly once it has settled at the edge.
+    if (mode === 'disc') {
+      omega.t = m.v > 0.86 && playing && !reduced ? 42 : 0;
       omega.step(dt);
       angle = (angle + omega.v * dt) % 360;
-    } else {
-      if (!settling) {
-        settling = true;
-        settle.v = angle; settle.vel = 0;
-        settle.t = angle < 180 ? 0 : 360;
-        omega.v = 0;
-      }
-      settle.step(dt);
-      angle = settle.v;
-      if (settle.t === 360 && settle.v === 360) { angle = settle.v = settle.t = 0; }
+    } else if (!unfold) {
+      // Opening: turn back upright by the shortest way, never more than half a circle, eased with the morph.
+      const e0 = easeInOut(clamp(m.v, 0, 1)), from = angle + e0 * TURN;
+      unfold = { from, to: Math.round(from / 360) * 360, e0: Math.max(e0, 0.001) };
+      omega.v = 0;
     }
-
-    // Unfold into the card only once the disc is upright again.
-    if (unfoldPending && Math.abs(settle.t - settle.v) < 14) { unfoldPending = false; m.t = 0; }
 
     if (mediaActive()) { if (media.duration) progress = media.currentTime / media.duration; }
     else if (playing) progress = (progress + dt / MOVIES[current].dur) % 1;
@@ -1127,7 +1119,8 @@
     const disc = `translate3d(${X - R}px, ${Y - R}px, 0)`;
     discFace.style.opacity = vv > 0.5 ? smooth(0, 0.25, mv) : smooth(0, 0.04, mv);
     for (const el of [spinEl, discStatic, discShadow]) { el.style.width = el.style.height = `${2 * R}px`; }
-    spinEl.style.transform = `${disc} rotate(${angle + e * 360}deg)`;
+    const rot = unfold ? unfold.to + (unfold.from - unfold.to) * clamp(e / unfold.e0, 0, 1) : angle + e * TURN;
+    spinEl.style.transform = `${disc} rotate(${rot}deg)`;
     discStatic.style.transform = disc;
     discStatic.style.opacity = smooth(0.6, 1, mv);
     discShadow.style.transform = disc;
@@ -1245,7 +1238,7 @@
       if (inward > 80) {
         // Pulled out: becomes a card under the finger and keeps following it.
         mode = 'card';
-        m.set(...UNFOLD); settle.set(...UNFOLD);
+        m.set(...UNFOLD);
         m.t = 0;
         drag.scx = cardBound(side, b) - dx;
         drag.scy = cy.t - dy;
@@ -1332,7 +1325,9 @@
     cx.t = discX(s);
     cy.t = clamp(cy.v + vy * 100, b.cyMin, b.cyMax); cy.vel = vy * 600;
     stick = cy.t >= b.cyMax - 6;
-    m.set(...MORPH); settle.set(...MORPH);
+    // Carry on from wherever the art is pointing, then turn half a circle into the disc.
+    if (unfold) { const e = easeInOut(clamp(m.v, 0, 1)); angle = unfold.to + (unfold.from - unfold.to) * clamp(e / unfold.e0, 0, 1) - e * TURN; unfold = null; }
+    m.set(...MORPH);
     m.t = 1;
     player.tabIndex = 0;
     player.setAttribute('aria-label', `Now playing: ${MOVIES[current].song}. Activate to expand the player`);
@@ -1342,7 +1337,7 @@
   function undock() {
     const b = bounds();
     mode = 'card';
-    m.set(...UNFOLD); settle.set(...UNFOLD); cx.set(205, 28.6);
+    m.set(...UNFOLD); cx.set(205, 28.6);
     cx.t = cardBound(side, b);
     m.t = 0;
     player.removeAttribute('tabindex');
@@ -1632,7 +1627,7 @@
     if (mode !== 'disc' && !unfoldPending) return;
     mode = 'card'; unfoldPending = false;
     m.v = m.t = 0; m.vel = 0;
-    angle = 0; settle.v = settle.t = 0; settling = true;
+    angle = 0; unfold = { from: 0, to: 0, e0: 1 };
     cx.v = cx.t = cardBound(side, bounds());
     player.removeAttribute('tabindex');
   }
