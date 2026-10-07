@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<title>Spotify — Floating Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #121212;
+    --text: #fff;
+    --sub: #b3b3b3;
+    --tile: rgba(255, 255, 255, .07);
+    --tile-press: rgba(255, 255, 255, .12);
+    --green: #1ed760;
+    --player: #6b1820;
+    --player-deep: #4f0f16;
+    --ring: #f3c4c9;
+    --ease-out: cubic-bezier(.22, 1, .36, 1);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #070707;
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 88px;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 600px at 70% 45%, rgba(107, 24, 32, .28), transparent 70%),
+      radial-gradient(700px 500px at 20% 80%, rgba(30, 215, 96, .06), transparent 70%),
+      #070707;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+  img { display: block; }
+
+  /* ───────── Desktop notes ───────── */
+
+  .notes { width: 320px; flex: none; }
+  .notes .eyebrow {
+    margin: 0 0 14px;
+    font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--green);
+  }
+  .notes h1 { margin: 0 0 14px; font-size: 40px; line-height: 1.05; font-weight: 800; letter-spacing: -.035em; }
+  .notes .lede { margin: 0 0 32px; font-size: 15px; line-height: 1.55; color: var(--sub); }
+  .gestures { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; counter-reset: g; }
+  .gestures li {
+    counter-increment: g;
+    display: grid; grid-template-columns: 28px 1fr; gap: 14px;
+    font-size: 14px; line-height: 1.5; color: #d6d6d6;
+  }
+  .gestures li::before {
+    content: counter(g);
+    width: 28px; height: 28px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+    background: rgba(255, 255, 255, .08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
+  }
+  .gestures b { color: #fff; font-weight: 600; }
+
+  @media (max-width: 900px) { .notes { display: none; } }
+
+  /* ───────── Device ───────── */
+
+  .stage { flex: none; transform-origin: center; }
+
+  .device {
+    position: relative;
+    width: 402px;
+    height: 874px;
+    border-radius: 56px;
+    overflow: hidden;
+    background: var(--bg);
+    isolation: isolate;
+    box-shadow:
+      0 0 0 10px #161618,
+      0 0 0 11px #2b2b2f,
+      0 50px 120px -20px rgba(0, 0, 0, .8),
+      0 30px 60px -30px rgba(0, 0, 0, .9);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: 47px; z-index: 40;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 30px 0 34px;
+    font-size: 16px; font-weight: 600; letter-spacing: -.01em;
+    pointer-events: none;
+  }
+  .statusbar .icons { display: flex; gap: 6px; align-items: center; }
+
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; z-index: 40;
+    width: 134px; height: 5px; margin-left: -67px; border-radius: 3px;
+    background: rgba(255, 255, 255, .9);
+    pointer-events: none;
+  }
+
+  /* Full-bleed on a real phone */
+  @media (max-width: 520px) {
+    body { display: block; background: var(--bg); }
+    .stage { transform: none !important; }
+    .device { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; box-shadow: none; }
+    .statusbar, .home-indicator { display: none; }
+  }
+
+  /* ───────── Scrolling screen ───────── */
+
+  .screen {
+    position: absolute; inset: 0;
+    overflow-y: auto; overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  .glow {
+    position: absolute; inset: 0 0 auto 0; height: 420px; z-index: -1;
+    background: linear-gradient(180deg, rgba(107, 24, 32, .62) 0%, rgba(107, 24, 32, .22) 45%, rgba(18, 18, 18, 0) 100%);
+    pointer-events: none;
+  }
+
+  .appbar {
+    position: sticky; top: 0; z-index: 10;
+    padding: 56px 16px 12px;
+    display: flex; align-items: center; gap: 8px;
+    transition: background-color .5s var(--ease-out), box-shadow .5s var(--ease-out);
+  }
+  .appbar.scrolled {
+    background: rgba(18, 18, 18, .9);
+    -webkit-backdrop-filter: saturate(160%) blur(24px);
+    backdrop-filter: saturate(160%) blur(24px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .04);
+  }
+  @media (max-width: 520px) {
+    .appbar { padding-top: calc(env(safe-area-inset-top) + 14px); }
+  }
+
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex: none; margin-right: 4px;
+    display: grid; place-items: center;
+    font-size: 14px; font-weight: 700; color: #1a0a0c;
+    background: linear-gradient(140deg, #ffb4a2, #f472b6);
+  }
+  .chip {
+    height: 32px; padding: 0 14px; border-radius: 16px;
+    display: inline-flex; align-items: center;
+    font-size: 13px; font-weight: 500;
+    background: rgba(255, 255, 255, .1);
+    transition: background-color .3s var(--ease-out), color .3s var(--ease-out), transform .3s var(--ease-out);
+  }
+  .chip:active { transform: scale(.96); }
+  .chip.on { background: var(--green); color: #000; font-weight: 600; }
+
+  /* Quick-access grid */
+  .quick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 6px 16px 0; }
+  .qtile {
+    height: 56px; border-radius: 6px; overflow: hidden;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--tile);
+    text-align: left;
+    transition: background-color .25s var(--ease-out), transform .25s var(--ease-out);
+  }
+  .qtile:active { background: var(--tile-press); transform: scale(.98); }
+  .qtile .art { width: 56px; height: 56px; flex: none; border-radius: 0; }
+  .qtile .t {
+    flex: 1; min-width: 0; padding-right: 8px;
+    font-size: 12.5px; font-weight: 600; line-height: 1.25; letter-spacing: -.005em;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .qtile.playing .t { color: var(--green); }
+
+  .eq { display: none; gap: 2px; align-items: flex-end; height: 12px; margin-right: 10px; flex: none; }
+  .qtile.playing .eq { display: flex; }
+  .eq i { width: 3px; height: 100%; border-radius: 1px; background: var(--green); transform-origin: bottom; animation: eq 1.1s ease-in-out infinite; }
+  .eq i:nth-child(2) { animation-delay: -.35s; animation-duration: .9s; }
+  .eq i:nth-child(3) { animation-delay: -.7s; animation-duration: 1.25s; }
+  .paused .eq i { animation-play-state: paused; }
+  @keyframes eq { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
+
+  /* Sections & rails */
+  .section { margin-top: 30px; }
+  .section h2 {
+    margin: 0 16px 14px;
+    font-size: 21px; font-weight: 700; letter-spacing: -.025em; line-height: 1.2;
+  }
+  .section .kicker { margin: 0 16px 2px; font-size: 12.5px; color: var(--sub); font-weight: 500; }
+
+  .rail {
+    display: flex; gap: 14px;
+    padding: 0 16px;
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity; scroll-padding: 0 16px;
+    scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar { display: none; }
+
+  .card { flex: none; scroll-snap-align: start; text-align: left; transition: transform .3s var(--ease-out); }
+  .card:active { transform: scale(.97); }
+  .card .t { margin-top: 9px; font-size: 13px; font-weight: 600; line-height: 1.3; letter-spacing: -.005em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .s { margin-top: 3px; font-size: 12px; color: var(--sub); line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .poster { width: 132px; }
+  .poster .art { width: 132px; height: 198px; border-radius: 8px; }
+
+  .mix { width: 150px; }
+  .mix .art { width: 150px; height: 150px; border-radius: 6px; }
+  .mix .band {
+    position: absolute; inset: auto 0 0 0; height: 34px; z-index: 2;
+    display: flex; align-items: center; padding: 0 10px;
+    font-size: 12.5px; font-weight: 700; letter-spacing: -.01em;
+    background: var(--band);
+  }
+  .mix .band::before { content: ''; position: absolute; inset: auto 0 100% 0; height: 3px; background: inherit; opacity: .6; }
+
+  .artist { width: 118px; text-align: center; }
+  .artist .art { width: 118px; height: 118px; border-radius: 50%; }
+  .artist .s { -webkit-line-clamp: 1; }
+
+  .footer-space { height: 190px; }
+
+  /* Artwork with a designed fallback underneath the real image */
+  .art { position: relative; overflow: hidden; background: hsl(var(--h, 350) 30% 20%); }
+  .art-fb {
+    position: absolute; inset: 0;
+    background: linear-gradient(160deg, hsl(var(--h) 48% 44%), hsl(var(--h) 52% 16%));
+  }
+  .art-fb i { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .12); }
+  .art-fb i:first-child { width: 90%; aspect-ratio: 1; right: -30%; top: -30%; }
+  .art-fb i:nth-child(2) { width: 60%; aspect-ratio: 1; left: -20%; bottom: -16%; background: rgba(0, 0, 0, .14); }
+  .art-fb span {
+    position: absolute; left: 10px; right: 10px; bottom: 10px;
+    font-size: 15px; font-weight: 700; line-height: 1.12; letter-spacing: -.02em;
+  }
+  .qtile .art-fb span, .artist .art-fb span { display: none; }
+  .art img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; object-position: var(--pos, 50% 30%);
+    opacity: 0; transition: opacity .7s var(--ease-out);
+  }
+  .art.loaded img { opacity: 1; }
+
+  .liked {
+    position: relative; width: 56px; height: 56px; flex: none;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, #450af5, #8e8ee5 90%);
+  }
+
+  /* ───────── Tab bar ───────── */
+
+  .tabbar {
+    position: absolute; inset: auto 0 0 0; z-index: 25;
+    height: 124px;
+    padding-top: 56px;
+    background: linear-gradient(180deg, rgba(18, 18, 18, 0) 0%, rgba(18, 18, 18, .78) 30%, rgba(10, 10, 10, .97) 58%, #0a0a0a 100%);
+    will-change: transform;
+    pointer-events: none;
+  }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); pointer-events: auto; }
+  .tab {
+    height: 41px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 500; color: #a7a7a7; letter-spacing: .005em;
+    transition: color .25s var(--ease-out), transform .25s var(--ease-out);
+  }
+  .tab:active { transform: scale(.92); }
+  .tab.on { color: #fff; font-weight: 600; }
+  .tab svg { width: 24px; height: 24px; }
+
+  @media (max-width: 520px) {
+    .tabbar { height: calc(110px + env(safe-area-inset-bottom)); }
+  }
+
+  /* ───────── Floating player ───────── */
+
+  .player {
+    position: absolute; left: 0; top: 0; z-index: 30;
+    width: 184px; height: 120px;
+    border-radius: 30px;
+    touch-action: none;
+    cursor: grab;
+    will-change: transform, width, border-radius;
+    background: linear-gradient(165deg, #7a1d27 0%, var(--player) 45%, var(--player-deep) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .09),
+      inset 0 0 0 1px rgba(255, 255, 255, .05),
+      0 22px 44px -12px rgba(0, 0, 0, .7),
+      0 6px 14px -4px rgba(0, 0, 0, .45);
+    outline: none;
+  }
+  .player.grabbing { cursor: grabbing; }
+  .player:focus-visible { box-shadow: 0 0 0 3px rgba(255, 255, 255, .9), 0 22px 44px -12px rgba(0, 0, 0, .7); }
+
+  .clip { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+
+  .card-face {
+    position: absolute; top: 0; left: 50%; width: 184px; height: 120px; margin-left: -92px;
+    transform-origin: 50% 50%;
+  }
+  .np-pill {
+    position: absolute; left: 8px; top: 10px; width: 168px; height: 64px;
+    display: flex; align-items: center; gap: 8px; padding: 1px;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, .1);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+  }
+  .np-art {
+    width: 62px; height: 62px; flex: none; border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(243, 196, 201, .55), 0 4px 10px rgba(0, 0, 0, .35);
+  }
+  .np-meta { min-width: 0; flex: 1; padding-right: 14px; }
+  .np-title { font-size: 14px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .np-artist { margin-top: 2px; font-size: 12.5px; color: rgba(255, 255, 255, .68); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .np-progress {
+    position: absolute; left: 47px; top: 72px; width: 104px; height: 2px; border-radius: 1px;
+    background: rgba(255, 255, 255, .18); overflow: hidden;
+  }
+  .np-progress i { position: absolute; inset: 0; background: #fff; transform-origin: left; transform: scaleX(var(--p, 0)); border-radius: inherit; }
+
+  .np-controls { position: absolute; left: 28px; top: 84px; display: flex; gap: 16px; }
+  .ctl {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    transition: transform .3s var(--ease-out), background-color .3s var(--ease-out);
+  }
+  .ctl:active { transform: scale(.86); background: rgba(255, 255, 255, .08); }
+  .ctl svg { width: 24px; height: 24px; }
+  .ctl.play svg { width: 28px; height: 28px; }
+  .ctl .alt { display: none; }
+  .ctl.toggled .main { display: none; }
+  .ctl.toggled .alt { display: block; }
+
+  .disc-face { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+  .disc-face .art { position: absolute; inset: 0; border-radius: 0; background: var(--player-deep); }
+  .disc-face .art-fb { background: radial-gradient(circle at 50% 50%, #2a0a0e 0 18%, #6b1820 19% 60%, #3d0c12 61%); }
+  .disc-face .art-fb i, .disc-face .art-fb span { display: none; }
+  .spin { position: absolute; inset: 0; will-change: transform; }
+  .grooves {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: repeating-radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 0 2.4px, rgba(0, 0, 0, .09) 2.4px 3.2px);
+    mix-blend-mode: multiply;
+  }
+  .disc-static { position: absolute; inset: 0; border-radius: 50%; opacity: 0; }
+  .sheen {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from 210deg, transparent 0deg, rgba(255, 255, 255, .22) 28deg, transparent 70deg, transparent 180deg, rgba(255, 255, 255, .14) 212deg, transparent 250deg);
+    mix-blend-mode: screen;
+  }
+  .ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(var(--ring) calc(var(--p, 0) * 1turn), rgba(255, 255, 255, .22) 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+  }
+  .spindle {
+    position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
+    background: radial-gradient(circle, #0c0c0c 0 3px, #1d1d1d 3.5px 100%);
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .22), 0 1px 4px rgba(0, 0, 0, .6);
+  }
+
+  .edge-hint {
+    position: absolute; top: 0; left: 0; z-index: 31;
+    width: 5px; height: 150px; border-radius: 3px;
+    background: linear-gradient(180deg, transparent, rgba(255, 220, 225, .85), transparent);
+    box-shadow: 0 0 22px 4px rgba(243, 196, 201, .45);
+    opacity: 0; pointer-events: none; will-change: transform, opacity;
+  }
+
+  /* Toast */
+  .toast {
+    position: absolute; left: 16px; right: 16px; top: 108px; z-index: 35;
+    padding: 12px 16px; border-radius: 10px;
+    background: #f2f2f2; color: #121212;
+    font-size: 13px; font-weight: 600; letter-spacing: -.005em; text-align: center;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+    opacity: 0; transform: translateY(-10px) scale(.98);
+    transition: opacity .45s var(--ease-out), transform .55s var(--ease-out);
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: none; }
+  @media (max-width: 520px) { .toast { top: calc(env(safe-area-inset-top) + 64px); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eq i { animation: none; transform: scaleY(.6); }
+  }
+</style>
+</head>
+<body>
+
+<aside class="notes">
+  <p class="eyebrow">Spotify · Interaction concept</p>
+  <h1>The floating player</h1>
+  <p class="lede">A mini player that drifts, docks and tucks itself away, so your music stays close without covering what you're browsing.</p>
+  <ol class="gestures">
+    <li><span><b>Drag the player</b> anywhere. Let go and it glides to the nearest edge.</span></li>
+    <li><span><b>Push it into the edge</b> and it folds into a spinning disc, half tucked away.</span></li>
+    <li><span><b>Tap the disc</b>, or pull it inward, to bring the player back.</span></li>
+    <li><span><b>Scroll down</b> to hide the tab bar. Scroll up and it returns.</span></li>
+  </ol>
+</aside>
+
+<div class="stage" id="stage">
+  <div class="device" id="device">
+
+    <div class="statusbar" aria-hidden="true">
+      <span>9:41</span>
+      <span class="icons">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="#fff"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="#fff"><path d="M8 2.4c2.3 0 4.4.9 6 2.4l1.1-1.1A10 10 0 0 0 8 .8 10 10 0 0 0 .9 3.7L2 4.8a8.4 8.4 0 0 1 6-2.4Zm0 3.2c1.4 0 2.7.5 3.7 1.4l1.1-1.1A6.9 6.9 0 0 0 8 4a6.9 6.9 0 0 0-4.8 1.9l1.1 1.1c1-.9 2.3-1.4 3.7-1.4Zm0 3.2c.6 0 1.1.2 1.5.6L8 11 6.5 9.4c.4-.4.9-.6 1.5-.6Z"/></svg>
+        <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="rgba(255,255,255,.4)"/><rect x="2" y="2" width="20" height="9" rx="2" fill="#fff"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" fill="rgba(255,255,255,.4)"/></svg>
+      </span>
+    </div>
+
+    <main class="screen" id="screen">
+      <div class="glow"></div>
+
+      <header class="appbar" id="appbar">
+        <div class="avatar" aria-label="Profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="#1a0a0c"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.5c.8-4 4-6.3 8-6.3s7.2 2.3 8 6.3"/></svg></div>
+        <button class="chip on">All</button>
+        <button class="chip">Music</button>
+        <button class="chip">Podcasts</button>
+        <button class="chip">Audiobooks</button>
+      </header>
+
+      <div class="quick" id="quick"></div>
+
+      <section class="section">
+        <h2>Soundtracks you'll love</h2>
+        <div class="rail" id="soundtracks"></div>
+      </section>
+
+      <section class="section">
+        <h2>Made For You</h2>
+        <div class="rail" id="mixes"></div>
+      </section>
+
+      <section class="section">
+        <h2>Your favourite artists</h2>
+        <div class="rail" id="artists"></div>
+      </section>
+
+      <section class="section">
+        <p class="kicker">Because you like Tum Bin</p>
+        <h2>Bollywood throwback</h2>
+        <div class="rail" id="throwback"></div>
+      </section>
+
+      <div class="footer-space"></div>
+    </main>
+
+    <div class="edge-hint" id="edgeHint"></div>
+
+    <!-- Floating player: one element that morphs between card and disc -->
+    <div class="player" id="player" role="group" aria-label="Now playing: Koi Fariyaad by Jagjit Singh">
+      <div class="clip">
+        <div class="card-face" id="cardFace">
+          <div class="np-pill">
+            <div class="art np-art" data-wiki="Tum Bin" style="--h:350;--pos:50% 28%">
+              <div class="art-fb"><i></i><i></i></div><img alt="">
+            </div>
+            <div class="np-meta">
+              <div class="np-title">Koi Fariyaad</div>
+              <div class="np-artist">Jagjit Singh</div>
+            </div>
+          </div>
+          <div class="np-progress"><i></i></div>
+          <div class="np-controls">
+            <button class="ctl" aria-label="Connect to a device" data-action="devices">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.8" y="5" width="7" height="13" rx="1.6"/><rect x="12.6" y="3" width="8.6" height="18" rx="2.2"/><circle cx="16.9" cy="14.4" r="2.6"/><circle cx="16.9" cy="7.4" r=".6" fill="#fff"/><path d="M5.6 15.4h1.4"/></svg>
+            </button>
+            <button class="ctl" aria-label="Add to Liked Songs" aria-pressed="false" data-action="like">
+              <svg class="main" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 8v8M8 12h8"/></svg>
+              <svg class="alt" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1ed760"/><path d="m7.8 12.3 2.8 2.8 5.6-5.8" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="ctl play" aria-label="Pause" data-action="play">
+              <svg class="main" viewBox="0 0 24 24" fill="#fff"><rect x="5.6" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.8" y="4" width="4.6" height="16" rx="1.3"/></svg>
+              <svg class="alt" viewBox="0 0 24 24" fill="#fff"><path d="M7 4.9v14.2c0 .8.9 1.3 1.6.9l11-7.1c.6-.4.6-1.4 0-1.8l-11-7.1C7.9 3.6 7 4.1 7 4.9Z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="disc-face" id="discFace">
+          <div class="spin" id="spin">
+            <div class="art" data-wiki="Tum Bin" style="--h:350;--pos:50% 30%">
+              <div class="art-fb"></div><img alt="">
+            </div>
+            <div class="grooves"></div>
+          </div>
+          <div class="disc-static" id="discStatic">
+            <div class="sheen"></div>
+            <div class="spindle"></div>
+            <div class="ring"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="tabbar" id="tabbar" aria-label="Main">
+      <div class="tabs">
+        <button class="tab on" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="#fff"><path d="M12.6 2.6a1.2 1.2 0 0 0-1.2 0L3.6 7.1A1.2 1.2 0 0 0 3 8.1V20c0 .7.5 1.2 1.2 1.2h5.2v-6.4h5.2v6.4h5.2c.7 0 1.2-.5 1.2-1.2V8.1c0-.4-.2-.8-.6-1L12.6 2.6Z"/></svg>
+          Home
+        </button>
+        <button class="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.6" cy="10.6" r="6.8"/><path d="m15.6 15.6 5 5"/></svg>
+          Search
+        </button>
+        <button class="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 3.5v17M9.5 3.5v17M14.2 3.8l6 16.7"/></svg>
+          Your Library
+        </button>
+        <button class="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v16M4 12h16"/></svg>
+          Create
+        </button>
+      </div>
+    </nav>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ─────────────────────────── Content ─────────────────────────── */
+  // `wiki` is an English Wikipedia article whose lead image (poster / photo)
+  // is fetched at runtime. Everything has a designed fallback cover.
+
+  const QUICK = [
+    { title: 'Liked Songs', liked: true },
+    { title: 'Tum Bin', wiki: 'Tum Bin', hue: 350, playing: true },
+    { title: 'Aashiqui 2', wiki: 'Aashiqui 2', hue: 20 },
+    { title: 'This Is Jagjit Singh', wiki: 'Jagjit Singh', hue: 30, pos: '50% 20%' },
+    { title: 'Rockstar', wiki: 'Rockstar (2011 film)', hue: 210 },
+    { title: 'Arijit Singh Mix', wiki: 'Arijit Singh', hue: 260, pos: '50% 20%' },
+    { title: 'Kal Ho Naa Ho', wiki: 'Kal Ho Naa Ho', hue: 195 },
+    { title: 'Ghazal Sukoon', wiki: 'Ghulam Ali (singer)', hue: 40, pos: '50% 20%' },
+  ];
+
+  const SOUNDTRACKS = [
+    { title: 'Jab We Met', sub: '2007 · Pritam', wiki: 'Jab We Met', hue: 25 },
+    { title: 'Yeh Jawaani Hai Deewani', sub: '2013 · Pritam', wiki: 'Yeh Jawaani Hai Deewani', hue: 200 },
+    { title: 'Rockstar', sub: '2011 · A. R. Rahman', wiki: 'Rockstar (2011 film)', hue: 0 },
+    { title: 'Tamasha', sub: '2015 · A. R. Rahman', wiki: 'Tamasha (2015 film)', hue: 170 },
+    { title: 'Kabir Singh', sub: '2019 · Mithoon, Amaal Mallik', wiki: 'Kabir Singh', hue: 220 },
+    { title: 'Laila Majnu', sub: '2018 · Niladri Kumar, Joi Barua', wiki: 'Laila Majnu (2018 film)', hue: 280 },
+    { title: 'Barfi!', sub: '2012 · Pritam', wiki: 'Barfi!', hue: 45 },
+    { title: 'Lootera', sub: '2013 · Amit Trivedi', wiki: 'Lootera', hue: 15 },
+  ];
+
+  const MIXES = [
+    { title: 'Daily Mix 1', sub: 'Jagjit Singh, Ghulam Ali, Pankaj Udhas and more', wiki: 'Jagjit Singh', hue: 25, band: '#c2562e', pos: '50% 20%' },
+    { title: 'Daily Mix 2', sub: 'Arijit Singh, Atif Aslam, Mithoon and more', wiki: 'Arijit Singh', hue: 200, band: '#2f7ea8', pos: '50% 20%' },
+    { title: 'Daily Mix 3', sub: 'A. R. Rahman, Shreya Ghoshal, Javed Ali and more', wiki: 'A. R. Rahman', hue: 150, band: '#2e8f6a', pos: '50% 20%' },
+    { title: 'Daily Mix 4', sub: 'Lata Mangeshkar, Kishore Kumar, R. D. Burman and more', wiki: 'Lata Mangeshkar', hue: 320, band: '#b0407e', pos: '50% 20%' },
+    { title: 'Daily Mix 5', sub: 'Pritam, KK, Mohit Chauhan and more', wiki: 'Pritam Chakraborty', hue: 45, band: '#b89120', pos: '50% 20%' },
+  ];
+
+  const ARTISTS = [
+    { title: 'Jagjit Singh', wiki: 'Jagjit Singh', hue: 30 },
+    { title: 'Arijit Singh', wiki: 'Arijit Singh', hue: 260 },
+    { title: 'Shreya Ghoshal', wiki: 'Shreya Ghoshal', hue: 330 },
+    { title: 'A. R. Rahman', wiki: 'A. R. Rahman', hue: 160 },
+    { title: 'Atif Aslam', wiki: 'Atif Aslam', hue: 210 },
+    { title: 'Kishore Kumar', wiki: 'Kishore Kumar', hue: 40 },
+  ];
+
+  const THROWBACK = [
+    { title: 'Tum Bin', sub: '2001 · Nikhil–Vinay', wiki: 'Tum Bin', hue: 350 },
+    { title: 'Dil Chahta Hai', sub: '2001 · Shankar–Ehsaan–Loy', wiki: 'Dil Chahta Hai', hue: 190 },
+    { title: 'Kal Ho Naa Ho', sub: '2003 · Shankar–Ehsaan–Loy', wiki: 'Kal Ho Naa Ho', hue: 210 },
+    { title: 'Veer-Zaara', sub: '2004 · Madan Mohan', wiki: 'Veer-Zaara', hue: 30 },
+    { title: 'Rang De Basanti', sub: '2006 · A. R. Rahman', wiki: 'Rang De Basanti', hue: 40 },
+    { title: 'Saathiya', sub: '2002 · A. R. Rahman', wiki: 'Saathiya (film)', hue: 0 },
+    { title: 'Jodhaa Akbar', sub: '2008 · A. R. Rahman', wiki: 'Jodhaa Akbar', hue: 20 },
+  ];
+
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  const art = (it, label = it.title) => `
+    <div class="art" ${it.wiki ? `data-wiki="${esc(it.wiki)}"` : ''} style="--h:${it.hue ?? 0};${it.pos ? `--pos:${it.pos}` : ''}">
+      <div class="art-fb"><i></i><i></i><span>${esc(label)}</span></div>
+      <img alt="" decoding="async">
+    </div>`;
+
+  const heart = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-7.5-4.4-9.6-9.2C1 8.6 3 5 6.6 5c2.1 0 3.6 1.1 4.5 2.6h1.8C13.8 6.1 15.3 5 17.4 5 21 5 23 8.6 21.6 11.8 19.5 16.6 12 21 12 21Z"/></svg>';
+
+  const $ = (id) => document.getElementById(id);
+
+  $('quick').innerHTML = QUICK.map((it) => `
+    <button class="qtile${it.playing ? ' playing' : ''}">
+      ${it.liked ? `<div class="liked">${heart}</div>` : art(it)}
+      <span class="t">${esc(it.title)}</span>
+      ${it.playing ? '<span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>' : ''}
+    </button>`).join('');
+
+  $('soundtracks').innerHTML = SOUNDTRACKS.map((it) => `
+    <button class="card poster">${art(it)}<div class="t">${esc(it.title)}</div><div class="s">${esc(it.sub)}</div></button>`).join('');
+
+  $('mixes').innerHTML = MIXES.map((it) => `
+    <button class="card mix">
+      <div style="position:relative;border-radius:6px;overflow:hidden">${art(it, '')}<div class="band" style="--band:${it.band}">${esc(it.title)}</div></div>
+      <div class="s" style="margin-top:9px">${esc(it.sub)}</div>
+    </button>`).join('');
+
+  $('artists').innerHTML = ARTISTS.map((it) => `
+    <button class="card artist">${art(it)}<div class="t">${esc(it.title)}</div><div class="s">Artist</div></button>`).join('');
+
+  $('throwback').innerHTML = THROWBACK.map((it) => `
+    <button class="card poster">${art(it)}<div class="t">${esc(it.title)}</div><div class="s">${esc(it.sub)}</div></button>`).join('');
+
+  // Fetch lead images (movie posters, artist photos) from Wikipedia in one request.
+  (async function loadArtwork() {
+    const nodes = [...document.querySelectorAll('.art[data-wiki]')];
+    const titles = [...new Set(nodes.map((n) => n.dataset.wiki))];
+    const params = new URLSearchParams({
+      action: 'query', prop: 'pageimages', piprop: 'thumbnail', pithumbsize: '480',
+      pilicense: 'any', redirects: '1', format: 'json', formatversion: '2', origin: '*',
+      titles: titles.join('|'),
+    });
+    try {
+      const res = await fetch('https://en.wikipedia.org/w/api.php?' + params);
+      const { query } = await res.json();
+      const hop = (list, t) => (list || []).find((x) => x.from === t)?.to || t;
+      const src = {};
+      for (const p of query.pages || []) if (p.thumbnail) src[p.title] = p.thumbnail.source;
+      for (const n of nodes) {
+        const url = src[hop(query.redirects, hop(query.normalized, n.dataset.wiki))];
+        if (!url) continue;
+        const img = n.querySelector('img');
+        img.onload = () => n.classList.add('loaded');
+        img.src = url;
+      }
+    } catch (_) { /* offline: the designed fallback covers stay */ }
+  })();
+
+  /* ─────────────────────────── Fit device ─────────────────────────── */
+
+  const stage = $('stage'), device = $('device'), screen = $('screen');
+  const framed = () => !matchMedia('(max-width: 520px)').matches;
+
+  function fit() {
+    const s = framed() ? Math.min(1, (innerHeight - 56) / 896) : 1;
+    stage.style.transform = s < 1 ? `scale(${s})` : '';
+  }
+  fit();
+  addEventListener('resize', () => { fit(); measure(); });
+
+  /* ─────────────────────────── Springs ─────────────────────────── */
+
+  class Spring {
+    constructor(v, k, c, eps = 0.01) { this.v = this.t = v; this.vel = 0; this.set(k, c); this.eps = eps; }
+    set(k, c) { this.k = k; this.c = c; return this; }
+    step(dt) {
+      const n = Math.max(1, Math.ceil(dt * 240)), h = dt / n;
+      for (let i = 0; i < n; i++) {
+        const a = -this.k * (this.v - this.t) - this.c * this.vel;
+        this.vel += a * h;
+        this.v += this.vel * h;
+      }
+      if (Math.abs(this.vel) < this.eps && Math.abs(this.v - this.t) < this.eps) { this.v = this.t; this.vel = 0; }
+    }
+  }
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Gentle, near-critically-damped motion; a touch softer for the morph.
+  const SOFT = reduced ? [600, 50] : [190, 25.5];
+  const FOLLOW = [1300, 72];
+  const MORPH = reduced ? [600, 50] : [130, 21.5];
+
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  const easeInOut = (t) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const rubber = (o, c) => c * (1 - 1 / (o / c * 0.7 + 1));
+
+  /* ─────────────────────────── Geometry ─────────────────────────── */
+
+  const CARD_W = 184, CARD_H = 120, DISC = 120, EDGE = 8;
+  const player = $('player'), cardFace = $('cardFace'), discFace = $('discFace'),
+        spinEl = $('spin'), discStatic = $('discStatic'), tabbar = $('tabbar'),
+        edgeHint = $('edgeHint'), appbar = $('appbar');
+
+  let W = 402, H = 874, tabH = 124, topSafe = 56;
+  function measure() {
+    W = device.clientWidth; H = device.clientHeight; tabH = tabbar.offsetHeight;
+    topSafe = framed() ? 56 : appbar.offsetHeight - 40;
+  }
+  measure();
+
+  const tab = new Spring(0, ...(reduced ? [600, 50] : [150, 25]), 0.001);   // 0 shown → 1 hidden
+
+  function bounds() {
+    const shownBottom = H - tabH + 46;                       // resting just above the tab labels
+    const hiddenBottom = H - Math.max(16, tabH - 97);         // above the home indicator
+    const maxBottom = lerp(shownBottom, hiddenBottom, clamp(tab.v, 0, 1));
+    return {
+      cxMin: EDGE + CARD_W / 2,
+      cxMax: W - EDGE - CARD_W / 2,
+      cyMin: topSafe + CARD_H / 2,
+      cyMax: maxBottom - CARD_H / 2,
+    };
+  }
+
+  /* ─────────────────────────── State ─────────────────────────── */
+
+  let mode = 'card';      // 'card' | 'disc'
+  let side = 'right';
+  let stick = true;       // follows the tab bar when resting at the bottom
+  let playing = true;
+  let drag = null;
+  let suppressClick = false;
+
+  const b0 = bounds();
+  const cx = new Spring(b0.cxMax, ...SOFT, 0.05);
+  const cy = new Spring(b0.cyMax, ...SOFT, 0.05);
+  const m = new Spring(0, ...MORPH, 0.0005);           // 0 card → 1 disc
+  const press = new Spring(1, 520, 34, 0.0005);
+  const hint = new Spring(0, 260, 30, 0.001);
+  const omega = new Spring(0, 5, 4.6, 0.01);           // disc angular velocity, slow spin-up
+  const settle = new Spring(0, 230, 30, 0.01);         // rights the disc before it unfolds
+  let angle = 0, settling = false, unfoldPending = false;
+
+  let progress = 0.38;
+  const DURATION = 341;  // 5:41
+
+  /* ─────────────────────────── Render loop ─────────────────────────── */
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.034, (now - last) / 1000);
+    last = now;
+
+    tab.step(dt);
+    const b = bounds();
+
+    if (!drag) {
+      if (stick) cy.t = b.cyMax;
+      else cy.t = clamp(cy.t, b.cyMin, b.cyMax);
+    }
+
+    cx.step(dt); cy.step(dt); m.step(dt); press.step(dt); hint.step(dt);
+
+    // Spin only once fully a disc; otherwise glide back to upright.
+    if (mode === 'disc' && m.v > 0.86) {
+      settling = false;
+      omega.t = playing && !reduced ? 42 : 0;
+      omega.step(dt);
+      angle = (angle + omega.v * dt) % 360;
+    } else {
+      if (!settling) {
+        settling = true;
+        settle.v = angle; settle.vel = omega.v;
+        settle.t = angle < 8 ? 0 : 360;
+        omega.v = 0;
+      }
+      settle.step(dt);
+      angle = settle.v;
+      if (settle.t === 360 && settle.v === 360) { angle = settle.v = settle.t = 0; }
+    }
+
+    // Unfold into the card only once the disc is upright again.
+    if (unfoldPending && Math.abs(settle.t - settle.v) < 14) { unfoldPending = false; m.t = 0; }
+
+    if (playing) progress = (progress + dt / DURATION) % 1;
+
+    render(b);
+    requestAnimationFrame(frame);
+  }
+
+  function render(b) {
+    const mv = clamp(m.v, 0, 1);
+    const shrink = easeInOut(smooth(0.32, 1, mv));
+    const w = lerp(CARD_W, DISC, shrink);
+    const r = lerp(30, DISC / 2, shrink);
+
+    player.style.width = w + 'px';
+    player.style.borderRadius = r + 'px';
+    player.style.transform = `translate3d(${cx.v - w / 2}px, ${cy.v - CARD_H / 2}px, 0) scale(${press.v})`;
+    player.style.setProperty('--p', progress.toFixed(4));
+
+    // Card UI dissolves first…
+    const cardOut = smooth(0.02, 0.3, mv);
+    cardFace.style.opacity = 1 - cardOut;
+    cardFace.style.transform = `scale(${1 - cardOut * 0.06})`;
+    cardFace.style.pointerEvents = mv > 0.15 ? 'none' : '';
+
+    // …while the album art blooms out of its thumbnail and fills the shape.
+    const grow = easeInOut(smooth(0, 0.55, mv));
+    const artX = w / 2 - CARD_W / 2 + 40, artY = 42;
+    const R = lerp(31, Math.hypot(w, CARD_H) / 2 + 2, grow);
+    const X = lerp(artX, w / 2, grow), Y = lerp(artY, CARD_H / 2, grow);
+    discFace.style.opacity = smooth(0, 0.12, mv);
+    discFace.style.clipPath = `circle(${R}px at ${X}px ${Y}px)`;
+    discStatic.style.opacity = smooth(0.72, 1, mv);
+    spinEl.style.transform = `rotate(${angle}deg)`;
+
+    tabbar.style.transform = `translate3d(0, ${(tab.v * (tabH + 2)).toFixed(2)}px, 0)`;
+
+    const hv = clamp(hint.v, 0, 1);
+    edgeHint.style.opacity = hv;
+    edgeHint.style.transform = `translate3d(${side === 'right' ? W - 4 : -1}px, ${cy.v - 75}px, 0) scaleY(${0.6 + hv * 0.4})`;
+  }
+
+  requestAnimationFrame((t) => { last = t; frame(t); });
+
+  /* ─────────────────────────── Tab bar on scroll ─────────────────────────── */
+
+  let lastY = 0, acc = 0, tabsHidden = false;
+  function setTabs(hidden) {
+    if (hidden === tabsHidden) return;
+    tabsHidden = hidden;
+    tab.t = hidden ? 1 : 0;
+  }
+  screen.addEventListener('scroll', () => {
+    const y = screen.scrollTop;
+    const d = y - lastY;
+    lastY = y;
+    appbar.classList.toggle('scrolled', y > 6);
+    const atEnd = y + screen.clientHeight >= screen.scrollHeight - 2;
+    if (y < 24) { setTabs(false); acc = 0; return; }
+    if (atEnd && d < 0) return;                        // ignore rubber-band bounce
+    if ((d > 0) !== (acc > 0)) acc = 0;
+    acc += d;
+    if (acc > 14) setTabs(true);
+    else if (acc < -14) setTabs(false);
+  }, { passive: true });
+
+  // Scroll the feed when the wheel is over the floating player (desktop).
+  player.addEventListener('wheel', (e) => { screen.scrollBy({ top: e.deltaY }); e.preventDefault(); }, { passive: false });
+
+  /* ─────────────────────────── Gestures ─────────────────────────── */
+
+  const scale = () => device.getBoundingClientRect().width / device.offsetWidth || 1;
+  const cardBound = (s, b) => (s === 'right' ? b.cxMax : b.cxMin);
+  const discX = (s) => (s === 'right' ? W : 0);
+
+  function velocity() {
+    const s = drag.samples;
+    const a = s[0], z = s[s.length - 1];
+    const dtm = Math.max(16, z.t - a.t);
+    const k = scale();
+    return { vx: (z.x - a.x) / dtm / k, vy: (z.y - a.y) / dtm / k };   // px per ms
+  }
+
+  player.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || drag) return;
+    drag = {
+      id: e.pointerId, sx: e.clientX, sy: e.clientY,
+      scx: cx.v, scy: cy.v, moved: false, over: 0, push: null,
+      samples: [{ t: e.timeStamp, x: e.clientX, y: e.clientY }],
+    };
+    press.t = mode === 'disc' ? 0.94 : 0.975;
+  });
+
+  addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const k = scale();
+    const dx = (e.clientX - drag.sx) / k, dy = (e.clientY - drag.sy) / k;
+
+    if (!drag.moved) {
+      if (Math.hypot(dx, dy) < 6) return;
+      drag.moved = true;
+      player.setPointerCapture(e.pointerId);
+      player.classList.add('grabbing');
+      cx.set(...FOLLOW); cy.set(...FOLLOW);
+      press.t = mode === 'disc' ? 0.97 : 1.02;
+    }
+
+    drag.samples.push({ t: e.timeStamp, x: e.clientX, y: e.clientY });
+    while (drag.samples.length > 2 && e.timeStamp - drag.samples[0].t > 90) drag.samples.shift();
+
+    const b = bounds();
+    const y = drag.scy + dy;
+    cy.t = y < b.cyMin ? b.cyMin - rubber(b.cyMin - y, 50) : y > b.cyMax ? b.cyMax + rubber(y - b.cyMax, 50) : y;
+
+    if (mode === 'disc') {
+      const inward = side === 'right' ? -dx : dx;
+      const peek = rubber(Math.max(0, inward), 46);
+      cx.t = discX(side) + (side === 'right' ? -peek : peek);
+      m.t = 1 - 0.2 * smooth(0, 80, inward);
+      if (inward > 80) {
+        // Pulled out: becomes a card under the finger and keeps following it.
+        mode = 'card';
+        m.t = 0.9; unfoldPending = true;
+        drag.scx = cardBound(side, b) - dx;
+        drag.scy = cy.t - dy;
+        press.t = 1.02;
+      }
+      return;
+    }
+
+    const x = drag.scx + dx;
+    drag.over = 0; drag.push = null;
+    if (x > b.cxMax) { drag.over = x - b.cxMax; drag.push = 'right'; cx.t = b.cxMax + rubber(drag.over, 90); }
+    else if (x < b.cxMin) { drag.over = b.cxMin - x; drag.push = 'left'; cx.t = b.cxMin - rubber(drag.over, 90); }
+    else cx.t = x;
+
+    // Pushing into the edge previews the fold: the art starts to bloom.
+    if (drag.push) side = drag.push;
+    if (!unfoldPending) m.t = drag.push ? 0.3 * smooth(0, 120, drag.over) : 0;
+    hint.t = drag.push ? smooth(10, 90, drag.over) : 0;
+  });
+
+  function endDrag(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag;
+    press.t = 1;
+    hint.t = 0;
+    player.classList.remove('grabbing');
+    cx.set(...SOFT); cy.set(...SOFT);
+
+    if (!d.moved) {
+      drag = null;
+      if (mode === 'disc' && e.type === 'pointerup') undock();
+      return;
+    }
+
+    suppressClick = true;
+    setTimeout(() => { suppressClick = false; }, 60);
+    const { vx, vy } = velocity();
+    drag = null;
+    const b = bounds();
+
+    if (mode === 'disc') {
+      cx.t = discX(side);
+      cy.t = clamp(cy.v + vy * 120, b.cyMin, b.cyMax); cy.vel = vy * 1000;
+      m.t = 1;
+      stick = cy.t >= b.cyMax - 6;
+      return;
+    }
+
+    const outward = d.push === 'right' ? vx : -vx;
+    if (d.push && (d.over > 76 || (d.over > 18 && outward > 0.45))) {
+      dock(d.push, vy);
+      return;
+    }
+
+    // Glide to the nearest edge, carrying the fling.
+    const projected = cx.v + vx * 220;
+    side = projected < W / 2 ? 'left' : 'right';
+    cx.t = cardBound(side, b); cx.vel = vx * 1000;
+    cy.t = clamp(cy.v + vy * 160, b.cyMin, b.cyMax); cy.vel = vy * 1000;
+    stick = cy.t >= b.cyMax - 6;
+    if (!unfoldPending) m.t = 0;
+  }
+  addEventListener('pointerup', endDrag);
+  addEventListener('pointercancel', endDrag);
+
+  player.addEventListener('click', (e) => {
+    if (suppressClick) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+  function dock(s, vy = 0) {
+    const b = bounds();
+    mode = 'disc'; side = s; unfoldPending = false;
+    cx.t = discX(s);
+    cy.t = clamp(cy.v + vy * 100, b.cyMin, b.cyMax); cy.vel = vy * 600;
+    stick = cy.t >= b.cyMax - 6;
+    m.t = 1;
+    player.tabIndex = 0;
+    player.setAttribute('aria-label', 'Now playing: Koi Fariyaad. Activate to expand the player');
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
+
+  function undock() {
+    const b = bounds();
+    mode = 'card';
+    cx.t = cardBound(side, b);
+    m.t = 0.9; unfoldPending = true;
+    player.removeAttribute('tabindex');
+    player.setAttribute('aria-label', 'Now playing: Koi Fariyaad by Jagjit Singh');
+  }
+
+  player.addEventListener('keydown', (e) => {
+    if (mode === 'disc' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); undock(); }
+  });
+
+  /* ─────────────────────────── Controls ─────────────────────────── */
+
+  const toastEl = $('toast');
+  let toastTimer;
+  function toast(msg, ms = 2200) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+  }
+
+  player.querySelectorAll('.ctl').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const a = btn.dataset.action;
+      if (a === 'play') {
+        playing = !playing;
+        btn.classList.toggle('toggled', !playing);
+        btn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+        document.body.classList.toggle('paused', !playing);
+      } else if (a === 'like') {
+        const on = !btn.classList.contains('toggled');
+        btn.classList.toggle('toggled', on);
+        btn.setAttribute('aria-pressed', on);
+        toast(on ? 'Added to Liked Songs' : 'Removed from Liked Songs');
+      } else if (a === 'devices') {
+        toast('Listening on this phone');
+      }
+    });
+  });
+
+  if (!framed()) setTimeout(() => toast('Tip: push the player into the screen edge', 3200), 900);
+})();
+</script>
+</body>
+</html>
