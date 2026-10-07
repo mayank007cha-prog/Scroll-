@@ -138,12 +138,12 @@
   const easeOutCubic = (x) => 1 - Math.pow(1 - clamp(x), 3);
 
   // ---------------------------------------------------------------- sound
-  // Two simple, soft sounds (synthesised live with Web Audio):
-  //   roll(speed) – a muffled foam-roller "rrr" that follows the roller's speed
-  //   stick(k)    – a short paper "pat" when the sheet presses onto the wall
+  // Two clean, simple sounds made only from pure tones (no noise):
+  //   roll(speed) – a smooth, low hum, like a roller gliding on a glossy surface
+  //   stick(k)    – a soft, round "tup" when the sheet presses onto the wall
   const sfx = (() => {
     const enabled = new URLSearchParams(location.search).get('sound') !== '0';
-    let ac = null, out = null, noise = null, roller = null;
+    let ac = null, out = null, roller = null;
 
     function unlock() {
       if (!enabled) return;
@@ -153,74 +153,60 @@
         ac = new AC();
         out = ac.createGain();
         out.gain.value = CONFIG.soundVolume;
-        const comp = ac.createDynamicsCompressor();
-        comp.threshold.value = -20; comp.knee.value = 16; comp.ratio.value = 3;
-        out.connect(comp).connect(ac.destination);
-        noise = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
-        const d = noise.getChannelData(0);
-        let b = 0;
-        for (let i = 0; i < d.length; i++) { b = 0.97 * b + 0.03 * (Math.random() * 2 - 1); d[i] = b * 6; } // soft, brownish noise
+        const tone = ac.createBiquadFilter();
+        tone.type = 'lowpass'; tone.frequency.value = 1800; tone.Q.value = 0.5;
+        out.connect(tone).connect(ac.destination);
       }
       if (ac.state === 'suspended') ac.resume();
     }
 
     const ok = () => ac && ac.state !== 'closed';
-    const filter = (type, f, q = 0.6) => { const n = ac.createBiquadFilter(); n.type = type; n.frequency.value = f; n.Q.value = q; return n; };
 
     function start() {
       if (!ok()) return;
       stop(0.02);
-      const src = ac.createBufferSource(); src.buffer = noise; src.loop = true;
-      const lp = filter('lowpass', 420, 0.5);
       const level = ac.createGain(); level.gain.value = 0;
-      // the foam sleeve turning: a gentle, fast wobble in loudness
-      const nap = ac.createOscillator(); nap.frequency.value = 18;
-      const depth = ac.createGain(); depth.gain.value = 0;
-      nap.connect(depth).connect(level.gain);
-      src.connect(lp).connect(level).connect(out);
-      src.start(); nap.start();
-      roller = { src, lp, level, nap, depth };
+      level.connect(out);
+      const base = ac.createOscillator(); base.type = 'sine'; base.frequency.value = 95;
+      const over = ac.createOscillator(); over.type = 'sine'; over.frequency.value = 190;
+      const overLevel = ac.createGain(); overLevel.gain.value = 0.12; // a hint of brightness
+      base.connect(level);
+      over.connect(overLevel).connect(level);
+      base.start(); over.start();
+      roller = { level, base, over };
     }
 
     function roll(speed) {
       if (!roller) return;
       const k = clamp(speed / 1500);
       const t = ac.currentTime;
-      roller.level.gain.setTargetAtTime(0.32 * k, t, 0.04);
-      roller.depth.gain.setTargetAtTime(0.1 * k, t, 0.04);
-      roller.nap.frequency.setTargetAtTime(12 + 22 * k, t, 0.06);
-      roller.lp.frequency.setTargetAtTime(320 + 260 * k, t, 0.06);
+      const f = 85 + 40 * k;
+      roller.level.gain.setTargetAtTime(0.16 * Math.pow(k, 0.8), t, 0.06);
+      roller.base.frequency.setTargetAtTime(f, t, 0.08);
+      roller.over.frequency.setTargetAtTime(f * 2, t, 0.08);
     }
 
-    function stop(fade = 0.12) {
+    function stop(fade = 0.15) {
       if (!roller) return;
       const r = roller; roller = null;
       const t = ac.currentTime;
       r.level.gain.cancelScheduledValues(t);
       r.level.gain.setTargetAtTime(0, t, fade / 3);
-      r.depth.gain.cancelScheduledValues(t);
-      r.depth.gain.setTargetAtTime(0, t, fade / 3);
-      r.src.stop(t + fade + 0.1); r.nap.stop(t + fade + 0.1);
+      r.base.stop(t + fade + 0.1); r.over.stop(t + fade + 0.1);
     }
 
-    // paper pressed onto the wall: soft papery pat + a tiny low thump
     function stick(k = 1) {
       if (!ok()) return;
       const t = ac.currentTime;
-      const n = ac.createBufferSource(); n.buffer = noise;
-      const ng = ac.createGain();
-      ng.gain.setValueAtTime(0.0001, t);
-      ng.gain.exponentialRampToValueAtTime(0.5 * k, t + 0.004);
-      ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
-      n.connect(filter('bandpass', 1100, 0.8)).connect(ng).connect(out);
-      n.start(t, Math.random()); n.stop(t + 0.12);
       const o = ac.createOscillator(); o.type = 'sine';
-      o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(70, t + 0.06);
-      const og = ac.createGain();
-      og.gain.setValueAtTime(0.0001, t);
-      og.gain.exponentialRampToValueAtTime(0.16 * k, t + 0.004);
-      og.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
-      o.connect(og).connect(out); o.start(t); o.stop(t + 0.1);
+      o.frequency.setValueAtTime(210, t);
+      o.frequency.exponentialRampToValueAtTime(120, t + 0.07);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.28 * k, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+      o.connect(g).connect(out);
+      o.start(t); o.stop(t + 0.12);
     }
 
     return { unlock, start, roll, stop, stick };
