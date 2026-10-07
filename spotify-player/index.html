@@ -301,16 +301,21 @@
     touch-action: none;
     cursor: grab;
     will-change: transform, width, border-radius;
+    outline: none;
+  }
+  .card-bg {
+    position: absolute; inset: 0; border-radius: inherit;
     background: linear-gradient(165deg, var(--pc1) 0%, var(--pc2) 45%, var(--pc3) 100%);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, .09),
       inset 0 0 0 1px rgba(255, 255, 255, .05),
       0 22px 44px -12px rgba(0, 0, 0, .7),
       0 6px 14px -4px rgba(0, 0, 0, .45);
-    outline: none;
   }
+  .disc-shadow { position: absolute; left: 0; top: 0; border-radius: 50%; opacity: 0;
+    box-shadow: 0 18px 36px -10px rgba(0, 0, 0, .7), 0 5px 12px -4px rgba(0, 0, 0, .45); }
   .player.grabbing { cursor: grabbing; }
-  .player:focus-visible { box-shadow: 0 0 0 3px rgba(255, 255, 255, .9), 0 22px 44px -12px rgba(0, 0, 0, .7); }
+  .player:focus-visible { box-shadow: 0 0 0 3px rgba(255, 255, 255, .9); }
 
   .clip { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
 
@@ -388,13 +393,14 @@
 
   .disc-face { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
   .disc-face .art { position: absolute; inset: 0; border-radius: 0; background: var(--pc3); }
-  .spin { position: absolute; inset: 0; will-change: transform; }
+  /* The disc is the round art itself: it grows from the card's thumbnail with one turn */
+  .spin { position: absolute; left: 0; top: 0; border-radius: 50%; overflow: hidden; will-change: transform; }
   .grooves {
     position: absolute; inset: 0; border-radius: 50%;
     background: repeating-radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 0 2.4px, rgba(0, 0, 0, .09) 2.4px 3.2px);
     mix-blend-mode: multiply;
   }
-  .disc-static { position: absolute; inset: 0; border-radius: 50%; opacity: 0; }
+  .disc-static { position: absolute; left: 0; top: 0; border-radius: 50%; opacity: 0; }
   .sheen {
     position: absolute; inset: 0; border-radius: 50%;
     background: conic-gradient(from 210deg, transparent 0deg, rgba(255, 255, 255, .22) 28deg, transparent 70deg, transparent 180deg, rgba(255, 255, 255, .14) 212deg, transparent 250deg);
@@ -678,6 +684,8 @@
 
     <!-- Floating player: one element that morphs between card and disc -->
     <div class="player" id="player" role="group" tabindex="0" aria-label="Now playing: Koi Fariyaad. Activate to expand the player">
+      <div class="card-bg" id="cardBg"></div>
+      <div class="disc-shadow" id="discShadow"></div>
       <div class="clip">
         <div class="card-face" id="cardFace">
           <div class="np-pill">
@@ -984,7 +992,7 @@
   // Gentle, near-critically-damped motion; a touch softer for the morph.
   const SOFT = reduced ? [600, 50] : [190, 25.5];
   const FOLLOW = [1300, 72];
-  const MORPH = reduced ? [600, 50] : [130, 21.5];
+  const MORPH = reduced ? [600, 50] : [95, 19.5];   // slow, no overshoot: one smooth turn
 
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -996,6 +1004,7 @@
 
   const CARD_W = 184, CARD_H = 120, DISC = 120, EDGE = 8;
   const player = $('player'), cardFace = $('cardFace'), discFace = $('discFace'), videoFace = $('videoFace'),
+        cardBg = $('cardBg'), discShadow = $('discShadow'),
         spinEl = $('spin'), discStatic = $('discStatic'), tabbar = $('tabbar'),
         edgeHint = $('edgeHint'), appbar = $('appbar');
 
@@ -1038,7 +1047,7 @@
   const press = new Spring(1, 520, 34, 0.0005);
   const hint = new Spring(0, 260, 30, 0.001);
   const omega = new Spring(0, 5, 4.6, 0.01);           // disc angular velocity, slow spin-up
-  const settle = new Spring(0, 230, 30, 0.01);         // rights the disc before it unfolds
+  const settle = new Spring(0, ...MORPH, 0.01);        // eases the spin back upright in step with the unfold
   let angle = 0, settling = false, unfoldPending = false;
   const vm = new Spring(0, 200, 28, 0.001);            // 0 audio card → 1 video card
 
@@ -1071,8 +1080,8 @@
     } else {
       if (!settling) {
         settling = true;
-        settle.v = angle; settle.vel = omega.v;
-        settle.t = angle < 8 ? 0 : 360;
+        settle.v = angle; settle.vel = 0;
+        settle.t = angle < 180 ? 0 : 360;
         omega.v = 0;
       }
       settle.step(dt);
@@ -1102,24 +1111,26 @@
     player.style.transform = `translate3d(${cx.v - w / 2}px, ${cy.v - CARD_H / 2}px, 0) scale(${press.v})`;
     device.style.setProperty('--p', progress.toFixed(4));
 
-    // Card UI dissolves first…
-    const cardOut = smooth(0.02, 0.3, mv), vv = clamp(vm.v, 0, 1);
+    // The card quietly fades while its round art grows into the disc, turning once on the way.
+    const e = easeInOut(mv), vv = clamp(vm.v, 0, 1);
+    const cardOut = smooth(0.05, 0.6, mv);
+    cardBg.style.opacity = 1 - smooth(0.25, 0.85, mv);
     cardFace.style.opacity = (1 - cardOut) * (1 - vv);
-    cardFace.style.transform = `scale(${1 - cardOut * 0.06})`;
+    cardFace.style.transform = `scale(${1 - cardOut * 0.03})`;
     cardFace.style.pointerEvents = mv > 0.15 || vv > 0.5 ? 'none' : '';
     videoFace.style.opacity = (1 - cardOut) * vv;
     videoFace.style.pointerEvents = mv > 0.15 || vv < 0.5 ? 'none' : 'auto';
 
-    // …while the album art blooms out of its thumbnail (or the whole video card) and fills the shape.
-    const grow = easeInOut(smooth(0, 0.55, mv));
-    const cover = Math.hypot(w, CARD_H) / 2 + 2;
-    const artX = lerp(w / 2 - CARD_W / 2 + 40, w / 2, vv), artY = lerp(42, CARD_H / 2, vv);
-    const R = lerp(lerp(31, cover, vv), cover, grow);
-    const X = lerp(artX, w / 2, grow), Y = lerp(artY, CARD_H / 2, grow);
-    discFace.style.opacity = smooth(0, 0.12, mv);
-    discFace.style.clipPath = `circle(${R}px at ${X}px ${Y}px)`;
-    discStatic.style.opacity = smooth(0.72, 1, mv);
-    spinEl.style.transform = `rotate(${angle}deg)`;
+    const X0 = lerp(w / 2 - CARD_W / 2 + 40, w / 2, vv), Y0 = lerp(42, CARD_H / 2, vv), R0 = lerp(31, 48, vv);
+    const R = lerp(R0, DISC / 2, e), X = lerp(X0, w / 2, e), Y = lerp(Y0, CARD_H / 2, e);
+    const disc = `translate3d(${X - R}px, ${Y - R}px, 0)`;
+    discFace.style.opacity = vv > 0.5 ? smooth(0, 0.25, mv) : smooth(0, 0.04, mv);
+    for (const el of [spinEl, discStatic, discShadow]) { el.style.width = el.style.height = `${2 * R}px`; }
+    spinEl.style.transform = `${disc} rotate(${angle + e * 360}deg)`;
+    discStatic.style.transform = disc;
+    discStatic.style.opacity = smooth(0.6, 1, mv);
+    discShadow.style.transform = disc;
+    discShadow.style.opacity = smooth(0.3, 0.9, mv);
 
     tabbar.style.transform = `translate3d(0, ${(tab.v * (tabH + 2)).toFixed(2)}px, 0)`;
 
@@ -1233,7 +1244,7 @@
       if (inward > 80) {
         // Pulled out: becomes a card under the finger and keeps following it.
         mode = 'card';
-        m.t = 0.9; unfoldPending = true;
+        m.t = 0;
         drag.scx = cardBound(side, b) - dx;
         drag.scy = cy.t - dy;
         press.t = 1.02;
@@ -1249,7 +1260,7 @@
 
     // Pushing into the edge previews the fold: the art starts to bloom.
     if (drag.push) side = drag.push;
-    if (!unfoldPending) m.t = drag.push ? 0.3 * smooth(0, 120, drag.over) : 0;
+    if (!unfoldPending) m.t = drag.push ? 0.12 * smooth(0, 120, drag.over) : 0;
     hint.t = drag.push ? smooth(10, 90, drag.over) : 0;
   });
 
@@ -1329,7 +1340,7 @@
     const b = bounds();
     mode = 'card';
     cx.t = cardBound(side, b);
-    m.t = 0.9; unfoldPending = true;
+    m.t = 0;
     player.removeAttribute('tabindex');
     player.setAttribute('aria-label', nowPlayingLabel());
   }
