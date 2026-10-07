@@ -112,6 +112,32 @@ body {
   will-change: transform;
 }
 
+/* Where the roller presses the paper on: a dark contact shadow right under
+   the roller, then a band of fresh, still-wet paste that fades as it dries. */
+.sheet__press {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 220px;
+  pointer-events: none;
+  background:
+    /* the roller's own shadow, right under its head */
+    radial-gradient(ellipse 34% 34px at 50% 30px, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 100%),
+    /* pressed-down crease across the sheet */
+    linear-gradient(to bottom,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0.26) 24px,
+      rgba(0, 0, 0, 0.1) 46px,
+      rgba(0, 0, 0, 0) 80px),
+    /* fresh, still-wet paste that fades as it dries */
+    linear-gradient(to bottom,
+      rgba(10, 20, 35, 0) 2px,
+      rgba(10, 20, 35, 0.2) 26px,
+      rgba(10, 20, 35, 0.08) 120px,
+      rgba(10, 20, 35, 0) 220px);
+}
+
 /* Loose paper flap above the roller (canvas) */
 .flap {
   position: absolute;
@@ -281,7 +307,7 @@ body {
   transform: translate3d(0, 120vh, 0);
   visibility: hidden;
   will-change: transform, opacity;
-  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.18));
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3)) drop-shadow(0 16px 16px rgba(0, 0, 0, 0.28));
 }
 .roller.is-active { visibility: visible; }
 

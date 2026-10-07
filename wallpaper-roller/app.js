@@ -54,12 +54,16 @@
     flapMaxAngle: 200,             // never fold further back than this
     ripple: 14,                    // deg of soft, uneven waviness across the width (makes it read as paper)
     rollerFrontZ: 12,              // paper further forward than this (px) is drawn over the roller
-    perspective: 820,              // px camera distance
+    perspective: 560,              // px camera distance (smaller = deeper perspective)
+    // The loose top falls: it starts standing up, then flops over onto the roller
+    fallStartAt: 0.45,             // × enterDuration: when the paper starts to fall over
+    fallStiffness: 95,             // spring of the fall (lower = slower, floppier)
+    fallDamping: 7.5,              // lower = more bounce when it lands on the roller
     droopPerSpeed: 0.013,          // deg the hanging paper swings out per px/s of roller speed
     droopMax: 46,
     flapStiffness: 130,            // spring (soft paper wobble)
     flapDamping: 9.5,
-    flutter: 2.2,                  // deg of idle flutter
+    flutter: 5,                    // deg of gentle flutter while rolling
     cornerSag: 12,                 // deg the corners fold over further than the middle
     twist: 5,                      // deg of slow left/right wobble
     paperBack: [241, 238, 231],    // colour of the back of the paper (warm off-white)
@@ -275,6 +279,7 @@
   let canvasH = 0, canvasHinge = 0;
   let last = null;           // previous frame (for velocities)
   let droop = 0, droopVel = 0;
+  let fall = 0, fallVel = 0;   // 0 = loose paper standing up, 1 = draped over the roller
 
   function measure() {
     const s = stage.getBoundingClientRect();
@@ -489,12 +494,13 @@
         const cx = W / 2, cy = lineY; // perspective centred on the roller, so the fold drops onto it
         const base = CONFIG.flapBaseAngle;
         // moving fast makes the hanging paper swing out (smaller angle), then it settles back
-        const tip = CONFIG.flapTipAngle - droop * 0.7 + Math.sin(tSec * 7.3) * CONFIG.flutter;
-        const sag = CONFIG.cornerSag;
-        const ripplePhase = tSec * 2.3;
+        const flutter = Math.sin(tSec * 7.3) * CONFIG.flutter + Math.sin(tSec * 11.9 + 1.1) * CONFIG.flutter * 0.4;
+        const tip = base + (CONFIG.flapTipAngle - base) * fall - droop * 0.7 * fall + flutter * fall;
+        const sag = CONFIG.cornerSag * fall;
+        const ripplePhase = tSec * 4.2; // ripples travel across the width
         const twist = Math.sin(tSec * 3.7 + 0.8) * CONFIG.twist;
         const sway = Math.sin(tSec * 4.1 + 0.6) * 5;
-        const OVERLAP = 6;                         // px of mesh tucked under the stuck paper
+        const OVERLAP = 2;                         // px of mesh tucked under the stuck paper
         const ds = (len + OVERLAP) / NS;
         const offY = lineY - canvasHinge;
         const { sc, bx, by } = cover;
@@ -513,7 +519,7 @@
               const f = smoothstep((sm / len - CONFIG.foldStart) / CONFIG.foldWidth);
               const lean = base * smoothstep(sm / (len * 0.16)); // soft crease at the roller, not a hard fold
               const wave = CONFIG.ripple * (0.65 * Math.sin(xn * 5.3 + ripplePhase) + 0.35 * Math.sin(xn * 11.7 - ripplePhase * 0.7 + 1.3));
-              const phi = rad(Math.min(CONFIG.flapMaxAngle, lean + (tip - base + sag * xn * xn + twist * xn + wave) * f));
+              const phi = rad(Math.min(CONFIG.flapMaxAngle, lean + (tip - base + sag * xn * xn + twist * xn + wave * (0.35 + 0.65 * fall)) * f));
               y -= Math.cos(phi) * ds;
               z += Math.sin(phi) * ds;
             }
@@ -551,9 +557,10 @@
             nx /= nl; ny /= nl; nz /= nl;
             const lit = nx * L[0] + ny * L[1] + nz * L[2];
             const edge = 1 - 0.16 * smoothstep((i - (NS - 2)) / 2); // slightly darker right at the paper's edge
-            const front = clamp(1 - 0.62 * (FLAT_LIT - lit), 0.4, 1.04) * edge; // flat paper = exactly 1
-            const hang = smoothstep((s / len - (CONFIG.foldStart + CONFIG.foldWidth * 0.7)) / 0.3); // 0 at crest → 1 near hem
-            const back = clamp(0.42 + 0.62 * -lit, 0.48, 1.0) * (1 - 0.1 * hang) * edge;
+            const front = clamp(1 - 0.95 * (FLAT_LIT - lit), 0.32, 1.0) * edge; // flat paper = exactly 1
+            const hang = smoothstep((s / len - (CONFIG.foldStart + CONFIG.foldWidth * 0.5)) / 0.42); // 0 at crest → 1 near hem
+            // crest catches the light, the hanging face shades down towards the hem
+            const back = clamp(0.62 + 0.5 * -lit, 0.6, 1.02) * (1 - 0.24 * Math.pow(hang, 1.3)) * edge;
             const nh = nx * Hv[0] + ny * Hv[1] + nz * Hv[2];
             const spec = Math.pow(clamp((nh - FLAT_NH) / (1 - FLAT_NH)), 2) * 0.14; // glint only where it bends towards the light
 
@@ -569,12 +576,12 @@
 
             // cast shadow on the old wallpaper: the lifted paper throws a soft
             // shadow slightly above itself
-            const shY = cy + (y - z * 0.42 - cy) * 1;
+            const shY = cy + (y - z * 0.6 - cy) * 1;
             const edgeFade = 1 - Math.pow(Math.abs(j / NU * 2 - 1), 6);
             shadowVerts[o] = (X / W) * 2 - 1;
             shadowVerts[o + 1] = 1 - ((shY - offY) / canvasH) * 2;
             shadowVerts[o + 2] = 0.999;
-            shadowVerts[o + 8] = 0.3 * Math.pow(clamp(z / (maxZ * 0.5)), 0.8) * edgeFade * (1 - smoothstep((s / len - 0.82) / 0.18));
+            shadowVerts[o + 8] = 0.5 * Math.pow(clamp(z / (maxZ * 0.5)), 0.8) * edgeFade * (1 - smoothstep((s / len - 0.82) / 0.18));
           }
         }
 
@@ -637,9 +644,9 @@
           dropVerts[o0] = (X / W) * 2 - 1;
           dropVerts[o0 + 1] = Yc;
           dropVerts[o0 + 2] = maskZ;
-          dropVerts[o0 + 8] = 0.22;
+          dropVerts[o0 + 8] = 0.42;
           dropVerts[o1] = dropVerts[o0];
-          dropVerts[o1 + 1] = Yc - (10 / canvasH) * 2;
+          dropVerts[o1 + 1] = Yc - (16 / canvasH) * 2;
           dropVerts[o1 + 2] = maskZ;
           dropVerts[o1 + 8] = 0;
         }
@@ -674,6 +681,10 @@
     const acc = CONFIG.flapStiffness * (target - droop) - CONFIG.flapDamping * droopVel;
     droopVel += acc * dt;
     droop += droopVel * dt;
+    // the loose top flops over onto the roller (slight bounce when it lands)
+    const fallTarget = t >= CONFIG.enterDuration * CONFIG.fallStartAt ? 1 : 0;
+    fallVel += (CONFIG.fallStiffness * (fallTarget - fall) - CONFIG.fallDamping * fallVel) * dt;
+    fall += fallVel * dt;
     const edgeSpeed = Math.max(0, v);
     last = { now, y: line.y };
 
@@ -853,7 +864,7 @@
     flyLayer.classList.remove('is-idle');
     parkChat();
     hint.classList.add('is-hidden');
-    last = null; droop = 0; droopVel = 0;
+    last = null; droop = 0; droopVel = 0; fall = 0; fallVel = 0;
     sweepDone = false; returnStart = -1;
 
     sheet.classList.add('is-active');
