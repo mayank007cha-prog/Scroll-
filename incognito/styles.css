@@ -1,0 +1,640 @@
+:root {
+    --home-bg: #000000;
+    --incog-bg: #3c3c3c;
+    --incog-disc: #d9d9d9;
+    --incog-card: #282828;
+    --text: #e3e3e3;
+    --text-dim: #c4c7c5;
+    --link: #a8c7fa;
+    --toolbar-h: 60px;
+    --font: 'Google Sans', 'Product Sans', Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #000;
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+a {
+    color: var(--link);
+}
+
+/* ───────────────────────────── Device shell ─────────────────────────────
+   On a phone the app is simply the viewport. On anything wider it is shown
+   inside a phone-sized frame, so the motion can be reviewed at its real size. */
+
+.Device {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+}
+
+.App {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--home-bg);
+    isolation: isolate;
+}
+
+.StatusBar,
+.Caption {
+    display: none;
+}
+
+@media (min-width: 640px) and (min-height: 640px) {
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        min-height: 100vh;
+        background: radial-gradient(120% 80% at 50% 0%, #1d1d1f 0%, #0a0a0a 60%) fixed;
+    }
+
+    .Device {
+        flex: none;
+        width: 390px;
+        height: min(844px, calc(100vh - 96px));
+        padding: 10px;
+        border-radius: 58px;
+        background: #121212;
+        box-shadow:
+            0 0 0 1.5px #2c2c2e,
+            0 40px 80px -20px rgba(0, 0, 0, .8),
+            inset 0 0 0 1px #000;
+    }
+
+    .App {
+        border-radius: 48px;
+        transform: translateZ(0);
+    }
+
+    .StatusBar {
+        position: absolute;
+        z-index: 20;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 30px 0 44px;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 500;
+        pointer-events: none;
+    }
+
+    .StatusBar-icons {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .App {
+        --safe-top: 50px;
+        --safe-bottom: 22px;
+    }
+
+    .Caption {
+        display: block;
+        max-width: 390px;
+        margin: 0;
+        text-align: center;
+        font-size: 13px;
+        line-height: 20px;
+        color: #8e8e93;
+    }
+
+    .Caption strong {
+        color: #d1d1d6;
+        font-weight: 500;
+    }
+
+    .Caption code {
+        font-size: 12px;
+        color: #d1d1d6;
+    }
+}
+
+/* ───────────────────────────── Google new tab ───────────────────────────── */
+
+.Home {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 8px) 16px calc(var(--toolbar-h) + 24px);
+}
+
+.Home-top {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+    padding-left: 4px;
+}
+
+.Home-links {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+}
+
+.Home-links a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.Avatar {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5b7cfa, #8e5bd8);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.IconButton {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #fff;
+    transition: background-color .2s ease;
+}
+
+.IconButton:disabled {
+    opacity: .38;
+    cursor: default;
+}
+
+.IconButton:not(:disabled):active {
+    background: rgba(255, 255, 255, .12);
+}
+
+.Logo {
+    margin: clamp(40px, 9vh, 76px) 0 28px;
+    font-size: 66px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -1.5px;
+    color: #fff;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.Logo span {
+    display: inline-block;
+}
+
+.Search {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    max-width: 420px;
+    height: 52px;
+    padding: 0 6px 0 16px;
+    border-radius: 26px;
+    background: #fff;
+    color: #1f1f1f;
+}
+
+.Search-plus {
+    color: #444746;
+}
+
+.Search-placeholder {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+    color: #5f6368;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.Search-ai {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 38px;
+    padding: 0 12px 0 10px;
+    border-radius: 19px;
+    background: #f0f4f9;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+    .Search-ai {
+        display: none;
+    }
+}
+
+.Chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    max-width: 420px;
+    margin-top: 12px;
+}
+
+.Chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: #2b2b2d;
+    font-size: 11.5px;
+    line-height: 16px;
+    color: #c4c7c5;
+}
+
+.Chip svg {
+    flex: none;
+    margin-top: 1px;
+    color: #e3e3e3;
+}
+
+.Chip strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #e3e3e3;
+}
+
+.Tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    row-gap: 18px;
+    width: 100%;
+    max-width: 420px;
+    margin: 34px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.Tiles li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #c4c7c5;
+}
+
+.Tile-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--c);
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.Tile-icon--add {
+    background: #2b2b2d;
+    color: #e3e3e3;
+}
+
+.Customise {
+    position: absolute;
+    right: 16px;
+    bottom: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 16px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 18px;
+    background: #1f2a3a;
+    color: #a8c7fa;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* ───────────────────────────── Incognito new tab ───────────────────────────── */
+
+.Incognito {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--incog-bg);
+    visibility: hidden;
+}
+
+.App[data-mode="transition"] .Incognito,
+.App[data-mode="returning"] .Incognito,
+.App[data-mode="incognito"] .Incognito {
+    visibility: visible;
+}
+
+.App[data-mode="incognito"] .Home {
+    visibility: hidden;
+}
+
+.Incognito-inner {
+    display: flex;
+    flex-direction: column;
+    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 8px) 24px calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 32px);
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--text-dim);
+}
+
+.Incognito-top {
+    display: flex;
+    justify-content: flex-end;
+    height: 48px;
+    align-items: center;
+    margin-right: -8px;
+}
+
+.Pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 17px;
+    background: #2a2a2a;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.Pill-close {
+    margin-left: 2px;
+    opacity: .6;
+}
+
+.Badge {
+    align-self: center;
+    margin: clamp(14px, 4vh, 36px) 0 22px;
+}
+
+.Badge-icon {
+    display: block;
+    width: 112px;
+    height: 112px;
+}
+
+.App[data-mode="transition"] .Badge-icon {
+    visibility: hidden;
+}
+
+.Incognito h2 {
+    margin: 0 0 16px;
+    text-align: center;
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 400;
+    color: var(--text);
+}
+
+.Incognito p {
+    margin: 0;
+}
+
+.Lists {
+    display: grid;
+    gap: 18px;
+    margin-top: 22px;
+}
+
+.Lists h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+}
+
+.Lists h3 strong {
+    font-weight: 500;
+}
+
+.Lists ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.Card {
+    margin-top: 26px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--incog-card);
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.Card h3 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* ───────────────────────────── Morph layer ───────────────────────────── */
+
+.Morph {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    overflow: visible;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.App[data-mode="transition"] .Morph {
+    visibility: visible;
+}
+
+.App[data-mode="transition"] .Logo-o {
+    visibility: hidden;
+}
+
+.Morph-disc--fill {
+    fill: var(--incog-disc);
+}
+
+.Morph-glyph {
+    color: #fff;
+}
+
+.Morph-glyph--inverse {
+    color: var(--incog-bg);
+}
+
+/* ───────────────────────────── Toolbar + menu ───────────────────────────── */
+
+.Toolbar {
+    position: absolute;
+    z-index: 10;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
+    padding: 0 8px var(--safe-bottom, env(safe-area-inset-bottom, 0px));
+    background: rgba(16, 16, 16, .92);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .08);
+    transition: background-color .6s cubic-bezier(.2, 0, 0, 1), box-shadow .6s cubic-bezier(.2, 0, 0, 1);
+}
+
+.App.is-incognito-chrome .Toolbar {
+    background: rgba(40, 40, 40, .94);
+    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .06);
+}
+
+.Tabs {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 2px solid currentColor;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.Hint {
+    position: absolute;
+    right: 10px;
+    bottom: calc(100% + 6px);
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #e3e3e3;
+    color: #1f1f1f;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    transform-origin: 90% 100%;
+    animation: hint-in .5s cubic-bezier(.2, 0, 0, 1) 1.2s both;
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+.Hint::after {
+    content: '';
+    position: absolute;
+    right: 22px;
+    top: 100%;
+    border: 6px solid transparent;
+    border-top-color: #e3e3e3;
+}
+
+.Hint.is-gone {
+    opacity: 0;
+    transform: scale(.9);
+}
+
+@keyframes hint-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(.94);
+    }
+}
+
+.Menu {
+    position: absolute;
+    z-index: 30;
+    right: 10px;
+    bottom: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 6px);
+    width: 232px;
+    padding: 8px 0;
+    border-radius: 16px;
+    background: #2b2b2d;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .06);
+    transform-origin: 92% 100%;
+    opacity: 0;
+    transform: scale(.9) translateY(8px);
+    pointer-events: none;
+    transition: opacity .16s ease, transform .22s cubic-bezier(.2, 0, 0, 1);
+}
+
+.Menu.is-open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition: opacity .18s ease, transform .32s cubic-bezier(.2, 0, 0, 1);
+}
+
+.Menu button {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    height: 46px;
+    padding: 0 20px;
+    font-size: 15px;
+    text-align: left;
+    color: var(--text);
+    transition: background-color .15s ease;
+}
+
+.Menu button svg {
+    flex: none;
+    color: #c4c7c5;
+}
+
+.Menu button:active,
+.Menu button.is-pressed {
+    background: rgba(255, 255, 255, .1);
+}
+
+.Menu hr {
+    height: .5px;
+    margin: 6px 0;
+    border: 0;
+    background: rgba(255, 255, 255, .1);
+}

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>Incognito Transition</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <defs>
+        <!-- Incognito glyph in the Figma frame's own coordinate space
+             (frame "5", node 50:147), so every animated part can be keyed
+             straight off the design's numbers. -->
+        <symbol id="glyph" viewBox="682 217 76 72">
+            <path d="M698 246.5L708.6 222.2Q709.3 220.6 711 221L720 223.4L729 221Q730.7 220.6 731.4 222.2L742 246.5Z" fill="currentColor"/>
+            <g fill="none" stroke="currentColor">
+                <path d="M685 253H755" stroke-width="4"/>
+                <path d="M714 272.2Q719.75 270.6 725.5 272.2" stroke-width="3"/>
+                <circle cx="702.77" cy="272.5" r="11.75" stroke-width="3.5"/>
+                <circle cx="737.23" cy="272.5" r="11.75" stroke-width="3.5"/>
+            </g>
+        </symbol>
+    </defs>
+</svg>
+
+<div class="Device">
+    <div class="App" data-mode="normal">
+
+        <div class="StatusBar" aria-hidden="true">
+            <span class="StatusBar-time">9:41</span>
+            <span class="StatusBar-icons">
+                <svg viewBox="0 0 18 12" width="18" height="12"><path fill="currentColor" d="M1 8h3v4H1zM5.5 6h3v6h-3zM10 3.5h3V12h-3zM14.5 1h3v11h-3z"/></svg>
+                <svg viewBox="0 0 16 12" width="16" height="12"><path fill="currentColor" d="M8 2.6c2.3 0 4.4.9 6 2.4l1.1-1.2A10.2 10.2 0 0 0 8 1C5.3 1 2.8 2 .9 3.8L2 5c1.6-1.5 3.7-2.4 6-2.4Zm0 3.3c1.4 0 2.6.5 3.6 1.4l1.1-1.2A6.8 6.8 0 0 0 8 4.3c-1.8 0-3.4.7-4.7 1.8l1.1 1.2c1-.9 2.2-1.4 3.6-1.4ZM8 9.2c.6 0 1.1.2 1.5.6L8 11.4 6.5 9.8c.4-.4.9-.6 1.5-.6Z"/></svg>
+                <svg viewBox="0 0 27 12" width="27" height="12"><rect x=".5" y=".5" width="23" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="8" rx="2" fill="currentColor"/><path d="M25 4v4a2 2 0 0 0 0-4Z" fill="currentColor" opacity=".4"/></svg>
+            </span>
+        </div>
+
+        <!-- ───────────────────────────── Google new tab ───────────────────────────── -->
+        <main class="Home" aria-label="New tab">
+            <header class="Home-top" data-exit>
+                <button class="IconButton" aria-label="Google apps">
+                    <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M6 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>
+                </button>
+                <div class="Home-links">
+                    <a href="#" tabindex="-1">Gmail</a>
+                    <a href="#" tabindex="-1">Images</a>
+                    <span class="Avatar">M</span>
+                </div>
+            </header>
+
+            <h1 class="Logo" aria-label="Google">
+                <span class="Logo-letter" aria-hidden="true">G</span><span class="Logo-o" aria-hidden="true">o</span><span class="Logo-o" aria-hidden="true">o</span><span class="Logo-letter" aria-hidden="true">g</span><span class="Logo-letter" aria-hidden="true">l</span><span class="Logo-letter" aria-hidden="true">e</span>
+            </h1>
+
+            <div class="Search" data-exit>
+                <svg class="Search-plus" viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+                <span class="Search-placeholder">Ask Google</span>
+                <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5.3-3c0 3-2.5 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.7 6.2 6 6.7V21h2v-3.3c3.3-.5 6-3.3 6-6.7h-1.7Z"/></svg>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V7a3 3 0 0 1 3-3h2M15 4h2a3 3 0 0 1 3 3v2M20 15v2a3 3 0 0 1-3 3h-2M9 20H7a3 3 0 0 1-3-3v-2"/><circle cx="12" cy="12" r="3"/></svg>
+                <span class="Search-ai">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M10 2.5c.4 3.9 3.6 7.1 7.5 7.5-3.9.4-7.1 3.6-7.5 7.5-.4-3.9-3.6-7.1-7.5-7.5 3.9-.4 7.1-3.6 7.5-7.5Zm8 11c.2 1.9 1.6 3.3 3.5 3.5-1.9.2-3.3 1.6-3.5 3.5-.2-1.9-1.6-3.3-3.5-3.5 1.9-.2 3.3-1.6 3.5-3.5Z"/></svg>
+                    AI Mode
+                </span>
+            </div>
+
+            <div class="Chips" data-exit>
+                <div class="Chip">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M10 2.5c.4 3.9 3.6 7.1 7.5 7.5-3.9.4-7.1 3.6-7.5 7.5-.4-3.9-3.6-7.1-7.5-7.5 3.9-.4 7.1-3.6 7.5-7.5Zm8 11c.2 1.9 1.6 3.3 3.5 3.5-1.9.2-3.3 1.6-3.5 3.5-.2-1.9-1.6-3.3-3.5-3.5 1.9-.2 3.3-1.6 3.5-3.5Z"/></svg>
+                    <span><strong>Do more with AI Mode</strong>Summarise, plan</span>
+                </div>
+                <div class="Chip">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm1 2v9.6l3.5-3.6 3 3 2-2L18 16.5V6H6Zm9 4.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
+                    <span><strong>Create images</strong>Reimagine, illustrate</span>
+                </div>
+            </div>
+
+            <ul class="Tiles">
+                <li data-exit><span class="Tile-icon" style="--c: #ea4335">Y</span>YouTube</li>
+                <li data-exit><span class="Tile-icon" style="--c: #a259ff">F</span>Figma</li>
+                <li data-exit><span class="Tile-icon" style="--c: #10a37f">C</span>ChatGPT</li>
+                <li data-exit><span class="Tile-icon" style="--c: #ea4c89">D</span>Dribbble</li>
+                <li data-exit><span class="Tile-icon" style="--c: #1769ff">B</span>Behance</li>
+                <li data-exit><span class="Tile-icon" style="--c: #34a853">M</span>Maps</li>
+                <li data-exit><span class="Tile-icon" style="--c: #fbbc04">N</span>News</li>
+                <li data-exit><span class="Tile-icon Tile-icon--add">
+                    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+                </span>Add</li>
+            </ul>
+
+            <button class="Customise" data-exit tabindex="-1">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.33-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.82-1.83Z"/></svg>
+                Customise Chrome
+            </button>
+        </main>
+
+        <!-- ───────────────────────────── Incognito new tab ───────────────────────────── -->
+        <main class="Incognito" aria-label="New Incognito tab" aria-hidden="true">
+            <div class="Incognito-inner">
+                <div class="Incognito-top" data-enter>
+                    <button class="Pill" data-action="exit">
+                        <svg width="18" height="17"><use href="#glyph"/></svg>
+                        Incognito
+                        <svg class="Pill-close" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
+                </div>
+
+                <div class="Badge">
+                    <svg class="Badge-icon" viewBox="659.5 194 121 121" aria-hidden="true">
+                        <circle cx="720" cy="254.5" r="60.5" fill="var(--incog-disc)"/>
+                        <use href="#glyph" x="682" y="217" width="76" height="72" color="var(--incog-bg)"/>
+                    </svg>
+                </div>
+
+                <h2 data-enter>You’ve gone Incognito</h2>
+
+                <p data-enter>
+                    Others who use this device won’t see your activity, so you can browse more privately.
+                    This won’t change how data is collected by websites that you visit and the services
+                    that they use, including Google. Downloads, bookmarks and reading list items will be
+                    saved. <a href="#" tabindex="-1">Learn more</a>
+                </p>
+
+                <div class="Lists">
+                    <div data-enter>
+                        <h3>Chrome won’t save:</h3>
+                        <ul>
+                            <li>Your browsing history</li>
+                            <li>Cookies and site data</li>
+                            <li>Information entered in forms</li>
+                        </ul>
+                    </div>
+                    <div data-enter>
+                        <h3>Your activity <strong>might still be visible</strong> to:</h3>
+                        <ul>
+                            <li>Websites that you visit</li>
+                            <li>Your employer or school</li>
+                            <li>Your Internet service provider</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="Card" data-enter>
+                    <h3>
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 7a5 5 0 0 1 4.64 6.83l2.92 2.92A11.8 11.8 0 0 0 23 12c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7ZM2 4.27l2.28 2.28.46.46A11.8 11.8 0 0 0 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27Zm5.53 5.53 1.55 1.55A3 3 0 0 0 12.65 15l1.55 1.55A5 5 0 0 1 7.53 9.8Zm4.31-.78 3.15 3.15.02-.16a3 3 0 0 0-3.17-3Z"/></svg>
+                        Third-party cookies are blocked
+                    </h3>
+                    <p>
+                        When you’re in Incognito mode, sites can’t use third-party cookies. If a site that
+                        relies on these cookies isn’t working, you can
+                        <a href="#" tabindex="-1">try giving that site temporary access to third-party cookies</a>.
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <!-- The morph layer: the two "o"s of the logo are re-drawn here and
+             built up into the Incognito badge, then handed back to the page. -->
+        <svg class="Morph" aria-hidden="true">
+            <defs>
+                <clipPath id="hat-clip" clipPathUnits="userSpaceOnUse">
+                    <rect x="560" y="120" width="320" height="131"/>
+                </clipPath>
+                <clipPath id="disc-clip" clipPathUnits="userSpaceOnUse">
+                    <circle class="Morph-disc" cx="720" cy="254.5" r="0"/>
+                </clipPath>
+            </defs>
+            <g class="Morph-root">
+                <circle class="Morph-disc Morph-disc--fill" cx="720" cy="254.5" r="0"/>
+                <!-- The glyph is drawn twice: white on the black stage, and a
+                     dark copy clipped to the disc. As the disc grows the glyph
+                     inverts exactly where it is covered — never low contrast. -->
+                <g class="Morph-glyph">
+                    <g id="morph-art" fill="none" stroke="currentColor">
+                        <g clip-path="url(#hat-clip)">
+                            <path class="Morph-hat" d="M698 246.5L708.6 222.2Q709.3 220.6 711 221L720 223.4L729 221Q730.7 220.6 731.4 222.2L742 246.5Z" fill="currentColor" stroke="none"/>
+                        </g>
+                        <path class="Morph-brim" d="M685 253H755" stroke-width="4"/>
+                        <path class="Morph-bridge" d="M714 272.2Q719.75 270.6 725.5 272.2" stroke-width="3"/>
+                        <circle class="Morph-ring"/>
+                        <circle class="Morph-ring"/>
+                    </g>
+                </g>
+                <g class="Morph-glyph Morph-glyph--inverse" clip-path="url(#disc-clip)">
+                    <use href="#morph-art"/>
+                </g>
+            </g>
+        </svg>
+
+        <!-- ───────────────────────────── Toolbar + menu ───────────────────────────── -->
+        <nav class="Toolbar">
+            <button class="IconButton" aria-label="Back" disabled>
+                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg>
+            </button>
+            <button class="IconButton" aria-label="Forward" disabled>
+                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="m12 4-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+            </button>
+            <button class="IconButton" aria-label="New tab">
+                <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+            </button>
+            <button class="IconButton" aria-label="Tabs" data-action="tabs">
+                <span class="Tabs"><span class="Tabs-count">3</span></span>
+            </button>
+            <button class="IconButton IconButton--menu" aria-label="More" aria-haspopup="menu" aria-expanded="false" data-action="menu">
+                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg>
+            </button>
+            <span class="Hint" aria-hidden="true">Try “New Incognito tab”</span>
+        </nav>
+
+        <div class="Menu" role="menu" aria-label="More options">
+            <button role="menuitem" data-action="close">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14v14Zm-8-2h2v-4h4v-2h-4V7h-2v4H7v2h4z"/></svg>
+                New tab
+            </button>
+            <button role="menuitem" data-action="incognito">
+                <svg width="20" height="19"><use href="#glyph"/></svg>
+                New Incognito tab
+            </button>
+            <hr>
+            <button role="menuitem" data-action="close">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z"/></svg>
+                History
+            </button>
+            <button role="menuitem" data-action="close">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2Zm0 15-5-2.18L7 18V5h10z"/></svg>
+                Bookmarks
+            </button>
+            <button role="menuitem" data-action="close">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.1 7.1 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.61l-1.92-3.32a.5.5 0 0 0-.59-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.49-.41h-3.84a.5.5 0 0 0-.48.41l-.36 2.54a7.4 7.4 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.59.22L2.71 8.87a.5.5 0 0 0 .12.61l2.03 1.58a7.3 7.3 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.5.5 0 0 0-.12-.61l-2.01-1.58ZM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2Z"/></svg>
+                Settings
+            </button>
+        </div>
+    </div>
+</div>
+
+<p class="Caption">
+    Mobile prototype — open the <strong>⋯</strong> menu and choose <strong>New Incognito tab</strong>.
+    Add <code>?speed=0.25</code> to the URL to review the motion in slow motion.
+</p>
+
+<script src="main.js"></script>
+</body>
+</html>
