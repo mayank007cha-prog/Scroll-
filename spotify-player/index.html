@@ -50,6 +50,7 @@
 
   button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
   img { display: block; -webkit-user-drag: none; user-select: none; }
+  [hidden] { display: none !important; }
 
   /* ───────── Desktop notes ───────── */
 
@@ -319,11 +320,14 @@
   }
   .np-pill {
     position: absolute; left: 8px; top: 10px; width: 168px; height: 64px;
-    display: flex; align-items: center; gap: 8px; padding: 1px;
+    display: flex; align-items: center; padding: 1px;
     border-radius: 32px;
     background: rgba(255, 255, 255, .1);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+    clip-path: inset(-4px round 36px);
   }
+  /* The song info slides as one piece when you swipe to skip */
+  .np-slide { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; will-change: transform; }
   .np-art {
     width: 62px; height: 62px; flex: none; border-radius: 50%;
     box-shadow: 0 0 0 2px rgba(243, 196, 201, .55), 0 4px 10px rgba(0, 0, 0, .35);
@@ -339,11 +343,35 @@
   @keyframes marquee { 0%, 18% { transform: none; } 50%, 68% { transform: translateX(var(--shift)); } 100% { transform: none; } }
   .np-artist { margin-top: 2px; font-size: 12.5px; color: rgba(255, 255, 255, .68); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+  /* Timer line starts behind the disc and runs out from under it */
   .np-progress {
-    position: absolute; left: 47px; top: 72px; width: 104px; height: 2px; border-radius: 1px;
-    background: rgba(255, 255, 255, .18); overflow: hidden;
+    position: absolute; left: 32px; top: 60px; width: 120px; height: 2px; border-radius: 1px; z-index: 0;
+    background: rgba(255, 255, 255, .2); overflow: hidden;
   }
-  .np-progress i { position: absolute; inset: 0; background: #fff; transform-origin: left; transform: scaleX(var(--p, 0)); border-radius: inherit; }
+  .np-progress i { position: absolute; inset: 0; background: #fff; transform-origin: left; border-radius: inherit;
+    transform: scaleX(calc((14 + 106 * var(--p, 0)) / 120)); }
+
+  /* Video variation: the whole card is the video, with a single play/pause */
+  .video-face { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+  .vid-slot { position: absolute; inset: 0; overflow: hidden; background: #000; }
+  .vid-slot > img, .vid-slot > video, .ghost > img, .ghost > video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .vfb { animation: drift 16s ease-in-out infinite alternate; transform-origin: 55% 40%; }
+  @keyframes drift { from { transform: scale(1.03); } to { transform: scale(1.16) translate(-2%, 2%); } }
+  .paused .vfb { animation-play-state: paused; }
+  #media { opacity: 0; transition: opacity .4s var(--ease-out); }
+  #media.on { opacity: 1; }
+  .vglass {
+    position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(18, 18, 18, .36);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+    transition: transform .3s var(--ease-out);
+  }
+  .vglass:active { transform: scale(.88); }
+  .vglass svg { width: 16px; height: 16px; }
+  .vglass .alt { display: none; } .vglass.toggled .main { display: none; } .vglass.toggled .alt { display: block; }
 
   .np-controls { position: absolute; left: 28px; top: 84px; display: flex; gap: 16px; }
   .ctl {
@@ -392,6 +420,78 @@
     opacity: 0; pointer-events: none; will-change: transform, opacity;
   }
 
+  /* ───────── Song page ───────── */
+
+  .sheet {
+    position: absolute; inset: 0; z-index: 38;
+    background: linear-gradient(180deg, var(--pc1) 0%, var(--pc2) 42%, var(--pc3) 80%, color-mix(in srgb, var(--pc3) 60%, #121212) 100%);
+  }
+  .sheet[hidden] { display: none; }
+  .sheet-scroll {
+    position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+    padding: 50px 24px 48px;
+  }
+  .sheet-scroll::-webkit-scrollbar { display: none; }
+  @media (max-width: 520px) { .sheet-scroll { padding-top: calc(env(safe-area-inset-top) + 6px); } }
+
+  .sh-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 48px; }
+  .sh-icon { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center;
+    transition: background-color .25s var(--ease-out), transform .25s var(--ease-out); }
+  .sh-icon:active { transform: scale(.9); background: rgba(255, 255, 255, .1); }
+  .sh-icon svg { width: 24px; height: 24px; }
+  .sh-ctx { min-width: 0; text-align: center; font-size: 11.5px; line-height: 1.35; color: rgba(255, 255, 255, .82); }
+  .sh-ctx b { display: block; font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .sh-banner {
+    position: relative; width: min(100%, 310px); aspect-ratio: 1; margin: 12px auto 0;
+    border-radius: 8px; overflow: hidden; background: rgba(0, 0, 0, .25);
+    box-shadow: 0 26px 60px -14px rgba(0, 0, 0, .6);
+  }
+  .sh-banner > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 30%); }
+  .sh-banner.waiting > * { visibility: hidden; }
+
+  .sh-lyric { margin: 38px 0 0; min-height: 22px; font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+  .sh-meta { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 40px; }
+  .sh-meta > div { min-width: 0; }
+  .sh-meta h2 { margin: 0; font-size: 23px; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sh-meta p { margin: 4px 0 0; font-size: 15px; color: rgba(255, 255, 255, .7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sh-like { width: 40px; height: 40px; display: grid; place-items: center; flex: none; }
+  .sh-like svg { width: 32px; height: 32px; }
+  .sh-like .alt { display: none; } .sh-like.toggled .main { display: none; } .sh-like.toggled .alt { display: block; }
+
+  .sh-bar { position: relative; margin-top: 22px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .3); cursor: pointer; touch-action: none; }
+  .sh-bar::before { content: ''; position: absolute; inset: -12px 0; }
+  .sh-bar i { position: absolute; inset: 0; border-radius: inherit; background: #fff; transform-origin: left; transform: scaleX(var(--p, 0)); }
+  .sh-bar b { position: absolute; top: 50%; left: calc(var(--p, 0) * 100%); width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
+  .sh-times { display: flex; justify-content: space-between; margin-top: 9px; font-size: 11.5px; color: rgba(255, 255, 255, .72); font-variant-numeric: tabular-nums; }
+
+  .sh-ctrls { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+  .sh-ctrls .sh-icon svg { width: 28px; height: 28px; }
+  .sh-ctrls .sh-icon.small svg { width: 24px; height: 24px; }
+  .sh-ctrls .sh-icon.on { color: var(--green); }
+  .sh-play { width: 70px; height: 70px; border-radius: 50%; background: #fff; color: #000; display: grid; place-items: center;
+    transition: transform .25s var(--ease-out); }
+  .sh-play:active { transform: scale(.94); }
+  .sh-play svg { width: 28px; height: 28px; }
+  .sh-play .alt { display: none; } .sh-play.toggled .main { display: none; } .sh-play.toggled .alt { display: block; }
+
+  .sh-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 26px; }
+  .sh-bottom .sh-icon svg { width: 22px; height: 22px; }
+  .sh-bottom > div { display: flex; gap: 10px; }
+
+  .sh-card { margin-top: 30px; padding: 18px 18px 20px; border-radius: 14px; background: rgba(0, 0, 0, .2); }
+  .sh-card.lyrics { background: color-mix(in srgb, var(--pc1) 82%, #fff); }
+  .sh-card h3 { margin: 0 0 12px; font-size: 16px; font-weight: 700; }
+  .sh-card p { margin: 0; font-size: 14.5px; line-height: 1.55; color: rgba(255, 255, 255, .86); }
+  .sh-card.lyrics p { font-size: 20px; line-height: 1.35; font-weight: 700; color: #fff; }
+  .sh-card.lyrics p + p { margin-top: 10px; color: rgba(0, 0, 0, .55); }
+  .sh-card dl { margin: 0; display: grid; gap: 12px; }
+  .sh-card dt { font-size: 14.5px; font-weight: 600; }
+  .sh-card dd { margin: 2px 0 0; font-size: 13px; color: rgba(255, 255, 255, .68); }
+
+  .ghost { position: absolute; left: 0; top: 0; z-index: 39; overflow: hidden; pointer-events: none; background: #000;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, .55); will-change: transform, width, height, border-radius; }
+
   /* Toast */
   .toast {
     position: absolute; left: 16px; right: 16px; top: 108px; z-index: 35;
@@ -407,7 +507,7 @@
   @media (max-width: 520px) { .toast { top: calc(env(safe-area-inset-top) + 64px); } }
 
   @media (prefers-reduced-motion: reduce) {
-    .np-title.marquee span { animation: none; }
+    .np-title.marquee span, .vfb { animation: none; }
     .eq i { animation: none; transform: scaleY(.6); }
   }
 </style>
@@ -423,7 +523,9 @@
     <li><span><b>Push it into the edge</b> and it folds into a spinning disc, half tucked away.</span></li>
     <li><span><b>Tap the disc</b>, or pull it inward, to bring the player back.</span></li>
     <li><span><b>Scroll down</b> to hide the tab bar. Scroll up and it returns.</span></li>
-    <li><span><b>Tap any poster</b> to play its soundtrack. The player, disc and header take on its artwork and colour.</span></li>
+    <li><span><b>Swipe the song title</b> left or right to skip to the next or previous song.</span></li>
+    <li><span><b>Tap the player</b> to open the song page. The disc spins into the cover; the down arrow tucks it back.</span></li>
+    <li><span><b>Koi Fariyaad · Video</b> turns the player into the video itself, with just play and pause.</span></li>
   </ol>
 </aside>
 
@@ -483,28 +585,44 @@
       <div class="clip">
         <div class="card-face" id="cardFace">
           <div class="np-pill">
-            <div class="art np-art loaded" style="--pos:50% 50%">
-              <img id="npArt" class="swap" src="assets/posters/tumbin-disc.jpg" alt="">
-            </div>
-            <div class="np-meta swap" id="npMeta">
-              <div class="np-title" id="npTitle"><span>Koi Fariyaad</span></div>
-              <div class="np-artist" id="npArtist">Jagjit Singh</div>
+            <div class="np-progress"><i></i></div>
+            <div class="np-slide" id="npSlide">
+              <div class="art np-art loaded" style="--pos:50% 50%">
+                <img id="npArt" class="swap" src="assets/posters/tumbin-disc.jpg" alt="">
+              </div>
+              <div class="np-meta swap" id="npMeta">
+                <div class="np-title" id="npTitle"><span>Koi Fariyaad</span></div>
+                <div class="np-artist" id="npArtist">Jagjit Singh</div>
+              </div>
             </div>
           </div>
-          <div class="np-progress"><i></i></div>
           <div class="np-controls">
             <button class="ctl" aria-label="Connect to a device" data-action="devices">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.8" y="5" width="7" height="13" rx="1.6"/><rect x="12.6" y="3" width="8.6" height="18" rx="2.2"/><circle cx="16.9" cy="14.4" r="2.6"/><circle cx="16.9" cy="7.4" r=".6" fill="#fff"/><path d="M5.6 15.4h1.4"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.7 4.6H4.4c-.7 0-1.2.5-1.2 1.2v9.1c0 .7.5 1.2 1.2 1.2h4.3"/><rect x="10.6" y="3.4" width="10.2" height="17.2" rx="1.8"/><circle cx="15.7" cy="14" r="2.8"/><circle cx="15.7" cy="7.6" r="1" fill="#fff" stroke="none"/><circle cx="5.7" cy="19.5" r="1.05" fill="#fff" stroke="none"/></svg>
             </button>
             <button class="ctl" aria-label="Add to Liked Songs" aria-pressed="false" data-action="like">
               <svg class="main" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 8v8M8 12h8"/></svg>
               <svg class="alt" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1ed760"/><path d="m7.8 12.3 2.8 2.8 5.6-5.8" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
-            <button class="ctl play" aria-label="Pause" data-action="play">
-              <svg class="main" viewBox="0 0 24 24" fill="#fff"><rect x="5.6" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.8" y="4" width="4.6" height="16" rx="1.3"/></svg>
-              <svg class="alt" viewBox="0 0 24 24" fill="#fff"><path d="M7 4.9v14.2c0 .8.9 1.3 1.6.9l11-7.1c.6-.4.6-1.4 0-1.8l-11-7.1C7.9 3.6 7 4.1 7 4.9Z"/></svg>
+            <button class="ctl play" aria-label="Pause" data-action="play" style="color:#fff">
+              <svg class="main" viewBox="0 0 24 24" fill="currentColor"><rect x="5.6" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.8" y="4" width="4.6" height="16" rx="1.3"/></svg>
+              <svg class="alt" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.9v14.2c0 .8.9 1.3 1.6.9l11-7.1c.6-.4.6-1.4 0-1.8l-11-7.1C7.9 3.6 7 4.1 7 4.9Z"/></svg>
             </button>
           </div>
+        </div>
+
+        <div class="video-face" id="videoFace">
+          <div class="vid-slot" id="vidSlotCard">
+            <img class="vfb" id="vfb" src="assets/posters/tumbin.jpg" alt="">
+            <video id="media" playsinline preload="auto">
+              <source src="assets/media/koi-fariyaad.mp4" type="video/mp4">
+              <source src="assets/media/koi-fariyaad.mp3" type="audio/mpeg">
+            </video>
+          </div>
+          <button class="vglass" aria-label="Pause" data-action="play" style="color:#fff">
+            <svg class="main" viewBox="0 0 24 24" fill="currentColor"><rect x="5.6" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.8" y="4" width="4.6" height="16" rx="1.3"/></svg>
+            <svg class="alt" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.9v14.2c0 .8.9 1.3 1.6.9l11-7.1c.6-.4.6-1.4 0-1.8l-11-7.1C7.9 3.6 7 4.1 7 4.9Z"/></svg>
+          </button>
         </div>
 
         <div class="disc-face" id="discFace">
@@ -522,6 +640,84 @@
         </div>
       </div>
     </div>
+
+    <!-- Song page: the floating player expands into this -->
+    <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Now playing" hidden>
+      <div class="sheet-scroll" id="sheetScroll">
+        <header class="sh-top">
+          <button class="sh-icon" id="shClose" aria-label="Minimise player">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 9 7 7 7-7"/></svg>
+          </button>
+          <div class="sh-ctx">Playing from Home<b id="shCtx">Bollywood throwback</b></div>
+          <button class="sh-icon" aria-label="More options">
+            <svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+          </button>
+        </header>
+
+        <div class="sh-banner" id="shBanner">
+          <img id="shArt" class="swap" src="assets/posters/tumbin.jpg" alt="">
+          <div class="vid-slot" id="vidSlotSheet" hidden></div>
+        </div>
+
+        <p class="sh-lyric swap" id="shLyric"></p>
+
+        <div class="sh-meta">
+          <div class="swap" id="shMeta"><h2 id="shTitle">Koi Fariyaad</h2><p id="shArtist">Jagjit Singh</p></div>
+          <button class="sh-like" aria-label="Add to Liked Songs" aria-pressed="false" data-action="like"><svg class="main" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.3"/><path d="M12 8v8M8 12h8"/></svg><svg class="alt" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1ed760"/><path d="m7.8 12.3 2.8 2.8 5.6-5.8" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+
+        <div class="sh-bar" id="shBar" role="slider" aria-label="Song position" aria-valuemin="0" aria-valuemax="100" tabindex="0"><i></i><b></b></div>
+        <div class="sh-times"><span id="tCur">0:00</span><span id="tDur">9:01</span></div>
+
+        <div class="sh-ctrls">
+          <button class="sh-icon small" data-toggle aria-label="Shuffle" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7h2.8c1.4 0 2.6.7 3.3 1.9l3.8 6.3c.7 1.1 1.9 1.8 3.3 1.8h3.3M3.5 17h2.8c1.4 0 2.6-.7 3.3-1.9l.5-.8M13.6 8.7l.4-.8c.7-1.1 1.9-1.9 3.3-1.9h3.3M18 3.5 20.7 6 18 8.5M18 14.5l2.7 2.5-2.7 2.5"/></svg>
+          </button>
+          <button class="sh-icon" data-step="-1" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="#fff"><rect x="4.5" y="4.5" width="2.6" height="15" rx="1.1"/><path d="M19.5 5.7v12.6c0 .9-1 1.4-1.7.9L9.3 13a1.2 1.2 0 0 1 0-2l8.5-6.2c.7-.5 1.7 0 1.7.9Z"/></svg>
+          </button>
+          <button class="sh-play" data-action="play" aria-label="Pause"><svg class="main" viewBox="0 0 24 24" fill="currentColor"><rect x="5.6" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.8" y="4" width="4.6" height="16" rx="1.3"/></svg><svg class="alt" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.9v14.2c0 .8.9 1.3 1.6.9l11-7.1c.6-.4.6-1.4 0-1.8l-11-7.1C7.9 3.6 7 4.1 7 4.9Z"/></svg></button>
+          <button class="sh-icon" data-step="1" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="#fff"><rect x="16.9" y="4.5" width="2.6" height="15" rx="1.1"/><path d="M4.5 5.7v12.6c0 .9 1 1.4 1.7.9l8.5-6.2a1.2 1.2 0 0 0 0-2L6.2 4.8c-.7-.5-1.7 0-1.7.9Z"/></svg>
+          </button>
+          <button class="sh-icon small" data-toggle aria-label="Repeat" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6.5h10.5a3 3 0 0 1 3 3v1.5M17 17.5H6.5a3 3 0 0 1-3-3V13M15 4l2.5 2.5L15 9M9 20l-2.5-2.5L9 15"/></svg>
+          </button>
+        </div>
+
+        <div class="sh-bottom">
+          <button class="sh-icon" data-action="devices" aria-label="Connect to a device"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.7 4.6H4.4c-.7 0-1.2.5-1.2 1.2v9.1c0 .7.5 1.2 1.2 1.2h4.3"/><rect x="10.6" y="3.4" width="10.2" height="17.2" rx="1.8"/><circle cx="15.7" cy="14" r="2.8"/><circle cx="15.7" cy="7.6" r="1" fill="#fff" stroke="none"/><circle cx="5.7" cy="19.5" r="1.05" fill="#fff" stroke="none"/></svg></button>
+          <div>
+            <button class="sh-icon" aria-label="Share">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1"/></svg>
+            </button>
+            <button class="sh-icon" aria-label="Queue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><path d="M4 5h16M4 10h16"/><rect x="4" y="14" width="16" height="6" rx="1.4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="sh-card lyrics" id="shLyrics">
+          <h3>Lyrics</h3>
+          <p>jaagate jaagate ek umr kati ho jaise</p>
+          <p>har mulaaqaat pe mahasoos yahi hota hai</p>
+        </div>
+
+        <div class="sh-card" id="shAbout">
+          <h3>About the song</h3>
+          <p>Director Anubhav Sinha worked closely with lyricist Faaiz Anwar on this ghazal, going through 81 couplets before settling on the 82nd.</p>
+        </div>
+
+        <div class="sh-card">
+          <h3>Credits</h3>
+          <dl>
+            <div><dt id="crBy">Jagjit Singh</dt><dd>Main artist</dd></div>
+            <div><dt id="crMusic">Nikhil–Vinay</dt><dd>Composer</dd></div>
+            <div><dt id="crFilm">Tum Bin (2001)</dt><dd>Soundtrack</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
 
     <nav class="tabbar" id="tabbar" aria-label="Main">
       <div class="tabs">
@@ -559,7 +755,7 @@
 
   // Every poster is a soundtrack you can play; the player takes on its art and tint.
   const MOVIES = {
-    tumbin:       { title: 'Tum Bin', year: 2001, music: 'Nikhil–Vinay', song: 'Koi Fariyaad', by: 'Jagjit Singh', dur: 341, img: P('tumbin'), disc: P('tumbin-disc'), tint: ['#7a1d27', '#6b1820', '#4f0f16'] },
+    tumbin:       { title: 'Tum Bin', year: 2001, music: 'Nikhil–Vinay', song: 'Koi Fariyaad', by: 'Jagjit Singh', dur: 541, media: true, lyric: 'jaagate jaagate ek umr kati ho jaise', img: P('tumbin'), disc: P('tumbin-disc'), tint: ['#7a1d27', '#6b1820', '#4f0f16'] },
     rockstar:     { title: 'Rockstar', year: 2011, music: 'A. R. Rahman', song: 'Kun Faya Kun', by: 'A. R. Rahman, Javed Ali, Mohit Chauhan', dur: 473, img: P('rockstar'), pos: '50% 30%', tint: ['#8a2a1e', '#6e1f17', '#4a130e'] },
     tamasha:      { title: 'Tamasha', year: 2015, music: 'A. R. Rahman', song: 'Agar Tum Saath Ho', by: 'Alka Yagnik, Arijit Singh', dur: 341, img: P('tamasha'), pos: '50% 35%', tint: ['#8a3b1f', '#70301a', '#4b1e10'] },
     highway:      { title: 'Highway', year: 2014, music: 'A. R. Rahman', song: 'Patakha Guddi', by: 'Sultana Nooran, Jyoti Nooran', dur: 290, img: P('highway'), pos: '50% 30%', tint: ['#7a5a1c', '#634816', '#43300d'] },
@@ -586,7 +782,13 @@
     taare:        { title: 'Taare Zameen Par', year: 2007, music: 'Shankar–Ehsaan–Loy', song: 'Maa', by: 'Shankar Mahadevan', dur: 300, img: P('taare'), pos: '50% 70%', tint: ['#80611d', '#694f18', '#47350f'] },
   };
 
-  const QUICK = ['liked', 'tumbin', 'rockstar', 'znmd', 'dilchahtahai', 'tamasha', 'highway', 'rabnebana'];
+  // The same song as a music video: the floating player becomes the video itself.
+  MOVIES['tumbin-video'] = { ...MOVIES.tumbin, video: true, tile: 'Koi Fariyaad · Video' };
+
+  // Swiping the song title walks through this queue.
+  const QUEUE = ['tumbin', 'tumbin-video', 'rockstar', 'tamasha', 'barfi', 'highway', 'znmd', 'dilse'];
+
+  const QUICK = ['liked', 'tumbin', 'rockstar', 'znmd', 'dilchahtahai', 'tamasha', 'highway', 'tumbin-video'];
   const SOUNDTRACKS = ['rockstar', 'tamasha', 'highway', 'barfi', 'queen', 'znmd', 'udaan', 'rdb', 'swades'];
   const MIXES = [
     { movie: 'dilse', title: 'Daily Mix 1', sub: 'A. R. Rahman, Javed Ali, Mohit Chauhan and more', band: '#c2562e' },
@@ -612,7 +814,7 @@
 
   $('quick').innerHTML = QUICK.map((k) => k === 'liked'
     ? `<button class="qtile"><div class="liked">${heart}</div><span class="t">Liked Songs</span></button>`
-    : `<button class="qtile" data-movie="${k}">${art(MOVIES[k])}<span class="t">${esc(MOVIES[k].title)}</span>${eq}</button>`).join('');
+    : `<button class="qtile" data-movie="${k}">${art(MOVIES[k])}<span class="t">${esc(MOVIES[k].tile || MOVIES[k].title)}</span>${eq}</button>`).join('');
 
   const posterCard = (k) => { const m = MOVIES[k]; return `
     <button class="card poster" data-movie="${k}">${art(m)}<div class="t">${esc(m.title)}</div><div class="s">${m.year} · ${esc(m.music)}</div></button>`; };
@@ -677,7 +879,7 @@
   /* ─────────────────────────── Geometry ─────────────────────────── */
 
   const CARD_W = 184, CARD_H = 120, DISC = 120, EDGE = 8;
-  const player = $('player'), cardFace = $('cardFace'), discFace = $('discFace'),
+  const player = $('player'), cardFace = $('cardFace'), discFace = $('discFace'), videoFace = $('videoFace'),
         spinEl = $('spin'), discStatic = $('discStatic'), tabbar = $('tabbar'),
         edgeHint = $('edgeHint'), appbar = $('appbar');
 
@@ -710,6 +912,7 @@
   let playing = true;
   let drag = null;
   let suppressClick = false;
+  let sheetOpen = false;
 
   const b0 = bounds();
   const cx = new Spring(b0.cxMax, ...SOFT, 0.05);
@@ -720,6 +923,7 @@
   const omega = new Spring(0, 5, 4.6, 0.01);           // disc angular velocity, slow spin-up
   const settle = new Spring(0, 230, 30, 0.01);         // rights the disc before it unfolds
   let angle = 0, settling = false, unfoldPending = false;
+  const vm = new Spring(0, 200, 28, 0.001);            // 0 audio card → 1 video card
 
   let progress = 0.38;
   let current = 'tumbin';
@@ -739,7 +943,7 @@
       else cy.t = clamp(cy.t, b.cyMin, b.cyMax);
     }
 
-    cx.step(dt); cy.step(dt); m.step(dt); press.step(dt); hint.step(dt);
+    cx.step(dt); cy.step(dt); m.step(dt); press.step(dt); hint.step(dt); vm.step(dt);
 
     // Spin only once fully a disc; otherwise glide back to upright.
     if (mode === 'disc' && m.v > 0.86) {
@@ -762,9 +966,11 @@
     // Unfold into the card only once the disc is upright again.
     if (unfoldPending && Math.abs(settle.t - settle.v) < 14) { unfoldPending = false; m.t = 0; }
 
-    if (playing) progress = (progress + dt / MOVIES[current].dur) % 1;
+    if (mediaActive()) { if (media.duration) progress = media.currentTime / media.duration; }
+    else if (playing) progress = (progress + dt / MOVIES[current].dur) % 1;
 
     render(b);
+    if (sheetOpen) renderSheet();
     requestAnimationFrame(frame);
   }
 
@@ -777,18 +983,21 @@
     player.style.width = w + 'px';
     player.style.borderRadius = r + 'px';
     player.style.transform = `translate3d(${cx.v - w / 2}px, ${cy.v - CARD_H / 2}px, 0) scale(${press.v})`;
-    player.style.setProperty('--p', progress.toFixed(4));
+    device.style.setProperty('--p', progress.toFixed(4));
 
     // Card UI dissolves first…
-    const cardOut = smooth(0.02, 0.3, mv);
-    cardFace.style.opacity = 1 - cardOut;
+    const cardOut = smooth(0.02, 0.3, mv), vv = clamp(vm.v, 0, 1);
+    cardFace.style.opacity = (1 - cardOut) * (1 - vv);
     cardFace.style.transform = `scale(${1 - cardOut * 0.06})`;
-    cardFace.style.pointerEvents = mv > 0.15 ? 'none' : '';
+    cardFace.style.pointerEvents = mv > 0.15 || vv > 0.5 ? 'none' : '';
+    videoFace.style.opacity = (1 - cardOut) * vv;
+    videoFace.style.pointerEvents = mv > 0.15 || vv < 0.5 ? 'none' : '';
 
-    // …while the album art blooms out of its thumbnail and fills the shape.
+    // …while the album art blooms out of its thumbnail (or the whole video card) and fills the shape.
     const grow = easeInOut(smooth(0, 0.55, mv));
-    const artX = w / 2 - CARD_W / 2 + 40, artY = 42;
-    const R = lerp(31, Math.hypot(w, CARD_H) / 2 + 2, grow);
+    const cover = Math.hypot(w, CARD_H) / 2 + 2;
+    const artX = lerp(w / 2 - CARD_W / 2 + 40, w / 2, vv), artY = lerp(42, CARD_H / 2, vv);
+    const R = lerp(lerp(31, cover, vv), cover, grow);
     const X = lerp(artX, w / 2, grow), Y = lerp(artY, CARD_H / 2, grow);
     discFace.style.opacity = smooth(0, 0.12, mv);
     discFace.style.clipPath = `circle(${R}px at ${X}px ${Y}px)`;
@@ -844,10 +1053,13 @@
   }
 
   player.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0 || drag) return;
+    if (e.button !== 0 || drag || sheetOpen || sheetBusy) return;
     drag = {
       id: e.pointerId, sx: e.clientX, sy: e.clientY,
-      scx: cx.v, scy: cy.v, moved: false, over: 0, push: null,
+      scx: cx.v, scy: cy.v, moved: false, over: 0, push: null, dx: 0,
+      // Horizontal drags that start on the song info skip songs; everything else moves the player.
+      zone: mode === 'card' && vm.t < 0.5 && e.target.closest('.np-pill') ? 'pill' : 'card',
+      btn: e.target.closest('button'),
       samples: [{ t: e.timeStamp, x: e.clientX, y: e.clientY }],
     };
     press.t = mode === 'disc' ? 0.94 : 0.975;
@@ -861,14 +1073,27 @@
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < 6) return;
       drag.moved = true;
+      drag.kind = drag.zone === 'pill' && Math.abs(dx) > Math.abs(dy) ? 'swipe' : 'move';
       player.setPointerCapture(e.pointerId);
-      player.classList.add('grabbing');
-      cx.set(...FOLLOW); cy.set(...FOLLOW);
-      press.t = mode === 'disc' ? 0.97 : 1.02;
+      if (drag.kind === 'swipe') {
+        press.t = 1;
+        npSlide.style.transition = 'none';
+      } else {
+        player.classList.add('grabbing');
+        cx.set(...FOLLOW); cy.set(...FOLLOW);
+        press.t = mode === 'disc' ? 0.97 : 1.02;
+      }
     }
 
     drag.samples.push({ t: e.timeStamp, x: e.clientX, y: e.clientY });
     while (drag.samples.length > 2 && e.timeStamp - drag.samples[0].t > 90) drag.samples.shift();
+
+    if (drag.kind === 'swipe') {
+      drag.dx = dx;
+      npSlide.style.transform = `translate3d(${dx}px, 0, 0)`;
+      npSlide.style.opacity = 1 - Math.min(0.7, Math.abs(dx) / 220);
+      return;
+    }
 
     const b = bounds();
     const y = drag.scy + dy;
@@ -912,7 +1137,9 @@
 
     if (!d.moved) {
       drag = null;
-      if (mode === 'disc' && e.type === 'pointerup') undock();
+      if (e.type !== 'pointerup') return;
+      if (mode === 'disc') undock();
+      else if (!d.btn) openSheet();
       return;
     }
 
@@ -921,6 +1148,15 @@
     const { vx, vy } = velocity();
     drag = null;
     const b = bounds();
+
+    if (d.kind === 'swipe') {
+      if (Math.abs(d.dx) > 46 || (Math.abs(vx) > 0.45 && Math.sign(vx) === Math.sign(d.dx))) skip(d.dx < 0 ? 1 : -1);
+      else {
+        npSlide.style.transition = 'transform .45s var(--ease-out), opacity .3s ease-out';
+        npSlide.style.transform = ''; npSlide.style.opacity = '';
+      }
+      return;
+    }
 
     if (mode === 'disc') {
       cx.t = discX(side);
@@ -976,7 +1212,7 @@
     if (mode === 'disc' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); undock(); }
   });
 
-  /* ─────────────────────────── Controls ─────────────────────────── */
+  /* ─────────────────────────── Toast ─────────────────────────── */
 
   const toastEl = $('toast');
   let toastTimer;
@@ -989,9 +1225,10 @@
 
   /* ─────────────────────────── Now playing ─────────────────────────── */
 
-  const npArt = $('npArt'), discArt = $('discArt'), npMeta = $('npMeta'),
-        npTitle = $('npTitle'), npArtist = $('npArtist'), playBtn = player.querySelector('[data-action=play]');
+  const npArt = $('npArt'), discArt = $('discArt'), npMeta = $('npMeta'), npSlide = $('npSlide'),
+        npTitle = $('npTitle'), npArtist = $('npArtist');
   const nowPlayingLabel = () => `Now playing: ${MOVIES[current].song} by ${MOVIES[current].by}`;
+  let ctx = 'Bollywood throwback';
 
   function fitTitle() {
     const span = npTitle.firstChild;
@@ -1004,50 +1241,128 @@
     }
   }
 
+  /* ── Media: one element serves the audio card, the video card and the song page ── */
+
+  const media = $('media'), vfb = $('vfb'), cardSlot = $('vidSlotCard'), sheetSlot = $('vidSlotSheet');
+  let mediaOK = false;
+  const mediaActive = () => mediaOK && !!MOVIES[current].media;
+
+  media.addEventListener('loadedmetadata', () => {
+    mediaOK = true;
+    media.classList.toggle('on', media.videoWidth > 0);   // an mp3 keeps the poster showing
+    syncMedia();
+  });
+  media.addEventListener('ended', () => { media.currentTime = 0; skip(1); });
+
+  function syncMedia() {
+    if (!mediaOK) return;
+    const want = playing && !!MOVIES[current].media;
+    if (want && media.paused) media.play().catch(() => {});   // retried on the next tap if autoplay is blocked
+    else if (!want && !media.paused) media.pause();
+  }
+  addEventListener('pointerdown', () => { if (playing && media.paused) syncMedia(); }, true);
+
+  function placeMedia() {
+    const inSheet = sheetOpen && MOVIES[current].video;
+    const slot = inSheet ? sheetSlot : cardSlot;
+    if (media.parentNode !== slot) slot.append(vfb, media);
+    sheetSlot.hidden = !MOVIES[current].video;
+    shArt.hidden = !!MOVIES[current].video;
+  }
+
   function setPlaying(on) {
     playing = on;
-    playBtn.classList.toggle('toggled', !on);
-    playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play');
+    document.querySelectorAll('[data-action=play]').forEach((b) => {
+      b.classList.toggle('toggled', !on);
+      b.setAttribute('aria-label', on ? 'Pause' : 'Play');
+    });
     document.body.classList.toggle('paused', !on);
+    syncMedia();
   }
 
   function markPlaying() {
     document.querySelectorAll('[data-movie]').forEach((el) => el.classList.toggle('playing', el.dataset.movie === current));
   }
 
+  /* ── Track changes ── */
+
+  const shArt = $('shArt'), shMeta = $('shMeta'), shLyric = $('shLyric');
+  const fmt = (t) => { t = Math.max(0, Math.round(t)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+  const duration = () => (mediaActive() && media.duration ? media.duration : MOVIES[current].dur);
+
+  function applyTrack(mv) {
+    const src = mv.disc || mv.img, pos = mv.disc ? '50% 50%' : (mv.pos || '50% 30%');
+    npArt.src = discArt.src = src;
+    npArt.parentNode.style.setProperty('--pos', pos);
+    discArt.parentNode.style.setProperty('--pos', pos);
+    npTitle.firstChild.textContent = mv.song;
+    npArtist.textContent = mv.by;
+    fitTitle();
+    vfb.src = mv.img;
+    shArt.src = mv.img;
+    $('shBanner').style.setProperty('--pos', mv.pos || '50% 30%');
+    $('shTitle').textContent = mv.song;
+    $('shArtist').textContent = mv.by;
+    $('shCtx').textContent = ctx;
+    shLyric.textContent = mv.lyric || '';
+    $('shLyrics').hidden = $('shAbout').hidden = !mv.lyric;
+    $('crBy').textContent = mv.by;
+    $('crMusic').textContent = mv.music;
+    $('crFilm').textContent = `${mv.title} (${mv.year})`;
+    placeMedia();
+  }
+
   let swapTimer;
-  function playMovie(key) {
+  function setTrack(key, how = 'fade') {
     const mv = MOVIES[key];
     if (!mv) return;
     if (key === current) { setPlaying(true); return; }
     current = key;
-    progress = 0;
-    setPlaying(true);
+    if (!mv.media) progress = 0;
     markPlaying();
     if (mode === 'card') player.setAttribute('aria-label', nowPlayingLabel());
 
     device.style.setProperty('--pc1', mv.tint[0]);
     device.style.setProperty('--pc2', mv.tint[1]);
     device.style.setProperty('--pc3', mv.tint[2]);
-    press.v = mode === 'disc' ? 0.92 : 0.96;            // a soft acknowledging pulse
+    vm.t = mv.video ? 1 : 0;
+    setPlaying(true);
 
-    const src = mv.disc || mv.img, pos = mv.disc ? '50% 50%' : (mv.pos || '50% 30%');
+    if (how === 'instant') { clearTimeout(swapTimer); applyTrack(mv); return; }
+
+    press.v = mode === 'disc' ? 0.92 : 0.96;            // a soft acknowledging pulse
+    const fading = [npArt, discArt, npMeta, shArt, shMeta, shLyric];
     const pre = new Image();
-    pre.src = src;
+    pre.src = mv.disc || mv.img;
     const go = () => {
-      [npArt, discArt, npMeta].forEach((el) => el.classList.add('out'));
+      fading.forEach((el) => el.classList.add('out'));
       clearTimeout(swapTimer);
       swapTimer = setTimeout(() => {
-        npArt.src = discArt.src = src;
-        npArt.parentNode.style.setProperty('--pos', pos);
-        discArt.parentNode.style.setProperty('--pos', pos);
-        npTitle.firstChild.textContent = mv.song;
-        fitTitle();
-        npArtist.textContent = mv.by;
-        requestAnimationFrame(() => [npArt, discArt, npMeta].forEach((el) => el.classList.remove('out')));
+        applyTrack(mv);
+        requestAnimationFrame(() => fading.forEach((el) => el.classList.remove('out')));
       }, 300);
     };
     (pre.decode ? pre.decode() : Promise.resolve()).then(go, go);
+  }
+
+  function skip(dir) {
+    const i = QUEUE.indexOf(current);
+    const n = i < 0 ? (dir > 0 ? 0 : QUEUE.length - 1) : (i + dir + QUEUE.length) % QUEUE.length;
+    if (sheetOpen || mode !== 'card' || vm.t > 0.5) { setTrack(QUEUE[n]); return; }
+
+    // Slide the song info out, swap, and slide the next one in from the other side.
+    const out = dir > 0 ? -1 : 1;
+    npSlide.style.transition = 'transform .2s cubic-bezier(.4, 0, 1, 1), opacity .2s linear';
+    npSlide.style.transform = `translate3d(${out * 180}px, 0, 0)`;
+    npSlide.style.opacity = '0';
+    setTimeout(() => {
+      setTrack(QUEUE[n], 'instant');
+      npSlide.style.transition = 'none';
+      npSlide.style.transform = `translate3d(${-out * 110}px, 0, 0)`;
+      void npSlide.offsetWidth;
+      npSlide.style.transition = 'transform .5s var(--ease-out), opacity .35s ease-out';
+      npSlide.style.transform = ''; npSlide.style.opacity = '';
+    }, 190);
   }
 
   device.addEventListener('dragstart', (e) => e.preventDefault());
@@ -1055,19 +1370,146 @@
 
   $('screen').addEventListener('click', (e) => {
     const el = e.target.closest('[data-movie]');
-    if (el) playMovie(el.dataset.movie);
+    if (!el) return;
+    ctx = el.closest('.section')?.querySelector('h2')?.textContent || 'Recents';
+    setTrack(el.dataset.movie);
   });
   markPlaying();
+  applyTrack(MOVIES[current]);
 
-  player.querySelectorAll('.ctl').forEach((btn) => {
+  /* ─────────────────────────── Song page ─────────────────────────── */
+
+  const sheet = $('sheet'), sheetScroll = $('sheetScroll'), shBanner = $('shBanner');
+  let sheetBusy = false;
+  const EASE = 'cubic-bezier(.2, .8, .2, 1)';
+
+  function devRect(el) {
+    const d = device.getBoundingClientRect(), r = el.getBoundingClientRect(), k = d.width / device.offsetWidth || 1;
+    return { x: (r.left - d.left) / k, y: (r.top - d.top) / k, w: r.width / k, h: r.height / k };
+  }
+  const cardRect = () => ({ x: cx.v - CARD_W / 2, y: cy.v - CARD_H / 2, w: CARD_W, h: CARD_H });
+  const clipAt = (r, rad) => `inset(${r.y}px ${W - r.x - r.w}px ${H - r.y - r.h}px ${r.x}px round ${rad}px)`;
+  // Where the flying artwork starts and ends on the card: the round art, or the whole video.
+  const cardArt = (mv, c) => (mv.video ? { ...c, r: 30 } : { x: c.x + 9, y: c.y + 11, w: 62, h: 62, r: 31 });
+
+  function makeGhost(mv) {
+    const g = document.createElement('div');
+    g.className = 'ghost';
+    if (mv.video) g.append(vfb, media);
+    else {
+      const a = new Image();
+      a.src = mv.img;
+      a.style.objectPosition = mv.pos || '50% 30%';
+      g.append(a);
+      if (mv.disc) { const d = new Image(); d.src = mv.disc; d.className = 'ghost-disc'; g.append(d); }
+    }
+    device.append(g);
+    return g;
+  }
+  const at = (r, turn) => ({
+    transform: `translate(${r.x}px, ${r.y}px) rotate(${turn}deg)`,
+    width: `${r.w}px`, height: `${r.h}px`, borderRadius: `${r.r}px`,
+  });
+
+  function openSheet() {
+    if (sheetOpen || sheetBusy) return;
+    sheetBusy = true;
+    const mv = MOVIES[current], c = cardRect(), dur = reduced ? 1 : 460;
+    sheet.hidden = false;
+    sheetScroll.scrollTop = 0;
+    renderSheet();
+    const b = { ...devRect(shBanner), r: 8 };
+    const g = makeGhost(mv);
+    shBanner.classList.add('waiting');
+    player.style.visibility = 'hidden';
+
+    // The card's colour opens out into the page while the disc spins into the cover.
+    sheet.animate([{ clipPath: clipAt(c, 30) }, { clipPath: clipAt({ x: 0, y: 0, w: W, h: H }, 0) }], { duration: dur, easing: EASE });
+    sheetScroll.animate([{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }],
+      { duration: dur * 0.7, delay: dur * 0.3, easing: EASE, fill: 'backwards' });
+    const fly = g.animate([at(cardArt(mv, c), 0), at(b, mv.video ? 0 : 360)], { duration: dur + 60, easing: 'cubic-bezier(.25, .8, .25, 1)', fill: 'forwards' });
+    g.querySelector('.ghost-disc')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.6, fill: 'forwards' });
+
+    fly.finished.then(() => {
+      sheetOpen = true;
+      placeMedia();
+      shBanner.classList.remove('waiting');
+      g.remove();
+      sheetBusy = false;
+    });
+  }
+
+  function closeSheet() {
+    if (!sheetOpen || sheetBusy) return;
+    sheetBusy = true;
+    const mv = MOVIES[current], c = cardRect(), dur = reduced ? 1 : 420;
+    const b = { ...devRect(shBanner), r: 8 };
+    sheetOpen = false;
+    const g = makeGhost(mv);
+    shBanner.classList.add('waiting');
+
+    sheetScroll.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.4, easing: 'ease-out', fill: 'forwards' });
+    sheet.animate([{ clipPath: clipAt({ x: 0, y: 0, w: W, h: H }, 0) }, { clipPath: clipAt(c, 30) }], { duration: dur, easing: EASE, fill: 'forwards' });
+    const fly = g.animate([at(b, 0), at(cardArt(mv, c), mv.video ? 0 : -360)], { duration: dur + 40, easing: 'cubic-bezier(.3, .7, .2, 1)', fill: 'forwards' });
+    g.querySelector('.ghost-disc')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.5, delay: dur * 0.4, fill: 'both' });
+
+    fly.finished.then(() => {
+      player.style.visibility = '';
+      sheet.hidden = true;
+      sheet.getAnimations().concat(sheetScroll.getAnimations()).forEach((a) => a.cancel());
+      shBanner.classList.remove('waiting');
+      placeMedia();
+      g.remove();
+      sheetBusy = false;
+    });
+  }
+
+  let lastSec = -1;
+  function renderSheet() {
+    const d = duration(), t = progress * d;
+    if (Math.floor(t) !== lastSec) {
+      lastSec = Math.floor(t);
+      $('tCur').textContent = fmt(t);
+      $('tDur').textContent = fmt(d);
+      $('shBar').setAttribute('aria-valuenow', Math.round(progress * 100));
+    }
+  }
+
+  function seek(clientX) {
+    const r = $('shBar').getBoundingClientRect();
+    const f = clamp((clientX - r.left) / r.width, 0, 1);
+    if (mediaActive() && media.duration) media.currentTime = f * media.duration;
+    progress = f;
+  }
+  $('shBar').addEventListener('pointerdown', (e) => {
+    seek(e.clientX);
+    const mv = (ev) => seek(ev.clientX);
+    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); };
+    addEventListener('pointermove', mv); addEventListener('pointerup', up);
+  });
+
+  $('shClose').addEventListener('click', closeSheet);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheetOpen) closeSheet(); });
+  sheet.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => skip(+b.dataset.step)));
+  sheet.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
+    const on = !b.classList.contains('on');
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on);
+  }));
+
+  /* ─────────────────────────── Controls ─────────────────────────── */
+
+  document.querySelectorAll('[data-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const a = btn.dataset.action;
       if (a === 'play') {
         setPlaying(!playing);
       } else if (a === 'like') {
         const on = !btn.classList.contains('toggled');
-        btn.classList.toggle('toggled', on);
-        btn.setAttribute('aria-pressed', on);
+        document.querySelectorAll('[data-action=like]').forEach((l) => {
+          l.classList.toggle('toggled', on);
+          l.setAttribute('aria-pressed', on);
+        });
         toast(on ? 'Added to Liked Songs' : 'Removed from Liked Songs');
       } else if (a === 'devices') {
         toast('Listening on this phone');
