@@ -90,7 +90,6 @@
 
     // Sound (synthesised with Web Audio; add ?sound=0 to the URL to mute)
     soundVolume: 0.8,
-    tickMerge: 60,                 // ms: chats knocked off closer together than this share one tick
 
     // 4. return — starts while the roller is still finishing near the top
     holdNewWallpaper: 0,           // ms to show the clean new wallpaper before the chat comes back
@@ -139,15 +138,12 @@
   const easeOutCubic = (x) => 1 - Math.pow(1 - clamp(x), 3);
 
   // ---------------------------------------------------------------- sound
-  // Short, muted gesture sounds (synthesised live with Web Audio) — closer to
-  // system UI feedback than to music. Nothing plays until the chats start
-  // falling, so the sound follows what you see.
-  //   bloop()  – a tiny muted tick the moment a chat is knocked off
-  //   finish() – one light, short tone as the chat settles back
+  // Two simple, soft sounds (synthesised live with Web Audio):
+  //   roll(speed) – a muffled foam-roller "rrr" that follows the roller's speed
+  //   stick(k)    – a short paper "pat" when the sheet presses onto the wall
   const sfx = (() => {
     const enabled = new URLSearchParams(location.search).get('sound') !== '0';
-    let ac = null, out = null;
-    let lastTick = -1;
+    let ac = null, out = null, noise = null, roller = null;
 
     function unlock() {
       if (!enabled) return;
@@ -155,92 +151,79 @@
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
         ac = new AC();
-        // muted bus: soft top end, a hint of room, gentle compression
         out = ac.createGain();
         out.gain.value = CONFIG.soundVolume;
-        const tone = ac.createBiquadFilter();
-        tone.type = 'lowpass'; tone.frequency.value = 3200; tone.Q.value = 0.4;
         const comp = ac.createDynamicsCompressor();
-        comp.threshold.value = -22; comp.knee.value = 16; comp.ratio.value = 3;
-        const room = ac.createConvolver();
-        room.buffer = roomImpulse(0.45);
-        const wet = ac.createGain(); wet.gain.value = 0.07;
-        out.connect(tone).connect(comp);
-        tone.connect(room).connect(wet).connect(comp);
-        comp.connect(ac.destination);
+        comp.threshold.value = -20; comp.knee.value = 16; comp.ratio.value = 3;
+        out.connect(comp).connect(ac.destination);
+        noise = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+        const d = noise.getChannelData(0);
+        let b = 0;
+        for (let i = 0; i < d.length; i++) { b = 0.97 * b + 0.03 * (Math.random() * 2 - 1); d[i] = b * 6; } // soft, brownish noise
       }
       if (ac.state === 'suspended') ac.resume();
     }
 
-    function roomImpulse(sec) {
-      const len = Math.floor(ac.sampleRate * sec);
-      const buf = ac.createBuffer(2, len, ac.sampleRate);
-      for (let c = 0; c < 2; c++) {
-        const d = buf.getChannelData(c);
-        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
-      }
-      return buf;
-    }
-
     const ok = () => ac && ac.state !== 'closed';
-    const panTo = (x) => {
-      const p = ac.createStereoPanner ? ac.createStereoPanner() : ac.createGain();
-      if (p.pan) p.pan.value = x;
-      p.connect(out);
-      return p;
-    };
+    const filter = (type, f, q = 0.6) => { const n = ac.createBiquadFilter(); n.type = type; n.frequency.value = f; n.Q.value = q; return n; };
 
-    // one short sine tone that glides from f0 to f1 — the building block of every sound
-    function tone(f0, f1, t, gain, dur, pan = 0) {
-      const o = ac.createOscillator();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(f0, t);
-      o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-      const e = ac.createGain();
-      e.gain.setValueAtTime(0.0001, t);
-      e.gain.exponentialRampToValueAtTime(gain, t + 0.004);
-      e.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(e).connect(panTo(pan));
-      o.start(t);
-      o.stop(t + dur + 0.02);
+    function start() {
+      if (!ok()) return;
+      stop(0.02);
+      const src = ac.createBufferSource(); src.buffer = noise; src.loop = true;
+      const lp = filter('lowpass', 420, 0.5);
+      const level = ac.createGain(); level.gain.value = 0;
+      // the foam sleeve turning: a gentle, fast wobble in loudness
+      const nap = ac.createOscillator(); nap.frequency.value = 18;
+      const depth = ac.createGain(); depth.gain.value = 0;
+      nap.connect(depth).connect(level.gain);
+      src.connect(lp).connect(level).connect(out);
+      src.start(); nap.start();
+      roller = { src, lp, level, nap, depth };
     }
 
-    // soft pad tone: gentle attack and a long, smooth fade
-    function pad(f, t, gain, attack, decay) {
-      const o = ac.createOscillator();
-      o.type = 'sine';
-      o.frequency.value = f;
-      const e = ac.createGain();
-      e.gain.setValueAtTime(0.0001, t);
-      e.gain.exponentialRampToValueAtTime(gain, t + attack);
-      e.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
-      o.connect(e).connect(out);
-      o.start(t);
-      o.stop(t + attack + decay + 0.05);
+    function roll(speed) {
+      if (!roller) return;
+      const k = clamp(speed / 1500);
+      const t = ac.currentTime;
+      roller.level.gain.setTargetAtTime(0.32 * k, t, 0.04);
+      roller.depth.gain.setTargetAtTime(0.1 * k, t, 0.04);
+      roller.nap.frequency.setTargetAtTime(12 + 22 * k, t, 0.06);
+      roller.lp.frequency.setTargetAtTime(320 + 260 * k, t, 0.06);
     }
 
-    function start() { lastTick = -1; }
+    function stop(fade = 0.12) {
+      if (!roller) return;
+      const r = roller; roller = null;
+      const t = ac.currentTime;
+      r.level.gain.cancelScheduledValues(t);
+      r.level.gain.setTargetAtTime(0, t, fade / 3);
+      r.depth.gain.cancelScheduledValues(t);
+      r.depth.gain.setTargetAtTime(0, t, fade / 3);
+      r.src.stop(t + fade + 0.1); r.nap.stop(t + fade + 0.1);
+    }
 
-    function finish() {
+    // paper pressed onto the wall: soft papery pat + a tiny low thump
+    function stick(k = 1) {
       if (!ok()) return;
       const t = ac.currentTime;
-      pad(523.25, t, 0.05, 0.012, 0.3); // one light, simple tone (C5) with a short soft fade
+      const n = ac.createBufferSource(); n.buffer = noise;
+      const ng = ac.createGain();
+      ng.gain.setValueAtTime(0.0001, t);
+      ng.gain.exponentialRampToValueAtTime(0.5 * k, t + 0.004);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+      n.connect(filter('bandpass', 1100, 0.8)).connect(ng).connect(out);
+      n.start(t, Math.random()); n.stop(t + 0.12);
+      const o = ac.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(70, t + 0.06);
+      const og = ac.createGain();
+      og.gain.setValueAtTime(0.0001, t);
+      og.gain.exponentialRampToValueAtTime(0.16 * k, t + 0.004);
+      og.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+      o.connect(og).connect(out); o.start(t); o.stop(t + 0.1);
     }
 
-    // plays the instant the chat is knocked off (no queue, no delay), so it
-    // lands on the same frame you see it go; near-simultaneous knocks share one tick
-    function bloop(side, r) {
-      if (!ok()) return;
-      const now = ac.currentTime;
-      if (now - lastTick < CONFIG.tickMerge / 1000) return;
-      lastTick = now;
-      const f = 440 * (0.95 + r * 0.1);    // nearly the same pitch every time
-      tone(f, f * 0.7, now, 0.06, 0.04, side * 0.4);
-    }
-
-    function reset() { lastTick = -1; }
-
-    return { unlock, start, finish, bloop, reset };
+    return { unlock, start, roll, stop, stick };
   })();
 
   // ---------------------------------------------------------------- DOM
@@ -269,6 +252,7 @@
   let phase = 'idle'; // idle | run | done
   let sweepDone = false, returnStart = -1, paperDoneAt = 0, sweepDoneAt = 0;
   let finished = false, returnEnd = 0;
+  let stuckIn = false, stuckTop = false;
   // Copy of the chat that falls away while the real chat comes back. Built once
   // and reused, so nothing new has to be laid out or painted mid-animation.
   const flyLayer = chat.cloneNode(true);
@@ -697,6 +681,9 @@
     // the fold rolls back off the roller head as the paper gets stuck down
     coverK = 1 - smoothstep((line.roll - CONFIG.uncoverFrom) / (CONFIG.uncoverTo - CONFIG.uncoverFrom));
     const edgeSpeed = Math.max(0, v);
+    sfx.roll(line.roll >= 1 ? 0 : Math.abs(v) * (1 - smoothstep((line.roll - 0.82) / 0.18)));
+    if (!stuckIn && t >= CONFIG.enterDuration) { stuckIn = true; sfx.stick(1); }      // sheet lands on the wall
+    if (!stuckTop && line.roll >= 0.9) { stuckTop = true; sfx.stick(0.6); }          // last of it pressed flat
     last = { now, y: line.y };
 
     // Stuck paper: clipped at the roller line, image fixed to the paper
@@ -725,7 +712,6 @@
           b.flung = true;
           b.t0 = tSec;
           b.vy = -Math.max(300, edgeSpeed) * b.lift;
-          sfx.bloop(b.side, b.pitch);
         } else {
           const k = smoothstep(1 - (gap - b.contact) / CONFIG.nudgeRange);
           if (k > 0) setTransform(b.el, b.side * 3 * k, -CONFIG.nudgeLift * k, b.side * CONFIG.nudgeTilt * k, 1);
@@ -765,6 +751,7 @@
         flyLayer.classList.add('is-idle');
         sweepDone = true;
         sweepDoneAt = t;
+        sfx.stop();
       }
     }
   }
@@ -829,7 +816,6 @@
       // hold on the clean new wallpaper, then bring the chat back
       if (sweepDone && returnStart < 0 && t - sweepDoneAt >= CONFIG.holdNewWallpaper) startReturn(t);
       const settled = returnStart >= 0 && updateReturn(t);
-      if (returnStart >= 0 && !finished && t - returnStart >= returnEnd) { finished = true; sfx.finish(); }
       if (sweepDone && settled) {
         units.forEach((el) => { el.style.transform = ''; el.style.opacity = ''; });
         flyLayer.classList.add('is-idle');
@@ -843,7 +829,7 @@
 
   // Back to the very first frame: old wallpaper, chat in place, no paper or roller.
   function resetToInitial() {
-    sfx.reset();
+    sfx.stop(0.05);
     wpBase.classList.remove('is-new');
     sheet.classList.remove('is-active');
     flapCanvas.classList.remove('is-active');
@@ -882,6 +868,7 @@
     flapCanvas.classList.add('is-active');
     roller.classList.add('is-active');
     roller.style.opacity = '1';
+    stuckIn = false; stuckTop = false;
     sfx.start();
 
     phase = 'run';
