@@ -46,77 +46,36 @@ body {
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-/* ---------- presentation (desktop: phone on a desk) ---------- */
-.stage {
-  height: 100%;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  justify-items: center;
-  gap: 14px;
-  padding-block: 24px 18px;
-  padding-inline: 16px;
-}
-.fit {
-  width: 100%;
-  min-height: 0;
-  container-type: size;
-  display: grid;
-  place-items: center;
-}
-.device {
-  width: min(100cqw, calc((100cqh - 20px) * 360 / 780 + 20px));
-  padding: 10px;
-  border-radius: calc(min(100cqw, (100cqh - 20px) * 360 / 780 + 20px) * .13);
-  background: #08090c;
-  box-shadow: 0 0 0 1.5px #3a3e47, 0 0 0 4px #15171c, 0 50px 90px -40px rgba(0, 0, 0, .9);
-}
-.caption {
-  margin: 0;
-  font-size: 13px;
-  color: var(--ink-3);
-  letter-spacing: .01em;
-  text-align: center;
-}
-.caption b { color: var(--ink-2); font-weight: 500; }
-
-/* ---------- the phone screen ---------- */
+/* ---------- full-bleed screen ----------
+   The wallpaper runs edge to edge on any display. Content lives in a
+   phone-width column scaled by --dp (1dp = the smaller of width/360 and
+   height/680), centred; home chrome hugs the bottom edge and the game is
+   centred vertically with --gy. */
+body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
 .screen {
-  --dp: calc(100cqw / 360);
-  position: relative;
-  width: 100%;
-  aspect-ratio: 360 / 780;
+  --dp: clamp(.5px, min(100cqw / 360, 100cqh / 680), 2.2px);
+  --gy: 0px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  position: fixed; inset: 0;
   overflow: hidden;
-  border-radius: 9.4% / 4.35%;
-  container-type: inline-size;
-  background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat;
+  container-type: size;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-.screen * { --dp: calc(100cqw / 360); }
-
-@media (max-width: 560px) {
-  body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
-  .stage { padding: 0; gap: 0; grid-template-rows: minmax(0, 1fr); }
-  .caption { display: none; }
-  .device { width: min(100cqw, calc(100cqh * 360 / 780)); padding: 0; border-radius: 0; background: none; box-shadow: none; }
-  .screen { border-radius: 0; background: none; }
-  .punch { display: none; }
-}
-
-.punch {
-  position: absolute; left: 50%; top: calc(var(--dp) * 10);
-  width: calc(var(--dp) * 11); height: calc(var(--dp) * 11);
-  margin-left: calc(var(--dp) * -5.5);
-  border-radius: 50%; background: #050608; z-index: 20;
-  box-shadow: inset 0 0 0 calc(var(--dp) * 1.5) #111318;
+.col {
+  --edge: calc((100cqw - var(--dp) * 360) / -2 + env(safe-area-inset-right, 0px));
+  position: absolute; top: 0; bottom: 0;
+  left: calc(50% - var(--dp) * 180);
+  width: calc(var(--dp) * 360);
 }
 
 /* status bar */
 .status {
-  position: absolute; inset: 0 0 auto 0; height: calc(var(--dp) * 36);
+  position: absolute; inset: 0 0 auto 0;
+  height: calc(var(--dp) * 36 + env(safe-area-inset-top, 0px));
   display: flex; align-items: center; justify-content: space-between;
-  padding: calc(var(--dp) * 2) calc(var(--dp) * 18) 0;
+  padding: calc(var(--dp) * 2 + env(safe-area-inset-top, 0px)) max(calc(var(--dp) * 18), env(safe-area-inset-right, 0px)) 0 max(calc(var(--dp) * 18), env(safe-area-inset-left, 0px));
   font-size: calc(var(--dp) * 14); font-weight: 500; z-index: 15;
   font-variant-numeric: tabular-nums;
 }
@@ -134,7 +93,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 /* top-right action: overflow menu ⇄ close (shape-morph cross-fade) */
 .top-action {
   position: absolute; z-index: 16;
-  left: calc(var(--dp) * 302); top: calc(var(--dp) * 38);
+  right: calc(var(--dp) * 10 + var(--edge)); top: calc(var(--dp) * 38);
   width: calc(var(--dp) * 48); height: calc(var(--dp) * 48);
   border-radius: 50%;
   display: grid; place-items: center;
@@ -142,7 +101,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 }
 .top-action:active { background: rgba(255, 255, 255, .12); }
 .top-action svg { width: calc(var(--dp) * 20); height: calc(var(--dp) * 20); }
-#closeBtn { left: calc(var(--dp) * 302); top: calc(var(--dp) * 37); opacity: 0; transform: rotate(-90deg) scale(.6); pointer-events: none; }
+#closeBtn { top: calc(var(--dp) * 37); opacity: 0; transform: rotate(-90deg) scale(.6); pointer-events: none; }
 .is-game #moreBtn { opacity: 0; transform: rotate(90deg) scale(.6); pointer-events: none; }
 .is-game #closeBtn { opacity: 1; transform: none; pointer-events: auto; }
 
@@ -184,14 +143,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 }
 .pager {
   position: absolute; z-index: 3;
-  left: calc(var(--dp) * 126.3); top: calc(var(--dp) * 673);
+  left: calc(var(--dp) * 126.3); bottom: calc(var(--dp) * 100.2 + var(--safe-b));
   display: flex; gap: calc(var(--dp) * 9.9);
 }
 .pager i { width: calc(var(--dp) * 6.8); height: calc(var(--dp) * 6.8); border-radius: 50%; background: rgba(255, 255, 255, .5); }
 .pager i.on { background: #fff; }
 .search {
   position: absolute; z-index: 3;
-  left: calc(var(--dp) * 58.3); top: calc(var(--dp) * 703.7);
+  left: calc(var(--dp) * 58.3); bottom: calc(var(--dp) * 25.1 + var(--safe-b));
   width: calc(var(--dp) * 243.4); height: calc(var(--dp) * 51.2);
   border-radius: calc(var(--dp) * 26);
   background: var(--search);
@@ -205,7 +164,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 
 .nav-handle {
   position: absolute; z-index: 15;
-  left: calc(var(--dp) * 117); top: calc(var(--dp) * 771.2);
+  left: calc(var(--dp) * 117); bottom: calc(var(--dp) * 5.1 + var(--safe-b));
   width: calc(var(--dp) * 126); height: calc(var(--dp) * 3.7);
   border-radius: 99px; background: rgba(255, 255, 255, .85);
 }
@@ -213,7 +172,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 /* tubes: glass test tubes drawn in SVG */
 .tubes { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .tube {
-  position: absolute; top: calc(var(--dp) * 337.6);
+  position: absolute; top: calc(var(--dp) * 337.6 + var(--gy));
   width: calc(var(--dp) * 72.2); height: calc(var(--dp) * 303.4);
   opacity: 0; transform: translateY(calc(var(--dp) * 18));
   transition: opacity .6s cubic-bezier(.2, 0, 0, 1), transform .9s cubic-bezier(.2, 0, 0, 1);
@@ -239,7 +198,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 .is-game .dim { opacity: 1; }
 
 /* pointer surface for the game */
-.hit { position: absolute; left: 0; right: 0; top: calc(var(--dp) * 236); height: calc(var(--dp) * 420); z-index: 6; touch-action: none; display: none; }
+.hit { position: absolute; left: 0; right: 0; top: calc(var(--dp) * 236 + var(--gy)); height: calc(var(--dp) * 420); z-index: 6; touch-action: none; display: none; }
 .is-game .hit { display: block; }
 
 /* HUD: hint → timer → reshuffle */
@@ -250,12 +209,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   transition: opacity .5s cubic-bezier(.2, 0, 0, 1), transform .8s cubic-bezier(.2, 0, 0, 1);
 }
 .hint {
-  top: calc(var(--dp) * 140);
+  top: calc(var(--dp) * 140 + var(--gy));
   font-size: calc(var(--dp) * 19.5); line-height: calc(var(--dp) * 25);
   font-weight: 300; color: var(--ink-2); letter-spacing: .005em;
   text-wrap: balance;
 }
-.clock { top: calc(var(--dp) * 145.4); display: grid; justify-items: center; gap: calc(var(--dp) * 3); }
+.clock { top: calc(var(--dp) * 145.4 + var(--gy)); display: grid; justify-items: center; gap: calc(var(--dp) * 3); }
 .clock .time {
   font-size: calc(var(--dp) * 22); line-height: calc(var(--dp) * 24); font-weight: 300;
   font-variant-numeric: tabular-nums; letter-spacing: .02em;
@@ -266,7 +225,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 .is-game.hud-hint .hint { transition-delay: .25s; }
 
 .reshuffle {
-  position: absolute; left: 50%; top: calc(var(--dp) * 224.4);
+  position: absolute; left: 50%; top: calc(var(--dp) * 224.4 + var(--gy));
   height: calc(var(--dp) * 28); padding: 0 calc(var(--dp) * 13);
   border-radius: 99px;
   display: inline-flex; align-items: center; gap: calc(var(--dp) * 6);
@@ -289,7 +248,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 .menu-open .scrim { display: block; }
 .menu {
   position: absolute; z-index: 18;
-  right: calc(var(--dp) * 18); top: calc(var(--dp) * 46.8);
+  right: calc(var(--dp) * 18 + var(--edge)); top: calc(var(--dp) * 46.8);
   width: calc(var(--dp) * 157.6);
   padding: calc(var(--dp) * 10) 0;
   border-radius: calc(var(--dp) * 24);
@@ -321,7 +280,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 .menu-open .menu-item:nth-child(4) { transition-delay: .09s; }
 
 .snack {
-  position: absolute; z-index: 19; left: calc(var(--dp) * 16); right: calc(var(--dp) * 16); top: calc(var(--dp) * 690);
+  position: absolute; z-index: 19; left: calc(var(--dp) * 16); right: calc(var(--dp) * 16); bottom: calc(var(--dp) * 92 + var(--safe-b));
   padding: calc(var(--dp) * 13) calc(var(--dp) * 16);
   border-radius: calc(var(--dp) * 14);
   background: var(--inverse); color: var(--on-inverse);
@@ -337,21 +296,20 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 </style>
 </head>
 <body>
-<main class="stage">
-  <div class="fit">
-    <div class="device">
-      <div class="screen" id="screen">
-        <div class="punch" aria-hidden="true"></div>
+<main class="screen" id="screen">
 
         <div class="status" aria-hidden="true">
           <span id="clockNow">1:06</span>
           <span class="status-icons">
             <svg viewBox="0 0 18 14" fill="#fff"><path d="M9 13.2 .6 4.6a12 12 0 0 1 16.8 0Z" opacity=".95"/></svg>
             <svg viewBox="0 0 16 14" fill="#fff"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="4.3" y="6" width="3" height="8" rx="1"/><rect x="8.6" y="3" width="3" height="11" rx="1"/><rect x="12.9" y="0" width="3" height="14" rx="1" opacity=".45"/></svg>
-            <span class="batt">15</span>
+            <span class="batt">16</span>
           </span>
         </div>
 
+        <div class="dim" aria-hidden="true"></div>
+        <div class="scrim" id="scrim"></div>
+        <div class="col" id="col">
         <button class="top-action" id="moreBtn" aria-label="More options" aria-haspopup="menu" aria-expanded="false" aria-controls="menu">
           <svg viewBox="0 0 20 20" fill="#fff"><circle cx="10" cy="3.2" r="1.9"/><circle cx="10" cy="10" r="1.9"/><circle cx="10" cy="16.8" r="1.9"/></svg>
         </button>
@@ -359,7 +317,6 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
           <svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l12 12M16 4 4 16"/></svg>
         </button>
 
-        <div class="dim" aria-hidden="true"></div>
         <div class="tubes" id="tubes"></div>
         <div class="apps" id="apps"></div>
         <div class="hit" id="hit"></div>
@@ -387,7 +344,6 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
         </div>
         <div class="nav-handle" aria-hidden="true"></div>
 
-        <div class="scrim" id="scrim"></div>
         <div class="menu" id="menu" role="menu" aria-label="Home screen options">
           <button class="menu-item" role="menuitem" tabindex="-1" id="sortBtn">Sort</button>
           <button class="menu-item" role="menuitem" tabindex="-1" data-soon="Clean up pages">Clean up pages</button>
@@ -395,10 +351,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
           <button class="menu-item" role="menuitem" tabindex="-1" id="playBtn">Play</button>
         </div>
         <div class="snack" id="snack" role="status"></div>
-      </div>
-    </div>
-  </div>
-  <p class="caption"><b>Tonal Sort</b> · Galaxy S24 home screen prototype · Tap ⋮ then Play</p>
+        </div>
 </main>
 
 <script>
@@ -446,8 +399,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   const TUBE = { x0: 24, pitch: 80, w: 72.2, top: 337.6, h: 303.4, slot: 56.6, bottomCy: 268.5, cap: 5, iconScale: 56.6 / 64 };
   const homePos = (i) => ({ cx: 55.5 + 83 * (i % 4), cy: 125 + 94 * Math.floor(i / 4), s: 1, r: 0 });
   const tubeCx = (i) => TUBE.x0 + TUBE.w / 2 + TUBE.pitch * i;
-  const slotPos = (i, k) => ({ cx: tubeCx(i), cy: TUBE.top + TUBE.bottomCy - TUBE.slot * k, s: TUBE.iconScale, r: 0 });
-  const liftPos = (i) => ({ cx: tubeCx(i), cy: 296, s: 1, r: -7 });
+  const slotPos = (i, k) => ({ cx: tubeCx(i), cy: TUBE.top + GY + TUBE.bottomCy - TUBE.slot * k, s: TUBE.iconScale, r: 0 });
+  const liftPos = (i) => ({ cx: tubeCx(i), cy: 296 + GY, s: 1, r: -7 });
 
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -470,10 +423,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
-  const screen = $("screen"), appsEl = $("apps"), tubesEl = $("tubes"), hit = $("hit");
+  const screen = $("screen"), col = $("col"), appsEl = $("apps"), tubesEl = $("tubes"), hit = $("hit");
   const timeEl = $("time"), bestEl = $("best"), fx = $("fx"), snackEl = $("snack");
   const moreBtn = $("moreBtn"), closeBtn = $("closeBtn"), menu = $("menu"), reshuffleBtn = $("reshuffle");
   let S = 0; // px per dp
+  let GY = 0; // dp the game shifts down to sit centred on taller screens
 
   const tokens = APPS.map((app, index) => {
     const el = document.createElement("div");
@@ -599,21 +553,34 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   // a gentle arc that rises a little above the higher of the two points
   const arcVia = (a, b, lift = 36) => ({ cx: (a.cx + b.cx) / 2, cy: Math.min(a.cy, b.cy) - lift });
 
-  // Only re-place icons when the scale really changes (e.g. a phone's URL bar
-  // resizing the viewport), so flights in progress aren't cut short.
+  // Where each icon belongs right now, from game state rather than pixels.
+  function restingPos(t) {
+    if (mode === "game") {
+      if (lifted && lifted.t === t) return liftPos(lifted.from);
+      for (let i = 0; i < 4; i++) { const k = tubes[i].indexOf(t); if (k >= 0) return slotPos(i, k); }
+    }
+    return homePos(t.slot);
+  }
+
+  // Re-place icons only when the scale or game offset really changes (rotation,
+  // window resize, a phone's URL bar), so flights in progress aren't cut short.
   function relayout() {
-    const next = screen.clientWidth / 360;
-    if (Math.abs(next - S) > 0.001) {
-      tokens.forEach((t) => { if (t.anim) { t.anim.cancel(); t.anim = null; } });
-      S = next;
-      tokens.forEach((t) => (t.el.style.transform = toTransform(t.pos)));
+    const nextS = col.clientWidth / 360;
+    const nextGY = Math.max(-85, (screen.clientHeight / nextS - 780) / 2);
+    if (Math.abs(nextS - S) > 0.001 || Math.abs(nextGY - GY) > 0.5) {
+      S = nextS;
+      GY = nextGY;
+      screen.style.setProperty("--gy", `${(GY * S).toFixed(2)}px`);
+      tokens.forEach((t) => {
+        if (t.anim) { t.anim.cancel(); t.anim = null; }
+        if (!(ptr && ptr.dragging && ptr.cand === t)) t.pos = restingPos(t);
+        t.el.style.transform = toTransform(t.pos);
+      });
     }
     const dpr = Math.min(3, window.devicePixelRatio || 1);
-    fx.width = Math.round(screen.clientWidth * dpr);
-    fx.height = Math.round(screen.clientHeight * dpr);
+    fx.width = Math.round(col.clientWidth * dpr);
+    fx.height = Math.round(col.clientHeight * dpr);
   }
-  new ResizeObserver(relayout).observe(screen);
-  relayout();
 
   // ---------- tone detection ----------
   // Sample a ring just inside the icon's edge: that's the background plate,
@@ -893,7 +860,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
       tubes.forEach((col, i) => tubeEls[i].style.setProperty("--tint", FAMILY[col[0].fam].color));
       screen.classList.add("is-won");
       timeEl.animate([{ transform: "scale(1)" }, { transform: "scale(1.06)" }, { transform: "scale(1)" }], { duration: 800, easing: "cubic-bezier(.2,0,0,1)" });
-      confetti(180, 166);
+      confetti(180, 166 + GY);
       tubes.forEach((col, i) => col.forEach((t, k) => {
         t.img.animate([{ transform: "translateY(0)" }, { transform: `translateY(${-3 * S}px) scale(1.02)` }, { transform: "translateY(0)" }],
           { duration: 700, delay: i * 90 + k * 45, easing: "cubic-bezier(.2,0,0,1)" });
@@ -1014,7 +981,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 
   // ---------- pointer: tap a tube, or drag its top icon ----------
   let ptr = null;
-  const toDp = (e) => { const b = screen.getBoundingClientRect(); return { x: (e.clientX - b.left) / S, y: (e.clientY - b.top) / S }; };
+  const toDp = (e) => { const b = col.getBoundingClientRect(); return { x: (e.clientX - b.left) / S, y: (e.clientY - b.top) / S }; };
   const tubeAt = (x) => {
     const i = Math.floor((x - TUBE.x0 + 4) / TUBE.pitch);
     if (i < 0 || i > 3) return -1;
@@ -1133,6 +1100,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   };
   tickClock();
   setInterval(tickClock, 15000);
+  // home screen starts sorted A–Z; then size everything to this screen
+  tokens.slice()
+    .sort((a, b) => a.app.name.localeCompare(b.app.name, undefined, { sensitivity: "base" }))
+    .forEach((t, i) => (t.slot = i));
+  new ResizeObserver(relayout).observe(screen);
+  relayout();
 })();
 </script>
 </body>
