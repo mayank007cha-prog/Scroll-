@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tonal Sort</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght,ROND@6..144,300..700,0..100&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..700&display=swap">
+<style>
+/* Layout: one Galaxy S24 screen (360 × 780 dp) drawn on a 1dp grid, the
+   phone scales to fit; on a real phone it fills the viewport edge to edge.
+   Colors are a dark tonal scheme pulled from the blue wallpaper, the way
+   Android's dynamic color would derive them. */
+:root {
+  --page: #0b0e14;
+  --ink: #f3f5fb;
+  --ink-2: rgba(243, 245, 251, .74);
+  --ink-3: rgba(243, 245, 251, .5);
+  --surface: #1d2435;
+  --surface-hi: #262f45;
+  --primary: #b2c5ff;
+  --primary-cont: #2b4274;
+  --on-primary-cont: #dbe2ff;
+  --inverse: #e4e8f4;
+  --on-inverse: #1b2131;
+  --search: rgba(40, 42, 47, .9);
+  --tube: rgba(255, 255, 255, .07);
+  --tube-edge: rgba(255, 255, 255, .1);
+  --pill: rgba(14, 20, 36, .55);
+  --font: "Google Sans Flex", "Roboto Flex", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ---------- presentation (desktop: phone on a desk) ---------- */
+.stage {
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 14px;
+  padding-block: 24px 18px;
+  padding-inline: 16px;
+}
+.fit {
+  width: 100%;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+.device {
+  width: min(100cqw, calc((100cqh - 20px) * 360 / 780 + 20px));
+  padding: 10px;
+  border-radius: calc(min(100cqw, (100cqh - 20px) * 360 / 780 + 20px) * .13);
+  background: #08090c;
+  box-shadow: 0 0 0 1.5px #3a3e47, 0 0 0 4px #15171c, 0 50px 90px -40px rgba(0, 0, 0, .9);
+}
+.caption {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+  letter-spacing: .01em;
+  text-align: center;
+}
+.caption b { color: var(--ink-2); font-weight: 500; }
+
+/* ---------- the phone screen ---------- */
+.screen {
+  --dp: calc(100cqw / 360);
+  position: relative;
+  width: 100%;
+  aspect-ratio: 360 / 780;
+  overflow: hidden;
+  border-radius: 9.4% / 4.35%;
+  container-type: inline-size;
+  background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.screen * { --dp: calc(100cqw / 360); }
+
+@media (max-width: 560px) {
+  body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
+  .stage { padding: 0; gap: 0; grid-template-rows: minmax(0, 1fr); }
+  .caption { display: none; }
+  .device { width: min(100cqw, calc(100cqh * 360 / 780)); padding: 0; border-radius: 0; background: none; box-shadow: none; }
+  .screen { border-radius: 0; background: none; }
+  .punch { display: none; }
+}
+
+.punch {
+  position: absolute; left: 50%; top: calc(var(--dp) * 10);
+  width: calc(var(--dp) * 11); height: calc(var(--dp) * 11);
+  margin-left: calc(var(--dp) * -5.5);
+  border-radius: 50%; background: #050608; z-index: 20;
+  box-shadow: inset 0 0 0 calc(var(--dp) * 1.5) #111318;
+}
+
+/* status bar */
+.status {
+  position: absolute; inset: 0 0 auto 0; height: calc(var(--dp) * 36);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(var(--dp) * 2) calc(var(--dp) * 18) 0;
+  font-size: calc(var(--dp) * 14); font-weight: 500; z-index: 15;
+  font-variant-numeric: tabular-nums;
+}
+.status-icons { display: flex; align-items: center; gap: calc(var(--dp) * 5); }
+.status-icons svg { height: calc(var(--dp) * 13); width: auto; display: block; }
+.batt {
+  display: inline-grid; place-items: center;
+  height: calc(var(--dp) * 13); min-width: calc(var(--dp) * 23);
+  padding: 0 calc(var(--dp) * 4);
+  border-radius: calc(var(--dp) * 4.5);
+  background: rgba(255, 255, 255, .9); color: #121620;
+  font-size: calc(var(--dp) * 9.5); font-weight: 650; line-height: 1;
+}
+
+/* top-right action: overflow menu ⇄ close (shape-morph cross-fade) */
+.top-action {
+  position: absolute; z-index: 16;
+  left: calc(var(--dp) * 302); top: calc(var(--dp) * 38);
+  width: calc(var(--dp) * 48); height: calc(var(--dp) * 48);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  transition: opacity .28s cubic-bezier(.2, 0, 0, 1), transform .5s cubic-bezier(.2, 1.4, .3, 1), background-color .2s;
+}
+.top-action:active { background: rgba(255, 255, 255, .12); }
+.top-action svg { width: calc(var(--dp) * 20); height: calc(var(--dp) * 20); }
+#closeBtn { left: calc(var(--dp) * 302); top: calc(var(--dp) * 37); opacity: 0; transform: rotate(-90deg) scale(.6); pointer-events: none; }
+.is-game #moreBtn { opacity: 0; transform: rotate(90deg) scale(.6); pointer-events: none; }
+.is-game #closeBtn { opacity: 1; transform: none; pointer-events: auto; }
+
+/* app tokens: one layer shared by the home grid and the game */
+.apps { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.app {
+  position: absolute; left: 0; top: 0;
+  width: calc(var(--dp) * 64); height: calc(var(--dp) * 64);
+  transform-origin: 50% 50%;
+  will-change: transform;
+  pointer-events: auto;
+  transition: opacity .3s cubic-bezier(.2, 0, 0, 1), filter .3s;
+}
+.app img {
+  display: block; width: 100%; height: 100%;
+  -webkit-user-drag: none; pointer-events: none;
+  transition: transform .35s cubic-bezier(.2, 1.5, .3, 1), filter .3s;
+}
+.app .label {
+  position: absolute; left: 50%; top: calc(var(--dp) * 67);
+  width: calc(var(--dp) * 84); margin-left: calc(var(--dp) * -42);
+  text-align: center; font-size: calc(var(--dp) * 12.5); line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+  transition: opacity .18s cubic-bezier(.2, 0, 0, 1);
+}
+.app.is-pressed img { transform: scale(.9); }
+.is-game .app { pointer-events: none; }
+.is-game .app .label { opacity: 0; }
+.app.is-out { opacity: 0; }
+.app.is-lifted { z-index: 3; }
+.app.is-lifted img { filter: drop-shadow(0 calc(var(--dp) * 10) calc(var(--dp) * 12) rgba(0, 0, 0, .35)); }
+
+/* home chrome */
+.pager, .search {
+  transition: opacity .3s cubic-bezier(.2, 0, 0, 1), transform .45s cubic-bezier(.2, 0, 0, 1);
+}
+.pager {
+  position: absolute; z-index: 3;
+  left: calc(var(--dp) * 126.3); top: calc(var(--dp) * 673);
+  display: flex; gap: calc(var(--dp) * 9.9);
+}
+.pager i { width: calc(var(--dp) * 6.8); height: calc(var(--dp) * 6.8); border-radius: 50%; background: rgba(255, 255, 255, .5); }
+.pager i.on { background: #fff; }
+.search {
+  position: absolute; z-index: 3;
+  left: calc(var(--dp) * 58.3); top: calc(var(--dp) * 703.7);
+  width: calc(var(--dp) * 243.4); height: calc(var(--dp) * 51.2);
+  border-radius: calc(var(--dp) * 26);
+  background: var(--search);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 calc(var(--dp) * 17) 0 calc(var(--dp) * 18);
+  font-size: calc(var(--dp) * 16); color: rgba(255, 255, 255, .86);
+}
+.search span { display: flex; align-items: center; gap: calc(var(--dp) * 10); }
+.search svg { width: calc(var(--dp) * 19); height: calc(var(--dp) * 19); }
+.is-game .pager, .is-game .search { opacity: 0; transform: translateY(calc(var(--dp) * 16)); pointer-events: none; }
+
+.nav-handle {
+  position: absolute; z-index: 15;
+  left: calc(var(--dp) * 117); top: calc(var(--dp) * 771.2);
+  width: calc(var(--dp) * 126); height: calc(var(--dp) * 3.7);
+  border-radius: 99px; background: rgba(255, 255, 255, .85);
+}
+
+/* tubes */
+.tubes { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.tube {
+  position: absolute; top: calc(var(--dp) * 337.6);
+  width: calc(var(--dp) * 72.2); height: calc(var(--dp) * 303.4);
+  border-radius: calc(var(--dp) * 36.1) calc(var(--dp) * 36.1) calc(var(--dp) * 34) calc(var(--dp) * 34);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .03), var(--tube) 55%, rgba(255, 255, 255, .1));
+  box-shadow: inset 0 0 0 1px var(--tube-edge), inset 0 calc(var(--dp) * -10) calc(var(--dp) * 18) rgba(255, 255, 255, .04);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  opacity: 0; transform: translateY(calc(var(--dp) * 28)) scaleY(.9);
+  transform-origin: 50% 100%;
+  transition: opacity .32s cubic-bezier(.2, 0, 0, 1), transform .6s cubic-bezier(.2, 1.25, .3, 1), box-shadow .2s;
+  pointer-events: none;
+}
+.tube::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(180deg, transparent 10%, var(--tint, transparent));
+  opacity: 0; transition: opacity .7s cubic-bezier(.2, 0, 0, 1);
+}
+.is-game .tube { opacity: 1; transform: none; }
+.is-game .tube:nth-child(2) { transition-delay: 0s, .04s, 0s; }
+.is-game .tube:nth-child(3) { transition-delay: 0s, .08s, 0s; }
+.is-game .tube:nth-child(4) { transition-delay: 0s, .12s, 0s; }
+.tube.is-target { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .34), inset 0 calc(var(--dp) * -10) calc(var(--dp) * 18) rgba(255, 255, 255, .08); }
+.is-won .tube::after { opacity: .42; }
+
+/* pointer surface for the game */
+.hit { position: absolute; left: 0; right: 0; top: calc(var(--dp) * 236); height: calc(var(--dp) * 420); z-index: 6; touch-action: none; display: none; }
+.is-game .hit { display: block; }
+
+/* HUD: hint → timer → reshuffle */
+.hud { position: absolute; inset: 0; z-index: 7; pointer-events: none; text-align: center; font-variation-settings: "ROND" 40; }
+.hint, .clock, .swatches {
+  position: absolute; left: 0; right: 0; margin: 0;
+  opacity: 0; transform: translateY(calc(var(--dp) * 8));
+  transition: opacity .3s cubic-bezier(.2, 0, 0, 1), transform .5s cubic-bezier(.2, 1.3, .3, 1);
+}
+.hint {
+  top: calc(var(--dp) * 140);
+  font-size: calc(var(--dp) * 19.5); line-height: calc(var(--dp) * 24);
+  font-weight: 350; color: var(--ink-2);
+  text-wrap: balance;
+}
+.swatches {
+  top: calc(var(--dp) * 202);
+  display: flex; justify-content: center; gap: calc(var(--dp) * 7);
+}
+.swatches i {
+  width: calc(var(--dp) * 7); height: calc(var(--dp) * 7); border-radius: 50%;
+  background: var(--c); box-shadow: 0 0 0 1px rgba(255, 255, 255, .25);
+}
+.clock { top: calc(var(--dp) * 145.4); display: grid; justify-items: center; gap: calc(var(--dp) * 2.5); }
+.clock .time {
+  font-size: calc(var(--dp) * 21); line-height: calc(var(--dp) * 24); font-weight: 400;
+  font-variant-numeric: tabular-nums; letter-spacing: .01em;
+}
+.clock .best { font-size: calc(var(--dp) * 12); line-height: calc(var(--dp) * 14); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.is-game.hud-hint .hint, .is-game.hud-hint .swatches,
+.is-game.hud-clock .clock { opacity: 1; transform: none; }
+.is-game.hud-hint .swatches { transition-delay: .12s; }
+
+.reshuffle {
+  position: absolute; left: 50%; top: calc(var(--dp) * 224.4);
+  height: calc(var(--dp) * 26); padding: 0 calc(var(--dp) * 12);
+  border-radius: 99px;
+  display: inline-flex; align-items: center; gap: calc(var(--dp) * 5);
+  background: var(--pill);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font-size: calc(var(--dp) * 12); font-weight: 600; letter-spacing: .01em;
+  opacity: 0; transform: translateX(-50%) scale(.7); pointer-events: none;
+  transition: opacity .25s cubic-bezier(.2, 0, 0, 1), transform .55s cubic-bezier(.2, 1.6, .3, 1), background-color .2s;
+}
+.reshuffle::before { content: ""; position: absolute; inset: calc(var(--dp) * -11) calc(var(--dp) * -8); }
+.reshuffle svg { width: calc(var(--dp) * 13); height: calc(var(--dp) * 13); }
+.reshuffle:active { background: rgba(255, 255, 255, .18); }
+.show-reshuffle .reshuffle { opacity: 1; transform: translateX(-50%); pointer-events: auto; }
+
+.fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; }
+
+/* overflow menu: Material 3 Expressive grouped menu */
+.scrim { position: absolute; inset: 0; z-index: 17; display: none; }
+.menu-open .scrim { display: block; }
+.menu {
+  position: absolute; z-index: 18;
+  right: calc(var(--dp) * 12); top: calc(var(--dp) * 84);
+  width: calc(var(--dp) * 252);
+  display: grid; gap: calc(var(--dp) * 3);
+  transform-origin: 92% 0;
+  opacity: 0; transform: scale(.82);
+  pointer-events: none;
+  transition: opacity .16s cubic-bezier(.2, 0, 0, 1), transform .45s cubic-bezier(.2, 1.35, .3, 1);
+}
+.menu-open .menu { opacity: 1; transform: none; pointer-events: auto; }
+.menu-group {
+  background: var(--surface);
+  border-radius: calc(var(--dp) * 20);
+  padding: calc(var(--dp) * 4);
+  display: grid; gap: calc(var(--dp) * 2);
+  box-shadow: 0 calc(var(--dp) * 6) calc(var(--dp) * 22) rgba(0, 0, 0, .3);
+}
+.menu-group.accent { background: var(--primary-cont); color: var(--on-primary-cont); }
+.menu-item {
+  display: flex; align-items: center; gap: calc(var(--dp) * 12);
+  min-height: calc(var(--dp) * 46);
+  padding: 0 calc(var(--dp) * 12);
+  border-radius: calc(var(--dp) * 6);
+  text-align: left; font-size: calc(var(--dp) * 14.5); font-weight: 450;
+  transition: background-color .15s, border-radius .3s cubic-bezier(.2, 1.3, .3, 1);
+}
+.menu-group > .menu-item:first-child { border-top-left-radius: calc(var(--dp) * 16); border-top-right-radius: calc(var(--dp) * 16); }
+.menu-group > .menu-item:last-child { border-bottom-left-radius: calc(var(--dp) * 16); border-bottom-right-radius: calc(var(--dp) * 16); }
+.menu-item:hover, .menu-item:focus-visible { background: rgba(255, 255, 255, .07); outline: none; }
+.menu-item:active { background: rgba(255, 255, 255, .12); border-radius: calc(var(--dp) * 16); }
+.menu-item > svg { width: calc(var(--dp) * 20); height: calc(var(--dp) * 20); flex: none; opacity: .9; }
+.menu-item.game { min-height: calc(var(--dp) * 60); }
+.game-glyph {
+  width: calc(var(--dp) * 34); height: calc(var(--dp) * 34); flex: none;
+  border-radius: calc(var(--dp) * 11);
+  background: var(--primary); display: grid; place-items: center;
+}
+.game-glyph svg { width: calc(var(--dp) * 22); height: calc(var(--dp) * 22); }
+.menu-item .txt { display: grid; gap: calc(var(--dp) * 1); flex: 1; min-width: 0; }
+.menu-item .txt b { font-weight: 600; font-size: calc(var(--dp) * 15); }
+.menu-item .txt small { font-size: calc(var(--dp) * 12); opacity: .78; }
+.badge {
+  font-size: calc(var(--dp) * 10.5); font-weight: 650; letter-spacing: .04em; text-transform: uppercase;
+  padding: calc(var(--dp) * 3) calc(var(--dp) * 7); border-radius: 99px;
+  background: var(--primary); color: #102457;
+}
+.menu .menu-item { opacity: 0; transform: translateY(calc(var(--dp) * -4)); transition: opacity .2s, transform .35s cubic-bezier(.2, 1.3, .3, 1), background-color .15s; }
+.menu-open .menu .menu-item { opacity: 1; transform: none; }
+.menu-open .menu .menu-item:nth-of-type(2) { transition-delay: .03s; }
+.menu-open .menu .menu-item:nth-of-type(3) { transition-delay: .06s; }
+.menu-open .menu .accent .menu-item { transition-delay: .09s; }
+
+.snack {
+  position: absolute; z-index: 19; left: calc(var(--dp) * 16); right: calc(var(--dp) * 16); top: calc(var(--dp) * 690);
+  padding: calc(var(--dp) * 13) calc(var(--dp) * 16);
+  border-radius: calc(var(--dp) * 14);
+  background: var(--inverse); color: var(--on-inverse);
+  font-size: calc(var(--dp) * 13.5); line-height: 1.35;
+  opacity: 0; transform: translateY(calc(var(--dp) * 14)); pointer-events: none;
+  transition: opacity .2s cubic-bezier(.2, 0, 0, 1), transform .45s cubic-bezier(.2, 1.3, .3, 1);
+}
+.snack.on { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .screen *, .screen *::after { transition-duration: .01s !important; transition-delay: 0s !important; }
+}
+</style>
+</head>
+<body>
+<main class="stage">
+  <div class="fit">
+    <div class="device">
+      <div class="screen" id="screen">
+        <div class="punch" aria-hidden="true"></div>
+
+        <div class="status" aria-hidden="true">
+          <span id="clockNow">1:06</span>
+          <span class="status-icons">
+            <svg viewBox="0 0 18 14" fill="#fff"><path d="M9 13.2 .6 4.6a12 12 0 0 1 16.8 0Z" opacity=".95"/></svg>
+            <svg viewBox="0 0 16 14" fill="#fff"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="4.3" y="6" width="3" height="8" rx="1"/><rect x="8.6" y="3" width="3" height="11" rx="1"/><rect x="12.9" y="0" width="3" height="14" rx="1" opacity=".45"/></svg>
+            <span class="batt">15</span>
+          </span>
+        </div>
+
+        <button class="top-action" id="moreBtn" aria-label="More options" aria-haspopup="menu" aria-expanded="false" aria-controls="menu">
+          <svg viewBox="0 0 20 20" fill="#fff"><circle cx="10" cy="3.2" r="1.9"/><circle cx="10" cy="10" r="1.9"/><circle cx="10" cy="16.8" r="1.9"/></svg>
+        </button>
+        <button class="top-action" id="closeBtn" aria-label="Close Tonal Sort" tabindex="-1">
+          <svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l12 12M16 4 4 16"/></svg>
+        </button>
+
+        <div class="tubes" id="tubes"></div>
+        <div class="apps" id="apps"></div>
+        <div class="hit" id="hit"></div>
+
+        <div class="hud">
+          <p class="hint">Put same color family<br>icons together</p>
+          <div class="swatches" id="swatches" aria-hidden="true"></div>
+          <div class="clock">
+            <span class="time" id="time">00:00</span>
+            <span class="best" id="best">Best --:--</span>
+          </div>
+          <button class="reshuffle" id="reshuffle" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            Reshuffle
+          </button>
+        </div>
+        <canvas class="fx" id="fx"></canvas>
+
+        <div class="pager" aria-hidden="true"><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="search" aria-hidden="true">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+            Search
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+        </div>
+        <div class="nav-handle" aria-hidden="true"></div>
+
+        <div class="scrim" id="scrim"></div>
+        <div class="menu" id="menu" role="menu" aria-label="Home screen options">
+          <div class="menu-group">
+            <button class="menu-item" role="menuitem" tabindex="-1" data-soon="Edit home screen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>
+              Edit home screen
+            </button>
+            <button class="menu-item" role="menuitem" tabindex="-1" data-soon="Wallpaper &amp; style">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-1.3-1-1.6-1-2.6 0-1 .8-1.7 1.9-1.7H17a4 4 0 0 0 4-4C21 6.4 17 3 12 3Z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15.5" cy="7.5" r="1.2" fill="currentColor"/></svg>
+              Wallpaper &amp; style
+            </button>
+            <button class="menu-item" role="menuitem" tabindex="-1" data-soon="Home settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>
+              Home settings
+            </button>
+          </div>
+          <div class="menu-group accent">
+            <button class="menu-item game" role="menuitem" tabindex="-1" id="playBtn">
+              <span class="game-glyph" aria-hidden="true">
+                <svg viewBox="0 0 22 22"><rect x="1.5" y="3" width="4" height="16" rx="2" fill="#2fbf6a"/><rect x="6.8" y="3" width="4" height="16" rx="2" fill="#3b7bf0"/><rect x="12.1" y="3" width="4" height="16" rx="2" fill="#eef0f5"/><rect x="17.4" y="3" width="4" height="16" rx="2" fill="#f0703a"/></svg>
+              </span>
+              <span class="txt"><b>Tonal Sort</b><small>Sort 16 apps by color</small></span>
+              <span class="badge">New</span>
+            </button>
+          </div>
+        </div>
+        <div class="snack" id="snack" role="status"></div>
+      </div>
+    </div>
+  </div>
+  <p class="caption"><b>Tonal Sort</b> · Galaxy S24 home screen prototype · Tap ⋮ to play</p>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  // Home screen apps in grid order. `tone` is a fallback used only when the
+  // icon pixels can't be read (e.g. opened from file://).
+  const APPS = [
+    { id: "whatsapp", name: "WhatsApp", tone: "green" },
+    { id: "facebook", name: "Facebook", tone: "blue" },
+    { id: "playstore", name: "Play Store", tone: "white" },
+    { id: "swiggy", name: "Swiggy", tone: "orange" },
+    { id: "phone", name: "Phone", tone: "green" },
+    { id: "truecaller", name: "Truecaller", tone: "blue" },
+    { id: "chatgpt", name: "ChatGPT", tone: "white" },
+    { id: "letsrentz", name: "Lets Rentz", tone: "orange" },
+    { id: "bistro", name: "Bistro", tone: "green" },
+    { id: "porter", name: "Porter", tone: "blue" },
+    { id: "myjio", name: "MyJio", tone: "white" },
+    { id: "turbovpn", name: "Turbo VPN", tone: "orange" },
+    { id: "toing", name: "toing", tone: "green" },
+    { id: "primevideo", name: "Prime Video", tone: "blue" },
+    { id: "delhivery", name: "Delhivery", tone: "white" },
+    { id: "cleartrip", name: "Cleartrip", tone: "orange" },
+  ];
+
+  const FAMILY = {
+    green: { label: "Green", color: "#2fbf6a" },
+    blue: { label: "Blue", color: "#3b7bf0" },
+    white: { label: "White", color: "#eef0f5" },
+    orange: { label: "Orange", color: "#f0703a" },
+    red: { label: "Red", color: "#e5484d" },
+    yellow: { label: "Yellow", color: "#f4c542" },
+    teal: { label: "Teal", color: "#1fb5b0" },
+    purple: { label: "Purple", color: "#8e6cf0" },
+    pink: { label: "Pink", color: "#ec5fa6" },
+    black: { label: "Black", color: "#2a2d34" },
+    grey: { label: "Grey", color: "#9aa0ab" },
+  };
+
+  // Geometry in dp on a 360 × 780 screen, taken from the Figma frames.
+  const ICON = 64;
+  const TUBE = { x0: 24, pitch: 80, w: 72.2, top: 337.6, h: 303.4, slot: 56.6, pad: 9.4, cap: 5, iconScale: 56.6 / 64 };
+  const homePos = (i) => ({ cx: 55.5 + 83 * (i % 4), cy: 125 + 94 * Math.floor(i / 4), s: 1, r: 0 });
+  const tubeCx = (i) => TUBE.x0 + TUBE.w / 2 + TUBE.pitch * i;
+  const slotPos = (i, k) => ({ cx: tubeCx(i), cy: TUBE.top + TUBE.h - TUBE.pad - TUBE.slot / 2 - TUBE.slot * k, s: TUBE.iconScale, r: 0 });
+  const liftPos = (i) => ({ cx: tubeCx(i), cy: 300, s: 1, r: -18 });
+
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- spring motion (M3 Expressive spatial springs) ----------
+  const canLinear = CSS.supports("animation-timing-function", "linear(0, 1)");
+  function spring(stiffness, damping) {
+    const w0 = Math.sqrt(stiffness), zw = damping * w0;
+    const wd = w0 * Math.sqrt(Math.max(1e-6, 1 - damping * damping));
+    const dur = Math.min(1.2, Math.log(1000) / zw);
+    const x = (t) => damping < 1
+      ? 1 - Math.exp(-zw * t) * (Math.cos(wd * t) + (zw / wd) * Math.sin(wd * t))
+      : 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+    const pts = [];
+    for (let i = 0; i <= 48; i++) pts.push(+x((i / 48) * dur).toFixed(4));
+    pts[48] = 1;
+    return {
+      duration: reduced ? 1 : Math.round(dur * 1000),
+      easing: canLinear ? `linear(${pts.join(",")})` : "cubic-bezier(.2,1.25,.3,1)",
+    };
+  }
+  const SP = {
+    fast: spring(800, 0.62),
+    def: spring(420, 0.72),
+    slow: spring(230, 0.78),
+    drop: spring(560, 0.55),
+  };
+
+  // ---------- DOM ----------
+  const $ = (id) => document.getElementById(id);
+  const screen = $("screen"), appsEl = $("apps"), tubesEl = $("tubes"), hit = $("hit");
+  const timeEl = $("time"), bestEl = $("best"), fx = $("fx"), snackEl = $("snack");
+  const moreBtn = $("moreBtn"), closeBtn = $("closeBtn"), menu = $("menu"), reshuffleBtn = $("reshuffle");
+  let S = 1; // px per dp
+
+  const tokens = APPS.map((app, index) => {
+    const el = document.createElement("div");
+    el.className = "app";
+    const img = new Image();
+    img.src = `icons/${app.id}.png`;
+    img.alt = "";
+    img.draggable = false;
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = app.name;
+    el.append(img, label);
+    el.setAttribute("aria-label", app.name);
+    appsEl.append(el);
+    const t = { app, index, el, img, fam: app.tone, pos: homePos(index), anim: null, seq: 0 };
+    el.addEventListener("pointerdown", () => { if (mode === "home") el.classList.add("is-pressed"); });
+    ["pointerup", "pointerleave", "pointercancel"].forEach((e) => el.addEventListener(e, () => el.classList.remove("is-pressed")));
+    return t;
+  });
+
+  const tubeEls = [0, 1, 2, 3].map((i) => {
+    const b = document.createElement("button");
+    b.className = "tube";
+    b.tabIndex = -1;
+    b.style.left = `calc(var(--dp) * ${TUBE.x0 + TUBE.pitch * i})`;
+    b.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tapTube(i); }
+      if (e.key === "ArrowRight") tubeEls[Math.min(3, i + 1)].focus();
+      if (e.key === "ArrowLeft") tubeEls[Math.max(0, i - 1)].focus();
+    });
+    tubesEl.append(b);
+    return b;
+  });
+
+  // ---------- placing tokens ----------
+  const toTransform = (p) =>
+    `translate3d(${((p.cx - ICON / 2) * S).toFixed(2)}px, ${((p.cy - ICON / 2) * S).toFixed(2)}px, 0) rotate(${p.r}deg) scale(${p.s})`;
+
+  function halt(t) {
+    if (!t.anim) return;
+    try { t.anim.commitStyles(); } catch (e) { /* element not rendered */ }
+    t.anim.cancel();
+    t.anim = null;
+  }
+  function moveTo(t, p, sp = SP.def, delay = 0) {
+    halt(t);
+    t.seq++;
+    const from = t.el.style.transform || toTransform(t.pos);
+    const to = toTransform(p);
+    t.pos = p;
+    t.el.style.transform = to;
+    t.anim = t.el.animate([{ transform: from }, { transform: to }], { duration: sp.duration, easing: sp.easing, delay, fill: "backwards" });
+    const a = t.anim;
+    a.onfinish = () => { if (t.anim === a) t.anim = null; };
+    return a;
+  }
+  function setNow(t, p) { halt(t); t.seq++; t.pos = p; t.el.style.transform = toTransform(p); }
+
+  // hop sideways above the target tube, then settle into its slot
+  function hopTo(t, via, p) {
+    moveTo(t, via, SP.fast);
+    const seq = t.seq;
+    setTimeout(() => { if (t.seq === seq) moveTo(t, p, SP.drop); }, reduced ? 0 : 150);
+  }
+
+  function relayout() {
+    S = screen.clientWidth / 360;
+    tokens.forEach((t) => setNow(t, t.pos));
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    fx.width = Math.round(screen.clientWidth * dpr);
+    fx.height = Math.round(screen.clientHeight * dpr);
+  }
+  new ResizeObserver(relayout).observe(screen);
+  relayout();
+
+  // ---------- tone detection ----------
+  // Sample a ring just inside the icon's edge: that's the background plate,
+  // which is what reads as the icon's color on a home screen.
+  function familyOf(r, g, b) {
+    const max = Math.max(r, g, b) / 255, min = Math.min(r, g, b) / 255;
+    const l = (max + min) / 2, d = max - min;
+    const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+    if (l > 0.74 && s < 0.25) return "white";
+    if (l < 0.16) return "black";
+    if (s < 0.18) return "grey";
+    let h;
+    const R = r / 255, G = g / 255, B = b / 255;
+    if (max === R) h = ((G - B) / d) % 6; else if (max === G) h = (B - R) / d + 2; else h = (R - G) / d + 4;
+    h = (h * 60 + 360) % 360;
+    if (h < 12 || h >= 345) return "red";
+    if (h < 42) return "orange";
+    if (h < 68) return "yellow";
+    if (h < 165) return "green";
+    if (h < 195) return "teal";
+    if (h < 255) return "blue";
+    if (h < 300) return "purple";
+    return "pink";
+  }
+  function detectTone(t) {
+    try {
+      const n = 66, c = document.createElement("canvas");
+      c.width = c.height = n;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(t.img, 0, 0, n, n);
+      const data = ctx.getImageData(0, 0, n, n).data;
+      let r = 0, g = 0, b = 0, k = 0;
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        const inset = Math.min(x, y, n - 1 - x, n - 1 - y);
+        if (inset < 4 || inset > 8) continue;
+        const o = (y * n + x) * 4;
+        if (data[o + 3] < 250) continue;
+        r += data[o]; g += data[o + 1]; b += data[o + 2]; k++;
+      }
+      if (k > 20) t.fam = familyOf(r / k, g / k, b / k);
+    } catch (e) { /* tainted canvas: keep the fallback tone */ }
+  }
+  tokens.forEach((t) => {
+    if (t.img.complete && t.img.naturalWidth) detectTone(t);
+    else t.img.addEventListener("load", () => detectTone(t), { once: true });
+  });
+
+  // ---------- game state ----------
+  let mode = "home";
+  let tubes = [[], [], [], []];
+  let families = [];
+  let lifted = null; // { t, from }
+  let busyUntil = 0;
+  let won = false;
+  const timer = { start: 0, elapsed: 0, running: false, id: 0 };
+
+  const rand = (n) => Math.floor(Math.random() * n);
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const fmt = (ms) => { const s = Math.floor(ms / 1000); return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+  const busy = () => performance.now() < busyUntil;
+  const lock = (ms) => { busyUntil = performance.now() + (reduced ? 0 : ms); };
+  const haptic = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) { /* not allowed */ } };
+
+  let best = null;
+  try { best = Number(localStorage.getItem("tonal-sort-best")) || null; } catch (e) { /* storage blocked */ }
+  const saveBest = (ms) => { best = ms; try { localStorage.setItem("tonal-sort-best", String(ms)); } catch (e) { /* storage blocked */ } };
+
+  // Pick any 4 color families that have at least 4 apps, then 4 apps from each.
+  function pickApps() {
+    const groups = {};
+    tokens.forEach((t) => (groups[t.fam] ||= []).push(t));
+    const eligible = shuffle(Object.keys(groups).filter((f) => groups[f].length >= 4));
+    if (eligible.length < 4) return null;
+    const fams = eligible.slice(0, 4);
+    return { fams, picked: fams.flatMap((f) => shuffle(groups[f].slice()).slice(0, 4)) };
+  }
+
+  // With one spare slot per tube most random deals can't be solved, so scramble
+  // backwards from a sorted board with legal moves. Stop on a board with 4 icons
+  // per tube and no tube holding 3+ of one family (12+ moves from solved).
+  function deal(picked) {
+    const playable = (cols) => cols.every((c) => {
+      if (c.length !== 4) return false;
+      const n = {};
+      c.forEach((t) => (n[t.fam] = (n[t.fam] || 0) + 1));
+      return Math.max(...Object.values(n)) < 3;
+    });
+    const byFam = {};
+    picked.forEach((t) => (byFam[t.fam] ||= []).push(t));
+    for (;;) {
+      const cols = shuffle(Object.values(byFam)).map((g) => shuffle(g.slice()));
+      let last = null;
+      for (let step = 0; step < 4000; step++) {
+        const moves = [];
+        for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) {
+          if (a === b || !cols[a].length || cols[b].length >= TUBE.cap) continue;
+          if (last && a === last[1] && b === last[0]) continue;
+          moves.push([a, b]);
+        }
+        const [a, b] = moves[rand(moves.length)];
+        cols[b].push(cols[a].pop());
+        last = [a, b];
+        if (step > 40 && playable(cols)) return cols;
+      }
+    }
+  }
+
+  function setHud(state) {
+    screen.classList.toggle("hud-hint", state === "hint");
+    screen.classList.toggle("hud-clock", state === "clock");
+  }
+  function renderBest(text) { bestEl.textContent = text ?? (best ? `Best ${fmt(best)}` : "Best --:--"); }
+  function renderSwatches() {
+    $("swatches").innerHTML = families.map((f) => `<i style="--c:${FAMILY[f].color}"></i>`).join("");
+  }
+  function labelTubes() {
+    tubeEls.forEach((b, i) => {
+      const names = tubes[i].map((t) => t.app.name).reverse();
+      const lift = lifted && lifted.from === i ? `, lifted ${lifted.t.app.name}` : "";
+      b.setAttribute("aria-label", `Tube ${i + 1}: ${names.length ? names.join(", ") : "empty"}${lift}`);
+    });
+  }
+
+  // timer starts on the first move, not when the board appears
+  function startTimer() {
+    if (timer.running || won) return;
+    timer.running = true;
+    timer.start = performance.now();
+    setHud("clock");
+    const tick = () => { timeEl.textContent = fmt(performance.now() - timer.start); };
+    tick();
+    timer.id = setInterval(tick, 250);
+  }
+  function stopTimer() {
+    if (timer.running) timer.elapsed = performance.now() - timer.start;
+    timer.running = false;
+    clearInterval(timer.id);
+  }
+
+  function clearWin() {
+    won = false;
+    screen.classList.remove("is-won", "show-reshuffle");
+    reshuffleBtn.tabIndex = -1;
+    tubeEls.forEach((b) => b.style.removeProperty("--tint"));
+  }
+
+  // ---------- enter / leave ----------
+  function enterGame() {
+    if (mode !== "home") return;
+    closeMenu(false);
+    const pick = pickApps();
+    if (!pick) { snack("Tonal Sort needs 4 colors with at least 4 apps each."); return; }
+    mode = "game";
+    families = pick.fams;
+    tubes = deal(pick.picked);
+    lifted = null;
+    clearWin();
+    renderSwatches();
+    timeEl.textContent = "00:00";
+    renderBest();
+    setHud("hint");
+    screen.classList.add("is-game");
+    closeBtn.tabIndex = 0; moreBtn.tabIndex = -1;
+    tubeEls.forEach((b) => (b.tabIndex = 0));
+    tokens.forEach((t) => t.el.classList.toggle("is-out", !pick.picked.includes(t)));
+    tubes.forEach((col, i) => col.forEach((t, k) => moveTo(t, slotPos(i, k), SP.slow, 90 + t.index * 26)));
+    labelTubes();
+    lock(800);
+    haptic(10);
+  }
+
+  function leaveGame() {
+    if (mode !== "game") return;
+    mode = "home";
+    stopTimer();
+    lifted = null;
+    clearWin();
+    setHud(null);
+    screen.classList.remove("is-game");
+    closeBtn.tabIndex = -1; moreBtn.tabIndex = 0;
+    tubeEls.forEach((b) => { b.tabIndex = -1; b.classList.remove("is-target"); });
+    tokens.forEach((t) => {
+      t.el.classList.remove("is-out", "is-lifted");
+      moveTo(t, homePos(t.index), SP.def, t.index * 16);
+    });
+    moreBtn.focus({ preventScroll: true });
+  }
+
+  function reshuffle() {
+    if (mode !== "game") return;
+    stopTimer();
+    clearWin();
+    const pick = pickApps();
+    families = pick.fams;
+    tubes = deal(pick.picked);
+    tokens.forEach((t) => t.el.classList.toggle("is-out", !pick.picked.includes(t)));
+    renderSwatches();
+    timeEl.textContent = "00:00";
+    renderBest();
+    setHud("clock");
+    tubes.forEach((col, i) => col.forEach((t, k) => moveTo(t, slotPos(i, k), SP.slow, Math.random() * 140)));
+    labelTubes();
+    lock(600);
+    haptic(10);
+  }
+
+  // ---------- moves ----------
+  function lift(i) {
+    const t = tubes[i].pop();
+    lifted = { t, from: i };
+    t.el.classList.add("is-lifted");
+    moveTo(t, liftPos(i), SP.fast);
+    startTimer();
+    haptic(8);
+  }
+  function dropInto(i, viaHop = true) {
+    const { t, from } = lifted;
+    lifted = null;
+    tubes[i].push(t);
+    const target = slotPos(i, tubes[i].length - 1);
+    if (viaHop && i !== from) hopTo(t, liftPos(i), target);
+    else moveTo(t, target, SP.drop);
+    setTimeout(() => t.el.classList.remove("is-lifted"), 260);
+    haptic(12);
+    labelTubes();
+    if (i !== from) checkWin();
+  }
+  function reject(i) {
+    tubeEls[i].animate(
+      [{ transform: "translateX(0)" }, { transform: `translateX(${-5 * S}px)` }, { transform: `translateX(${4 * S}px)` }, { transform: `translateX(${-2 * S}px)` }, { transform: "translateX(0)" }],
+      { duration: 320, easing: "cubic-bezier(.3,0,.2,1)" }
+    );
+    haptic([6, 40, 6]);
+  }
+  function tapTube(i) {
+    if (mode !== "game" || won || busy()) return;
+    if (!lifted) { if (tubes[i].length) lift(i); labelTubes(); return; }
+    if (i === lifted.from || tubes[i].length < TUBE.cap) dropInto(i);
+    else reject(i);
+  }
+
+  function checkWin() {
+    const solved = tubes.every((c) => c.length === 4 && c.every((t) => t.fam === c[0].fam));
+    if (solved) celebrate();
+  }
+
+  function celebrate() {
+    won = true;
+    stopTimer();
+    const ms = timer.elapsed;
+    const isBest = !best || ms < best;
+    if (isBest) saveBest(ms);
+    timeEl.textContent = fmt(ms);
+    renderBest(isBest ? "New best" : `Best ${fmt(best)}`);
+    setTimeout(() => {
+      tubes.forEach((col, i) => tubeEls[i].style.setProperty("--tint", FAMILY[col[0].fam].color));
+      screen.classList.add("is-won");
+      timeEl.animate([{ transform: "scale(1)" }, { transform: "scale(1.12)" }, { transform: "scale(1)" }], { duration: 520, easing: "cubic-bezier(.3,0,.2,1)" });
+      confetti(180, 170);
+      tubes.forEach((col, i) => col.forEach((t, k) => {
+        t.img.animate([{ transform: "translateY(0)" }, { transform: `translateY(${-5 * S}px) scale(1.04)` }, { transform: "translateY(0)" }],
+          { duration: 440, delay: i * 70 + k * 35, easing: "cubic-bezier(.3,0,.2,1)" });
+      }));
+      haptic([10, 50, 18]);
+    }, reduced ? 0 : 280);
+    setTimeout(() => {
+      screen.classList.add("show-reshuffle");
+      reshuffleBtn.tabIndex = 0;
+    }, reduced ? 0 : 1250);
+  }
+
+  // ---------- confetti: a quiet ring of gold that lasts a second ----------
+  function confetti(cxDp, cyDp) {
+    if (reduced) return;
+    const ctx = fx.getContext("2d");
+    const k = fx.width / 360; // canvas px per dp
+    const golds = ["#f3d27a", "#f3d27a", "#e9bd55", "#fff1cc"];
+    const parts = Array.from({ length: 46 }, (_, n) => {
+      const a = (n / 46) * Math.PI * 2 + (Math.random() - 0.5) * 0.12;
+      const tinted = Math.random() < 0.16;
+      return {
+        a,
+        r0: 40 + Math.random() * 8,
+        dr: 12 + Math.random() * 20,
+        len: 4.5 + Math.random() * 3.5,
+        spin: (Math.random() - 0.5) * 5,
+        delay: Math.random() * 110,
+        color: tinted ? FAMILY[families[rand(families.length)]].color : golds[rand(golds.length)],
+      };
+    });
+    const t0 = performance.now(), life = 900;
+    const frame = (now) => {
+      ctx.clearRect(0, 0, fx.width, fx.height);
+      let alive = false;
+      for (const p of parts) {
+        const t = Math.min(1, Math.max(0, (now - t0 - p.delay) / life));
+        if (t < 1) alive = true;
+        if (t <= 0) continue;
+        const e = 1 - Math.pow(1 - t, 3);
+        const r = p.r0 + p.dr * e;
+        const x = (cxDp + Math.cos(p.a) * r * 1.12) * k;
+        const y = (cyDp + Math.sin(p.a) * r + 5 * t * t) * k;
+        const alpha = t < 0.12 ? t / 0.12 : t > 0.55 ? Math.max(0, 1 - (t - 0.55) / 0.45) : 1;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(x, y);
+        ctx.rotate(p.a + Math.PI / 2 + p.spin * t);
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 1.5 * k;
+        ctx.lineCap = "round";
+        const L = p.len * k;
+        ctx.beginPath();
+        ctx.moveTo(-L / 2, 0);
+        ctx.quadraticCurveTo(-L / 4, -1.8 * k, 0, 0);
+        ctx.quadraticCurveTo(L / 4, 1.8 * k, L / 2, 0);
+        ctx.stroke();
+        ctx.restore();
+      }
+      if (alive) requestAnimationFrame(frame);
+      else ctx.clearRect(0, 0, fx.width, fx.height);
+    };
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- pointer: tap a tube, or drag its top icon ----------
+  let ptr = null;
+  const toDp = (e) => { const b = screen.getBoundingClientRect(); return { x: (e.clientX - b.left) / S, y: (e.clientY - b.top) / S }; };
+  const tubeAt = (x) => {
+    const i = Math.floor((x - TUBE.x0 + 4) / TUBE.pitch);
+    if (i < 0 || i > 3) return -1;
+    const left = TUBE.x0 + TUBE.pitch * i;
+    return x >= left - 4 && x <= left + TUBE.w + 4 ? i : -1;
+  };
+  const near = (p, q, d) => Math.hypot(p.x - q.cx, p.y - q.cy) < d;
+
+  hit.addEventListener("pointerdown", (e) => {
+    if (mode !== "game" || won || busy()) return;
+    const p = toDp(e);
+    const ti = tubeAt(p.x);
+    let cand = null, src = -1;
+    if (lifted && near(p, lifted.t.pos, 40)) { cand = lifted.t; src = lifted.from; }
+    else if (!lifted && ti >= 0 && tubes[ti].length) { cand = tubes[ti][tubes[ti].length - 1]; src = ti; }
+    ptr = { id: e.pointerId, start: p, ti, cand, src, dragging: false, over: -1 };
+    hit.setPointerCapture(e.pointerId);
+  });
+
+  hit.addEventListener("pointermove", (e) => {
+    if (!ptr || e.pointerId !== ptr.id || !ptr.cand) return;
+    const p = toDp(e);
+    if (!ptr.dragging) {
+      if (Math.hypot(p.x - ptr.start.x, p.y - ptr.start.y) < 6) return;
+      ptr.dragging = true;
+      if (!lifted) {
+        tubes[ptr.src].pop();
+        lifted = { t: ptr.cand, from: ptr.src };
+        startTimer();
+        haptic(8);
+      }
+      ptr.cand.el.classList.add("is-lifted");
+    }
+    setNow(ptr.cand, { cx: p.x, cy: p.y - 10, s: 1.08, r: 0 });
+    const over = tubeAt(p.x);
+    if (over !== ptr.over) {
+      if (ptr.over >= 0) tubeEls[ptr.over].classList.remove("is-target");
+      if (over >= 0) tubeEls[over].classList.add("is-target");
+      ptr.over = over;
+    }
+  });
+
+  function endPointer(e, cancelled) {
+    if (!ptr || e.pointerId !== ptr.id) return;
+    const st = ptr;
+    ptr = null;
+    if (st.over >= 0) tubeEls[st.over].classList.remove("is-target");
+    if (st.dragging) {
+      const target = cancelled ? -1 : tubeAt(toDp(e).x);
+      if (target >= 0 && (target === lifted.from || tubes[target].length < TUBE.cap)) dropInto(target, false);
+      else {
+        if (target >= 0) reject(target);
+        dropInto(lifted.from, false);
+      }
+      return;
+    }
+    if (cancelled) return;
+    if (st.ti >= 0) tapTube(st.ti);
+    else if (lifted) dropInto(lifted.from);
+  }
+  hit.addEventListener("pointerup", (e) => endPointer(e, false));
+  hit.addEventListener("pointercancel", (e) => endPointer(e, true));
+
+  // ---------- menu ----------
+  const items = [...menu.querySelectorAll(".menu-item")];
+  function openMenu() {
+    screen.classList.add("menu-open");
+    moreBtn.setAttribute("aria-expanded", "true");
+    items.forEach((b) => (b.tabIndex = 0));
+    setTimeout(() => items[items.length - 1].focus({ preventScroll: true }), 40);
+  }
+  function closeMenu(refocus = true) {
+    if (!screen.classList.contains("menu-open")) return;
+    screen.classList.remove("menu-open");
+    moreBtn.setAttribute("aria-expanded", "false");
+    items.forEach((b) => (b.tabIndex = -1));
+    if (refocus) moreBtn.focus({ preventScroll: true });
+  }
+  moreBtn.addEventListener("click", () => (screen.classList.contains("menu-open") ? closeMenu() : openMenu()));
+  $("scrim").addEventListener("pointerdown", () => closeMenu(false));
+  $("playBtn").addEventListener("click", enterGame);
+  items.forEach((b) => {
+    if (!b.dataset.soon) return;
+    b.addEventListener("click", () => { closeMenu(); snack(`${b.dataset.soon} isn't part of this prototype. Try Tonal Sort.`); });
+  });
+  menu.addEventListener("keydown", (e) => {
+    const i = items.indexOf(document.activeElement);
+    if (e.key === "ArrowDown") { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  });
+
+  closeBtn.addEventListener("click", leaveGame);
+  reshuffleBtn.addEventListener("click", reshuffle);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (screen.classList.contains("menu-open")) closeMenu();
+    else if (lifted) dropInto(lifted.from);
+    else leaveGame();
+  });
+
+  let snackTimer = 0;
+  function snack(msg) {
+    snackEl.textContent = msg;
+    snackEl.classList.add("on");
+    clearTimeout(snackTimer);
+    snackTimer = setTimeout(() => snackEl.classList.remove("on"), 2600);
+  }
+
+  // live status-bar clock
+  const nowEl = $("clockNow");
+  const tickClock = () => {
+    const d = new Date();
+    nowEl.textContent = `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, "0")}`;
+  };
+  tickClock();
+  setInterval(tickClock, 15000);
+})();
+</script>
+</body>
+</html>
