@@ -73,7 +73,9 @@
     flutter: 1.5,                  // deg of gentle flutter while rolling
     cornerSag: 6,                  // deg the corners fold over further than the middle
     twist: 2,                      // deg of slow left/right wobble
-    paperBack: [241, 238, 231],    // colour of the back of the paper (warm off-white)
+    paperBack: [92, 108, 128],     // colour of the back of the paper (slate, so it stands out from the beige chat)
+    wrinkles: 9,                   // soft bulges/creases trailing right behind the roller
+    wrinkleDepth: 260,             // px they reach down the freshly pressed paper before settling flat
 
     // Bubbles (unchanged feel)
     nudgeRange: 120,
@@ -180,11 +182,69 @@
   let fall = 1, fallVel = 0;   // settle of the sheet when it first comes in
   let coverK = 1;               // 1 = paper covers the roller head, 0 = head fully shown
 
+  // Soft bulges and creases on the paper just behind the roller: each one is a
+  // narrow ridge with a lit side and a shaded side, tapering away as the
+  // paste settles. Drawn once into a canvas that rides along with the roller.
+  const bulge = document.getElementById('sheetBulge');
+  function drawWrinkles() {
+    const h = CONFIG.wrinkleDepth;
+    const c = document.createElement('canvas');
+    const k = Math.min(dpr, 2);
+    c.width = Math.round(W * k); c.height = Math.round(h * k);
+    const g = c.getContext('2d');
+    g.scale(k, k);
+    const rand = seeded(7331);
+    for (let n = 0; n < CONFIG.wrinkles; n++) {
+      const x0 = W * (0.06 + 0.88 * ((n + 0.25 + rand() * 0.5) / CONFIG.wrinkles));
+      const len = h * (0.45 + 0.55 * rand());
+      const lean = (rand() - 0.5) * 70;           // slight slant
+      const bow = (rand() - 0.5) * 30;            // slight curve
+      const wide = 5 + rand() * 7;                // ridge width
+      const strength = 0.55 + rand() * 0.45;
+      const path = () => {
+        g.beginPath();
+        g.moveTo(x0, 0);
+        g.quadraticCurveTo(x0 + lean * 0.5 + bow, len * 0.5, x0 + lean, len);
+      };
+      // soft profile: several strokes, wide & faint → narrow & stronger
+      for (let i = 4; i >= 1; i--) {
+        const w = wide * i / 4;
+        g.lineWidth = w;
+        g.lineCap = 'round';
+        g.save(); g.translate(-w * 0.35, 0);        // lit side (light from the top-left)
+        g.strokeStyle = `rgba(255,255,255,${(0.05 * strength).toFixed(3)})`; path(); g.stroke(); g.restore();
+        g.save(); g.translate(w * 0.45, 0);         // shaded side
+        g.strokeStyle = `rgba(0,0,0,${(0.075 * strength).toFixed(3)})`; path(); g.stroke(); g.restore();
+      }
+    }
+    // a couple of broad, shallow bulges across the width
+    for (let n = 0; n < 3; n++) {
+      const y = 30 + rand() * 90, x = W * (0.15 + rand() * 0.7), r = 60 + rand() * 60;
+      const gr = g.createRadialGradient(x - r * 0.2, y - r * 0.25, 0, x, y, r);
+      gr.addColorStop(0, 'rgba(255,255,255,0.1)');
+      gr.addColorStop(0.55, 'rgba(255,255,255,0)');
+      gr.addColorStop(0.8, 'rgba(0,0,0,0.08)');
+      gr.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    // fade out down the sheet (the paste settles flat behind the roller)
+    g.globalCompositeOperation = 'destination-in';
+    const fade = g.createLinearGradient(0, 0, 0, h);
+    fade.addColorStop(0, 'rgba(0,0,0,0)');
+    fade.addColorStop(0.08, 'rgba(0,0,0,1)');
+    fade.addColorStop(0.35, 'rgba(0,0,0,0.8)');
+    fade.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = fade; g.fillRect(0, 0, W, h);
+    bulge.style.height = h + 'px';
+    bulge.style.backgroundImage = `url(${c.toDataURL()})`;
+  }
+
   function measure() {
     const s = stage.getBoundingClientRect();
     W = s.width;
     H = s.height;
     sheet.style.setProperty('--sheet-h', H + 'px');
+    drawWrinkles();
     stage.style.setProperty('--roller-scale', CONFIG.rollerScale);
 
     // background-size: cover, centred — same mapping for the DOM layer and the canvas
@@ -303,7 +363,7 @@
           // plain back of the paper with a fine fibre grain
           vec2 g = floor(vUV * uGrain / 1.6);
           float grain = hash(g) * 0.6 + hash(g * 0.37 + 11.0) * 0.4;
-          c = uBack * vLight.y * (0.955 + 0.07 * grain);
+          c = uBack * vLight.y * (0.955 + 0.07 * grain) + vec3(vAlpha); // vAlpha = sheen along the fold
         }
         gl_FragColor = vec4(c, 1.0);
       }`;
@@ -458,10 +518,11 @@
             nx /= nl; ny /= nl; nz /= nl;
             const lit = nx * L[0] + ny * L[1] + nz * L[2];
             const edge = 1 - CONFIG.paperEdge * smoothstep(i - (NS - 1)); // dark cut edge = the sheet's thickness
-            const front = clamp(1 - 0.95 * (FLAT_LIT - lit), 0.32, 1.0) * edge; // flat paper = exactly 1
+            const lift = 1 - 0.32 * smoothstep(s / 6) * (1 - smoothstep((s - 8) / 22)); // crease shadow where it lifts off the wall
+            const front = clamp(1 - 0.95 * (FLAT_LIT - lit), 0.32, 1.0) * edge * lift; // flat paper = exactly 1
             const hang = smoothstep((s / len - (foldStart + foldWidth * 0.5)) / 0.42); // 0 at crest → 1 near hem
             // crest catches the light, the hanging face shades down towards the hem
-            const back = clamp(0.62 + 0.5 * -lit, 0.6, 1.02) * (1 - 0.24 * Math.pow(hang, 1.3)) * edge;
+            const back = clamp(0.55 + 0.6 * -lit, 0.5, 1.08) * (1 - 0.3 * Math.pow(hang, 1.3)) * edge;
             const nh = nx * Hv[0] + ny * Hv[1] + nz * Hv[2];
             const spec = Math.pow(clamp((nh - FLAT_NH) / (1 - FLAT_NH)), 2) * 0.14; // glint only where it bends towards the light
 
@@ -473,7 +534,9 @@
             verts[o + 5] = front;
             verts[o + 6] = back;
             verts[o + 7] = spec;
-            verts[o + 8] = 1;
+            // soft sheen where the back of the fold curves towards the light
+            const nhb = -nh;
+            verts[o + 8] = Math.pow(clamp((nhb - 0.55) / 0.45), 3) * 0.16;
 
             // cast shadow on the old wallpaper: the lifted paper throws a soft
             // shadow slightly above itself
@@ -482,7 +545,7 @@
             shadowVerts[o] = (X / W) * 2 - 1;
             shadowVerts[o + 1] = 1 - ((shY - offY) / canvasH) * 2;
             shadowVerts[o + 2] = 0.999;
-            shadowVerts[o + 8] = 0.5 * Math.pow(clamp(z / (maxZ * 0.5)), 0.8) * edgeFade * (1 - smoothstep((s / len - 0.82) / 0.18));
+            shadowVerts[o + 8] = 0.62 * Math.pow(clamp(z / (maxZ * 0.5)), 0.8) * edgeFade * (1 - smoothstep((s / len - 0.82) / 0.18));
           }
         }
 

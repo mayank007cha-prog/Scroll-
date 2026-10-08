@@ -127,15 +127,25 @@ body {
     /* pressed-down crease across the sheet */
     linear-gradient(to bottom,
       rgba(0, 0, 0, 0) 2px,
-      rgba(0, 0, 0, 0.26) 24px,
-      rgba(0, 0, 0, 0.1) 46px,
-      rgba(0, 0, 0, 0) 80px),
+      rgba(0, 0, 0, 0.34) 24px,
+      rgba(0, 0, 0, 0.14) 48px,
+      rgba(0, 0, 0, 0) 86px),
     /* fresh, still-wet paste that fades as it dries */
     linear-gradient(to bottom,
       rgba(10, 20, 35, 0) 2px,
-      rgba(10, 20, 35, 0.2) 26px,
-      rgba(10, 20, 35, 0.08) 120px,
+      rgba(10, 20, 35, 0.26) 26px,
+      rgba(10, 20, 35, 0.1) 120px,
       rgba(10, 20, 35, 0) 220px);
+}
+
+/* Bulges and creases on the freshly pressed paper (drawn in app.js) */
+.sheet__bulge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-size: 100% 100%;
+  pointer-events: none;
 }
 
 /* Loose paper flap above the roller (canvas) */
