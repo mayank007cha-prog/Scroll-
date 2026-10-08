@@ -116,13 +116,15 @@
          #flap  = the loose paper above the roller, drawn in perspective. -->
     <div class="sheet" id="sheet" aria-hidden="true">
       <div class="sheet__image" id="sheetImage"></div>
-      <div class="sheet__bulge" id="sheetBulge" aria-hidden="true"></div>
       <div class="sheet__press" aria-hidden="true"></div>
     </div>
     <canvas class="flap" id="flap" aria-hidden="true"></canvas>
 
     <!-- 4. Paint roller (Figma asset) — drives the whole transition -->
-    <img class="roller" id="roller" src="assets/roller.png" alt="" width="205" height="236" draggable="false">
+    <div class="roller" id="roller" aria-hidden="true">
+      <img class="roller__img" src="assets/roller.png" alt="" width="205" height="236" draggable="false">
+      <div class="roller__nap" id="rollerNap"></div>
+    </div>
 
     <!-- Dev affordance -->
     <div class="hint" id="hint">Tap to change wallpaper</div>

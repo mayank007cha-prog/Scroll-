@@ -45,37 +45,45 @@
     rollerHeadCenter: 33,
     rollerScale: 1.15,             // drawn this much bigger than the Figma asset
 
-    // Loose paper flap — a fairly thick, stiff sheet.
-    // It comes in folded over the roller, hiding the roller head; as the
-    // roller climbs and the paper sticks, the fold rolls back until the whole
-    // head shows with just a short curl of paper over its top edge.
-    // Each value is [covering the roller, roller fully shown].
-    flapLength: [185, 76],         // px of loose paper above the roller line
-    flapTipAngle: [182, 140],      // deg at the end of the fold (180 = hanging straight down)
-    foldStart: [0.27, 0.35],       // where along the loose paper the fold begins (0–1)
-    foldWidth: [0.30, 0.45],       // how long the fold is (0–1) — longer = rounder, stiffer bend
-    uncoverFrom: 0.04,             // roll progress when the fold starts rolling back
-    uncoverTo: 0.4,                // roll progress when the roller head is fully shown
+    // Loose paper flap — handled like a heavy carpet.
+    // It comes in curled over the roller, hiding the roller head. As the
+    // roller climbs and the paper sticks, it opens into a carpet-style S wave:
+    // it rises off the wall, rolls forward into a big rounded curl just above
+    // the roller head (showing its underside), then the far end flips back up.
+    // Each value is [covering the roller, carpet wave].
+    flapLength: [185, 300],        // px of loose sheet above the roller line
+    curlAngle: [182, 190],         // deg the sheet turns over in the main roll
+    curlStart: [0.27, 0.36],       // where along the loose sheet the roll begins (0–1)
+    curlWidth: [0.30, 0.42],       // how long the roll is (0–1) — longer = bigger, rounder roll
+    flipAngle: [0, 70],            // deg the end flares back out (the carpet's lifted edge)
+    flipStart: [0.55, 0.82],
+    flipWidth: [0.30, 0.14],
+    viewTilt: 0.32,                // seen slightly from below, so the roll's rounded underside shows
+    uncoverFrom: 0.04,             // roll progress when it starts opening into the wave
+    uncoverTo: 0.4,                // roll progress when the wave is fully open
     flapBaseAngle: 4,              // deg it leans forward where it rises behind the roller head
-    flapMaxAngle: 200,             // never fold further back than this
-    ripple: 4,                     // deg of waviness across the width (low = stiff sheet)
-    paperEdge: 0.32,               // how dark the paper's cut edge is (shows its thickness)
+    ripple: 2,                     // deg of waviness across the width (low = heavy sheet)
+    paperEdge: 0.45,               // how dark the sheet's cut edge is (shows its thickness)
+    sideEdge: 0.35,                // how dark its side edges are
     rollerFrontZ: 12,              // paper further forward than this (px) is drawn over the roller
     perspective: 560,              // px camera distance (smaller = deeper perspective)
     // A small settle when the sheet first comes in
     fallFrom: 0.85,
     fallStiffness: 140,
     fallDamping: 11,
-    droopPerSpeed: 0.006,          // deg the hanging paper swings out per px/s of roller speed
-    droopMax: 22,
-    flapStiffness: 220,            // spring (stiff paper)
-    flapDamping: 16,
-    flutter: 1.5,                  // deg of gentle flutter while rolling
+    droopPerSpeed: 0.01,           // deg the wave lags behind per px/s of roller speed (heavy = more lag)
+    droopMax: 24,
+    flapStiffness: 110,            // spring (heavy sheet: slow, weighty swing)
+    flapDamping: 12,
+    flutter: 0.8,                  // deg of gentle flutter while rolling
     cornerSag: 6,                  // deg the corners fold over further than the middle
     twist: 2,                      // deg of slow left/right wobble
     paperBack: [92, 108, 128],     // colour of the back of the paper (slate, so it stands out from the beige chat)
-    wrinkles: 9,                   // soft bulges/creases trailing right behind the roller
-    wrinkleDepth: 260,             // px they reach down the freshly pressed paper before settling flat
+    // Roller head: the sleeve visibly turns, and the roller bobs and tips a
+    // little with each turn, like it is pushing something heavy
+    sleeveNap: 14,                 // px between the soft sheen bands that roll across the sleeve
+    pushBob: 1.6,                  // px up/down per turn
+    pushTilt: 0.7,                 // deg of tilt per turn
 
     // Bubbles (unchanged feel)
     nudgeRange: 120,
@@ -144,6 +152,7 @@
   const sheetImage = document.getElementById('sheetImage');
   const flapCanvas = document.getElementById('flap');
   const roller = document.getElementById('roller');
+  const rollerNap = document.getElementById('rollerNap');
   const hint = document.getElementById('hint');
   const chat = document.getElementById('chat');
   const units = Array.from(document.querySelectorAll('.unit'));
@@ -179,72 +188,15 @@
   let canvasH = 0, canvasHinge = 0;
   let last = null;           // previous frame (for velocities)
   let droop = 0, droopVel = 0;
+  let travelled = 0;           // px the roller has rolled (turns the sleeve)
   let fall = 1, fallVel = 0;   // settle of the sheet when it first comes in
   let coverK = 1;               // 1 = paper covers the roller head, 0 = head fully shown
-
-  // Soft bulges and creases on the paper just behind the roller: each one is a
-  // narrow ridge with a lit side and a shaded side, tapering away as the
-  // paste settles. Drawn once into a canvas that rides along with the roller.
-  const bulge = document.getElementById('sheetBulge');
-  function drawWrinkles() {
-    const h = CONFIG.wrinkleDepth;
-    const c = document.createElement('canvas');
-    const k = Math.min(dpr, 2);
-    c.width = Math.round(W * k); c.height = Math.round(h * k);
-    const g = c.getContext('2d');
-    g.scale(k, k);
-    const rand = seeded(7331);
-    for (let n = 0; n < CONFIG.wrinkles; n++) {
-      const x0 = W * (0.06 + 0.88 * ((n + 0.25 + rand() * 0.5) / CONFIG.wrinkles));
-      const len = h * (0.45 + 0.55 * rand());
-      const lean = (rand() - 0.5) * 70;           // slight slant
-      const bow = (rand() - 0.5) * 30;            // slight curve
-      const wide = 5 + rand() * 7;                // ridge width
-      const strength = 0.55 + rand() * 0.45;
-      const path = () => {
-        g.beginPath();
-        g.moveTo(x0, 0);
-        g.quadraticCurveTo(x0 + lean * 0.5 + bow, len * 0.5, x0 + lean, len);
-      };
-      // soft profile: several strokes, wide & faint → narrow & stronger
-      for (let i = 4; i >= 1; i--) {
-        const w = wide * i / 4;
-        g.lineWidth = w;
-        g.lineCap = 'round';
-        g.save(); g.translate(-w * 0.35, 0);        // lit side (light from the top-left)
-        g.strokeStyle = `rgba(255,255,255,${(0.05 * strength).toFixed(3)})`; path(); g.stroke(); g.restore();
-        g.save(); g.translate(w * 0.45, 0);         // shaded side
-        g.strokeStyle = `rgba(0,0,0,${(0.075 * strength).toFixed(3)})`; path(); g.stroke(); g.restore();
-      }
-    }
-    // a couple of broad, shallow bulges across the width
-    for (let n = 0; n < 3; n++) {
-      const y = 30 + rand() * 90, x = W * (0.15 + rand() * 0.7), r = 60 + rand() * 60;
-      const gr = g.createRadialGradient(x - r * 0.2, y - r * 0.25, 0, x, y, r);
-      gr.addColorStop(0, 'rgba(255,255,255,0.1)');
-      gr.addColorStop(0.55, 'rgba(255,255,255,0)');
-      gr.addColorStop(0.8, 'rgba(0,0,0,0.08)');
-      gr.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
-    }
-    // fade out down the sheet (the paste settles flat behind the roller)
-    g.globalCompositeOperation = 'destination-in';
-    const fade = g.createLinearGradient(0, 0, 0, h);
-    fade.addColorStop(0, 'rgba(0,0,0,0)');
-    fade.addColorStop(0.08, 'rgba(0,0,0,1)');
-    fade.addColorStop(0.35, 'rgba(0,0,0,0.8)');
-    fade.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = fade; g.fillRect(0, 0, W, h);
-    bulge.style.height = h + 'px';
-    bulge.style.backgroundImage = `url(${c.toDataURL()})`;
-  }
 
   function measure() {
     const s = stage.getBoundingClientRect();
     W = s.width;
     H = s.height;
     sheet.style.setProperty('--sheet-h', H + 'px');
-    drawWrinkles();
     stage.style.setProperty('--roller-scale', CONFIG.rollerScale);
 
     // background-size: cover, centred — same mapping for the DOM layer and the canvas
@@ -253,7 +205,7 @@
     cover = { sc, bx: (W - iw * sc) / 2, by: (H - ih * sc) / 2 };
 
     // Flap canvas: tall enough for the flap plus a little overhang below the roller line
-    canvasH = Math.ceil(CONFIG.flapLength[0] * 1.2 + 120);
+    canvasH = Math.ceil(Math.max(...CONFIG.flapLength) * 1.25 + 140);
     canvasHinge = canvasH - 70;
     flapCanvas.style.width = W + 'px';
     flapCanvas.style.height = canvasH + 'px';
@@ -324,7 +276,7 @@
   // it leans forward at the roller and curls more towards the tip, and the
   // corners sag further than the middle, so the top edge arches like the
   // storyboard's sheet. Printed side = new wallpaper, back = plain paper.
-  const NU = 26, NS = 60;                 // mesh resolution (across × along)
+  const NU = 26, NS = 96;                 // mesh resolution (across × along)
   const flapGL = createFlapRenderer(flapCanvas);
 
   function createFlapRenderer(canvas) {
@@ -446,17 +398,20 @@
       },
 
       // Returns the highest (smallest y) screen point of the paper.
-      draw(lineY, paperRow, tSec, rollerX = 0) {
+      draw(lineY, paperRow, tSec, rollerX = 0, rollerY = 0) {
         if (!texReady) upload();
         const mix = (pair) => pair[1] + (pair[0] - pair[1]) * coverK;
         const len = mix(CONFIG.flapLength);
-        const foldStart = mix(CONFIG.foldStart), foldWidth = mix(CONFIG.foldWidth);
+        const curlStart = mix(CONFIG.curlStart), curlWidth = mix(CONFIG.curlWidth);
+        const flipStart = mix(CONFIG.flipStart), flipWidth = mix(CONFIG.flipWidth);
+        const flip = mix(CONFIG.flipAngle);
+        const tilt = CONFIG.viewTilt * (1 - 0.75 * coverK); // keep the roller covered at the start
         const persp = CONFIG.perspective;
         const cx = W / 2, cy = lineY; // perspective centred on the roller, so the fold drops onto it
         const base = CONFIG.flapBaseAngle;
         // moving fast makes the hanging paper swing out (smaller angle), then it settles back
         const flutter = Math.sin(tSec * 7.3) * CONFIG.flutter + Math.sin(tSec * 11.9 + 1.1) * CONFIG.flutter * 0.4;
-        const tip = base + (mix(CONFIG.flapTipAngle) - base) * fall - droop * 0.7 + flutter;
+        const tip = base + (mix(CONFIG.curlAngle) - base) * fall - droop * 0.7 + flutter;
         const sag = CONFIG.cornerSag;
         const ripplePhase = tSec * 4.2; // ripples travel across the width
         const twist = Math.sin(tSec * 3.7 + 0.8) * CONFIG.twist;
@@ -477,10 +432,11 @@
             if (i > 0) {
               const sm = Math.max(0, s - ds * 0.5);
               // rises behind the roller head, then folds over it and hangs down in front
-              const f = smoothstep((sm / len - foldStart) / foldWidth);
+              const f = smoothstep((sm / len - curlStart) / curlWidth);
+              const f2 = smoothstep((sm / len - flipStart) / flipWidth);
               const lean = base * smoothstep(sm / (len * 0.16)); // soft crease at the roller, not a hard fold
               const wave = CONFIG.ripple * (0.65 * Math.sin(xn * 5.3 + ripplePhase) + 0.35 * Math.sin(xn * 11.7 - ripplePhase * 0.7 + 1.3));
-              const phi = rad(Math.min(CONFIG.flapMaxAngle, lean + (tip - base + sag * xn * xn + twist * xn + wave) * f));
+              const phi = rad(lean + (tip - base + sag * xn * xn + twist * xn + wave) * f - flip * f2);
               y -= Math.cos(phi) * ds;
               z += Math.sin(phi) * ds;
             }
@@ -503,7 +459,7 @@
             const x = P3[k], y = P3[k + 1], z = P3[k + 2];
             const kk = persp / (persp - z);
             const X = cx + (x - cx) * kk;
-            const Y = cy + (y - cy) * kk;
+            const Y = cy + (y - z * tilt - cy) * kk;
             if (Y < top) top = Y;
 
             // normal = cross(tangent along s, tangent along u)
@@ -517,12 +473,16 @@
             const nl = Math.hypot(nx, ny, nz) || 1;
             nx /= nl; ny /= nl; nz /= nl;
             const lit = nx * L[0] + ny * L[1] + nz * L[2];
-            const edge = 1 - CONFIG.paperEdge * smoothstep(i - (NS - 1)); // dark cut edge = the sheet's thickness
+            const edge = (1 - CONFIG.paperEdge * smoothstep(i - (NS - 1)))      // dark cut edge = the sheet's thickness
+              * (1 - CONFIG.sideEdge * smoothstep(Math.abs(j - NU / 2) - (NU / 2 - 1))); // and its side edges
             const lift = 1 - 0.32 * smoothstep(s / 6) * (1 - smoothstep((s - 8) / 22)); // crease shadow where it lifts off the wall
-            const front = clamp(1 - 0.95 * (FLAT_LIT - lit), 0.32, 1.0) * edge * lift; // flat paper = exactly 1
-            const hang = smoothstep((s / len - (foldStart + foldWidth * 0.5)) / 0.42); // 0 at crest → 1 near hem
+            // the roll overhangs the rising sheet below it and shades it
+            const uu = s / len;
+            const under = 1 - 0.4 * (1 - coverK) * smoothstep((uu - (curlStart - 0.24)) / 0.24) * (1 - smoothstep((uu - curlStart) / 0.12));
+            const front = clamp(1 - 0.95 * (FLAT_LIT - lit), 0.32, 1.0) * edge * lift * under; // flat paper = exactly 1
+            const hang = smoothstep((s / len - (curlStart + curlWidth * 0.5)) / 0.25); // 0 at the crest → 1 inside the curl
             // crest catches the light, the hanging face shades down towards the hem
-            const back = clamp(0.55 + 0.6 * -lit, 0.5, 1.08) * (1 - 0.3 * Math.pow(hang, 1.3)) * edge;
+            const back = clamp(0.42 + 0.8 * -lit, 0.32, 1.12) * (1 - 0.3 * Math.pow(hang, 1.3)) * edge; // round: lit on top, dark underneath
             const nh = nx * Hv[0] + ny * Hv[1] + nz * Hv[2];
             const spec = Math.pow(clamp((nh - FLAT_NH) / (1 - FLAT_NH)), 2) * 0.14; // glint only where it bends towards the light
 
@@ -540,7 +500,7 @@
 
             // cast shadow on the old wallpaper: the lifted paper throws a soft
             // shadow slightly above itself
-            const shY = cy + (y - z * 0.6 - cy) * 1;
+            const shY = cy + (y - z * (0.6 + tilt) - cy) * 1;
             const edgeFade = 1 - Math.pow(Math.abs(j / NU * 2 - 1), 6);
             shadowVerts[o] = (X / W) * 2 - 1;
             shadowVerts[o + 1] = 1 - ((shY - offY) / canvasH) * 2;
@@ -559,7 +519,7 @@
         // part that folds over in front of the head is drawn on top of it
         const rs = CONFIG.rollerScale;
         const hx0 = W / 2 + (14 - 102.5) * rs + rollerX, hx1 = W / 2 + (180 - 102.5) * rs + rollerX;
-        const hy0 = lineY + (13 - CONFIG.rollerHeadCenter) * rs, hy1 = lineY + (54 - CONFIG.rollerHeadCenter) * rs;
+        const hy0 = lineY + rollerY + (13 - CONFIG.rollerHeadCenter) * rs, hy1 = lineY + rollerY + (54 - CONFIG.rollerHeadCenter) * rs;
         const maskZ = -CONFIG.rollerFrontZ / (maxZ * 2);
         let m = 0;
         const ring = [];
@@ -660,13 +620,19 @@
 
     // Loose flap
     flapCanvas.style.transform = `translate3d(0, ${snap(line.y - canvasHinge)}px, 0)`;
+    // Roller: the sleeve turns with the distance travelled, and the roller
+    // bobs and tips a little with each turn, like pushing something heavy
+    travelled += Math.abs(v) * dt;
+    const turn = travelled / (Math.PI * 41 * CONFIG.rollerScale);   // sleeve turns
     const sway = Math.sin(tSec * 6.5) * 1.4;
-    const edge = (flapGL ? flapGL.draw(line.y, line.paperRow, tSec, sway) : line.y) - 2;
+    const bob = Math.sin(turn * Math.PI * 2) * CONFIG.pushBob * smoothstep(Math.abs(v) / 400);
+    const tilt = Math.sin(turn * Math.PI * 2 + 1.2) * CONFIG.pushTilt * smoothstep(Math.abs(v) / 400);
+    rollerNap.style.backgroundPositionY = `${(-travelled % CONFIG.sleeveNap).toFixed(2)}px`;
+    const edge = (flapGL ? flapGL.draw(line.y, line.paperRow, tSec, sway, bob) : line.y) - 2;
 
-    // Roller: head on the roller line, tiny hand sway, lifts off at the very end
     const lift = smoothstep((line.roll - 0.84) / 0.16);
     roller.style.transform =
-      `translate3d(${sway.toFixed(2)}px, ${snap(line.y - CONFIG.rollerHeadCenter * CONFIG.rollerScale)}px, 0) scale(${(1 + lift * 0.05).toFixed(4)})`;
+      `translate3d(${sway.toFixed(2)}px, ${snap(line.y + bob - CONFIG.rollerHeadCenter * CONFIG.rollerScale)}px, 0) rotate(${tilt.toFixed(2)}deg) scale(${(1 + lift * 0.05).toFixed(4)})`;
     roller.style.opacity = (1 - lift).toFixed(3);
 
     // Bubbles get knocked off by the paper's top edge
@@ -823,7 +789,7 @@
     flyLayer.classList.remove('is-idle');
     parkChat();
     hint.classList.add('is-hidden');
-    last = null; droop = 0; droopVel = 0; fall = CONFIG.fallFrom; fallVel = 0; coverK = 1;
+    last = null; droop = 0; droopVel = 0; fall = CONFIG.fallFrom; fallVel = 0; coverK = 1; travelled = 0;
     sweepDone = false; returnStart = -1;
 
     sheet.classList.add('is-active');
