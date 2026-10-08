@@ -53,13 +53,14 @@
     // Each value is [covering the roller, carpet wave].
     // [covering: drapes over the roller and hangs down over its head and the top of the arm,
     //  open: a carpet roll resting on the roller head]
-    flapLength: [270, 260],        // px of loose sheet above the roller line
+    flapLength: [270, 240],        // px of loose sheet above the roller line
     curlAngle: [181, 190],         // deg the sheet turns over in the main roll
-    curlStart: [0.17, 0.26],       // where along the loose sheet the roll begins (0–1)
-    curlWidth: [0.26, 0.48],       // how long the roll is (0–1) — longer = bigger, rounder roll
-    flipAngle: [0, 70],            // deg the end flares back out (the carpet's lifted edge)
-    flipStart: [0.55, 0.86],       // (the roll comes down to rest on the roller head)
-    flipWidth: [0.30, 0.14],
+    curlStart: [0.17, 0.12],       // where along the loose sheet the roll begins (0–1)
+    curlWidth: [0.26, 0.60],       // how long the roll is (0–1) — longer = bigger, rounder roll
+    flipAngle: [0, -60],           // deg the lip curls on (negative = tucks back down onto the wall)
+    flipStart: [0.55, 0.75],       // so the open roll closes onto the wall right at the roller line,
+    flipWidth: [0.30, 0.15],       // and the roller head props it up in the middle
+    propSoftness: 32,              // px over which the sheet drops from the roller head onto the wall
     viewTilt: 0.32,                // seen slightly from below, so the roll's rounded underside shows
     // Where the roller line is (× screen height) for each stage of the climb
     revealTo: 0.22,                // drape slowly lifts off the roller until here (roller fully shown)
@@ -448,6 +449,11 @@
         const flip = mix(CONFIG.flipAngle);
         const tilt = CONFIG.viewTilt * (1 - 0.75 * coverK); // keep the roller covered at the start
         const persp = CONFIG.perspective;
+        const rs = CONFIG.rollerScale;
+        const hx0 = W / 2 + (14 - 102.5) * rs + rollerX, hx1 = W / 2 + (180 - 102.5) * rs + rollerX;
+        const hy0 = lineY + rollerY + (13 - CONFIG.rollerHeadCenter) * rs, hy1 = lineY + rollerY + (54 - CONFIG.rollerHeadCenter) * rs;
+        const headTop = hy0 + 1, PF = CONFIG.propSoftness;
+        const prop = smoothstep((0.4 - coverK) / 0.4) * (1 - topK); // once the drape has mostly opened, it settles onto the head
         const cx = W / 2, cy = lineY; // perspective centred on the roller, so the fold drops onto it
         const base = CONFIG.flapBaseAngle;
         // moving fast makes the hanging paper swing out (smaller angle), then it settles back
@@ -501,7 +507,17 @@
             const x = P3[k], y = P3[k + 1], z = P3[k + 2];
             const kk = persp / (persp - z);
             const X = cx + (x - cx) * kk;
-            const Y = cy + (y - z * tilt - cy) * kk;
+            let Y = cy + (y - z * tilt - cy) * kk;
+            // the roller head props the roll up: where the sheet's front face would
+            // come down over the head it rests on top of it; either side of the head
+            // it drops onto the wall
+            if (prop > 0 && Y > headTop - 8) {
+              const wx = smoothstep((X - hx0 + PF) / PF) * smoothstep((hx1 + PF - X) / PF);
+              const wz = smoothstep((z - 6) / 10);
+              const d = Y - headTop;
+              const excess = (d + Math.sqrt(d * d + 16)) / 2; // smooth max(0, d)
+              Y -= excess * wx * wz * prop;
+            }
             if (Y < top) top = Y;
 
             // normal = cross(tangent along s, tangent along u)
@@ -559,9 +575,6 @@
         // roller head as a depth-only mask: this canvas sits above the roller,
         // so paper still behind the head (small z) is hidden by it, while the
         // part that folds over in front of the head is drawn on top of it
-        const rs = CONFIG.rollerScale;
-        const hx0 = W / 2 + (14 - 102.5) * rs + rollerX, hx1 = W / 2 + (180 - 102.5) * rs + rollerX;
-        const hy0 = lineY + rollerY + (13 - CONFIG.rollerHeadCenter) * rs, hy1 = lineY + rollerY + (54 - CONFIG.rollerHeadCenter) * rs;
         const maskZ = -CONFIG.rollerFrontZ / (maxZ * 2);
         let m = 0;
         const ring = [];
