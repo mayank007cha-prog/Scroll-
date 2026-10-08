@@ -249,15 +249,16 @@
 
         // How far each piece of Incognito copy sits from the badge, so it can
         // fade in exactly as the reveal passes over it.
-        var enterDistance = enterItems.map(function (el) {
+        function distanceTo(el) {
             var r = relativeRect(el);
             var dx = Math.max(r.left - space.cx, 0, space.cx - (r.left + r.width));
             var dy = Math.max(r.top - space.cy, 0, space.cy - (r.top + r.height));
             return Math.hypot(dx, dy);
-        });
-
-        var bar = relativeRect(app.querySelector('.Toolbar'));
-        var toolbarDistance = Math.max(0, bar.top - space.cy);
+        }
+        var enterDistance = enterItems.map(distanceTo);
+        // The Android toolbar sits above the badge; it turns Incognito (and
+        // shows its address bar) as the reveal sweeps up into it.
+        var toolbarDistance = distanceTo(app.querySelector('.Toolbar'));
 
         geometry = { space: space, from: from, revealMax: revealMax, enterDistance: enterDistance, toolbarDistance: toolbarDistance };
         return geometry;

@@ -1,12 +1,17 @@
 :root {
-    --home-bg: #000000;
+    /* Chrome for Android, dark theme (Material 3 neutral surfaces). */
+    --home-bg: #1f1f1f;
+    --surface: #2b2b2b;
+    --surface-high: #333537;
     --incog-bg: #3c3c3c;
+    --incog-bar: #282828;
     --incog-disc: #d9d9d9;
-    --incog-card: #282828;
+    --incog-card: #303030;
     --text: #e3e3e3;
     --text-dim: #c4c7c5;
+    --text-mute: #9aa0a6;
     --link: #a8c7fa;
-    --toolbar-h: 60px;
+    --toolbar-h: 56px;
     --font: 'Google Sans', 'Product Sans', Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -41,8 +46,8 @@ a {
 
 /* ───────────────────────────── Device shell ─────────────────────────────
    On a phone the app is simply the viewport. Everywhere else it is shown in
-   an iPhone 17 frame (402 × 874 pt screen) scaled to fit the window, so the
-   motion is always reviewed at the real device proportions. */
+   an Android phone frame (412 × 915 dp screen, punch-hole camera, gesture
+   bar) scaled to fit the window. */
 
 .Device {
     position: relative;
@@ -52,6 +57,8 @@ a {
 }
 
 .App {
+    --top: var(--safe-top, env(safe-area-inset-top, 0px));
+    --bottom: var(--safe-bottom, env(safe-area-inset-bottom, 0px));
     position: relative;
     width: 100%;
     height: 100%;
@@ -61,8 +68,8 @@ a {
 }
 
 .StatusBar,
-.Island,
-.HomeIndicator,
+.Camera,
+.NavHandle,
 .Caption {
     display: none;
 }
@@ -77,12 +84,12 @@ a {
     position: fixed;
     top: 50%;
     left: 50%;
-    width: 422px;
-    height: 894px;
-    margin: -465px 0 0 -211px;
+    width: 432px;
+    height: 935px;
+    margin: -485px 0 0 -216px;
     padding: 10px;
-    border-radius: 65px;
-    background: #121212;
+    border-radius: 44px;
+    background: #141414;
     box-shadow:
         0 0 0 1.5px #2c2c2e,
         0 40px 80px -20px rgba(0, 0, 0, .8),
@@ -91,23 +98,24 @@ a {
 }
 
 .is-framed .App {
-    --safe-top: 59px;
-    --safe-bottom: 24px;
-    border-radius: 55px;
+    --safe-top: 40px;
+    --safe-bottom: 20px;
+    border-radius: 34px;
     transform: translateZ(0);
 }
 
-.is-framed .Island {
+.is-framed .Camera {
     display: block;
     position: absolute;
     z-index: 25;
-    top: 11px;
+    top: 12px;
     left: 50%;
-    width: 126px;
-    height: 37px;
-    margin-left: -63px;
-    border-radius: 19px;
+    width: 18px;
+    height: 18px;
+    margin-left: -9px;
+    border-radius: 50%;
     background: #000;
+    box-shadow: inset 0 0 0 3px #0b0b0b;
     pointer-events: none;
 }
 
@@ -117,34 +125,34 @@ a {
     top: 0;
     left: 0;
     right: 0;
-    height: 59px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 34px 0 54px;
+    padding: 2px 24px 0 28px;
     color: #fff;
-    font-size: 17px;
+    font-size: 14px;
     font-weight: 500;
     pointer-events: none;
 }
 
 .StatusBar-icons {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
 }
 
-.is-framed .HomeIndicator {
+.is-framed .NavHandle {
     display: block;
     position: absolute;
     z-index: 25;
     bottom: 8px;
     left: 50%;
-    width: 134px;
-    height: 5px;
-    margin-left: -67px;
-    border-radius: 3px;
-    background: #fff;
+    width: 108px;
+    height: 4px;
+    margin-left: -54px;
+    border-radius: 2px;
+    background: #e3e3e3;
     pointer-events: none;
 }
 
@@ -166,25 +174,75 @@ a {
     font-weight: 500;
 }
 
-/* ───────────────────────────── Google new tab ─────────────────────────────
-   Chrome for iPhone, dark theme: logo, search box, the AI Mode / Incognito
-   shortcuts, Most visited, then the Discover feed. */
+/* ───────────────────────────── Chrome toolbar ───────────────────────────── */
 
-.Home {
+.Toolbar {
     position: absolute;
-    inset: 0;
+    z-index: 10;
+    top: 0;
+    left: 0;
+    right: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 4px) 16px calc(var(--toolbar-h) + 24px);
+    gap: 2px;
+    height: calc(var(--toolbar-h) + var(--top));
+    padding: var(--top) 4px 0;
+    background: var(--home-bg);
+    transition: background-color .6s cubic-bezier(.2, 0, 0, 1);
 }
 
-.Home-top {
-    align-self: stretch;
+.App.is-incognito-chrome .Toolbar {
+    background: var(--incog-bar);
+}
+
+.IconButton {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    color: var(--text);
+    transition: background-color .2s ease;
+}
+
+.IconButton:active {
+    background: rgba(255, 255, 255, .12);
+}
+
+.Toolbar-center {
+    position: relative;
+    flex: 1;
+    height: 40px;
+    min-width: 0;
+}
+
+/* The location bar: hidden on the new tab page (the page has its own search
+   box), shown in Incognito — where it is the only search bar. */
+.Toolbar-omnibox {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    height: 44px;
+    gap: 10px;
+    height: 100%;
+    padding: 0 14px;
+    border-radius: 20px;
+    background: #3a3a3a;
+    color: var(--text);
+    font-size: 16px;
+    opacity: 0;
+    transform: scale(.96);
+    transition: opacity .35s cubic-bezier(.2, 0, 0, 1), transform .5s cubic-bezier(.2, 0, 0, 1);
+}
+
+.Toolbar-omnibox span {
+    color: var(--text-mute);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.App.is-incognito-chrome .Toolbar-omnibox {
+    opacity: 1;
+    transform: none;
 }
 
 .Avatar {
@@ -199,27 +257,45 @@ a {
     font-weight: 500;
 }
 
-.IconButton {
+.Toolbar-avatar {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    transition: opacity .25s ease, transform .35s cubic-bezier(.2, 0, 0, 1);
+}
+
+.App.is-incognito-chrome .Toolbar-avatar {
+    opacity: 0;
+    transform: scale(.8);
+}
+
+.Tabs {
     display: grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    color: #fff;
-    transition: background-color .2s ease;
+    width: 20px;
+    height: 20px;
+    border: 2px solid currentColor;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
 }
 
-.IconButton:disabled {
-    opacity: .38;
-    cursor: default;
-}
+/* ───────────────────────────── Google new tab ─────────────────────────────
+   Chrome for Android: logo, search box, the AI Mode / Incognito shortcuts,
+   a row of Most visited tiles, then the Discover feed. */
 
-.IconButton:not(:disabled):active {
-    background: rgba(255, 255, 255, .12);
+.Home {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(var(--top) + var(--toolbar-h)) 16px calc(var(--bottom) + 24px);
 }
 
 .Logo {
-    margin: clamp(28px, 6vh, 52px) 0 26px;
+    margin: clamp(24px, 5vh, 44px) 0 24px;
     font-size: 66px;
     font-weight: 400;
     line-height: 1;
@@ -238,18 +314,18 @@ a {
     align-items: center;
     gap: 14px;
     width: 100%;
-    height: 52px;
+    height: 56px;
     padding: 0 16px;
-    border-radius: 26px;
-    background: #303134;
-    color: #e3e3e3;
+    border-radius: 28px;
+    background: var(--surface-high);
+    color: var(--text);
 }
 
 .Fakebox-placeholder {
     flex: 1;
     min-width: 0;
     font-size: 17px;
-    color: #9aa0a6;
+    color: var(--text-mute);
     white-space: nowrap;
     overflow: hidden;
 }
@@ -269,8 +345,8 @@ a {
     gap: 8px;
     height: 44px;
     border-radius: 22px;
-    background: #282a2d;
-    color: #e3e3e3;
+    background: var(--surface);
+    color: var(--text);
     font-size: 15px;
     font-weight: 500;
     transition: background-color .15s ease, transform .15s ease;
@@ -282,18 +358,11 @@ a {
     transform: scale(.97);
 }
 
-.Module {
-    width: 100%;
-    margin-top: 22px;
-    padding: 16px 8px 14px;
-    border-radius: 20px;
-    background: #1c1c1e;
-}
-
 .Tiles {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    margin: 0;
+    grid-template-columns: repeat(5, 1fr);
+    width: 100%;
+    margin: 26px 0 0;
     padding: 0;
     list-style: none;
 }
@@ -304,47 +373,53 @@ a {
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    color: #c4c7c5;
+    color: var(--text-dim);
 }
 
 .Tile-icon {
     display: grid;
     place-items: center;
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
     border-radius: 16px;
-    background: #2c2c2e;
+    background: var(--surface);
 }
 
 .Tile-icon span {
     display: grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background: #fff;
     color: var(--c);
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
 }
 
 .Feed {
     width: 100%;
-    margin-top: 22px;
+    margin-top: 26px;
 }
 
 .Feed-head {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 20px;
     padding: 0 4px 12px;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 500;
-    color: #e3e3e3;
+    color: var(--text-mute);
+}
+
+.Feed-tab.is-active {
+    color: var(--text);
+    box-shadow: inset 0 -3px 0 #a8c7fa;
+    padding-bottom: 6px;
 }
 
 .Feed-head svg {
-    color: #9aa0a6;
+    margin-left: auto;
 }
 
 .Story-media {
@@ -361,13 +436,13 @@ a {
     font-size: 16px;
     line-height: 22px;
     font-weight: 400;
-    color: #e3e3e3;
+    color: var(--text);
 }
 
 .Story-meta {
     margin: 0 4px;
     font-size: 12px;
-    color: #9aa0a6;
+    color: var(--text-mute);
 }
 
 /* ───────────────────────────── Incognito new tab ───────────────────────────── */
@@ -394,40 +469,15 @@ a {
 .Incognito-inner {
     display: flex;
     flex-direction: column;
-    padding: 0 24px calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 32px);
+    padding: calc(var(--top) + var(--toolbar-h) + 8px) 24px calc(var(--bottom) + 32px);
     font-size: 14px;
     line-height: 21px;
     color: var(--text-dim);
 }
 
-.Omnibox {
-    position: sticky;
-    z-index: 2;
-    top: 0;
-    padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 4px) 16px 10px;
-    background: var(--incog-bg);
-}
-
-.Omnibox-field {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    height: 44px;
-    padding: 0 14px;
-    border-radius: 22px;
-    background: #2a2a2a;
-    color: #e3e3e3;
-}
-
-.Omnibox-placeholder {
-    flex: 1;
-    font-size: 17px;
-    color: #9aa0a6;
-}
-
 .Badge {
     align-self: center;
-    margin: clamp(14px, 4vh, 36px) 0 22px;
+    margin: clamp(16px, 4vh, 36px) 0 22px;
 }
 
 .Badge-icon {
@@ -508,22 +558,54 @@ a {
 }
 
 .Card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
     margin-top: 26px;
     padding: 16px;
-    border-radius: 12px;
+    border-radius: 16px;
     background: var(--incog-card);
     font-size: 13px;
-    line-height: 20px;
+    line-height: 19px;
+}
+
+.Card-icon {
+    flex: none;
+    margin-top: 1px;
+    color: var(--text);
+}
+
+.Card-text {
+    flex: 1;
 }
 
 .Card h3 {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 0 0 8px;
-    font-size: 14px;
+    margin: 0 0 4px;
+    font-size: 15px;
     font-weight: 500;
     color: var(--text);
+}
+
+/* Material 3 switch, on. */
+.Switch {
+    flex: none;
+    position: relative;
+    width: 52px;
+    height: 32px;
+    margin-top: 2px;
+    border-radius: 16px;
+    background: #a8c7fa;
+}
+
+.Switch::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #062e6f;
 }
 
 /* ───────────────────────────── Morph layer ───────────────────────────── */
@@ -559,56 +641,21 @@ a {
     color: var(--incog-bg);
 }
 
-/* ───────────────────────────── Toolbar + menu ───────────────────────────── */
-
-.Toolbar {
-    position: absolute;
-    z-index: 10;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    height: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
-    padding: 0 8px var(--safe-bottom, env(safe-area-inset-bottom, 0px));
-    /* Solid rather than backdrop-blurred: a blur would have to re-render
-       every frame while the reveal sweeps underneath it. */
-    background: #101010;
-    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .08);
-    transition: background-color .6s cubic-bezier(.2, 0, 0, 1), box-shadow .6s cubic-bezier(.2, 0, 0, 1);
-}
-
-.App.is-incognito-chrome .Toolbar {
-    background: #282828;
-    box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .06);
-}
-
-.Tabs {
-    display: grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border: 2px solid currentColor;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1;
-}
+/* ───────────────────────────── Overflow menu ───────────────────────────── */
 
 .Menu {
     position: absolute;
     z-index: 30;
-    right: 10px;
-    bottom: calc(var(--toolbar-h) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 6px);
-    width: 232px;
-    padding: 8px 0;
+    top: calc(var(--top) + 4px);
+    right: 6px;
+    width: 248px;
+    padding: 4px 0 8px;
     border-radius: 16px;
-    background: #2b2b2d;
+    background: #2b2b2b;
     box-shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .06);
-    transform-origin: 92% 100%;
+    transform-origin: 100% 0;
     opacity: 0;
-    transform: scale(.9) translateY(8px);
+    transform: scale(.9) translateY(-8px);
     pointer-events: none;
     transition: opacity .16s ease, transform .22s cubic-bezier(.2, 0, 0, 1);
 }
@@ -620,22 +667,25 @@ a {
     transition: opacity .18s ease, transform .32s cubic-bezier(.2, 0, 0, 1);
 }
 
+.Menu-icons {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 48px;
+    padding: 0 8px;
+    color: var(--text-dim);
+}
+
 .Menu button {
     display: flex;
     align-items: center;
-    gap: 16px;
     width: 100%;
-    height: 46px;
+    height: 44px;
     padding: 0 20px;
     font-size: 15px;
     text-align: left;
     color: var(--text);
     transition: background-color .15s ease;
-}
-
-.Menu button svg {
-    flex: none;
-    color: #c4c7c5;
 }
 
 .Menu button:active,
@@ -645,7 +695,7 @@ a {
 
 .Menu hr {
     height: .5px;
-    margin: 6px 0;
+    margin: 4px 0;
     border: 0;
     background: rgba(255, 255, 255, .1);
 }

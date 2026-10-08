@@ -2,17 +2,20 @@
 
 A mobile prototype of the "go Incognito" moment, built from the
 [Interactions-motion Figma file](https://www.figma.com/design/drf0JtS2gg4BL55VLqCkHP/Interactions-motion?node-id=46-6312)
-(frames 1 → 5). It needs no build step: open `incognito-iphone17.html` (a single
+(frames 1 → 5). It needs no build step: open `incognito-android.html` (a single
 self-contained file), or serve this folder. On a phone it fills the screen;
-anywhere else it renders inside an iPhone 17 frame (402 × 874 pt).
+anywhere else it renders inside an Android phone frame (412 × 915 dp).
 
-The screens follow Chrome for iPhone (141+): the new tab page has the search
-box with the **AI Mode** and **Incognito** shortcuts under it, Most visited
-and Discover; the Incognito tab has the address bar at the top.
+The screens follow Chrome for Android (141+), dark theme: Chrome's toolbar sits
+at the top (home, tab switcher, ⋮ menu). The new tab page has the search box
+with the **AI Mode** and **Incognito** shortcuts under it, a row of Most visited
+tiles and the Discover feed. In Incognito the location bar ("Search or type
+URL") appears in the toolbar as the page is revealed, and the page ends with
+the "Block third-party cookies" switch card.
 
 ```sh
 cd incognito && python3 -m http.server 8000
-# open http://localhost:8000            — tap Incognito under the search box (tabs button goes back)
+# open http://localhost:8000            — tap Incognito under the search box (tab switcher goes back)
 # open http://localhost:8000/?speed=0.25 — slow motion for motion review
 # open http://localhost:8000/?autoplay   — plays once on load
 ```
