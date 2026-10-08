@@ -138,7 +138,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   width: calc(var(--dp) * 48); height: calc(var(--dp) * 48);
   border-radius: 50%;
   display: grid; place-items: center;
-  transition: opacity .28s cubic-bezier(.2, 0, 0, 1), transform .5s cubic-bezier(.2, 1.4, .3, 1), background-color .2s;
+  transition: opacity .28s cubic-bezier(.2, 0, 0, 1), transform .6s cubic-bezier(.2, 0, 0, 1), background-color .2s;
 }
 .top-action:active { background: rgba(255, 255, 255, .12); }
 .top-action svg { width: calc(var(--dp) * 20); height: calc(var(--dp) * 20); }
@@ -159,7 +159,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 .app img {
   display: block; width: 100%; height: 100%;
   -webkit-user-drag: none; pointer-events: none;
-  transition: transform .35s cubic-bezier(.2, 1.5, .3, 1), filter .3s;
+  transition: transform .4s cubic-bezier(.2, 0, 0, 1), filter .4s;
 }
 .app .label {
   position: absolute; left: 50%; top: calc(var(--dp) * 67);
@@ -169,12 +169,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
   transition: opacity .18s cubic-bezier(.2, 0, 0, 1);
 }
-.app.is-pressed img { transform: scale(.9); }
+.app.is-pressed img { transform: scale(.94); }
 .is-game .app { pointer-events: none; }
 .is-game .app .label { opacity: 0; }
 .app.is-out { opacity: 0; }
 .app.is-lifted { z-index: 3; }
-.app.is-lifted img { filter: drop-shadow(0 calc(var(--dp) * 10) calc(var(--dp) * 12) rgba(0, 0, 0, .35)); }
+.app.is-lifted img { filter: drop-shadow(0 calc(var(--dp) * 12) calc(var(--dp) * 16) rgba(0, 0, 0, .24)); }
 
 /* home chrome */
 .pager, .search {
@@ -208,141 +208,119 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   border-radius: 99px; background: rgba(255, 255, 255, .85);
 }
 
-/* tubes */
+/* tubes: glass test tubes drawn in SVG, frosted inside their own outline */
 .tubes { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .tube {
   position: absolute; top: calc(var(--dp) * 337.6);
   width: calc(var(--dp) * 72.2); height: calc(var(--dp) * 303.4);
-  border-radius: calc(var(--dp) * 36.1) calc(var(--dp) * 36.1) calc(var(--dp) * 34) calc(var(--dp) * 34);
-  background: linear-gradient(180deg, rgba(255, 255, 255, .03), var(--tube) 55%, rgba(255, 255, 255, .1));
-  box-shadow: inset 0 0 0 1px var(--tube-edge), inset 0 calc(var(--dp) * -10) calc(var(--dp) * 18) rgba(255, 255, 255, .04);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  opacity: 0; transform: translateY(calc(var(--dp) * 28)) scaleY(.9);
-  transform-origin: 50% 100%;
-  transition: opacity .32s cubic-bezier(.2, 0, 0, 1), transform .6s cubic-bezier(.2, 1.25, .3, 1), box-shadow .2s;
+  opacity: 0; transform: translateY(calc(var(--dp) * 18));
+  transition: opacity .6s cubic-bezier(.2, 0, 0, 1), transform .9s cubic-bezier(.2, 0, 0, 1);
   pointer-events: none;
 }
-.tube::after {
-  content: ""; position: absolute; inset: 0; border-radius: inherit;
-  background: linear-gradient(180deg, transparent 10%, var(--tint, transparent));
-  opacity: 0; transition: opacity .7s cubic-bezier(.2, 0, 0, 1);
+.tube .frost {
+  position: absolute; inset: 0;
+  -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15);
+  clip-path: inset(calc(var(--dp) * 10) calc(var(--dp) * 3.5) calc(var(--dp) * .8) round 0 0 calc(var(--dp) * 32.6) calc(var(--dp) * 32.6));
 }
+.tube svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.tube .edge { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 1; transition: stroke .3s; }
+.tube .lip { fill: rgba(255, 255, 255, .07); stroke: rgba(255, 255, 255, .3); stroke-width: 1; }
+.tube .tint { opacity: 0; transition: opacity 1.2s cubic-bezier(.2, 0, 0, 1); }
 .is-game .tube { opacity: 1; transform: none; }
-.is-game .tube:nth-child(2) { transition-delay: 0s, .04s, 0s; }
-.is-game .tube:nth-child(3) { transition-delay: 0s, .08s, 0s; }
-.is-game .tube:nth-child(4) { transition-delay: 0s, .12s, 0s; }
-.tube.is-target { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .34), inset 0 calc(var(--dp) * -10) calc(var(--dp) * 18) rgba(255, 255, 255, .08); }
-.is-won .tube::after { opacity: .42; }
+.is-game .tube:nth-child(2) { transition-delay: .05s; }
+.is-game .tube:nth-child(3) { transition-delay: .1s; }
+.is-game .tube:nth-child(4) { transition-delay: .15s; }
+.tube.is-target .edge { stroke: rgba(255, 255, 255, .5); }
+.is-won .tube .tint { opacity: 1; }
+
+/* a soft dim that settles over the wallpaper while playing */
+.dim {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(120% 70% at 50% 58%, rgba(6, 10, 24, .1), rgba(6, 10, 24, .38));
+  opacity: 0; transition: opacity .8s cubic-bezier(.2, 0, 0, 1);
+}
+.is-game .dim { opacity: 1; }
 
 /* pointer surface for the game */
 .hit { position: absolute; left: 0; right: 0; top: calc(var(--dp) * 236); height: calc(var(--dp) * 420); z-index: 6; touch-action: none; display: none; }
 .is-game .hit { display: block; }
 
 /* HUD: hint → timer → reshuffle */
-.hud { position: absolute; inset: 0; z-index: 7; pointer-events: none; text-align: center; font-variation-settings: "ROND" 40; }
-.hint, .clock, .swatches {
+.hud { position: absolute; inset: 0; z-index: 7; pointer-events: none; text-align: center; }
+.hint, .clock {
   position: absolute; left: 0; right: 0; margin: 0;
-  opacity: 0; transform: translateY(calc(var(--dp) * 8));
-  transition: opacity .3s cubic-bezier(.2, 0, 0, 1), transform .5s cubic-bezier(.2, 1.3, .3, 1);
+  opacity: 0; transform: translateY(calc(var(--dp) * 6));
+  transition: opacity .5s cubic-bezier(.2, 0, 0, 1), transform .8s cubic-bezier(.2, 0, 0, 1);
 }
 .hint {
   top: calc(var(--dp) * 140);
-  font-size: calc(var(--dp) * 19.5); line-height: calc(var(--dp) * 24);
-  font-weight: 350; color: var(--ink-2);
+  font-size: calc(var(--dp) * 19.5); line-height: calc(var(--dp) * 25);
+  font-weight: 300; color: var(--ink-2); letter-spacing: .005em;
   text-wrap: balance;
 }
-.swatches {
-  top: calc(var(--dp) * 202);
-  display: flex; justify-content: center; gap: calc(var(--dp) * 7);
-}
-.swatches i {
-  width: calc(var(--dp) * 7); height: calc(var(--dp) * 7); border-radius: 50%;
-  background: var(--c); box-shadow: 0 0 0 1px rgba(255, 255, 255, .25);
-}
-.clock { top: calc(var(--dp) * 145.4); display: grid; justify-items: center; gap: calc(var(--dp) * 2.5); }
+.clock { top: calc(var(--dp) * 145.4); display: grid; justify-items: center; gap: calc(var(--dp) * 3); }
 .clock .time {
-  font-size: calc(var(--dp) * 21); line-height: calc(var(--dp) * 24); font-weight: 400;
-  font-variant-numeric: tabular-nums; letter-spacing: .01em;
+  font-size: calc(var(--dp) * 22); line-height: calc(var(--dp) * 24); font-weight: 300;
+  font-variant-numeric: tabular-nums; letter-spacing: .02em;
 }
-.clock .best { font-size: calc(var(--dp) * 12); line-height: calc(var(--dp) * 14); color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.is-game.hud-hint .hint, .is-game.hud-hint .swatches,
-.is-game.hud-clock .clock { opacity: 1; transform: none; }
-.is-game.hud-hint .swatches { transition-delay: .12s; }
+.clock .best { font-size: calc(var(--dp) * 12); line-height: calc(var(--dp) * 14); color: var(--ink-3); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.is-game.hud-hint .hint, .is-game.hud-clock .clock { opacity: 1; transform: none; }
+.is-game.hud-hint .hint { transition-delay: .25s; }
 
 .reshuffle {
   position: absolute; left: 50%; top: calc(var(--dp) * 224.4);
-  height: calc(var(--dp) * 26); padding: 0 calc(var(--dp) * 12);
+  height: calc(var(--dp) * 28); padding: 0 calc(var(--dp) * 13);
   border-radius: 99px;
-  display: inline-flex; align-items: center; gap: calc(var(--dp) * 5);
-  background: var(--pill);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  font-size: calc(var(--dp) * 12); font-weight: 600; letter-spacing: .01em;
-  opacity: 0; transform: translateX(-50%) scale(.7); pointer-events: none;
-  transition: opacity .25s cubic-bezier(.2, 0, 0, 1), transform .55s cubic-bezier(.2, 1.6, .3, 1), background-color .2s;
+  display: inline-flex; align-items: center; gap: calc(var(--dp) * 6);
+  background: rgba(255, 255, 255, .1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3);
+  font-size: calc(var(--dp) * 12); font-weight: 500; letter-spacing: .03em;
+  opacity: 0; transform: translateX(-50%) translateY(calc(var(--dp) * 6)); pointer-events: none;
+  transition: opacity .6s cubic-bezier(.2, 0, 0, 1), transform .8s cubic-bezier(.2, 0, 0, 1), background-color .25s;
 }
-.reshuffle::before { content: ""; position: absolute; inset: calc(var(--dp) * -11) calc(var(--dp) * -8); }
-.reshuffle svg { width: calc(var(--dp) * 13); height: calc(var(--dp) * 13); }
-.reshuffle:active { background: rgba(255, 255, 255, .18); }
+.reshuffle::before { content: ""; position: absolute; inset: calc(var(--dp) * -10) calc(var(--dp) * -8); }
+.reshuffle svg { width: calc(var(--dp) * 12); height: calc(var(--dp) * 12); opacity: .85; }
+.reshuffle:active { background: rgba(255, 255, 255, .2); }
 .show-reshuffle .reshuffle { opacity: 1; transform: translateX(-50%); pointer-events: auto; }
 
 .fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; }
 
-/* overflow menu: Material 3 Expressive grouped menu */
+/* overflow menu: one frosted-glass panel, as in the Figma frame */
 .scrim { position: absolute; inset: 0; z-index: 17; display: none; }
 .menu-open .scrim { display: block; }
 .menu {
   position: absolute; z-index: 18;
-  right: calc(var(--dp) * 12); top: calc(var(--dp) * 84);
-  width: calc(var(--dp) * 252);
-  display: grid; gap: calc(var(--dp) * 3);
-  transform-origin: 92% 0;
-  opacity: 0; transform: scale(.82);
+  right: calc(var(--dp) * 18); top: calc(var(--dp) * 46.8);
+  width: calc(var(--dp) * 157.6);
+  padding: calc(var(--dp) * 10) 0;
+  border-radius: calc(var(--dp) * 24);
+  background: rgba(10, 14, 26, .66);
+  -webkit-backdrop-filter: blur(26px) saturate(1.5); backdrop-filter: blur(26px) saturate(1.5);
+  box-shadow: 0 calc(var(--dp) * 14) calc(var(--dp) * 40) rgba(0, 0, 0, .28), inset 0 0 0 1px rgba(255, 255, 255, .07);
+  display: grid;
+  transform-origin: 88% 6%;
+  opacity: 0; transform: scale(.92);
   pointer-events: none;
-  transition: opacity .16s cubic-bezier(.2, 0, 0, 1), transform .45s cubic-bezier(.2, 1.35, .3, 1);
+  transition: opacity .22s cubic-bezier(.2, 0, 0, 1), transform .45s cubic-bezier(.2, 0, 0, 1);
 }
 .menu-open .menu { opacity: 1; transform: none; pointer-events: auto; }
-.menu-group {
-  background: var(--surface);
-  border-radius: calc(var(--dp) * 20);
-  padding: calc(var(--dp) * 4);
-  display: grid; gap: calc(var(--dp) * 2);
-  box-shadow: 0 calc(var(--dp) * 6) calc(var(--dp) * 22) rgba(0, 0, 0, .3);
-}
-.menu-group.accent { background: var(--primary-cont); color: var(--on-primary-cont); }
 .menu-item {
-  display: flex; align-items: center; gap: calc(var(--dp) * 12);
-  min-height: calc(var(--dp) * 46);
-  padding: 0 calc(var(--dp) * 12);
-  border-radius: calc(var(--dp) * 6);
-  text-align: left; font-size: calc(var(--dp) * 14.5); font-weight: 450;
-  transition: background-color .15s, border-radius .3s cubic-bezier(.2, 1.3, .3, 1);
+  display: flex; align-items: center;
+  min-height: calc(var(--dp) * 44);
+  padding: 0 calc(var(--dp) * 14) 0 calc(var(--dp) * 23);
+  white-space: nowrap;
+  text-align: left; font-size: calc(var(--dp) * 16); font-weight: 400; letter-spacing: .005em;
+  color: rgba(255, 255, 255, .94);
+  opacity: 0; transform: translateY(calc(var(--dp) * -3));
+  transition: opacity .3s cubic-bezier(.2, 0, 0, 1), transform .45s cubic-bezier(.2, 0, 0, 1), background-color .2s;
 }
-.menu-group > .menu-item:first-child { border-top-left-radius: calc(var(--dp) * 16); border-top-right-radius: calc(var(--dp) * 16); }
-.menu-group > .menu-item:last-child { border-bottom-left-radius: calc(var(--dp) * 16); border-bottom-right-radius: calc(var(--dp) * 16); }
-.menu-item:hover, .menu-item:focus-visible { background: rgba(255, 255, 255, .07); outline: none; }
-.menu-item:active { background: rgba(255, 255, 255, .12); border-radius: calc(var(--dp) * 16); }
-.menu-item > svg { width: calc(var(--dp) * 20); height: calc(var(--dp) * 20); flex: none; opacity: .9; }
-.menu-item.game { min-height: calc(var(--dp) * 60); }
-.game-glyph {
-  width: calc(var(--dp) * 34); height: calc(var(--dp) * 34); flex: none;
-  border-radius: calc(var(--dp) * 11);
-  background: var(--primary); display: grid; place-items: center;
-}
-.game-glyph svg { width: calc(var(--dp) * 22); height: calc(var(--dp) * 22); }
-.menu-item .txt { display: grid; gap: calc(var(--dp) * 1); flex: 1; min-width: 0; }
-.menu-item .txt b { font-weight: 600; font-size: calc(var(--dp) * 15); }
-.menu-item .txt small { font-size: calc(var(--dp) * 12); opacity: .78; }
-.badge {
-  font-size: calc(var(--dp) * 10.5); font-weight: 650; letter-spacing: .04em; text-transform: uppercase;
-  padding: calc(var(--dp) * 3) calc(var(--dp) * 7); border-radius: 99px;
-  background: var(--primary); color: #102457;
-}
-.menu .menu-item { opacity: 0; transform: translateY(calc(var(--dp) * -4)); transition: opacity .2s, transform .35s cubic-bezier(.2, 1.3, .3, 1), background-color .15s; }
-.menu-open .menu .menu-item { opacity: 1; transform: none; }
-.menu-open .menu .menu-item:nth-of-type(2) { transition-delay: .03s; }
-.menu-open .menu .menu-item:nth-of-type(3) { transition-delay: .06s; }
-.menu-open .menu .accent .menu-item { transition-delay: .09s; }
+.menu-item:hover, .menu-item:focus-visible { background: rgba(255, 255, 255, .06); outline: none; }
+.menu-item:active { background: rgba(255, 255, 255, .11); }
+.menu-open .menu-item { opacity: 1; transform: none; }
+.menu-open .menu-item:nth-child(2) { transition-delay: .03s; }
+.menu-open .menu-item:nth-child(3) { transition-delay: .06s; }
+.menu-open .menu-item:nth-child(4) { transition-delay: .09s; }
 
 .snack {
   position: absolute; z-index: 19; left: calc(var(--dp) * 16); right: calc(var(--dp) * 16); top: calc(var(--dp) * 690);
@@ -351,7 +329,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   background: var(--inverse); color: var(--on-inverse);
   font-size: calc(var(--dp) * 13.5); line-height: 1.35;
   opacity: 0; transform: translateY(calc(var(--dp) * 14)); pointer-events: none;
-  transition: opacity .2s cubic-bezier(.2, 0, 0, 1), transform .45s cubic-bezier(.2, 1.3, .3, 1);
+  transition: opacity .3s cubic-bezier(.2, 0, 0, 1), transform .5s cubic-bezier(.2, 0, 0, 1);
 }
 .snack.on { opacity: 1; transform: none; }
 
@@ -383,13 +361,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
           <svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l12 12M16 4 4 16"/></svg>
         </button>
 
+        <div class="dim" aria-hidden="true"></div>
         <div class="tubes" id="tubes"></div>
         <div class="apps" id="apps"></div>
         <div class="hit" id="hit"></div>
 
         <div class="hud">
           <p class="hint">Put same color family<br>icons together</p>
-          <div class="swatches" id="swatches" aria-hidden="true"></div>
           <div class="clock">
             <span class="time" id="time">00:00</span>
             <span class="best" id="best">Best --:--</span>
@@ -413,35 +391,16 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 
         <div class="scrim" id="scrim"></div>
         <div class="menu" id="menu" role="menu" aria-label="Home screen options">
-          <div class="menu-group">
-            <button class="menu-item" role="menuitem" tabindex="-1" data-soon="Edit home screen">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>
-              Edit home screen
-            </button>
-            <button class="menu-item" role="menuitem" tabindex="-1" data-soon="Wallpaper &amp; style">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-1.3-1-1.6-1-2.6 0-1 .8-1.7 1.9-1.7H17a4 4 0 0 0 4-4C21 6.4 17 3 12 3Z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15.5" cy="7.5" r="1.2" fill="currentColor"/></svg>
-              Wallpaper &amp; style
-            </button>
-            <button class="menu-item" role="menuitem" tabindex="-1" data-soon="Home settings">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>
-              Home settings
-            </button>
-          </div>
-          <div class="menu-group accent">
-            <button class="menu-item game" role="menuitem" tabindex="-1" id="playBtn">
-              <span class="game-glyph" aria-hidden="true">
-                <svg viewBox="0 0 22 22"><rect x="1.5" y="3" width="4" height="16" rx="2" fill="#2fbf6a"/><rect x="6.8" y="3" width="4" height="16" rx="2" fill="#3b7bf0"/><rect x="12.1" y="3" width="4" height="16" rx="2" fill="#eef0f5"/><rect x="17.4" y="3" width="4" height="16" rx="2" fill="#f0703a"/></svg>
-              </span>
-              <span class="txt"><b>Tonal Sort</b><small>Sort 16 apps by color</small></span>
-              <span class="badge">New</span>
-            </button>
-          </div>
+          <button class="menu-item" role="menuitem" tabindex="-1" id="sortBtn">Sort</button>
+          <button class="menu-item" role="menuitem" tabindex="-1" data-soon="Clean up pages">Clean up pages</button>
+          <button class="menu-item" role="menuitem" tabindex="-1" data-soon="Settings">Settings</button>
+          <button class="menu-item" role="menuitem" tabindex="-1" id="playBtn">Play</button>
         </div>
         <div class="snack" id="snack" role="status"></div>
       </div>
     </div>
   </div>
-  <p class="caption"><b>Tonal Sort</b> · Galaxy S24 home screen prototype · Tap ⋮ to play</p>
+  <p class="caption"><b>Tonal Sort</b> · Galaxy S24 home screen prototype · Tap ⋮ then Play</p>
 </main>
 
 <script>
@@ -485,11 +444,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 
   // Geometry in dp on a 360 × 780 screen, taken from the Figma frames.
   const ICON = 64;
-  const TUBE = { x0: 24, pitch: 80, w: 72.2, top: 337.6, h: 303.4, slot: 56.6, pad: 9.4, cap: 5, iconScale: 56.6 / 64 };
+  // The bottom slot sits in the round end of the tube (its center is the arc center).
+  const TUBE = { x0: 24, pitch: 80, w: 72.2, top: 337.6, h: 303.4, slot: 56.6, bottomCy: 268.5, cap: 5, iconScale: 56.6 / 64 };
   const homePos = (i) => ({ cx: 55.5 + 83 * (i % 4), cy: 125 + 94 * Math.floor(i / 4), s: 1, r: 0 });
   const tubeCx = (i) => TUBE.x0 + TUBE.w / 2 + TUBE.pitch * i;
-  const slotPos = (i, k) => ({ cx: tubeCx(i), cy: TUBE.top + TUBE.h - TUBE.pad - TUBE.slot / 2 - TUBE.slot * k, s: TUBE.iconScale, r: 0 });
-  const liftPos = (i) => ({ cx: tubeCx(i), cy: 300, s: 1, r: -18 });
+  const slotPos = (i, k) => ({ cx: tubeCx(i), cy: TUBE.top + TUBE.bottomCy - TUBE.slot * k, s: TUBE.iconScale, r: 0 });
+  const liftPos = (i) => ({ cx: tubeCx(i), cy: 296, s: 1, r: -7 });
 
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -511,10 +471,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     };
   }
   const SP = {
-    fast: spring(800, 0.62),
-    def: spring(420, 0.72),
-    slow: spring(230, 0.78),
-    drop: spring(560, 0.55),
+    fast: spring(520, 0.82),
+    def: spring(300, 0.86),
+    slow: spring(170, 0.88),
+    drop: spring(380, 0.78),
   };
 
   // ---------- DOM ----------
@@ -537,15 +497,51 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     el.append(img, label);
     el.setAttribute("aria-label", app.name);
     appsEl.append(el);
-    const t = { app, index, el, img, fam: app.tone, pos: homePos(index), anim: null, seq: 0 };
+    const t = { app, index, slot: index, el, img, fam: app.tone, pos: homePos(index), anim: null, seq: 0 };
     el.addEventListener("pointerdown", () => { if (mode === "home") el.classList.add("is-pressed"); });
     ["pointerup", "pointerleave", "pointercancel"].forEach((e) => el.addEventListener(e, () => el.classList.remove("is-pressed")));
     return t;
   });
 
+  // Glass test tube in the tube's own 72.2 × 303.4 dp box: flared lip, straight
+  // walls, round end. The frosted layer is clipped to the same outline in CSS.
+  function tubeArt(i) {
+    const body = "M3.5 10V270a32.6 32.6 0 0 0 65.2 0V10";
+    return `<span class="frost"></span>
+      <svg viewBox="0 0 72.2 303.4" aria-hidden="true">
+        <defs>
+          <linearGradient id="glass${i}" x1="0" x2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".13"/>
+            <stop offset=".22" stop-color="#fff" stop-opacity=".04"/>
+            <stop offset=".7" stop-color="#fff" stop-opacity=".03"/>
+            <stop offset="1" stop-color="#fff" stop-opacity=".1"/>
+          </linearGradient>
+          <linearGradient id="tint${i}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" style="stop-color:var(--tint, #fff)" stop-opacity="0"/>
+            <stop offset=".55" style="stop-color:var(--tint, #fff)" stop-opacity=".16"/>
+            <stop offset="1" style="stop-color:var(--tint, #fff)" stop-opacity=".46"/>
+          </linearGradient>
+          <linearGradient id="shine${i}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+            <stop offset=".18" stop-color="#fff" stop-opacity=".34"/>
+            <stop offset=".75" stop-color="#fff" stop-opacity=".12"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${body}Z" fill="url(#glass${i})"/>
+        <path class="tint" d="${body}Z" fill="url(#tint${i})"/>
+        <path class="edge" d="${body}" vector-effect="non-scaling-stroke"/>
+        <rect x="8.6" y="24" width="2.6" height="226" rx="1.3" fill="url(#shine${i})"/>
+        <path d="M62.6 30V250" stroke="#fff" stroke-opacity=".07" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M13 283a26 26 0 0 0 22 13" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.4" stroke-linecap="round"/>
+        <rect class="lip" x=".75" y="1" width="70.7" height="9" rx="4.5" vector-effect="non-scaling-stroke"/>
+      </svg>`;
+  }
+
   const tubeEls = [0, 1, 2, 3].map((i) => {
     const b = document.createElement("button");
     b.className = "tube";
+    b.innerHTML = tubeArt(i);
     b.tabIndex = -1;
     b.style.left = `calc(var(--dp) * ${TUBE.x0 + TUBE.pitch * i})`;
     b.addEventListener("keydown", (e) => {
@@ -585,7 +581,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   function hopTo(t, via, p) {
     moveTo(t, via, SP.fast);
     const seq = t.seq;
-    setTimeout(() => { if (t.seq === seq) moveTo(t, p, SP.drop); }, reduced ? 0 : 150);
+    setTimeout(() => { if (t.seq === seq) moveTo(t, p, SP.drop); }, reduced ? 0 : 190);
   }
 
   function relayout() {
@@ -709,9 +705,6 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     screen.classList.toggle("hud-clock", state === "clock");
   }
   function renderBest(text) { bestEl.textContent = text ?? (best ? `Best ${fmt(best)}` : "Best --:--"); }
-  function renderSwatches() {
-    $("swatches").innerHTML = families.map((f) => `<i style="--c:${FAMILY[f].color}"></i>`).join("");
-  }
   function labelTubes() {
     tubeEls.forEach((b, i) => {
       const names = tubes[i].map((t) => t.app.name).reverse();
@@ -743,6 +736,16 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     tubeEls.forEach((b) => b.style.removeProperty("--tint"));
   }
 
+  // Sort: reflow the home grid A–Z
+  function sortApps() {
+    const order = tokens.slice().sort((a, b) => a.app.name.localeCompare(b.app.name, undefined, { sensitivity: "base" }));
+    order.forEach((t, i) => {
+      const moved = t.slot !== i;
+      t.slot = i;
+      if (moved) moveTo(t, homePos(i), SP.slow, i * 18);
+    });
+  }
+
   // ---------- enter / leave ----------
   function enterGame() {
     if (mode !== "home") return;
@@ -754,7 +757,6 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     tubes = deal(pick.picked);
     lifted = null;
     clearWin();
-    renderSwatches();
     timeEl.textContent = "00:00";
     renderBest();
     setHud("hint");
@@ -762,9 +764,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     closeBtn.tabIndex = 0; moreBtn.tabIndex = -1;
     tubeEls.forEach((b) => (b.tabIndex = 0));
     tokens.forEach((t) => t.el.classList.toggle("is-out", !pick.picked.includes(t)));
-    tubes.forEach((col, i) => col.forEach((t, k) => moveTo(t, slotPos(i, k), SP.slow, 90 + t.index * 26)));
+    tubes.forEach((col, i) => col.forEach((t, k) => moveTo(t, slotPos(i, k), SP.slow, 120 + t.slot * 30)));
     labelTubes();
-    lock(800);
+    lock(950);
     haptic(10);
   }
 
@@ -780,7 +782,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     tubeEls.forEach((b) => { b.tabIndex = -1; b.classList.remove("is-target"); });
     tokens.forEach((t) => {
       t.el.classList.remove("is-out", "is-lifted");
-      moveTo(t, homePos(t.index), SP.def, t.index * 16);
+      moveTo(t, homePos(t.slot), SP.slow, t.slot * 20);
     });
     moreBtn.focus({ preventScroll: true });
   }
@@ -793,11 +795,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     families = pick.fams;
     tubes = deal(pick.picked);
     tokens.forEach((t) => t.el.classList.toggle("is-out", !pick.picked.includes(t)));
-    renderSwatches();
     timeEl.textContent = "00:00";
     renderBest();
     setHud("clock");
-    tubes.forEach((col, i) => col.forEach((t, k) => moveTo(t, slotPos(i, k), SP.slow, Math.random() * 140)));
+    tubes.forEach((col, i) => col.forEach((t, k) => moveTo(t, slotPos(i, k), SP.slow, Math.random() * 180)));
     labelTubes();
     lock(600);
     haptic(10);
@@ -810,7 +811,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     t.el.classList.add("is-lifted");
     moveTo(t, liftPos(i), SP.fast);
     startTimer();
-    haptic(8);
+    haptic(6);
   }
   function dropInto(i, viaHop = true) {
     const { t, from } = lifted;
@@ -826,8 +827,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   }
   function reject(i) {
     tubeEls[i].animate(
-      [{ transform: "translateX(0)" }, { transform: `translateX(${-5 * S}px)` }, { transform: `translateX(${4 * S}px)` }, { transform: `translateX(${-2 * S}px)` }, { transform: "translateX(0)" }],
-      { duration: 320, easing: "cubic-bezier(.3,0,.2,1)" }
+      [{ transform: "translateX(0)" }, { transform: `translateX(${-3 * S}px)` }, { transform: `translateX(${2.5 * S}px)` }, { transform: `translateX(${-1 * S}px)` }, { transform: "translateX(0)" }],
+      { duration: 420, easing: "cubic-bezier(.2,0,0,1)" }
     );
     haptic([6, 40, 6]);
   }
@@ -854,18 +855,18 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     setTimeout(() => {
       tubes.forEach((col, i) => tubeEls[i].style.setProperty("--tint", FAMILY[col[0].fam].color));
       screen.classList.add("is-won");
-      timeEl.animate([{ transform: "scale(1)" }, { transform: "scale(1.12)" }, { transform: "scale(1)" }], { duration: 520, easing: "cubic-bezier(.3,0,.2,1)" });
+      timeEl.animate([{ transform: "scale(1)" }, { transform: "scale(1.06)" }, { transform: "scale(1)" }], { duration: 800, easing: "cubic-bezier(.2,0,0,1)" });
       confetti(180, 170);
       tubes.forEach((col, i) => col.forEach((t, k) => {
-        t.img.animate([{ transform: "translateY(0)" }, { transform: `translateY(${-5 * S}px) scale(1.04)` }, { transform: "translateY(0)" }],
-          { duration: 440, delay: i * 70 + k * 35, easing: "cubic-bezier(.3,0,.2,1)" });
+        t.img.animate([{ transform: "translateY(0)" }, { transform: `translateY(${-3 * S}px) scale(1.02)` }, { transform: "translateY(0)" }],
+          { duration: 700, delay: i * 90 + k * 45, easing: "cubic-bezier(.2,0,0,1)" });
       }));
-      haptic([10, 50, 18]);
+      haptic([8, 60, 12]);
     }, reduced ? 0 : 280);
     setTimeout(() => {
       screen.classList.add("show-reshuffle");
       reshuffleBtn.tabIndex = 0;
-    }, reduced ? 0 : 1250);
+    }, reduced ? 0 : 1300);
   }
 
   // ---------- confetti: a quiet ring of gold that lasts a second ----------
@@ -873,21 +874,21 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     if (reduced) return;
     const ctx = fx.getContext("2d");
     const k = fx.width / 360; // canvas px per dp
-    const golds = ["#f3d27a", "#f3d27a", "#e9bd55", "#fff1cc"];
-    const parts = Array.from({ length: 46 }, (_, n) => {
-      const a = (n / 46) * Math.PI * 2 + (Math.random() - 0.5) * 0.12;
-      const tinted = Math.random() < 0.16;
+    const golds = ["#f1d48a", "#f1d48a", "#e6c26c", "#fbf0d6"];
+    const parts = Array.from({ length: 40 }, (_, n) => {
+      const a = (n / 40) * Math.PI * 2 + (Math.random() - 0.5) * 0.12;
+      const tinted = Math.random() < 0.1;
       return {
         a,
         r0: 40 + Math.random() * 8,
-        dr: 12 + Math.random() * 20,
+        dr: 10 + Math.random() * 16,
         len: 4.5 + Math.random() * 3.5,
-        spin: (Math.random() - 0.5) * 5,
+        spin: (Math.random() - 0.5) * 3,
         delay: Math.random() * 110,
         color: tinted ? FAMILY[families[rand(families.length)]].color : golds[rand(golds.length)],
       };
     });
-    const t0 = performance.now(), life = 900;
+    const t0 = performance.now(), life = 920;
     const frame = (now) => {
       ctx.clearRect(0, 0, fx.width, fx.height);
       let alive = false;
@@ -895,17 +896,17 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
         const t = Math.min(1, Math.max(0, (now - t0 - p.delay) / life));
         if (t < 1) alive = true;
         if (t <= 0) continue;
-        const e = 1 - Math.pow(1 - t, 3);
+        const e = 1 - Math.pow(1 - t, 4);
         const r = p.r0 + p.dr * e;
         const x = (cxDp + Math.cos(p.a) * r * 1.12) * k;
         const y = (cyDp + Math.sin(p.a) * r + 5 * t * t) * k;
-        const alpha = t < 0.12 ? t / 0.12 : t > 0.55 ? Math.max(0, 1 - (t - 0.55) / 0.45) : 1;
+        const alpha = 0.85 * (t < 0.15 ? t / 0.15 : t > 0.5 ? Math.max(0, 1 - (t - 0.5) / 0.5) : 1);
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.translate(x, y);
         ctx.rotate(p.a + Math.PI / 2 + p.spin * t);
         ctx.strokeStyle = p.color;
-        ctx.lineWidth = 1.5 * k;
+        ctx.lineWidth = 1.3 * k;
         ctx.lineCap = "round";
         const L = p.len * k;
         ctx.beginPath();
@@ -993,7 +994,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     screen.classList.add("menu-open");
     moreBtn.setAttribute("aria-expanded", "true");
     items.forEach((b) => (b.tabIndex = 0));
-    setTimeout(() => items[items.length - 1].focus({ preventScroll: true }), 40);
+    setTimeout(() => items[0].focus({ preventScroll: true }), 40);
   }
   function closeMenu(refocus = true) {
     if (!screen.classList.contains("menu-open")) return;
@@ -1005,9 +1006,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   moreBtn.addEventListener("click", () => (screen.classList.contains("menu-open") ? closeMenu() : openMenu()));
   $("scrim").addEventListener("pointerdown", () => closeMenu(false));
   $("playBtn").addEventListener("click", enterGame);
+  $("sortBtn").addEventListener("click", () => { closeMenu(); sortApps(); });
   items.forEach((b) => {
     if (!b.dataset.soon) return;
-    b.addEventListener("click", () => { closeMenu(); snack(`${b.dataset.soon} isn't part of this prototype. Try Tonal Sort.`); });
+    b.addEventListener("click", () => { closeMenu(); snack(`${b.dataset.soon} isn't part of this prototype. Tap Play to try the game.`); });
   });
   menu.addEventListener("keydown", (e) => {
     const i = items.indexOf(document.activeElement);
