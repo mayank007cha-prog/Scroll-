@@ -49,7 +49,6 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  cursor: pointer;
   background: var(--base-bg);
   isolation: isolate;
 }
@@ -75,12 +74,11 @@ body {
 .wallpaper {
   position: absolute;
   inset: 0;
-  background: var(--base-bg) url("assets/wallpaper-old.jpg") center / cover no-repeat;
+  background: var(--base-bg) url("assets/wallpaper-doodle.jpg") center / cover no-repeat;
 }
 
-.wallpaper.is-new,
+/* the chosen wallpaper's image is set from app.js */
 .sheet__image {
-  background-image: url("assets/wallpaper-new.jpg");
   background-position: center;
   background-size: cover;
   background-color: #3a7bb1;
@@ -323,13 +321,252 @@ body {
 }
 
 /* ------------------------------------------------------------------
-   Dev hint
+   Chat chrome: header, ⋮ menu, message bar, background picker
+------------------------------------------------------------------ */
+.topbar,
+.composer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(246, 246, 246, 0.94);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+          backdrop-filter: blur(16px) saturate(1.4);
+}
+
+.topbar {
+  top: 0;
+  padding: calc(6px + env(safe-area-inset-top)) 6px 6px 2px;
+  box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.18);
+}
+
+.composer {
+  bottom: 0;
+  gap: 4px;
+  padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+  box-shadow: 0 -0.5px 0 rgba(0, 0, 0, 0.14);
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #0a0a0a;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#menuBtn svg { fill: currentColor; stroke: none; }
+button.icon-btn:active { background: rgba(0, 0, 0, 0.07); }
+button.icon-btn:focus-visible { outline: 2px solid #007bfc; outline-offset: 1px; }
+
+.topbar__back { width: 32px; }
+.topbar__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #f2a65a, #c0504d);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.topbar__who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+.topbar__name { font-size: 16px; font-weight: 600; color: #0a0a0a; }
+.topbar__status { font-size: 12.5px; color: rgba(0, 0, 0, 0.5); }
+
+.composer__field {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 14px;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 18px;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.38);
+  font-size: 16px;
+  line-height: 35px;
+}
+
+.menu[hidden],
+.picker[hidden] { display: none; }
+
+/* ⋮ menu */
+.menu {
+  position: absolute;
+  top: calc(52px + env(safe-area-inset-top));
+  right: 8px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 212px;
+  padding: 6px 0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform-origin: top right;
+  animation: menu-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.menu button {
+  padding: 12px 18px;
+  border: 0;
+  background: none;
+  color: #0a0a0a;
+  font: inherit;
+  font-size: 15.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.menu button:active,
+.menu button:focus-visible { background: rgba(0, 0, 0, 0.06); outline: none; }
+@keyframes menu-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Background picker — bottom sheet */
+.picker {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+}
+.picker__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  animation: fade-in 220ms ease;
+}
+.picker__sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 18px calc(22px + env(safe-area-inset-bottom));
+  border-radius: 20px 20px 0 0;
+  background: #fff;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+  animation: sheet-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.picker.is-closing .picker__sheet { animation: sheet-out 240ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+.picker.is-closing .picker__backdrop { animation: fade-out 240ms ease forwards; }
+.picker__handle {
+  width: 36px;
+  height: 5px;
+  margin: 0 auto 14px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.15);
+}
+.picker__title { margin: 0; font-size: 18px; font-weight: 600; color: #0a0a0a; }
+.picker__sub { margin: 4px 0 16px; font-size: 13.5px; color: rgba(0, 0, 0, 0.5); }
+.picker__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.wp-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.wp-tile__img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #ddd center / cover no-repeat;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+  transition: transform 160ms ease;
+}
+.wp-tile:active .wp-tile__img { transform: scale(0.96); }
+.wp-tile:focus-visible { outline: none; }
+.wp-tile:focus-visible .wp-tile__img { outline: 2px solid #007bfc; outline-offset: 2px; }
+/* tiny chat bubbles so each tile reads as a chat preview */
+.wp-tile__img::before,
+.wp-tile__img::after {
+  content: "";
+  position: absolute;
+  height: 9%;
+  border-radius: 4px;
+}
+.wp-tile__img::before { left: 9%; top: 52%; width: 52%; background: #fff; }
+.wp-tile__img::after  { right: 9%; top: 66%; width: 46%; background: var(--bubble-me); }
+.wp-tile.is-current .wp-tile__img { box-shadow: 0 0 0 2.5px #25a35a; }
+.wp-tile__check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  display: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #25a35a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.wp-tile.is-current .wp-tile__check { display: grid; }
+.wp-tile__name {
+  overflow: hidden;
+  color: #0a0a0a;
+  font-size: 12.5px;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@keyframes sheet-in  { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheet-out { from { transform: translateY(0); } to { transform: translateY(100%); } }
+@keyframes fade-in   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out  { from { opacity: 1; } to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .menu, .picker__sheet, .picker__backdrop { animation: none; }
+}
+
+/* ------------------------------------------------------------------
+   Hint
 ------------------------------------------------------------------ */
 .hint {
   position: absolute;
   left: 50%;
-  bottom: calc(26px + env(safe-area-inset-bottom));
-  z-index: 7;
+  top: calc(64px + env(safe-area-inset-top));
+  z-index: 19;
   padding: 7px 14px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.55);
@@ -344,4 +581,4 @@ body {
   transition: opacity 260ms ease, transform 260ms ease;
   pointer-events: none;
 }
-.hint.is-hidden { opacity: 0; transform: translate(-50%, 6px); }
+.hint.is-hidden { opacity: 0; transform: translate(-50%, -6px); }

@@ -3,10 +3,11 @@
 Mobile prototype of the "paint roller" wallpaper change, built from the Figma
 file *Interactions-motion → Chat Background Change animation*.
 
-Open `index.html` through any static server (e.g. `python3 -m http.server`) and
-**tap the screen** to play. A tap plays the change once, and taps while it is
-playing are ignored. Once the wallpaper has changed, the next tap replays the
-whole sequence from the start (old wallpaper).
+Open `index.html` through any static server (e.g. `python3 -m http.server`).
+Tap **⋮** at the top right, choose **Chat background**, and pick a wallpaper:
+the roller animation pastes it over the current one. There are four built-in
+backgrounds: Doodles (the original), Blue cat, Sunset and Mint. Add more in the
+`WALLPAPERS` list at the top of `app.js`.
 
 - `?speed=0.25` in the URL plays it in slow motion.
 - All timing/physics lives in `CONFIG` at the top of `app.js`.
@@ -26,5 +27,6 @@ sequence takes about 2.3s.
 
 Layers, bottom to top: old wallpaper, chat, new paper, roller.
 
-Assets in `assets/` were exported from Figma: the roller image, the original
-chat wallpaper and the new wallpaper.
+Assets in `assets/`: the roller image, the doodle chat wallpaper and the
+blue cat wallpaper come from Figma; the sunset and mint wallpapers were drawn
+for this prototype.

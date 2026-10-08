@@ -24,7 +24,16 @@
 (() => {
   'use strict';
 
-  const NEW_WALLPAPER = 'assets/wallpaper-new.jpg';
+  // Chat backgrounds to choose from. `back` is the colour of the back of the
+  // paper when it is rolled up (a darker shade of the wallpaper, so the roll
+  // stands out against the chat).
+  const WALLPAPERS = [
+    { id: 'doodle', name: 'Doodles', src: 'assets/wallpaper-doodle.jpg', back: [150, 132, 104] },
+    { id: 'cat',    name: 'Blue cat', src: 'assets/wallpaper-cat.jpg', back: [92, 108, 128] },
+    { id: 'sunset', name: 'Sunset', src: 'assets/wallpaper-sunset.jpg', back: [104, 62, 98] },
+    { id: 'mint',   name: 'Mint', src: 'assets/wallpaper-mint.jpg', back: [64, 128, 112] },
+  ];
+  let currentId = 'doodle';
   const ROLLER_IMAGE = 'assets/roller.png';
 
   const CONFIG = {
@@ -87,7 +96,6 @@
     flutter: 0.8,                  // deg of gentle flutter while rolling
     cornerSag: 6,                  // deg the corners fold over further than the middle
     twist: 2,                      // deg of slow left/right wobble
-    paperBack: [92, 108, 128],     // colour of the back of the paper (slate, so it stands out from the beige chat)
     // Roller head: the sleeve visibly turns, and the roller bobs and tips a
     // little with each turn, like it is pushing something heavy
     sleeveLines: 14,               // nap ridges around the roller sleeve (they roll over as it turns)
@@ -203,9 +211,16 @@
   const dprGL = Math.min(dpr, 2.5);
   const snap = (v) => Math.round(v * dpr) / dpr;
 
-  const paperImg = new Image();
-  paperImg.src = NEW_WALLPAPER;
-  const paperReady = (paperImg.decode ? paperImg.decode() : Promise.resolve()).catch(() => {});
+  // Preload every wallpaper; the one being pasted on is `paperImg`
+  const wallImgs = {};
+  for (const w of WALLPAPERS) {
+    const img = new Image();
+    img.src = w.src;
+    wallImgs[w.id] = { img, ready: (img.decode ? img.decode() : Promise.resolve()).catch(() => {}) };
+  }
+  let paper = WALLPAPERS[1];
+  let paperImg = wallImgs[paper.id].img;
+  const paperReady = wallImgs[paper.id].ready;
   const rollerImg = new Image();
   rollerImg.src = ROLLER_IMAGE;
   if (rollerImg.decode) rollerImg.decode().catch(() => {});
@@ -405,7 +420,7 @@
     attr('aPos', 3, 0); attr('aUV', 2, 3); attr('aLight', 2, 5); attr('aSpec', 1, 7); attr('aAlpha', 1, 8);
     const uShadow = gl.getUniformLocation(prog, 'uShadow');
     const uGrain = gl.getUniformLocation(prog, 'uGrain');
-    gl.uniform3fv(gl.getUniformLocation(prog, 'uBack'), CONFIG.paperBack.map((c) => c / 255));
+    const uBack = gl.getUniformLocation(prog, 'uBack');
 
     let texReady = false, texKey = '';
     const tex = gl.createTexture();
@@ -436,6 +451,12 @@
     const FLAT_NH = Hv[2];
 
     return {
+      // a new wallpaper to paste: re-upload the texture, set the back colour
+      setPaper(back) {
+        texReady = false;
+        gl.uniform3fv(uBack, back.map((c) => c / 255));
+      },
+
       resize() {
         if (texKey !== `${W}x${H}`) texReady = false;
         canvas.width = Math.round(W * dprGL);
@@ -764,8 +785,9 @@
     // Roller gone: the new wallpaper becomes the base. The sweep ends once the
     // last falling chat has left the screen too (with a safety cap).
     if (line.roll >= 1) {
-      if (!wpBase.classList.contains('is-new')) {
-        wpBase.classList.add('is-new');
+      if (currentId !== paper.id) {
+        currentId = paper.id;
+        wpBase.style.backgroundImage = `url("${paper.src}")`;
         sheet.classList.remove('is-active');
         flapCanvas.classList.remove('is-active');
         roller.classList.remove('is-active');
@@ -824,10 +846,7 @@
   function setPhase(next, now) {
     phase = next;
     phaseStart = now;
-    if (next === 'done') {
-      hint.textContent = 'Tap to replay';
-      hint.classList.remove('is-hidden');
-    }
+
   }
 
   function tick() {
@@ -851,7 +870,6 @@
 
   // Back to the very first frame: old wallpaper, chat in place, no paper or roller.
   function resetToInitial() {
-    wpBase.classList.remove('is-new');
     sheet.classList.remove('is-active');
     flapCanvas.classList.remove('is-active');
     roller.classList.remove('is-active');
@@ -866,17 +884,24 @@
     phase = 'idle';
   }
 
-  // A tap plays the whole sequence once; taps while it is playing are ignored.
-  // After the wallpaper has changed, the next tap replays it from the start.
+  // Picking a chat background plays the whole sequence once, pasting that
+  // wallpaper over the current one.
   let starting = false;
-  async function play() {
-    if (starting || phase === 'run') return;
+  async function play(id) {
+    const next = WALLPAPERS.find((w) => w.id === id);
+    if (!next || next.id === currentId || starting || phase === 'run') return;
     starting = true;
-    await paperReady;
+    await wallImgs[next.id].ready;
     starting = false;
     resetToInitial();
 
+    paper = next;
+    paperImg = wallImgs[next.id].img;
+    sheetImage.style.backgroundImage = `url("${next.src}")`;
+    if (flapGL) flapGL.setPaper(next.back);
+
     measure();
+    if (flapGL) flapGL.draw(H + 2000, H, 0); // upload the new wallpaper's texture before the first frame
     // The copy does the falling; the real chat is parked and comes back later.
     flyLayer.classList.remove('is-idle');
     parkChat();
@@ -898,16 +923,80 @@
     if (!rafId) rafId = requestAnimationFrame(tick);
   }
 
-  stage.addEventListener('click', play);
+  // ---------------------------------------------------------------- ⋮ menu + background picker
+  const menuBtn = document.getElementById('menuBtn');
+  const menu = document.getElementById('menu');
+  const picker = document.getElementById('picker');
+  const pickerGrid = document.getElementById('pickerGrid');
+
+  function openMenu() {
+    if (phase === 'run' || starting) return;
+    menu.hidden = false;
+    menuBtn.setAttribute('aria-expanded', 'true');
+    hint.classList.add('is-hidden');
+    menu.querySelector('button').focus({ preventScroll: true });
+  }
+  function closeMenu() {
+    menu.hidden = true;
+    menuBtn.setAttribute('aria-expanded', 'false');
+  }
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (menu.hidden) openMenu(); else closeMenu();
+  });
+  menu.addEventListener('click', (e) => {
+    const item = e.target.closest('button');
+    if (!item) return;
+    closeMenu();
+    if (item.dataset.action === 'wallpaper') openPicker();
+  });
+  document.addEventListener('click', (e) => {
+    if (!menu.hidden && !menu.contains(e.target)) closeMenu();
+  });
+
+  function renderPicker() {
+    pickerGrid.innerHTML = '';
+    for (const w of WALLPAPERS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'wp-tile' + (w.id === currentId ? ' is-current' : '');
+      b.setAttribute('aria-label', `${w.name}${w.id === currentId ? ' (current)' : ''}`);
+      b.innerHTML = `<span class="wp-tile__img" style="background-image:url('${w.src}')"><span class="wp-tile__check">✓</span></span><span class="wp-tile__name">${w.name}</span>`;
+      b.addEventListener('click', () => choose(w.id));
+      pickerGrid.appendChild(b);
+    }
+  }
+  function openPicker() {
+    renderPicker();
+    picker.classList.remove('is-closing');
+    picker.hidden = false;
+    (pickerGrid.querySelector('.wp-tile:not(.is-current)') || pickerGrid.firstChild).focus({ preventScroll: true });
+  }
+  function closePicker() {
+    return new Promise((resolve) => {
+      if (picker.hidden) return resolve();
+      picker.classList.add('is-closing');
+      setTimeout(() => { picker.hidden = true; picker.classList.remove('is-closing'); resolve(); }, 240);
+    });
+  }
+  async function choose(id) {
+    await closePicker();
+    if (id !== currentId) play(id);
+  }
+  document.getElementById('pickerBackdrop').addEventListener('click', closePicker);
+  // focusing or tapping inside the frame must never scroll it
+  stage.addEventListener('scroll', () => { stage.scrollTop = 0; stage.scrollLeft = 0; });
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); play(); }
+    if (e.key !== 'Escape') return;
+    if (!menu.hidden) closeMenu();
+    else if (!picker.hidden) closePicker();
   });
 
   // Prepare everything up front (layout, texture upload, shader compile) so the
   // first frames after a tap are as light as the rest.
   Promise.all([paperReady, document.fonts ? document.fonts.ready : null]).then(() => {
     measure();
-    if (flapGL) flapGL.draw(H + 2000, H, 0);
+    if (flapGL) { flapGL.setPaper(paper.back); flapGL.draw(H + 2000, H, 0); }
   });
   window.addEventListener('resize', () => { if (phase !== 'run') measure(); });
 
