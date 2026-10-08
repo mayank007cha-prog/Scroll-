@@ -34,9 +34,11 @@
     coverOnEnter: 0.24,            // part of the screen the stuck paper covers after entering
     landSpeed: 420,                // px/s while the paper lands on the roller (never zero → no hitch)
     // 2. roll – the roller carries on smoothly up and off the top
-    rollDuration: 1260,            // ms
-    rollPeakAt: 0.45,              // where in the roll it reaches top speed
-    exitSpeed: 600,                // px/s as it leaves the top
+    rollDuration: 1000,            // ms
+    rollPeakAt: 0.4,               // where in the roll it reaches top speed
+    exitSpeed: 0,                  // px/s at the end: it eases to a stop at the top
+    topStop: 30,                   // px from the top where the roller stops (its head fully on screen)
+    liftDuration: 320,             // ms for the roller to lift off the wall once the paper is up
     // (start and top speeds are solved so the distances fit the durations;
     //  speeds are per 852px of screen height)
 
@@ -64,8 +66,8 @@
     viewTilt: 0.32,                // seen slightly from below, so the roll's rounded underside shows
     // Where the roller line is (× screen height) for each stage of the climb
     revealTo: 0.22,                // drape slowly lifts off the roller until here (roller fully shown)
-    flattenFrom: 0.0,              // the roll travels up and over the top edge of the screen intact,
-    flattenTo: -0.15,              // and only unrolls once it is past it (out of view)
+    settleZone: 0.14,              // × screen height before the stop: the last of the sheet settles flat
+    showHeadZone: 0.2,             // × screen height before the stop: the head comes out from under the roll
     accelSwing: 0.0028,            // deg the heavy sheet swings per px/s² of roller acceleration
     breathe: 4,                    // deg of slow "breathing" in the middle of the heavy sheet
     flapBaseAngle: 4,              // deg it leans forward where it rises behind the roller head
@@ -160,6 +162,7 @@
   const flapCanvas = document.getElementById('flap');
   const roller = document.getElementById('roller');
   const rollerNap = document.getElementById('rollerNap');
+  const sheetPress = document.querySelector('.sheet__press');
   const napCtx = rollerNap.getContext('2d');
 
   // The roller sleeve turning: nap ridges spaced around the cylinder. Seen from
@@ -230,7 +233,8 @@
   let travelled = 0;           // px the roller has rolled (turns the sleeve)
   let fall = 1, fallVel = 0;   // settle of the sheet when it first comes in
   let coverK = 1;               // 1 = paper drapes over the roller, 0 = roller fully shown
-  let topK = 0;                 // 0 = rolled, 1 = unrolled flat over the top edge
+  let topK = 0;                 // 0 = rolled, 1 = the last of the sheet has settled flat at the top
+  let headCover = 1;            // 1 = roll keeps the roller head covered, 0 = head fully shown
   let lastV = 0;                // roller speed last frame (for its acceleration)
 
   function measure() {
@@ -288,7 +292,7 @@
     const k = H / 852;
     const enterTo = H * (1 - CONFIG.coverOnEnter);
     const enterFrom = H + 110;  // everything starts below the screen
-    const rollTo = -((CONFIG.rollerHeight - CONFIG.rollerHeadCenter) * CONFIG.rollerScale + 30); // roller fully past the top
+    const rollTo = CONFIG.topStop; // the sheet is one screen tall: the roller stops as its top edge reaches the top
     const vLand = CONFIG.landSpeed * k, vExit = CONFIG.exitSpeed * k;
     // solve the start and top speeds so each segment covers exactly its distance
     const vIn = (2 * (enterFrom - enterTo)) / tIn - vLand;
@@ -443,7 +447,9 @@
       draw(lineY, paperRow, tSec, rollerX = 0, rollerY = 0) {
         if (!texReady) upload();
         const mix = (pair) => pair[1] + (pair[0] - pair[1]) * coverK;
-        const len = mix(CONFIG.flapLength);
+        // the sheet ends at the top of the screen: only the paper left between the
+        // roller and the top edge can be loose, so the roll shrinks as it runs out
+        const len = Math.max(1, Math.min(mix(CONFIG.flapLength), paperRow));
         const curlStart = mix(CONFIG.curlStart), curlWidth = mix(CONFIG.curlWidth);
         const flipStart = mix(CONFIG.flipStart), flipWidth = mix(CONFIG.flipWidth);
         const flip = mix(CONFIG.flipAngle);
@@ -567,7 +573,7 @@
             const deficit = headBottom - hemY;
             if (deficit <= 0) continue;
             const hemX = ((verts[hemO] + 1) / 2) * W;
-            const wx = smoothstep((hemX - hx0 + PF) / PF) * smoothstep((hx1 + PF - hemX) / PF) * (1 - topK);
+            const wx = smoothstep((hemX - hx0 + PF) / PF) * smoothstep((hx1 + PF - hemX) / PF) * (1 - topK) * headCover;
             if (wx <= 0) continue;
             for (let i = 0; i <= NS; i++) {
               const o = (i * (NU + 1) + j) * STRIDE;
@@ -685,7 +691,8 @@
     // the top the roll unrolls flat and goes over the top edge
     const yCover = H * (1 - CONFIG.coverOnEnter), yOpen = H * CONFIG.revealTo;
     coverK = smoothstep((line.y - yOpen) / (yCover - yOpen));
-    topK = 1 - smoothstep((line.y - H * CONFIG.flattenTo) / (H * (CONFIG.flattenFrom - CONFIG.flattenTo)));
+    topK = 1 - smoothstep((line.y - CONFIG.topStop) / (H * CONFIG.settleZone));
+    headCover = smoothstep((line.y - CONFIG.topStop - 12) / (H * CONFIG.showHeadZone));
     const edgeSpeed = Math.max(0, v);
     last = { now, y: line.y };
 
@@ -706,10 +713,12 @@
     drawSleeve(travelled);
     const edge = (flapGL ? flapGL.draw(line.y, line.paperRow, tSec, sway, bob) : line.y) - 2;
 
-    const lift = smoothstep((line.roll - 0.84) / 0.16);
+    // once the paper is up, the roller lifts off the wall towards you and fades
+    const lift = smoothstep((t - CONFIG.enterDuration - CONFIG.rollDuration) / CONFIG.liftDuration);
     roller.style.transform =
-      `translate3d(${sway.toFixed(2)}px, ${snap(line.y + bob - CONFIG.rollerHeadCenter * CONFIG.rollerScale)}px, 0) rotate(${tilt.toFixed(2)}deg) scale(${(1 + lift * 0.05).toFixed(4)})`;
+      `translate3d(${sway.toFixed(2)}px, ${snap(line.y + bob - 6 * lift - CONFIG.rollerHeadCenter * CONFIG.rollerScale)}px, 0) rotate(${tilt.toFixed(2)}deg) scale(${(1 + lift * 0.08).toFixed(4)})`;
     roller.style.opacity = (1 - lift).toFixed(3);
+    sheetPress.style.opacity = (1 - lift).toFixed(3);
 
     // Bubbles get knocked off by the paper's top edge
     for (const b of bubbles) {
@@ -747,7 +756,7 @@
 
     // Roller gone: the new wallpaper becomes the base. The sweep ends once the
     // last falling chat has left the screen too (with a safety cap).
-    if (line.roll >= 1) {
+    if (lift >= 1) {
       if (!wpBase.classList.contains('is-new')) {
         wpBase.classList.add('is-new');
         sheet.classList.remove('is-active');
@@ -865,7 +874,8 @@
     flyLayer.classList.remove('is-idle');
     parkChat();
     hint.classList.add('is-hidden');
-    last = null; droop = 0; droopVel = 0; fall = CONFIG.fallFrom; fallVel = 0; coverK = 1; topK = 0; lastV = 0; travelled = 0;
+    last = null; droop = 0; droopVel = 0; fall = CONFIG.fallFrom; fallVel = 0; coverK = 1; topK = 0; headCover = 1; lastV = 0; travelled = 0;
+    sheetPress.style.opacity = '';
     sweepDone = false; returnStart = -1;
 
     sheet.classList.add('is-active');
