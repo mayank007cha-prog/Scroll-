@@ -51,12 +51,12 @@
     // it rises off the wall, rolls forward into a big rounded curl just above
     // the roller head (showing its underside), then the far end flips back up.
     // Each value is [covering the roller, carpet wave].
-    // [covering: drapes over the roller and hangs down over its head and handle,
+    // [covering: drapes over the roller and hangs down over its head and the top of the arm,
     //  open: a carpet roll resting on the roller head]
-    flapLength: [400, 260],        // px of loose sheet above the roller line
+    flapLength: [270, 260],        // px of loose sheet above the roller line
     curlAngle: [181, 190],         // deg the sheet turns over in the main roll
-    curlStart: [0.12, 0.26],       // where along the loose sheet the roll begins (0–1)
-    curlWidth: [0.18, 0.48],       // how long the roll is (0–1) — longer = bigger, rounder roll
+    curlStart: [0.17, 0.26],       // where along the loose sheet the roll begins (0–1)
+    curlWidth: [0.26, 0.48],       // how long the roll is (0–1) — longer = bigger, rounder roll
     flipAngle: [0, 70],            // deg the end flares back out (the carpet's lifted edge)
     flipStart: [0.55, 0.86],       // (the roll comes down to rest on the roller head)
     flipWidth: [0.30, 0.14],
