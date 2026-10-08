@@ -171,7 +171,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 }
 .app.is-pressed img { transform: scale(.94); }
 .is-game .app { pointer-events: none; }
-.is-game .app .label { opacity: 0; }
+.is-game .app .label { opacity: 0; transition-duration: .2s; }
+.app .label { transition-delay: .35s; }
+.is-game .app .label { transition-delay: 0s; }
 .app.is-out { opacity: 0; }
 .app.is-lifted { z-index: 3; }
 .app.is-lifted img { filter: drop-shadow(0 calc(var(--dp) * 12) calc(var(--dp) * 16) rgba(0, 0, 0, .24)); }
@@ -208,7 +210,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   border-radius: 99px; background: rgba(255, 255, 255, .85);
 }
 
-/* tubes: glass test tubes drawn in SVG, frosted inside their own outline */
+/* tubes: glass test tubes drawn in SVG */
 .tubes { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .tube {
   position: absolute; top: calc(var(--dp) * 337.6);
@@ -216,11 +218,6 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   opacity: 0; transform: translateY(calc(var(--dp) * 18));
   transition: opacity .6s cubic-bezier(.2, 0, 0, 1), transform .9s cubic-bezier(.2, 0, 0, 1);
   pointer-events: none;
-}
-.tube .frost {
-  position: absolute; inset: 0;
-  -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15);
-  clip-path: inset(calc(var(--dp) * 10) calc(var(--dp) * 3.5) calc(var(--dp) * .8) round 0 0 calc(var(--dp) * 32.6) calc(var(--dp) * 32.6));
 }
 .tube svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .tube .edge { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 1; transition: stroke .3s; }
@@ -453,28 +450,21 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
 
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // ---------- spring motion (M3 Expressive spatial springs) ----------
-  const canLinear = CSS.supports("animation-timing-function", "linear(0, 1)");
-  function spring(stiffness, damping) {
-    const w0 = Math.sqrt(stiffness), zw = damping * w0;
-    const wd = w0 * Math.sqrt(Math.max(1e-6, 1 - damping * damping));
-    const dur = Math.min(1.2, Math.log(1000) / zw);
-    const x = (t) => damping < 1
-      ? 1 - Math.exp(-zw * t) * (Math.cos(wd * t) + (zw / wd) * Math.sin(wd * t))
-      : 1 - Math.exp(-w0 * t) * (1 + w0 * t);
-    const pts = [];
-    for (let i = 0; i <= 48; i++) pts.push(+x((i / 48) * dur).toFixed(4));
-    pts[48] = 1;
-    return {
-      duration: reduced ? 1 : Math.round(dur * 1000),
-      easing: canLinear ? `linear(${pts.join(",")})` : "cubic-bezier(.2,1.25,.3,1)",
+  // ---------- motion ----------
+  // Every move is one continuous animation along a curved path, sampled into
+  // keyframes, so speed never jumps between stages and nothing overshoots.
+  function cubicBezier(x1, y1, x2, y2) {
+    const f = (a, b, t) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t;
+    return (x) => {
+      let lo = 0, hi = 1, t = x;
+      for (let i = 0; i < 24; i++) { t = (lo + hi) / 2; if (f(x1, x2, t) < x) lo = t; else hi = t; }
+      return f(y1, y2, t);
     };
   }
-  const SP = {
-    fast: spring(520, 0.82),
-    def: spring(300, 0.86),
-    slow: spring(170, 0.88),
-    drop: spring(380, 0.78),
+  const EASE = {
+    inOut: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+    // starts from rest and settles slowly: no jolt on tap, no overshoot
+    out: cubicBezier(0.3, 0, 0.1, 1),
   };
 
   // ---------- DOM ----------
@@ -482,7 +472,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   const screen = $("screen"), appsEl = $("apps"), tubesEl = $("tubes"), hit = $("hit");
   const timeEl = $("time"), bestEl = $("best"), fx = $("fx"), snackEl = $("snack");
   const moreBtn = $("moreBtn"), closeBtn = $("closeBtn"), menu = $("menu"), reshuffleBtn = $("reshuffle");
-  let S = 1; // px per dp
+  let S = 0; // px per dp
 
   const tokens = APPS.map((app, index) => {
     const el = document.createElement("div");
@@ -504,16 +494,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   });
 
   // Glass test tube in the tube's own 72.2 × 303.4 dp box: flared lip, straight
-  // walls, round end. The frosted layer is clipped to the same outline in CSS.
+  // walls, round end. No backdrop blur, so 16 icons can fly over it at full frame rate.
   function tubeArt(i) {
     const body = "M3.5 10V270a32.6 32.6 0 0 0 65.2 0V10";
-    return `<span class="frost"></span>
-      <svg viewBox="0 0 72.2 303.4" aria-hidden="true">
+    return `<svg viewBox="0 0 72.2 303.4" aria-hidden="true">
         <defs>
           <linearGradient id="glass${i}" x1="0" x2="1">
-            <stop offset="0" stop-color="#fff" stop-opacity=".13"/>
-            <stop offset=".22" stop-color="#fff" stop-opacity=".04"/>
-            <stop offset=".7" stop-color="#fff" stop-opacity=".03"/>
+            <stop offset="0" stop-color="#fff" stop-opacity=".15"/>
+            <stop offset=".22" stop-color="#fff" stop-opacity=".06"/>
+            <stop offset=".7" stop-color="#fff" stop-opacity=".05"/>
             <stop offset="1" stop-color="#fff" stop-opacity=".1"/>
           </linearGradient>
           <linearGradient id="tint${i}" x1="0" y1="0" x2="0" y2="1">
@@ -557,36 +546,67 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
   const toTransform = (p) =>
     `translate3d(${((p.cx - ICON / 2) * S).toFixed(2)}px, ${((p.cy - ICON / 2) * S).toFixed(2)}px, 0) rotate(${p.r}deg) scale(${p.s})`;
 
+  // where the icon is right now, even mid-flight
+  function currentPos(t) {
+    if (!t.anim) return t.pos;
+    const m = new DOMMatrix(getComputedStyle(t.el).transform);
+    return { cx: m.e / S + ICON / 2, cy: m.f / S + ICON / 2, s: Math.hypot(m.a, m.b), r: (Math.atan2(m.b, m.a) * 180) / Math.PI };
+  }
   function halt(t) {
     if (!t.anim) return;
-    try { t.anim.commitStyles(); } catch (e) { /* element not rendered */ }
+    const p = currentPos(t);
     t.anim.cancel();
     t.anim = null;
-  }
-  function moveTo(t, p, sp = SP.def, delay = 0) {
-    halt(t);
-    t.seq++;
-    const from = t.el.style.transform || toTransform(t.pos);
-    const to = toTransform(p);
     t.pos = p;
-    t.el.style.transform = to;
-    t.anim = t.el.animate([{ transform: from }, { transform: to }], { duration: sp.duration, easing: sp.easing, delay, fill: "backwards" });
-    const a = t.anim;
+    t.el.style.transform = toTransform(p);
+  }
+
+  // Fly along a Bézier curve: `via` is one control point (quadratic) or two
+  // (cubic), in dp. Sampled every ~6ms so the path stays round at any speed.
+  function flyTo(t, p, { duration = 520, delay = 0, ease = EASE.inOut, via = null } = {}) {
+    halt(t);
+    const from = t.pos;
+    const v = via ? [].concat(via) : [{ cx: (from.cx + p.cx) / 2, cy: (from.cy + p.cy) / 2 }];
+    const [c1, c2] = v.length === 2 ? v : [v[0], v[0]];
+    const n = Math.max(16, Math.round(duration / 6));
+    const frames = [];
+    for (let i = 0; i <= n; i++) {
+      const u = i / n, e = ease(u), q = 1 - e;
+      const w0 = q * q * q, w1 = 3 * q * q * e, w2 = 3 * q * e * e, w3 = e * e * e;
+      const bez = v.length === 2
+        ? (k) => w0 * from[k] + w1 * c1[k] + w2 * c2[k] + w3 * p[k]
+        : (k) => q * q * from[k] + 2 * q * e * c1[k] + e * e * p[k];
+      frames.push({
+        offset: u,
+        transform: toTransform({
+          cx: bez("cx"),
+          cy: bez("cy"),
+          s: from.s + (p.s - from.s) * e,
+          r: from.r + (p.r - from.r) * e,
+        }),
+      });
+    }
+    t.pos = p;
+    t.el.style.transform = toTransform(p);
+    const a = t.el.animate(frames, { duration: reduced ? 1 : duration, delay: reduced ? 0 : delay, easing: "linear", fill: "backwards" });
+    t.anim = a;
     a.onfinish = () => { if (t.anim === a) t.anim = null; };
     return a;
   }
-  function setNow(t, p) { halt(t); t.seq++; t.pos = p; t.el.style.transform = toTransform(p); }
+  function setNow(t, p) { halt(t); t.pos = p; t.el.style.transform = toTransform(p); }
 
-  // hop sideways above the target tube, then settle into its slot
-  function hopTo(t, via, p) {
-    moveTo(t, via, SP.fast);
-    const seq = t.seq;
-    setTimeout(() => { if (t.seq === seq) moveTo(t, p, SP.drop); }, reduced ? 0 : 190);
-  }
+  // a gentle arc that rises a little above the higher of the two points
+  const arcVia = (a, b, lift = 36) => ({ cx: (a.cx + b.cx) / 2, cy: Math.min(a.cy, b.cy) - lift });
 
+  // Only re-place icons when the scale really changes (e.g. a phone's URL bar
+  // resizing the viewport), so flights in progress aren't cut short.
   function relayout() {
-    S = screen.clientWidth / 360;
-    tokens.forEach((t) => setNow(t, t.pos));
+    const next = screen.clientWidth / 360;
+    if (Math.abs(next - S) > 0.001) {
+      tokens.forEach((t) => { if (t.anim) { t.anim.cancel(); t.anim = null; } });
+      S = next;
+      tokens.forEach((t) => (t.el.style.transform = toTransform(t.pos)));
+    }
     const dpr = Math.min(3, window.devicePixelRatio || 1);
     fx.width = Math.round(screen.clientWidth * dpr);
     fx.height = Math.round(screen.clientHeight * dpr);
@@ -742,7 +762,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     order.forEach((t, i) => {
       const moved = t.slot !== i;
       t.slot = i;
-      if (moved) moveTo(t, homePos(i), SP.slow, i * 18);
+      if (moved) flyTo(t, homePos(i), { duration: 640, delay: i * 18, via: arcVia(t.pos, homePos(i), 18) });
     });
   }
 
@@ -764,7 +784,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     closeBtn.tabIndex = 0; moreBtn.tabIndex = -1;
     tubeEls.forEach((b) => (b.tabIndex = 0));
     tokens.forEach((t) => t.el.classList.toggle("is-out", !pick.picked.includes(t)));
-    tubes.forEach((col, i) => col.forEach((t, k) => moveTo(t, slotPos(i, k), SP.slow, 120 + t.slot * 30)));
+    // fall from the grid into the tubes: rise a touch, then settle in, in grid order
+    requestAnimationFrame(() => tubes.forEach((col, i) => col.forEach((t, k) => {
+      const to = slotPos(i, k);
+      flyTo(t, to, { duration: 820, delay: 80 + t.slot * 34, via: { cx: (t.pos.cx + to.cx) / 2, cy: t.pos.cy - 24 } });
+    })));
     labelTubes();
     lock(950);
     haptic(10);
@@ -782,7 +806,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     tubeEls.forEach((b) => { b.tabIndex = -1; b.classList.remove("is-target"); });
     tokens.forEach((t) => {
       t.el.classList.remove("is-out", "is-lifted");
-      moveTo(t, homePos(t.slot), SP.slow, t.slot * 20);
+      flyTo(t, homePos(t.slot), { duration: 720, delay: (15 - t.slot) * 16, via: arcVia(t.pos, homePos(t.slot), 30) });
     });
     moreBtn.focus({ preventScroll: true });
   }
@@ -798,7 +822,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     timeEl.textContent = "00:00";
     renderBest();
     setHud("clock");
-    tubes.forEach((col, i) => col.forEach((t, k) => moveTo(t, slotPos(i, k), SP.slow, Math.random() * 180)));
+    tubes.forEach((col, i) => col.forEach((t, k) => {
+      const to = slotPos(i, k);
+      flyTo(t, to, { duration: 760, delay: Math.random() * 160, via: arcVia(t.pos, to, 70) });
+    }));
     labelTubes();
     lock(600);
     haptic(10);
@@ -809,7 +836,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     const t = tubes[i].pop();
     lifted = { t, from: i };
     t.el.classList.add("is-lifted");
-    moveTo(t, liftPos(i), SP.fast);
+    flyTo(t, liftPos(i), { duration: 300, ease: EASE.out });
     startTimer();
     haptic(6);
   }
@@ -818,8 +845,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
     lifted = null;
     tubes[i].push(t);
     const target = slotPos(i, tubes[i].length - 1);
-    if (viaHop && i !== from) hopTo(t, liftPos(i), target);
-    else moveTo(t, target, SP.drop);
+    // glide across, then descend straight into the tube, as one S-curve
+    const start = currentPos(t);
+    const dx = target.cx - start.cx;
+    const top = Math.min(start.cy, target.cy);
+    flyTo(t, target, {
+      duration: Math.round(Math.min(620, 300 + Math.abs(target.cy - start.cy) * 0.5 + Math.abs(dx) * 0.55)),
+      ease: viaHop ? EASE.inOut : EASE.out,
+      via: [{ cx: start.cx + dx * 0.55, cy: top - 10 }, { cx: target.cx, cy: top - 4 }],
+    });
     setTimeout(() => t.el.classList.remove("is-lifted"), 260);
     haptic(12);
     labelTubes();
@@ -862,11 +896,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primar
           { duration: 700, delay: i * 90 + k * 45, easing: "cubic-bezier(.2,0,0,1)" });
       }));
       haptic([8, 60, 12]);
-    }, reduced ? 0 : 280);
+    }, reduced ? 0 : 520);
     setTimeout(() => {
       screen.classList.add("show-reshuffle");
       reshuffleBtn.tabIndex = 0;
-    }, reduced ? 0 : 1300);
+    }, reduced ? 0 : 1550);
   }
 
   // ---------- confetti: a quiet ring of gold that lasts a second ----------
