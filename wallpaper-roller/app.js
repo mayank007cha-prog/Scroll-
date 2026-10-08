@@ -51,16 +51,22 @@
     // it rises off the wall, rolls forward into a big rounded curl just above
     // the roller head (showing its underside), then the far end flips back up.
     // Each value is [covering the roller, carpet wave].
-    flapLength: [185, 260],        // px of loose sheet above the roller line
-    curlAngle: [182, 190],         // deg the sheet turns over in the main roll
-    curlStart: [0.27, 0.26],       // where along the loose sheet the roll begins (0–1)
-    curlWidth: [0.30, 0.48],       // how long the roll is (0–1) — longer = bigger, rounder roll
+    // [covering: drapes over the roller and hangs down over its head and handle,
+    //  open: a carpet roll resting on the roller head]
+    flapLength: [400, 260],        // px of loose sheet above the roller line
+    curlAngle: [181, 190],         // deg the sheet turns over in the main roll
+    curlStart: [0.12, 0.26],       // where along the loose sheet the roll begins (0–1)
+    curlWidth: [0.18, 0.48],       // how long the roll is (0–1) — longer = bigger, rounder roll
     flipAngle: [0, 70],            // deg the end flares back out (the carpet's lifted edge)
     flipStart: [0.55, 0.86],       // (the roll comes down to rest on the roller head)
     flipWidth: [0.30, 0.14],
     viewTilt: 0.32,                // seen slightly from below, so the roll's rounded underside shows
-    uncoverFrom: 0.04,             // roll progress when it starts opening into the wave
-    uncoverTo: 0.4,                // roll progress when the wave is fully open
+    // Where the roller line is (× screen height) for each stage of the climb
+    revealTo: 0.22,                // drape slowly lifts off the roller until here (roller fully shown)
+    flattenFrom: 0.2,              // near the top the roll unrolls flat onto the last of the wall…
+    flattenTo: -0.03,              // …and goes over the top edge of the screen
+    accelSwing: 0.0028,            // deg the heavy sheet swings per px/s² of roller acceleration
+    breathe: 4,                    // deg of slow "breathing" in the middle of the heavy sheet
     flapBaseAngle: 4,              // deg it leans forward where it rises behind the roller head
     ripple: 2,                     // deg of waviness across the width (low = heavy sheet)
     paperEdge: 0.45,               // how dark the sheet's cut edge is (shows its thickness)
@@ -73,15 +79,15 @@
     fallDamping: 11,
     droopPerSpeed: 0.01,           // deg the wave lags behind per px/s of roller speed (heavy = more lag)
     droopMax: 24,
-    flapStiffness: 110,            // spring (heavy sheet: slow, weighty swing)
-    flapDamping: 12,
+    flapStiffness: 95,             // spring (heavy sheet: slow, weighty swing)
+    flapDamping: 6.5,              // low = it swings a couple of times before settling
     flutter: 0.8,                  // deg of gentle flutter while rolling
     cornerSag: 6,                  // deg the corners fold over further than the middle
     twist: 2,                      // deg of slow left/right wobble
     paperBack: [92, 108, 128],     // colour of the back of the paper (slate, so it stands out from the beige chat)
     // Roller head: the sleeve visibly turns, and the roller bobs and tips a
     // little with each turn, like it is pushing something heavy
-    sleeveNap: 14,                 // px between the soft sheen bands that roll across the sleeve
+    sleeveLines: 14,               // nap ridges around the roller sleeve (they roll over as it turns)
     pushBob: 1.6,                  // px up/down per turn
     pushTilt: 0.7,                 // deg of tilt per turn
 
@@ -153,6 +159,38 @@
   const flapCanvas = document.getElementById('flap');
   const roller = document.getElementById('roller');
   const rollerNap = document.getElementById('rollerNap');
+  const napCtx = rollerNap.getContext('2d');
+
+  // The roller sleeve turning: nap ridges spaced around the cylinder. Seen from
+  // the front, each one rolls over the top of the head as the roller climbs,
+  // bunching up and fading near the top and bottom edges like on a real drum.
+  let sleeveW = 0, sleeveH = 0;
+  function sizeSleeve() {
+    const k = Math.min(dpr, 2);
+    sleeveW = 166 * CONFIG.rollerScale; sleeveH = 41 * CONFIG.rollerScale;
+    rollerNap.width = Math.round(sleeveW * k); rollerNap.height = Math.round(sleeveH * k);
+    napCtx.setTransform(k, 0, 0, k, 0, 0);
+  }
+  function drawSleeve(dist) {
+    const r = sleeveH / 2;
+    napCtx.clearRect(0, 0, sleeveW, sleeveH);
+    const n = CONFIG.sleeveLines;
+    const theta = dist / r;                     // rolls without slipping
+    for (let i = 0; i < n; i++) {
+      const p = theta + (i / n) * Math.PI * 2;
+      const c = Math.cos(p);
+      if (c <= 0.05) continue;                  // on the far side of the drum
+      const y = r - r * 0.92 * Math.sin(p);     // front surface moves up as the roller climbs
+      const inset = 4 + (1 - c) * 6;
+      napCtx.lineCap = 'round';
+      napCtx.lineWidth = 0.6 + 1.4 * c;
+      napCtx.strokeStyle = `rgba(60, 66, 78, ${(0.2 * c).toFixed(3)})`;
+      napCtx.beginPath(); napCtx.moveTo(inset, y); napCtx.lineTo(sleeveW - inset, y); napCtx.stroke();
+      napCtx.lineWidth = 0.8 * c;
+      napCtx.strokeStyle = `rgba(255, 255, 255, ${(0.35 * c).toFixed(3)})`;
+      napCtx.beginPath(); napCtx.moveTo(inset, y + 1.2); napCtx.lineTo(sleeveW - inset, y + 1.2); napCtx.stroke();
+    }
+  }
   const hint = document.getElementById('hint');
   const chat = document.getElementById('chat');
   const units = Array.from(document.querySelectorAll('.unit'));
@@ -190,7 +228,9 @@
   let droop = 0, droopVel = 0;
   let travelled = 0;           // px the roller has rolled (turns the sleeve)
   let fall = 1, fallVel = 0;   // settle of the sheet when it first comes in
-  let coverK = 1;               // 1 = paper covers the roller head, 0 = head fully shown
+  let coverK = 1;               // 1 = paper drapes over the roller, 0 = roller fully shown
+  let topK = 0;                 // 0 = rolled, 1 = unrolled flat over the top edge
+  let lastV = 0;                // roller speed last frame (for its acceleration)
 
   function measure() {
     const s = stage.getBoundingClientRect();
@@ -205,8 +245,9 @@
     cover = { sc, bx: (W - iw * sc) / 2, by: (H - ih * sc) / 2 };
 
     // Flap canvas: tall enough for the flap plus a little overhang below the roller line
-    canvasH = Math.ceil(Math.max(...CONFIG.flapLength) * 1.25 + 140);
-    canvasHinge = canvasH - 70;
+    canvasHinge = CONFIG.flapLength[1] + 40;      // room above the roller line (sheet unrolled flat)
+    canvasH = canvasHinge + 320;                     // room below it (drape hanging over the roller)
+    sizeSleeve();
     flapCanvas.style.width = W + 'px';
     flapCanvas.style.height = canvasH + 'px';
     if (flapGL) flapGL.resize();
@@ -411,10 +452,11 @@
         const base = CONFIG.flapBaseAngle;
         // moving fast makes the hanging paper swing out (smaller angle), then it settles back
         const flutter = Math.sin(tSec * 7.3) * CONFIG.flutter + Math.sin(tSec * 11.9 + 1.1) * CONFIG.flutter * 0.4;
+        const open = 1 - topK;    // near the top the roll unrolls flat onto the wall
         const tip = base + (mix(CONFIG.curlAngle) - base) * fall - droop * 0.7 + flutter;
-        const sag = CONFIG.cornerSag;
+        const sag = CONFIG.cornerSag + CONFIG.breathe * Math.sin(tSec * 2.4);
         const ripplePhase = tSec * 4.2; // ripples travel across the width
-        const twist = Math.sin(tSec * 3.7 + 0.8) * CONFIG.twist;
+        const twist = Math.sin(tSec * 3.7 + 0.8) * CONFIG.twist + clamp(droopVel * 0.04, -6, 6); // heavy sheet sloshes sideways as it swings
         const sway = Math.sin(tSec * 4.1 + 0.6) * 5;
         const OVERLAP = 2;                         // px of mesh tucked under the stuck paper
         const ds = (len + OVERLAP) / NS;
@@ -436,7 +478,7 @@
               const f2 = smoothstep((sm / len - flipStart) / flipWidth);
               const lean = base * smoothstep(sm / (len * 0.16)); // soft crease at the roller, not a hard fold
               const wave = CONFIG.ripple * (0.65 * Math.sin(xn * 5.3 + ripplePhase) + 0.35 * Math.sin(xn * 11.7 - ripplePhase * 0.7 + 1.3));
-              const phi = rad(lean + (tip - base + sag * xn * xn + twist * xn + wave) * f - flip * f2);
+              const phi = rad((lean + (tip - base + sag * xn * xn + twist * xn + wave) * f - flip * f2) * open);
               y -= Math.cos(phi) * ds;
               z += Math.sin(phi) * ds;
             }
@@ -475,10 +517,10 @@
             const lit = nx * L[0] + ny * L[1] + nz * L[2];
             const edge = (1 - CONFIG.paperEdge * smoothstep(i - (NS - 1)))      // dark cut edge = the sheet's thickness
               * (1 - CONFIG.sideEdge * smoothstep(Math.abs(j - NU / 2) - (NU / 2 - 1))); // and its side edges
-            const lift = 1 - 0.32 * smoothstep(s / 6) * (1 - smoothstep((s - 8) / 22)); // crease shadow where it lifts off the wall
+            const lift = 1 - 0.32 * open * smoothstep(s / 6) * (1 - smoothstep((s - 8) / 22)); // crease shadow where it lifts off the wall
             // the roll overhangs the rising sheet below it and shades it
             const uu = s / len;
-            const under = 1 - 0.4 * (1 - coverK) * smoothstep((uu - (curlStart - 0.24)) / 0.24) * (1 - smoothstep((uu - curlStart) / 0.12));
+            const under = 1 - 0.4 * (1 - coverK) * open * smoothstep((uu - (curlStart - 0.24)) / 0.24) * (1 - smoothstep((uu - curlStart) / 0.12));
             const front = clamp(1 - 0.95 * (FLAT_LIT - lit), 0.32, 1.0) * edge * lift * under; // flat paper = exactly 1
             const hang = smoothstep((s / len - (curlStart + curlWidth * 0.5)) / 0.25); // 0 at the crest → 1 inside the curl
             // crest catches the light, the hanging face shades down towards the hem
@@ -601,7 +643,10 @@
     // Velocity of the roller line (px/s, + = upward) drives the paper droop
     const dt = last ? clamp((now - last.now) * speed / 1000, 1 / 240, 1 / 20) : 1 / 60;
     const v = last ? (last.y - line.y) / dt : 0;
-    const target = clamp(v * CONFIG.droopPerSpeed, -12, CONFIG.droopMax);
+    // the heavy sheet lags with speed and swings with every change of speed
+    const a = last ? (v - lastV) / dt : 0;
+    lastV = v;
+    const target = clamp(v * CONFIG.droopPerSpeed + a * CONFIG.accelSwing, -20, CONFIG.droopMax);
     const acc = CONFIG.flapStiffness * (target - droop) - CONFIG.flapDamping * droopVel;
     droopVel += acc * dt;
     droop += droopVel * dt;
@@ -609,7 +654,11 @@
     fallVel += (CONFIG.fallStiffness * (1 - fall) - CONFIG.fallDamping * fallVel) * dt;
     fall += fallVel * dt;
     // the fold rolls back off the roller head as the paper gets stuck down
-    coverK = 1 - smoothstep((line.roll - CONFIG.uncoverFrom) / (CONFIG.uncoverTo - CONFIG.uncoverFrom));
+    // the drape slowly lifts off the roller as the paper gets stuck down, and near
+    // the top the roll unrolls flat and goes over the top edge
+    const yCover = H * (1 - CONFIG.coverOnEnter), yOpen = H * CONFIG.revealTo;
+    coverK = smoothstep((line.y - yOpen) / (yCover - yOpen));
+    topK = 1 - smoothstep((line.y - H * CONFIG.flattenTo) / (H * (CONFIG.flattenFrom - CONFIG.flattenTo)));
     const edgeSpeed = Math.max(0, v);
     last = { now, y: line.y };
 
@@ -627,7 +676,7 @@
     const sway = Math.sin(tSec * 6.5) * 1.4;
     const bob = Math.sin(turn * Math.PI * 2) * CONFIG.pushBob * smoothstep(Math.abs(v) / 400);
     const tilt = Math.sin(turn * Math.PI * 2 + 1.2) * CONFIG.pushTilt * smoothstep(Math.abs(v) / 400);
-    rollerNap.style.backgroundPositionY = `${(-travelled % CONFIG.sleeveNap).toFixed(2)}px`;
+    drawSleeve(travelled);
     const edge = (flapGL ? flapGL.draw(line.y, line.paperRow, tSec, sway, bob) : line.y) - 2;
 
     const lift = smoothstep((line.roll - 0.84) / 0.16);
@@ -789,7 +838,7 @@
     flyLayer.classList.remove('is-idle');
     parkChat();
     hint.classList.add('is-hidden');
-    last = null; droop = 0; droopVel = 0; fall = CONFIG.fallFrom; fallVel = 0; coverK = 1; travelled = 0;
+    last = null; droop = 0; droopVel = 0; fall = CONFIG.fallFrom; fallVel = 0; coverK = 1; topK = 0; lastV = 0; travelled = 0;
     sweepDone = false; returnStart = -1;
 
     sheet.classList.add('is-active');

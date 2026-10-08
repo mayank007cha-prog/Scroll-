@@ -312,8 +312,7 @@ body {
 .roller.is-active { visibility: visible; }
 .roller__img { display: block; width: 100%; height: 100%; }
 
-/* The roller sleeve turning: soft sheen bands over the roller head that move as
-   it rolls, shaded like a cylinder (fading out towards its top and bottom). */
+/* The roller sleeve turning: nap ridges drawn in app.js over the roller head. */
 .roller__nap {
   position: absolute;
   left: 6.83%;
@@ -321,13 +320,6 @@ body {
   width: 80.98%;
   height: 17.37%;
   border-radius: 9px;
-  background-image: repeating-linear-gradient(to bottom,
-    rgba(0, 0, 0, 0) 0,
-    rgba(0, 0, 0, 0.045) 4px,
-    rgba(255, 255, 255, 0.07) 9px,
-    rgba(0, 0, 0, 0) 14px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);
-          mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);
 }
 
 /* ------------------------------------------------------------------
