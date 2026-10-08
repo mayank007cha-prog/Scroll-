@@ -481,21 +481,22 @@ a {
 .Incognito-inner {
     display: flex;
     flex-direction: column;
-    padding: calc(var(--top) + var(--toolbar-h) + 8px) 24px calc(var(--bottom) + 32px);
+    /* Chrome for Android: everything left-aligned on a wide 32dp margin. */
+    padding: calc(var(--top) + var(--toolbar-h)) 32px calc(var(--bottom) + 32px);
     font-size: 14px;
-    line-height: 21px;
-    color: var(--text-dim);
+    line-height: 20px;
+    color: #d6d6d6;
 }
 
 .Badge {
-    align-self: center;
-    margin: clamp(16px, 4vh, 36px) 0 22px;
+    align-self: flex-start;
+    margin: clamp(40px, 8vh, 72px) 0 28px;
 }
 
 .Badge-icon {
     display: block;
-    width: 112px;
-    height: 112px;
+    width: 72px;
+    height: 72px;
 }
 
 .App[data-mode="transition"] .Badge-icon {
@@ -535,10 +536,9 @@ a {
 }
 
 .Incognito h2 {
-    margin: 0 0 16px;
-    text-align: center;
-    font-size: 24px;
-    line-height: 32px;
+    margin: 0 0 22px;
+    font-size: 22px;
+    line-height: 28px;
     font-weight: 400;
     color: var(--text);
 }
@@ -549,8 +549,8 @@ a {
 
 .Lists {
     display: grid;
-    gap: 18px;
-    margin-top: 22px;
+    gap: 22px;
+    margin-top: 26px;
 }
 
 .Lists h3 {
@@ -566,7 +566,7 @@ a {
 
 .Lists ul {
     margin: 0;
-    padding-left: 20px;
+    padding-left: 16px;
 }
 
 .Card {
@@ -850,9 +850,9 @@ a {
 
                 <p data-enter>
                     Others who use this device won’t see your activity, so you can browse more privately.
-                    This won’t change how data is collected by websites that you visit and the services
+                    This won't change how data is collected by websites that you visit and the services
                     that they use, including Google. Downloads, bookmarks and reading list items will be
-                    saved. <a href="#" tabindex="-1">Learn more</a>
+                    saved.
                 </p>
 
                 <div class="Lists">
