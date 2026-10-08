@@ -60,7 +60,7 @@
     flipAngle: [0, -60],           // deg the lip curls on (negative = tucks back down onto the wall)
     flipStart: [0.55, 0.75],       // so the open roll closes onto the wall right at the roller line,
     flipWidth: [0.30, 0.15],       // and the roller head props it up in the middle
-    propSoftness: 32,              // px over which the sheet drops from the roller head onto the wall
+    drapeSoftness: 32,             // px over which the sheet drops from over the roller head onto the wall
     viewTilt: 0.32,                // seen slightly from below, so the roll's rounded underside shows
     // Where the roller line is (× screen height) for each stage of the climb
     revealTo: 0.22,                // drape slowly lifts off the roller until here (roller fully shown)
@@ -452,8 +452,7 @@
         const rs = CONFIG.rollerScale;
         const hx0 = W / 2 + (14 - 102.5) * rs + rollerX, hx1 = W / 2 + (180 - 102.5) * rs + rollerX;
         const hy0 = lineY + rollerY + (13 - CONFIG.rollerHeadCenter) * rs, hy1 = lineY + rollerY + (54 - CONFIG.rollerHeadCenter) * rs;
-        const headTop = hy0 + 1, PF = CONFIG.propSoftness;
-        const prop = smoothstep((0.4 - coverK) / 0.4) * (1 - topK); // once the drape has mostly opened, it settles onto the head
+        const headTop = hy0 - 2, headBottom = hy1 + 4, PF = CONFIG.drapeSoftness;
         const cx = W / 2, cy = lineY; // perspective centred on the roller, so the fold drops onto it
         const base = CONFIG.flapBaseAngle;
         // moving fast makes the hanging paper swing out (smaller angle), then it settles back
@@ -507,17 +506,7 @@
             const x = P3[k], y = P3[k + 1], z = P3[k + 2];
             const kk = persp / (persp - z);
             const X = cx + (x - cx) * kk;
-            let Y = cy + (y - z * tilt - cy) * kk;
-            // the roller head props the roll up: where the sheet's front face would
-            // come down over the head it rests on top of it; either side of the head
-            // it drops onto the wall
-            if (prop > 0 && Y > headTop - 8) {
-              const wx = smoothstep((X - hx0 + PF) / PF) * smoothstep((hx1 + PF - X) / PF);
-              const wz = smoothstep((z - 6) / 10);
-              const d = Y - headTop;
-              const excess = (d + Math.sqrt(d * d + 16)) / 2; // smooth max(0, d)
-              Y -= excess * wx * wz * prop;
-            }
+            const Y = cy + (y - z * tilt - cy) * kk;
             if (Y < top) top = Y;
 
             // normal = cross(tangent along s, tangent along u)
@@ -564,6 +553,31 @@
             shadowVerts[o + 1] = 1 - ((shY - offY) / canvasH) * 2;
             shadowVerts[o + 2] = 0.999;
             shadowVerts[o + 8] = 0.62 * Math.pow(clamp(z / (maxZ * 0.5)), 0.8) * edgeFade * (1 - smoothstep((s / len - 0.82) / 0.18));
+          }
+        }
+
+        // Keep the roller head covered: where the sheet's front face would end above
+        // the bottom of the head, it drapes down over the head instead; either side
+        // of the head it still closes onto the wall.
+        if (topK < 1) {
+          for (let j = 0; j <= NU; j++) {
+            const hemO = (NS * (NU + 1) + j) * STRIDE;
+            const toY = (o) => offY + ((1 - verts[o + 1]) / 2) * canvasH;
+            const hemY = toY(hemO);
+            const deficit = headBottom - hemY;
+            if (deficit <= 0) continue;
+            const hemX = ((verts[hemO] + 1) / 2) * W;
+            const wx = smoothstep((hemX - hx0 + PF) / PF) * smoothstep((hx1 + PF - hemX) / PF) * (1 - topK);
+            if (wx <= 0) continue;
+            for (let i = 0; i <= NS; i++) {
+              const o = (i * (NU + 1) + j) * STRIDE;
+              const z = -verts[o + 2] * maxZ * 2;
+              const Y = toY(o);
+              if (Y <= headTop || z < 6) continue;
+              const t = clamp((Y - headTop) / Math.max(1, hemY - headTop));
+              const Y2 = Y + deficit * t * wx * smoothstep((z - 6) / 10);
+              verts[o + 1] = 1 - ((Y2 - offY) / canvasH) * 2;
+            }
           }
         }
 
