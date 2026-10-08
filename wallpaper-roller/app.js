@@ -39,11 +39,11 @@
   const CONFIG = {
     // One continuous roller path (no stop between entering and rolling):
     // 1. enter – the sheet slides in fast and slows right down as it lands
-    enterDuration: 300,            // ms
+    enterDuration: 240,            // ms
     coverOnEnter: 0.24,            // part of the screen the stuck paper covers after entering
     landSpeed: 420,                // px/s while the paper lands on the roller (never zero → no hitch)
     // 2. roll – the roller carries on smoothly up and off the top
-    rollDuration: 1200,            // ms
+    rollDuration: 900,             // ms
     rollPeakAt: 0.45,              // where in the roll it reaches top speed
     exitSpeed: 600,                // px/s as it carries on up and out of the frame
     // (start and top speeds are solved so the distances fit the durations;
@@ -118,7 +118,7 @@
 
     // 4. return — starts while the roller is still finishing near the top
     holdNewWallpaper: 0,           // ms to show the clean new wallpaper before the chat comes back
-    returnStagger: 40,             // ms between bubbles, newest (bottom) first — one after another
+    returnStagger: 30,             // ms between bubbles, newest (bottom) first — one after another
     returnRise: 0.12,              // × screen height each bubble comes up from
     returnSide: 0.45,              // × screen width it comes in from its own side (green: right, white: left)
     returnTilt: 7,                 // deg it starts tilted, straightening as it lands
@@ -960,8 +960,9 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'wp-tile' + (w.id === currentId ? ' is-current' : '');
+      b.dataset.id = w.id;
       b.setAttribute('aria-label', `${w.name}${w.id === currentId ? ' (current)' : ''}`);
-      b.innerHTML = `<span class="wp-tile__img" style="background-image:url('${w.src}')"><span class="wp-tile__check">✓</span></span><span class="wp-tile__name">${w.name}</span>`;
+      b.innerHTML = `<span class="wp-tile__img" style="background-image:url('${w.src}')"><span class="wp-tile__check"><svg viewBox="0 0 16 16"><path d="M4 8.4l2.6 2.6L12 5.4"/></svg></span></span><span class="wp-tile__name">${w.name}</span>`;
       b.addEventListener('click', () => choose(w.id));
       pickerGrid.appendChild(b);
     }
@@ -976,13 +977,23 @@
     return new Promise((resolve) => {
       if (picker.hidden) return resolve();
       picker.classList.add('is-closing');
-      setTimeout(() => { picker.hidden = true; picker.classList.remove('is-closing'); resolve(); }, 240);
+      setTimeout(() => { picker.hidden = true; picker.classList.remove('is-closing'); resolve(); }, 220);
     });
   }
+  // Picking a wallpaper: the selection (ring + check) moves to it first, then
+  // the sheet closes and the roller pastes it on
+  let choosing = false;
   async function choose(id) {
+    if (choosing) return;
+    if (id === currentId) { closePicker(); return; }
+    choosing = true;
+    for (const t of pickerGrid.children) t.classList.toggle('is-current', t.dataset.id === id);
+    await new Promise((r) => setTimeout(r, 420));
     await closePicker();
-    if (id !== currentId) play(id);
+    choosing = false;
+    play(id);
   }
+  document.getElementById('pickerClose').addEventListener('click', closePicker);
   document.getElementById('pickerBackdrop').addEventListener('click', closePicker);
   // focusing or tapping inside the frame must never scroll it
   stage.addEventListener('scroll', () => { stage.scrollTop = 0; stage.scrollLeft = 0; });
