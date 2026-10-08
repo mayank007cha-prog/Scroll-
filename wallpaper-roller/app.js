@@ -64,8 +64,8 @@
     viewTilt: 0.32,                // seen slightly from below, so the roll's rounded underside shows
     // Where the roller line is (× screen height) for each stage of the climb
     revealTo: 0.22,                // drape slowly lifts off the roller until here (roller fully shown)
-    flattenFrom: 0.2,              // near the top the roll unrolls flat onto the last of the wall…
-    flattenTo: -0.03,              // …and goes over the top edge of the screen
+    flattenFrom: 0.0,              // the roll travels up and over the top edge of the screen intact,
+    flattenTo: -0.15,              // and only unrolls once it is past it (out of view)
     accelSwing: 0.0028,            // deg the heavy sheet swings per px/s² of roller acceleration
     breathe: 4,                    // deg of slow "breathing" in the middle of the heavy sheet
     flapBaseAngle: 4,              // deg it leans forward where it rises behind the roller head
