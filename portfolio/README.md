@@ -55,6 +55,6 @@ ffmpeg -i hero-video.mp4 -vf "crop=1920:856:0:0" -an -c:v libx264 -crf 24 -g 1 \
 
 ## Glass
 
-Each case study is one card: a label row, then the title and one-liner beside a media slot. To show a video or GIF of the work there, put the file in `public/work/` and set `media` on the project in `projects.ts` (`{ type: "video", src, poster }` or `{ type: "image", src }`); until then the slot shows a quiet placeholder.
+Case-study cards are sized so they appear exactly as large as the shrunken video card (ScrollStage derives `--card-w`/`--card-h` from `heroScale`, `heroDepth` and `trackDepth`). On desktop, all depths and the perspective scale with the frame width (tuned at 1440px), so the curve and background keep the same proportions on every screen size. Each case study is one card: a label row, then the title and one-liner beside a media slot. To show a video or GIF of the work there, put the file in `public/work/` and set `media` on the project in `projects.ts` (`{ type: "video", src, poster }` or `{ type: "image", src }`); until then the slot shows a quiet placeholder.
 
 Cards share one `.glass` style in `globals.css`: a dense frosted base with a light gradient, a hairline border, a top sheen and a faint grain. There's no backdrop blur (browsers don't apply it inside the 3D scene, and it costs frames). The case study pages deliberately skip glass.

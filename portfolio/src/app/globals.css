@@ -40,8 +40,10 @@
   /* The scene runs edge to edge; cards have small, crisp corners. */
   --gutter: 0px;
   --radius: 8px;
-  --card-w: min(76vw, 1280px);
-  --card-h: min(66vh, 740px);
+  /* Fallbacks; ScrollStage sets these so the cards match the shrunken video
+     card's on-screen size exactly. */
+  --card-w: 76vw;
+  --card-h: 76vh;
   --track-gap: 5vw;
   --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -134,6 +136,10 @@ a:focus-visible {
   position: absolute;
   inset: var(--gutter);
   overflow: hidden;
+  /* clip, not just hidden: the floor reaches below the frame, and a hidden
+     overflow can still be scrolled (e.g. by focusing a card), which would
+     shift the whole scene. */
+  overflow: clip;
   /* Static backdrop: two faint violet lights. */
   background:
     radial-gradient(70% 60% at 50% 50%, transparent 30%, var(--frame-bg) 100%),
@@ -398,13 +404,13 @@ a:focus-visible {
   position: absolute;
   left: -150%;
   width: 400%;
-  height: 1440px; /* 6 grid cells */
+  height: calc(1440px * var(--zs, 1)); /* 6 grid cells at 1440 wide */
   background-size: 240px 240px;
 }
 
 .depth-wall {
   bottom: 0;
-  transform: translateZ(-1100px);
+  transform: translateZ(calc(-1100px * var(--zs, 1)));
   background-image: var(--wall-img);
   background-position: 0 100%; /* anchor the grid on the floor line */
   mask-image: linear-gradient(0deg, #000 0%, #000 35%, transparent 95%);
@@ -412,7 +418,7 @@ a:focus-visible {
 
 .depth-floor {
   top: 100%;
-  transform: translateZ(-1100px) rotateX(90deg);
+  transform: translateZ(calc(-1100px * var(--zs, 1))) rotateX(90deg);
   transform-origin: 50% 0;
   background-image: var(--floor-img);
   background-position: 0 0;
@@ -427,8 +433,8 @@ a:focus-visible {
   top: 100%;
   left: -150%;
   width: 400%;
-  height: 1440px;
-  transform: translateZ(-1100px) rotateX(90deg);
+  height: calc(1440px * var(--zs, 1));
+  transform: translateZ(calc(-1100px * var(--zs, 1))) rotateX(90deg);
   transform-origin: 50% 0;
   transform-style: preserve-3d;
   pointer-events: none;
@@ -1045,9 +1051,17 @@ a:focus-visible {
 
 /* Short screens: smaller background objects so they stay in the thin
    empty bands above and below the cards. */
-@media (min-width: 768px) and (max-height: 820px) {
+@media (min-width: 768px) and (max-height: 880px) {
   .depth-field {
     --depth-scale: 0.62;
+  }
+}
+
+/* Very wide screens: the cards span most of the width, so the background
+   objects shrink a little to stay in the bands above and below them. */
+@media (min-width: 768px) and (min-aspect-ratio: 2/1) {
+  .depth-field {
+    --depth-scale: 0.72;
   }
 }
 
@@ -1087,8 +1101,8 @@ a:focus-visible {
 
 @media (max-width: 767px) {
   :root {
-    --card-w: 84vw;
-    --card-h: 62svh;
+    --card-w: 78vw;
+    --card-h: 78svh;
     --track-gap: 9svh;
   }
 

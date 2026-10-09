@@ -53,7 +53,8 @@ function placement({ x, y, z, size }: DepthObject): CSSProperties {
     left: `${50 + (x - 50) / f}%`,
     top: `${50 + (y - 50) / f}%`,
     fontSize: `calc(${(size / f).toFixed(1)}px * var(--depth-scale, 1))`,
-    transform: `translate(-50%, -50%) translateZ(${z}px)`,
+    // --zs: depth scale set by ScrollStage (depths grow with the frame width).
+    transform: `translate(-50%, -50%) translateZ(calc(${z}px * var(--zs, 1)))`,
   };
 }
 

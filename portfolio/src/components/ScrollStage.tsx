@@ -111,7 +111,6 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   // Cubes on the floor: only with the horizontal row (desktop).
   const cubes = cubesPlane && config.axis === "x" ? floorCubes(cubesPlane, frame) : null;
 
-  gsap.set(frame, { perspective: config.perspective });
   gsap.set(hero, { transformOrigin: "50% 50%", force3D: true });
 
   // ---- Axis ---------------------------------------------------------------
@@ -131,7 +130,29 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   let halfWidths: number[] = [];
   let radius = 0;
   let gapPx = 0;
+  // Depths are tuned for a 1440px-wide frame. On desktop they scale with the
+  // frame width (perspective too), so the curve and the background keep the
+  // same proportions on any screen; only absolute distances change, and
+  // every ratio below (P / (P - z)) stays the same.
+  const cfg = { ...config };
+  const depthScale = () => (vertical ? 1 : Math.max(0.5, frame.clientWidth / 1440));
+  const scaleDepths = () => {
+    const zs = depthScale();
+    cfg.perspective = config.perspective * zs;
+    cfg.heroDepth = config.heroDepth * zs;
+    cfg.trackDepth = config.trackDepth * zs;
+    cfg.curveDepth = config.curveDepth * zs;
+    frame.style.setProperty("--zs", zs.toFixed(4));
+    gsap.set(frame, { perspective: cfg.perspective });
+  };
+  // Case-study cards are sized so that, at their depth, they appear exactly
+  // as large as the video card once it has moved back.
+  const Pm = config.perspective;
+  const cardScale = (config.heroScale * (Pm / (Pm - config.heroDepth))) / (Pm / (Pm - config.trackDepth));
   const measure = () => {
+    scaleDepths();
+    frame.style.setProperty("--card-w", `${(frame.clientWidth * cardScale).toFixed(1)}px`);
+    frame.style.setProperty("--card-h", `${(frame.clientHeight * cardScale).toFixed(1)}px`);
     frameWidth = vertical ? frame.clientHeight : frame.clientWidth;
     const trackStyle = getComputedStyle(track ?? frame);
     gapPx = parseFloat(vertical ? trackStyle.rowGap : trackStyle.columnGap) || 0;
@@ -142,16 +163,15 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   measure();
 
   // How much an element at depth z appears scaled on screen.
-  const P = config.perspective;
-  const depthFactor = (z: number) => P / (P - z);
-  const trackFactor = depthFactor(config.trackDepth);
+  const depthFactor = (z: number) => cfg.perspective / (cfg.perspective - z);
+  const trackFactor = depthFactor(cfg.trackDepth); // the same at every depth scale
 
   // Track x values: off-screen right → first card parked beside the shrunken
   // video → each item centred in turn (see the timeline).
   const offscreenX = () =>
     (config.entryDistance / 100) * frameWidth - ((vertical ? items[0]?.offsetTop : items[0]?.offsetLeft) ?? 0);
   const rowStartX = () => {
-    const heroHalf = (frameWidth / 2) * config.heroScale * depthFactor(config.heroDepth);
+    const heroHalf = (frameWidth / 2) * config.heroScale * depthFactor(cfg.heroDepth);
     const firstLeft = heroHalf / trackFactor + gapPx; // distance from centre, in track space
     return frameWidth / 2 + firstLeft + (halfWidths[0] ?? 0) - (centers[0] ?? 0);
   };
@@ -170,7 +190,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const project = (cx: number, cz: number, lx: number, deg: number) => {
     const X = cx + lx * Math.cos(deg * toRad);
     const Z = cz - lx * Math.sin(deg * toRad);
-    return (X * P) / (P - Z);
+    return (X * cfg.perspective) / (cfg.perspective - Z);
   };
 
   const render = () => {
@@ -187,7 +207,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const shrink = gsap.utils.clamp(0, 1, (1 - heroState.scale) / (1 - config.heroScale || 1));
     const onScreen = heroState.scale * heroFactor;
     const cornerRadius = (radius * trackFactor * shrink) / onScreen;
-    const heroZ = heroState.z - Math.abs(dh) * config.curveDepth;
+    const heroZ = heroState.z - Math.abs(dh) * cfg.curveDepth;
     const heroDeg = dh * config.curveRotate;
     gsap.set(hero, {
       [AX]: heroX,
@@ -231,7 +251,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const cardLeft = (x: number) => {
       const c = centers[0] + x - half;
       const d = bend(c / half);
-      return project(c, config.trackDepth - Math.abs(d) * config.curveDepth, -(halfWidths[0] ?? 0), d * config.curveRotate);
+      return project(c, cfg.trackDepth - Math.abs(d) * cfg.curveDepth, -(halfWidths[0] ?? 0), d * config.curveRotate);
     };
     let x = trackState.x;
     for (let k = 0; k < 4 && items.length; k++) {
@@ -246,10 +266,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       cubes.setActive(Math.abs(x - endX) < frameWidth * 0.06);
     }
 
-    gsap.set(track, { [AX]: x, z: config.trackDepth });
+    gsap.set(track, { [AX]: x, z: cfg.trackDepth });
     items.forEach((el, i) => {
       const d = bend((centers[i] + x - half) / half);
-      gsap.set(el, { [ROT]: turn(d * config.curveRotate), z: -Math.abs(d) * config.curveDepth, transformOrigin: "50% 50%" });
+      gsap.set(el, { [ROT]: turn(d * config.curveRotate), z: -Math.abs(d) * cfg.curveDepth, transformOrigin: "50% 50%" });
     });
   };
   const refreshPositions = () => {
@@ -315,7 +335,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     .fromTo(
       heroState,
       { z: 0, scale: 1 },
-      { z: config.heroDepth, scale: config.heroScale, duration: config.heroDistance, ease: "power1.inOut", onUpdate: render },
+      { z: () => cfg.heroDepth, scale: config.heroScale, duration: config.heroDistance, ease: "power1.inOut", onUpdate: render },
       "heroBack",
     )
     .fromTo(
@@ -400,6 +420,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     gsap.ticker.remove(raf);
     lenis.destroy();
     video?.pause();
+    frame.style.removeProperty("--card-w");
+    frame.style.removeProperty("--card-h");
+    frame.style.removeProperty("--zs");
   };
 }
 
