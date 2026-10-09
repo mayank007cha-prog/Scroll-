@@ -50,7 +50,7 @@ export const sceneConfig: SceneConfig = {
   axis: "x",
   perspective: 1400,
   heroDepth: -400,
-  heroScale: 0.85,
+  heroScale: 0.92,
   trackDepth: -80,
   curveRotate: 18,
   curveDepth: 200,

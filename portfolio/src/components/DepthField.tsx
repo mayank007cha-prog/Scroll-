@@ -20,18 +20,18 @@ type DepthObject = {
 
 // Depth and size vary (near objects are larger and drift faster, far ones
 // small and slow). Objects live only in the empty bands above and below the cards (cards and
-// the shrunken video span roughly 17–83% of the frame height), so they never
+// the shrunken video span roughly 14–86% of the frame height), so they never
 // pass behind a card. The layer drifts about two frame widths over the
 // scroll, so x runs 0–260%.
 const objects: DepthObject[] = [
   // near, larger, faster
   { kind: "cube", x: 8, y: 8, z: -300, size: 88, spin: 1 },
-  { kind: "cursor", x: 58, y: 7, z: -250, size: 120 },
+  { kind: "cursor", x: 58, y: 5, z: -250, size: 92 },
   { kind: "layers", x: 104, y: 93, z: -350, size: 120 },
   { kind: "pen", x: 176, y: 6, z: -300, size: 150 },
   { kind: "cube", x: 236, y: 93, z: -280, size: 72, spin: -1.3 },
   // middle
-  { kind: "rings", x: 30, y: 93, z: -800, size: 100 },
+  { kind: "rings", x: 30, y: 95.5, z: -800, size: 84 },
   { kind: "type", x: 88, y: 5, z: -900, size: 84 },
   { kind: "measure", x: 142, y: 94, z: -850, size: 110 },
   { kind: "selection", x: 208, y: 6, z: -900, size: 100 },

@@ -1,3 +1,14 @@
+/** A short video or GIF of the work, shown beside the text on the card.
+ *  Put the file in public/work/ and point `src` at it, e.g.
+ *  { type: "video", src: "/work/earthlink-checkout.mp4", poster: "/work/earthlink-checkout.jpg" }
+ *  or { type: "image", src: "/work/earthlink-checkout.gif" }. */
+export type ProjectMedia = {
+  type: "video" | "image";
+  src: string;
+  poster?: string;
+  alt?: string;
+};
+
 export type Project = {
   slug: string;
   client: string;
@@ -8,6 +19,8 @@ export type Project = {
   oneLiner: string;
   /** Longer summary, used on the case study page. */
   description: string;
+  /** Optional video/GIF for the card (a placeholder shows until it's set). */
+  media?: ProjectMedia;
 };
 
 export const projects: Project[] = [

@@ -101,6 +101,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const track = stage.querySelector<HTMLElement>("[data-track]");
   const items = track ? gsap.utils.toArray<HTMLElement>(".work-item", track) : [];
   const fog = hero.querySelector<HTMLElement>(".hero-fog");
+  const border = hero.querySelector<HTMLElement>(".hero-border");
   const depthField = stage.querySelector<HTMLElement>("[data-depth-field]");
   const room = depthField?.querySelector<HTMLElement>("[data-room]");
   const spinners = depthField ? gsap.utils.toArray<HTMLElement>("[data-spin]", depthField) : [];
@@ -134,7 +135,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     frameWidth = vertical ? frame.clientHeight : frame.clientWidth;
     const trackStyle = getComputedStyle(track ?? frame);
     gapPx = parseFloat(vertical ? trackStyle.rowGap : trackStyle.columnGap) || 0;
-    radius = parseFloat(getComputedStyle(frame).borderTopLeftRadius) || 0; // same --radius as the cards
+    radius = parseFloat(getComputedStyle(frame).getPropertyValue("--radius")) || 0; // the cards' corner radius
     centers = items.map((el) => (vertical ? el.offsetTop + el.offsetHeight / 2 : el.offsetLeft + el.offsetWidth / 2));
     halfWidths = items.map((el) => (vertical ? el.offsetHeight : el.offsetWidth) / 2);
   };
@@ -181,11 +182,11 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const shift = Math.min(0, trackState.x - parkedX);
     const heroX = (shift * trackFactor) / heroFactor;
     const dh = bend((heroX * heroFactor) / half);
-    // Counter-scale the corner radius so the shrunken video's corners look
-    // the same as the cards' (which sit at trackDepth) instead of shrinking.
+    // Square while it fills the screen, then rounding to the cards' radius as
+    // it moves back (counter-scaled so it matches the cards at trackDepth).
     const shrink = gsap.utils.clamp(0, 1, (1 - heroState.scale) / (1 - config.heroScale || 1));
     const onScreen = heroState.scale * heroFactor;
-    const cornerRadius = (radius * gsap.utils.interpolate(1, trackFactor, shrink)) / onScreen;
+    const cornerRadius = (radius * trackFactor * shrink) / onScreen;
     const heroZ = heroState.z - Math.abs(dh) * config.curveDepth;
     const heroDeg = dh * config.curveRotate;
     gsap.set(hero, {
@@ -198,6 +199,8 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     // The fog on the video's sides and the background objects fade in as the
     // video turns into a card.
     if (fog) gsap.set(fog, { opacity: shrink });
+    // Its hairline border only shows once it's a card, not at the screen edge.
+    if (border) gsap.set(border, { opacity: shrink });
 
     // Background objects: the layer drifts with the row (deeper objects move
     // slower on screen thanks to perspective) and some objects slowly turn.
