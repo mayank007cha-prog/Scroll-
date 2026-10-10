@@ -285,6 +285,12 @@ a {
    Chrome for Android: logo, search box, the AI Mode / Incognito shortcuts,
    a row of Most visited tiles, then the Discover feed. */
 
+/* Nothing on the page may shrink to fit a short viewport — the page simply
+   runs past the fold, as Chrome's does. */
+.Home > * {
+    flex-shrink: 0;
+}
+
 .Home {
     position: absolute;
     inset: 0;
@@ -297,7 +303,7 @@ a {
 .Logo {
     margin: clamp(24px, 5vh, 44px) 0 24px;
     font-size: 66px;
-    font-weight: 400;
+    font-weight: 500;
     line-height: 1;
     letter-spacing: -1.5px;
     color: #fff;
@@ -314,9 +320,9 @@ a {
     align-items: center;
     gap: 14px;
     width: 100%;
-    height: 56px;
-    padding: 0 16px;
-    border-radius: 28px;
+    height: 64px;
+    padding: 0 18px;
+    border-radius: 32px;
     background: var(--surface-high);
     color: var(--text);
 }
