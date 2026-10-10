@@ -241,7 +241,8 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
 .reshuffle:active { background: rgba(255, 255, 255, .2); }
 .show-reshuffle .reshuffle { opacity: 1; transform: translateX(-50%); pointer-events: auto; }
 
-.fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; }
+/* below the timer text so paper passes behind the digits, above the icons */
+.fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
 
 /* overflow menu: one frosted-glass panel, as in the Figma frame */
 .scrim { position: absolute; inset: 0; z-index: 17; display: none; }
@@ -870,110 +871,83 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
     setTimeout(() => {
       screen.classList.add("show-reshuffle");
       reshuffleBtn.tabIndex = 0;
-    }, reduced ? 0 : 1750);
+    }, reduced ? 0 : 1950);
   }
 
-  // ---------- confetti: Material 3 Expressive shapes in wallpaper colors ----------
-  // The pieces are the soft shapes Android 16 uses across the system (cookie,
-  // clover, sunny, pill, gem, soft triangle), colored from the wallpaper the way
-  // dynamic color would: blue primary tones, the teal and the amber glow.
-  const polar = (fn, n = 72) => {
-    const path = new Path2D();
-    for (let i = 0; i <= n; i++) {
-      const a = (i / n) * Math.PI * 2, r = fn(a);
-      i ? path.lineTo(Math.cos(a) * r, Math.sin(a) * r) : path.moveTo(r, 0);
-    }
-    path.closePath();
-    return path;
-  };
-  const pill = (() => { const p = new Path2D(); p.roundRect(-1.25, -0.55, 2.5, 1.1, 0.55); return p; })();
-  const SHAPES = [
-    polar((a) => 1 + 0.1 * Math.cos(7 * a)),    // cookie 7
-    polar((a) => 1 + 0.22 * Math.cos(4 * a)),   // clover 4
-    polar((a) => 1 + 0.07 * Math.cos(9 * a)),   // sunny
-    polar((a) => 1 + 0.16 * Math.cos(3 * a)),   // soft triangle
-    polar((a) => 1 + 0.18 * Math.cos(2 * a)),   // gem
-    polar(() => 1),                              // circle
-    pill,
-  ];
-  const PALETTE = [
-    ["#b2c5ff", 3], // primary 80
-    ["#dbe2ff", 2], // primary 90
-    ["#8fd3df", 2], // teal from the lower wallpaper
-    ["#f3cf7a", 2], // amber glow behind the icons
-    ["#ffffff", 1],
-  ].flatMap(([c, w]) => Array(w).fill(c));
-
-  // damped spring 0 → 1 with a small overshoot (M3 expressive spatial spring)
-  const springIn = (t, w = 24, z = 0.55) => {
-    const wd = w * Math.sqrt(1 - z * z);
-    return 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + ((z * w) / wd) * Math.sin(wd * t));
-  };
+  // ---------- confetti: real paper, quietly ----------
+  // Thin strips and small squares of paper burst up from behind the timer,
+  // lose speed to air drag, then drift down while they flutter. The flutter is
+  // a flip about the piece's own axis: it foreshortens, and its lit and shaded
+  // sides alternate as it turns. Muted champagne, pearl and pale wallpaper blue.
+  const PAPER = [
+    ["#ead6a6", "#bfa774", 3], // champagne
+    ["#f3f1ec", "#c8c4bb", 3], // pearl
+    ["#cdd8fb", "#9aa9d6", 2], // pale primary
+    ["#b5dde3", "#86b2b9", 1], // mist teal
+  ].flatMap(([lit, shade, w]) => Array(w).fill({ lit, shade }));
 
   function confetti(cxDp, cyDp) {
     if (reduced) return;
     const ctx = fx.getContext("2d");
     const k = fx.width / 360; // canvas px per dp
-    const N = 28;
-    const parts = Array.from({ length: N }, (_, n) => {
-      const a = (n / N) * Math.PI * 2 + (Math.random() - 0.5) * 0.35;
+    const G = 430, DRAG = 2.4; // dp/s² and 1/s: terminal fall ≈ 180 dp/s
+    const parts = Array.from({ length: 42 }, () => {
+      const ang = -Math.PI / 2 + (Math.random() - 0.5) * 2.3;
+      const speed = 150 + Math.random() * 170;
+      const strip = Math.random() < 0.72;
       return {
-        a,
-        r0: 22 + Math.random() * 6,
-        dist: 30 + Math.random() * 34,
-        size: 3.2 + Math.random() * 2.6,
-        shape: SHAPES[n % SHAPES.length],
-        color: PALETTE[rand(PALETTE.length)],
+        x: cxDp + (Math.random() - 0.5) * 70,
+        y: cyDp + 6 + (Math.random() - 0.5) * 14,
+        vx: Math.cos(ang) * speed,
+        vy: Math.sin(ang) * speed,
+        w: strip ? 2.4 + Math.random() * 1.2 : 3.6 + Math.random() * 1.2,
+        h: strip ? 6.5 + Math.random() * 3 : 3.6 + Math.random() * 1.2,
         rot: Math.random() * Math.PI * 2,
-        spin: (Math.random() - 0.5) * 3.2,
-        delay: Math.random() * 0.09,
+        spin: (Math.random() - 0.5) * 6,
+        flip: Math.random() * Math.PI * 2,
+        flipRate: 9 + Math.random() * 9,
+        sway: 18 + Math.random() * 22,
+        life: 1.15 + Math.random() * 0.45,
+        delay: Math.random() * 0.06,
+        paper: PAPER[rand(PAPER.length)],
       };
     });
-    const life = 1.15; // seconds
-    const t0 = performance.now();
+    let last = performance.now();
+    const t0 = last;
     const frame = (now) => {
+      const dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
       const T = (now - t0) / 1000;
       ctx.clearRect(0, 0, fx.width, fx.height);
-
-      // a soft ripple from behind the timer, like a touch ripple
-      const rt = Math.min(1, T / 0.75);
-      if (rt < 1) {
-        const re = 1 - Math.pow(1 - rt, 3);
-        ctx.save();
-        ctx.globalAlpha = 0.32 * (1 - rt);
-        ctx.strokeStyle = "#dbe2ff";
-        ctx.lineWidth = 1.4 * k;
-        ctx.beginPath();
-        ctx.ellipse(cxDp * k, cyDp * k, (24 + 54 * re) * 1.22 * k, (24 + 54 * re) * k, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = 0.1 * (1 - rt);
-        ctx.fillStyle = "#b2c5ff";
-        ctx.fill();
-        ctx.restore();
-      }
-
+      let alive = false;
+      const drag = Math.exp(-DRAG * dt);
       for (const p of parts) {
-        const t = T - p.delay;
-        if (t <= 0) continue;
-        const u = Math.min(1, t / life);
-        const travel = 1 - Math.exp(-5.2 * t);            // fast out, eased to rest
-        const r = p.r0 + p.dist * travel;
-        const x = cxDp + Math.cos(p.a) * r * 1.22;
-        const y = cyDp + Math.sin(p.a) * r + 9 * u * u;    // a whisper of gravity
-        const grow = springIn(t);
-        const shrink = u < 0.62 ? 1 : 1 - (u - 0.62) / 0.38;
-        const sc = Math.max(0, grow * shrink) * p.size;
-        if (sc <= 0.01) continue;
+        const age = T - p.delay;
+        if (age < 0) { alive = true; continue; }
+        if (age > p.life) continue;
+        alive = true;
+        // physics: drag, gravity, and a sideways drift that follows the flutter
+        p.vx = p.vx * drag + Math.sin(p.flip * 0.5) * p.sway * dt;
+        p.vy = p.vy * drag + G * dt * (1 - drag) / (DRAG * dt);
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.rot += p.spin * dt;
+        p.flip += p.flipRate * dt;
+        p.spin *= Math.exp(-0.8 * dt);
+
+        const u = age / p.life;
+        const alpha = Math.min(1, age / 0.08) * (u < 0.55 ? 1 : Math.max(0, 1 - (u - 0.55) / 0.45));
+        const face = Math.cos(p.flip); // -1..1: which side faces us, and how foreshortened
         ctx.save();
-        ctx.globalAlpha = Math.min(1, shrink * 1.4) * 0.95;
-        ctx.translate(x * k, y * k);
-        ctx.rotate(p.rot + p.spin * (1 - Math.exp(-3 * t)));
-        ctx.scale(sc * k, sc * k);
-        ctx.fillStyle = p.color;
-        ctx.fill(p.shape);
+        ctx.globalAlpha = alpha * 0.92;
+        ctx.translate(p.x * k, p.y * k);
+        ctx.rotate(p.rot);
+        ctx.scale(1, Math.max(0.08, Math.abs(face)));
+        ctx.fillStyle = face >= 0 ? p.paper.lit : p.paper.shade;
+        ctx.fillRect((-p.w / 2) * k, (-p.h / 2) * k, p.w * k, p.h * k);
         ctx.restore();
       }
-      if (T < life + 0.12) requestAnimationFrame(frame);
+      if (alive) requestAnimationFrame(frame);
       else ctx.clearRect(0, 0, fx.width, fx.height);
     };
     requestAnimationFrame(frame);
