@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- deep blue from the top of the wallpaper -->
+    <color name="wallpaper">#FF0F2C6E</color>
+</resources>

@@ -1,0 +1,37 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.tonalsort.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.tonalsort.app'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+
+    // The game itself is the web prototype in /tonal-sort, bundled as-is.
+    sourceSets {
+        main {
+            assets.srcDirs = ['../../tonal-sort']
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Signed with the debug key so the release build installs directly.
+            // Swap in your own signingConfig before publishing to Play.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}

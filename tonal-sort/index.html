@@ -55,7 +55,7 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
 .screen {
   --dp: clamp(.5px, min(100cqw / 360, 100cqh / 680), 2.2px);
   --gy: 0px;
-  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-b: max(env(safe-area-inset-bottom, 0px), var(--app-inset-b, 0px));
   position: fixed; inset: 0;
   overflow: hidden;
   container-type: size;
@@ -161,6 +161,9 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
 .search span { display: flex; align-items: center; gap: calc(var(--dp) * 10); }
 .search svg { width: calc(var(--dp) * 19); height: calc(var(--dp) * 19); }
 .is-game .pager, .is-game .search { opacity: 0; transform: translateY(calc(var(--dp) * 16)); pointer-events: none; }
+
+/* inside the Android app the real status bar and gesture bar take over */
+.in-app .status, .in-app .nav-handle { display: none; }
 
 .nav-handle {
   position: absolute; z-index: 15;
@@ -643,7 +646,15 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
   const fmt = (ms) => { const s = Math.floor(ms / 1000); return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
   const busy = () => performance.now() < busyUntil;
   const lock = (ms) => { busyUntil = performance.now() + (reduced ? 0 : ms); };
-  const haptic = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) { /* not allowed */ } };
+  // In the Android app, haptics go to the system's own feedback constants;
+  // in a browser, to navigator.vibrate where it's allowed.
+  const native = window.TonalNative || null;
+  const haptic = (kind, pattern) => {
+    try {
+      if (native) native.haptic(kind);
+      else if (navigator.vibrate) navigator.vibrate(pattern);
+    } catch (e) { /* not allowed */ }
+  };
 
   let best = null;
   try { best = Number(localStorage.getItem("tonal-sort-best")) || null; } catch (e) { /* storage blocked */ }
@@ -761,7 +772,7 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
     })));
     labelTubes();
     lock(950);
-    haptic(10);
+    haptic("tick", 10);
   }
 
   function leaveGame() {
@@ -798,7 +809,7 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
     }));
     labelTubes();
     lock(600);
-    haptic(10);
+    haptic("tick", 10);
   }
 
   // ---------- moves ----------
@@ -808,7 +819,7 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
     t.el.classList.add("is-lifted");
     flyTo(t, liftPos(i), { duration: 300, ease: EASE.out });
     startTimer();
-    haptic(6);
+    haptic("lift", 6);
   }
   function dropInto(i, viaHop = true) {
     const { t, from } = lifted;
@@ -825,7 +836,7 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
       via: [{ cx: start.cx + dx * 0.55, cy: top - 10 }, { cx: target.cx, cy: top - 4 }],
     });
     setTimeout(() => t.el.classList.remove("is-lifted"), 260);
-    haptic(12);
+    haptic("drop", 12);
     labelTubes();
     if (i !== from) checkWin();
   }
@@ -834,7 +845,7 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
       [{ transform: "translateX(0)" }, { transform: `translateX(${-3 * S}px)` }, { transform: `translateX(${2.5 * S}px)` }, { transform: `translateX(${-1 * S}px)` }, { transform: "translateX(0)" }],
       { duration: 420, easing: "cubic-bezier(.2,0,0,1)" }
     );
-    haptic([6, 40, 6]);
+    haptic("reject", [6, 40, 6]);
   }
   function tapTube(i) {
     if (mode !== "game" || won || busy()) return;
@@ -866,7 +877,7 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
         t.img.animate([{ transform: "translateY(0)" }, { transform: `translateY(${-3 * S}px) scale(1.02)` }, { transform: "translateY(0)" }],
           { duration: 700, delay: i * 90 + k * 45, easing: "cubic-bezier(.2,0,0,1)" });
       }));
-      haptic([8, 60, 12]);
+      haptic("success", [8, 60, 12]);
     }, reduced ? 0 : 520);
     setTimeout(() => {
       screen.classList.add("show-reshuffle");
@@ -985,7 +996,7 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
         tubes[ptr.src].pop();
         lifted = { t: ptr.cand, from: ptr.src };
         startTimer();
-        haptic(8);
+        haptic("lift", 8);
       }
       ptr.cand.el.classList.add("is-lifted");
     }
@@ -1050,6 +1061,16 @@ body { background: #1a3d73 url("wallpaper.jpg") center / cover no-repeat; }
 
   closeBtn.addEventListener("click", leaveGame);
   reshuffleBtn.addEventListener("click", reshuffle);
+
+  // Android back: close the menu, put a lifted icon back, or leave the game.
+  // Returns false when there is nothing to close, so the app can exit.
+  window.tonalBack = () => {
+    if (screen.classList.contains("menu-open")) { closeMenu(); return true; }
+    if (lifted) { dropInto(lifted.from); return true; }
+    if (mode === "game") { leaveGame(); return true; }
+    return false;
+  };
+  if (native) screen.classList.add("in-app");
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
