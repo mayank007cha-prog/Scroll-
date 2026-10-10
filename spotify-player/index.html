@@ -1736,6 +1736,12 @@
     if (e.key !== 'Escape') return;
     if (sheetOpen) closeSheet(); else closeAlbum();
   });
+  // Android app's Back button: close the song page, then the album, then leave the app.
+  window.__back = () => {
+    if (sheetOpen) closeSheet();
+    else if (!album.hidden) closeAlbum();
+    else window.AndroidApp?.exit();
+  };
   sheet.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => skip(+b.dataset.step)));
   sheet.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
     const on = !b.classList.contains('on');
@@ -1768,11 +1774,11 @@
     });
   });
 
-  if (!framed()) setTimeout(() => toast('Tip: push the player into the screen edge', 3200), 900);
+  if (!framed() && !window.AndroidApp) setTimeout(() => toast('Tip: push the player into the screen edge', 3200), 900);
 
   // On a phone browser (Android), go full screen on the first tap. Installed to the home screen it already is.
   const installed = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
-  if (!framed() && !installed && document.documentElement.requestFullscreen) {
+  if (!framed() && !installed && !window.AndroidApp && document.documentElement.requestFullscreen) {
     addEventListener('pointerup', () => document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}), { once: true });
   }
 })();
