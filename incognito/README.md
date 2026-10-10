@@ -23,6 +23,25 @@ cd incognito && python3 -m http.server 8000
 Recordings: `preview/incognito-transition.mp4` (real time) and
 `preview/incognito-transition-slowmo.mp4` (0.3×).
 
+## Android app
+
+`android/IncognitoMotion.apk` (≈110 KB, Android 7.0+) is a full-screen
+WebView app around `incognito-android.html`. Install it by opening the file on
+the phone and allowing "Install unknown apps" for the app you opened it from.
+
+- The status and navigation bars animate between Chrome's normal and
+  Incognito colours along with the page.
+- Back leaves Incognito (or closes the ⋮ menu) before it leaves the app.
+
+Rebuild with `python3 android/build_apk.py`. It needs only a JDK; no Android
+SDK. It fetches Robolectric's `android-all` (to compile against), `dalvik-dx`
+and `apksig` from Maven Central into `android/.tools/`, writes the binary
+manifest, adaptive-icon XML and `resources.arsc` itself, and signs with APK
+Signature Scheme v2 using a local key (`android/signing.p12`, not committed —
+a build signed with a new key needs the old app uninstalled first).
+`python3 build_standalone.py` regenerates `incognito-android.html` from
+`index.html`, `styles.css`, `main.js` and `assets/`.
+
 ## Choreography
 
 All times are in ms and run on one `requestAnimationFrame` clock (`main.js`).

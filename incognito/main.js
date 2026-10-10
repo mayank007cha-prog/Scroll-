@@ -391,7 +391,7 @@
             at: Math.max(REVEAL_AT, reachedAt(g.toolbarDistance) - 220), dur: 1, ease: ease.linear,
             update: function (p) {
                 if (p < 1) return;
-                app.classList.add('is-incognito-chrome');
+                setChromeIncognito(true);
                 swapTabCount('1');
             }
         });
@@ -435,7 +435,7 @@
         if (reduceMotion) return crossfadeTo('normal');
 
         app.dataset.mode = 'returning';
-        app.classList.remove('is-incognito-chrome');
+        setChromeIncognito(false);
         swapTabCount('3');
 
         var homeItems = logoLetters.concat(logoOs, exitItems);
@@ -471,7 +471,7 @@
     function crossfadeTo(mode) {
         var showIncognito = mode === 'incognito';
         app.dataset.mode = showIncognito ? 'transition' : 'returning';
-        app.classList.toggle('is-incognito-chrome', showIncognito);
+        setChromeIncognito(showIncognito);
         swapTabCount(showIncognito ? '1' : '3');
         badge.style.visibility = 'visible';
 
@@ -493,6 +493,15 @@
         [bridge, brim].forEach(function (el) { el.setAttribute('opacity', 0); });
         discs.forEach(function (disc) { disc.setAttribute('r', 0); });
         hat.setAttribute('transform', 'translate(0 ' + FIG.hatDrop + ')');
+    }
+
+    // Switches Chrome's own colours. Inside the Android app wrapper the
+    // native status and navigation bars follow along (AndroidChrome bridge).
+    function setChromeIncognito(on) {
+        app.classList.toggle('is-incognito-chrome', on);
+        if (window.AndroidChrome) {
+            window.AndroidChrome.setBars(on ? '#282828' : '#1f1f1f', on ? '#3c3c3c' : '#1f1f1f');
+        }
     }
 
     function setPagesHidden(isIncognito) {
@@ -589,6 +598,16 @@
     }
 
     resetMorph();
+
+    // Lets the Android app's back button step back out of Incognito (or close
+    // the menu) before it leaves the app.
+    window.IncognitoPrototype = {
+        back: function () {
+            if (menu.classList.contains('is-open')) { closeMenu(); return true; }
+            if (app.dataset.mode === 'incognito') { exitIncognito(); return true; }
+            return busy;
+        }
+    };
 
     (document.fonts ? document.fonts.ready : Promise.resolve()).then(measure);
     if (document.fonts) document.fonts.addEventListener('loadingdone', invalidate);
