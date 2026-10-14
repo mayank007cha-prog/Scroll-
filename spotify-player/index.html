@@ -490,6 +490,8 @@
     background: linear-gradient(180deg, var(--pc1) 0%, var(--pc2) 42%, var(--pc3) 80%, color-mix(in srgb, var(--pc3) 60%, #121212) 100%);
   }
   .sheet[hidden] { display: none; }
+  /* Darkens the screen behind while the song page rises over it */
+  .sheet-dim { position: absolute; inset: 0; z-index: 37; background: #000; opacity: 0; pointer-events: none; }
   .sheet { overflow: hidden; will-change: transform; }
   .sheet-scroll {
     position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
@@ -753,6 +755,7 @@
     </div>
 
     <!-- Song page: the floating player expands into this -->
+    <div class="sheet-dim" id="sheetDim" aria-hidden="true"></div>
     <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Now playing" hidden>
       <div class="sheet-scroll" id="sheetScroll">
         <header class="sh-top">
@@ -1600,6 +1603,10 @@
   const sheet = $('sheet'), sheetScroll = $('sheetScroll');
   let sheetBusy = false;
   const EASE = 'cubic-bezier(.2, .8, .2, 1)';
+  // Song-page motion: an iOS-like curve that glides out and settles softly, and a gentle rise for content.
+  const GLIDE = 'cubic-bezier(.32, .72, 0, 1)';
+  const RISE = 'cubic-bezier(.22, 1, .36, 1)';
+  const sheetDim = $('sheetDim');
 
   function devRect(el) {
     const d = device.getBoundingClientRect(), r = el.getBoundingClientRect(), k = d.width / device.offsetWidth || 1;
@@ -1645,7 +1652,7 @@
   function openSheet(tile) {
     if (sheetOpen || sheetBusy) return;
     sheetBusy = true;
-    const mv = MOVIES[current], dur = reduced ? 1 : 480;
+    const mv = MOVIES[current], dur = reduced ? 1 : 640;
     snapToCard();
     sheet.hidden = false;
     sheetScroll.scrollTop = 0;
@@ -1659,23 +1666,29 @@
       clip = clipAt(r, 8);
       from = { ...devRect(tile.querySelector('.art, .cover-ghazal') || tile), r: 6 };
       g = makeGhost(mv, false);
-      g.querySelector('.gart')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.3, fill: 'both' });
+      g.querySelector('.gart')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.25, fill: 'both' });
     } else {
       const c = cardRect();
       clip = clipAt(c, 30);
       from = { ...c, r: 30 };
       g = makeGhost(mv, true);
-      g.querySelector('.gclone')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.35, fill: 'forwards' });
-      g.querySelector('.gart')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.45, fill: 'both' });
+      // The card's controls melt away as its artwork fills in.
+      g.querySelector('.gclone')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.3, easing: 'ease-out', fill: 'forwards' });
+      g.querySelector('.gart')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.4, easing: 'ease-out', fill: 'both' });
     }
     shBanner.classList.add('waiting');
     player.classList.add('off');
 
-    // The source opens out into the page while its artwork grows into the cover.
-    sheet.animate([{ clipPath: clip }, { clipPath: clipAt({ x: 0, y: 0, w: W, h: H }, 0) }], { duration: dur, easing: EASE });
-    sheetScroll.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }],
-      { duration: dur * 0.7, delay: dur * 0.3, easing: EASE, fill: 'backwards' });
-    g.animate([at(from), at(to)], { duration: dur, easing: EASE, fill: 'forwards' }).finished.then(() => {
+    // The player opens out into the page and its artwork glides up into the cover,
+    // while the screen behind gently dims.
+    sheetDim.animate([{ opacity: 0 }, { opacity: 0.5 }], { duration: dur, easing: GLIDE });
+    sheet.animate([{ clipPath: clip }, { clipPath: clipAt({ x: 0, y: 0, w: W, h: H }, 0) }], { duration: dur, easing: GLIDE });
+    // Then the page content arrives in a soft cascade, top to bottom.
+    [...sheetScroll.children].filter((el) => el !== shBanner).forEach((el, i) => {
+      el.animate([{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }],
+        { duration: 520, delay: dur * 0.36 + Math.min(i, 6) * 45, easing: RISE, fill: 'backwards' });
+    });
+    g.animate([at(from), at(to)], { duration: dur, easing: GLIDE, fill: 'forwards' }).finished.then(() => {
       sheetOpen = true;
       placeMedia();
       shBanner.classList.remove('waiting');
@@ -1687,25 +1700,29 @@
   function closeSheet(pulled = 0) {
     if (!sheetOpen || sheetBusy) return;
     sheetBusy = true;
-    const mv = MOVIES[current], c = cardRect(), dur = reduced ? 1 : 440;
+    const mv = MOVIES[current], c = cardRect(), dur = reduced ? 1 : 560, wait = reduced ? 0 : 90;
     const from = { ...devRect(shBanner), r: mv.video ? 0 : 8 };
     sheetOpen = false;
     const g = makeGhost(mv, true);
-    g.querySelector('.gclone')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.4, delay: dur * 0.6, fill: 'both' });
-    g.querySelector('.gart')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.45, delay: dur * 0.55, fill: 'both' });
+    // The cover turns back into the card as it lands.
+    g.querySelector('.gclone')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.4, delay: wait + dur * 0.55, easing: 'ease-in-out', fill: 'both' });
+    g.querySelector('.gart')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.45, delay: wait + dur * 0.5, easing: 'ease-in-out', fill: 'both' });
     shBanner.classList.add('waiting');
 
-    sheetScroll.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.35, easing: 'ease-out', fill: 'forwards' });
+    // Content steps back first, then the page folds down into the floating player.
+    sheetScroll.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(10px)' }],
+      { duration: 150, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards' });
+    sheetDim.animate([{ opacity: 0.5 }, { opacity: 0 }], { duration: dur, delay: wait, easing: GLIDE, fill: 'backwards' });
     // If it was pulled down, carry on from where the finger let go.
     sheet.style.transform = ''; sheet.style.borderRadius = '';
     sheet.animate([
       { clipPath: clipAt({ x: 0, y: 0, w: W, h: H }, Math.min(28, pulled / 5)), transform: `translateY(${pulled}px)` },
       { clipPath: clipAt(c, 30), transform: 'translateY(0)' },
-    ], { duration: dur, easing: EASE, fill: 'forwards' });
-    g.animate([at(from), at({ ...c, r: 30 })], { duration: dur, easing: EASE, fill: 'forwards' }).finished.then(() => {
+    ], { duration: dur, delay: wait, easing: GLIDE, fill: 'both' });
+    g.animate([at(from), at({ ...c, r: 30 })], { duration: dur, delay: wait, easing: GLIDE, fill: 'both' }).finished.then(() => {
       player.classList.remove('off');
       sheet.hidden = true;
-      sheet.getAnimations().concat(sheetScroll.getAnimations()).forEach((a) => a.cancel());
+      [sheet, sheetScroll, ...sheetScroll.children].forEach((el) => el.getAnimations().forEach((an) => an.cancel()));
       shBanner.classList.remove('waiting');
       placeMedia();
       g.remove();
@@ -1771,7 +1788,7 @@
     const v = (y1 - y0) / Math.max(16, t1 - t0) / scale();   // px per ms, downward
     if (p.dy > 140 || (v > 0.3 && p.dy > 30)) { closeSheet(p.dy); return; }
     sheet.animate([{ transform: `translateY(${p.dy}px)`, borderRadius: sheet.style.borderRadius }, { transform: 'translateY(0)', borderRadius: '0px' }],
-      { duration: 380, easing: EASE });
+      { duration: 460, easing: GLIDE });
     sheet.style.transform = ''; sheet.style.borderRadius = '';
   }
   sheet.addEventListener('touchstart', (e) => pullStart(e.touches[0].clientY, e.timeStamp, e.target), { passive: true });
