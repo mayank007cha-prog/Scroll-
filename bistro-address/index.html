@@ -29,6 +29,7 @@
     --page-ink: #1c1c1c;
     --page-muted: #5f6673;
     --page-card: #ffffff;
+    --page-line: #dcdde2;
     --ease-out: cubic-bezier(.22, 1, .36, 1);
     --ease-spring: cubic-bezier(.34, 1.4, .64, 1);
   }
@@ -38,6 +39,8 @@
       --page-ink: #f2f3f5;
       --page-muted: #a3a8b2;
       --page-card: #2a2c30;
+      --page-line: #34363b;
+      color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
@@ -45,6 +48,8 @@
     --page-ink: #f2f3f5;
     --page-muted: #a3a8b2;
     --page-card: #2a2c30;
+    --page-line: #34363b;
+    color-scheme: dark;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -60,13 +65,19 @@
 
   /* ---------- Page layout ---------- */
   .stage {
-    min-height: 100%;
+    min-height: calc(100% - 40px);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 56px;
     padding: 40px 16px;
   }
+  .disclaimer {
+    font-size: 12.5px; line-height: 1.4; text-align: center; color: var(--page-muted);
+    padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    border-bottom: 1px solid var(--page-line);
+  }
+  .disclaimer b { color: var(--page-ink); font-weight: 700; }
   .notes { max-width: 340px; }
   .notes .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--green); }
   .notes h1 { font-size: 26px; line-height: 1.2; font-weight: 800; margin: 6px 0 12px; }
@@ -456,9 +467,10 @@
   </defs>
 </svg>
 
+<p class="disclaimer"><b>Unofficial UX concept.</b> Not affiliated with Bistro or Blinkit. This prototype can't place orders and uses placeholder addresses.</p>
 <main class="stage">
   <section class="notes" aria-label="About this concept">
-    <div class="eyebrow">Bistro · UX concept</div>
+    <div class="eyebrow">Unofficial UX concept</div>
     <h1>Help people find where Bistro already delivers</h1>
     <p>When Bistro isn't live where you are, the app shows "Hang tight" and stops there. The location sheet lists every saved address in the same style, so you can't tell which ones Bistro delivers to.</p>
     <ol>
