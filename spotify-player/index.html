@@ -561,6 +561,8 @@
     background: linear-gradient(165deg, var(--pc1) 0%, var(--pc2) 45%, var(--pc3) 100%);
     box-shadow: 0 20px 50px -10px rgba(0, 0, 0, .55); will-change: transform, width, height, border-radius; }
   .ghost > img { object-position: var(--pos, 50% 30%); }
+  .ghost > .gdisc { object-position: var(--dpos, 50% 50%); opacity: 0; }
+  .ghost-card { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .09), 0 22px 44px -12px rgba(0, 0, 0, .7); }
   .ghost .gclone { position: absolute; left: 50%; top: 50%; width: 184px; height: 120px; margin: -60px 0 0 -92px; }
 
   .player.off { visibility: hidden; pointer-events: none; }
@@ -1614,28 +1616,43 @@
   }
   const cardRect = () => ({ x: cx.v - CARD_W / 2, y: cy.v - CARD_H / 2, w: CARD_W, h: CARD_H });
   const clipAt = (r, rad) => `inset(${r.y}px ${W - r.x - r.w}px ${H - r.y - r.h}px ${r.x}px round ${rad}px)`;
-  const at = (r) => ({ transform: `translate(${r.x}px, ${r.y}px)`, width: `${r.w}px`, height: `${r.h}px`, borderRadius: `${r.r}px` });
+  const at = (r) => ({ transform: `translate(${r.x}px, ${r.y}px)`, width: `${r.w}px`, height: `${r.h}px`,
+    borderRadius: typeof r.r === 'string' ? r.r : `${r.r}px` });
+  // Where the round artwork sits inside the floating card.
+  const discAt = (c) => ({ x: c.x + 9, y: c.y + 11, w: 62, h: 62, r: '50%' });
+  const COVER_SHADOW = '0 26px 60px -14px rgba(0, 0, 0, .6)';
+  const DISC_SHADOW = '0 0 0 2px rgba(243, 196, 201, .55), 0 4px 10px rgba(0, 0, 0, .35)';
 
-  // The flying piece: the floating card itself (its UI dissolving into the cover), the video, or a poster.
-  function makeGhost(mv, withCard) {
+  // The artwork that travels between the player's disc and the page cover (or the video itself).
+  function artGhost(mv) {
     const g = document.createElement('div');
     g.className = 'ghost';
     if (mv.video) g.append(vfb, media);
     else {
-      const a = new Image();
-      a.src = mv.img;
-      a.className = 'gart';
+      const sq = new Image();
+      sq.src = mv.img; sq.className = 'gart';
+      const disc = new Image();
+      disc.src = mv.disc || mv.img; disc.className = 'gdisc';
       g.style.setProperty('--pos', mv.pos || '50% 30%');
-      g.append(a);
-      if (withCard) {
-        const c = cardFace.cloneNode(true);
-        c.removeAttribute('style');
-        c.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
-        c.removeAttribute('id');
-        c.classList.add('gclone');
-        g.append(c);
-      }
+      g.style.setProperty('--dpos', mv.disc ? '50% 50%' : (mv.pos || '50% 30%'));
+      g.append(sq, disc);
     }
+    device.append(g);
+    return g;
+  }
+
+  // The floating card's body and controls, without its disc (the art ghost brings that).
+  function cardGhost(c) {
+    const g = document.createElement('div');
+    g.className = 'ghost ghost-card';
+    const face = cardFace.cloneNode(true);
+    face.removeAttribute('style');
+    face.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
+    face.removeAttribute('id');
+    face.classList.add('gclone');
+    face.querySelector('.np-art').style.visibility = 'hidden';
+    g.append(face);
+    Object.assign(g.style, at({ ...c, r: 30 }));
     device.append(g);
     return g;
   }
@@ -1658,23 +1675,31 @@
     sheetScroll.scrollTop = 0;
     placeMedia();
     renderSheet();
-    const to = { ...devRect(shBanner), r: mv.video ? 0 : 8 };
+    const to = { ...devRect(shBanner), r: mv.video ? 0 : '2.6%' };
 
-    let from, clip, g;
+    let from, clip, g, card;
     if (tile) {
       const r = devRect(tile);
       clip = clipAt(r, 8);
       from = { ...devRect(tile.querySelector('.art, .cover-ghazal') || tile), r: 6 };
-      g = makeGhost(mv, false);
+      g = artGhost(mv);
       g.querySelector('.gart')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.25, fill: 'both' });
     } else {
       const c = cardRect();
       clip = clipAt(c, 30);
-      from = { ...c, r: 30 };
-      g = makeGhost(mv, true);
-      // The card's controls melt away as its artwork fills in.
-      g.querySelector('.gclone')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.3, easing: 'ease-out', fill: 'forwards' });
-      g.querySelector('.gart')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.4, easing: 'ease-out', fill: 'both' });
+      if (mv.video) {
+        from = { ...c, r: 30 };
+        g = artGhost(mv);
+      } else {
+        // The round disc grows out of the card and its edges square off into the cover,
+        // while the card's title and buttons melt away around it.
+        card = cardGhost(c);
+        card.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.3, easing: 'ease-out', fill: 'forwards' });
+        from = discAt(c);
+        g = artGhost(mv);
+        g.querySelector('.gdisc').animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.45, easing: 'ease-in-out', fill: 'both' });
+        g.animate([{ boxShadow: DISC_SHADOW }, { boxShadow: COVER_SHADOW }], { duration: dur, easing: GLIDE, fill: 'both' });
+      }
     }
     shBanner.classList.add('waiting');
     player.classList.add('off');
@@ -1693,6 +1718,7 @@
       placeMedia();
       shBanner.classList.remove('waiting');
       g.remove();
+      card?.remove();
       sheetBusy = false;
     });
   }
@@ -1701,12 +1727,17 @@
     if (!sheetOpen || sheetBusy) return;
     sheetBusy = true;
     const mv = MOVIES[current], c = cardRect(), dur = reduced ? 1 : 560, wait = reduced ? 0 : 90;
-    const from = { ...devRect(shBanner), r: mv.video ? 0 : 8 };
+    const from = { ...devRect(shBanner), r: mv.video ? 0 : '2.6%' };
     sheetOpen = false;
-    const g = makeGhost(mv, true);
-    // The cover turns back into the card as it lands.
-    g.querySelector('.gclone')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.4, delay: wait + dur * 0.55, easing: 'ease-in-out', fill: 'both' });
-    g.querySelector('.gart')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.45, delay: wait + dur * 0.5, easing: 'ease-in-out', fill: 'both' });
+    // The card's title and buttons gather around the disc as it lands.
+    const card = mv.video ? null : cardGhost(c);
+    card?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.45, delay: wait + dur * 0.5, easing: 'ease-in-out', fill: 'both' });
+    const g = artGhost(mv);
+    if (!mv.video) {
+      // The square cover rounds off into the circular disc of the floating player.
+      g.querySelector('.gdisc').animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * 0.45, delay: wait + dur * 0.45, easing: 'ease-in-out', fill: 'both' });
+      g.animate([{ boxShadow: COVER_SHADOW }, { boxShadow: DISC_SHADOW }], { duration: dur, delay: wait, easing: GLIDE, fill: 'both' });
+    }
     shBanner.classList.add('waiting');
 
     // Content steps back first, then the page folds down into the floating player.
@@ -1719,7 +1750,8 @@
       { clipPath: clipAt({ x: 0, y: 0, w: W, h: H }, Math.min(28, pulled / 5)), transform: `translateY(${pulled}px)` },
       { clipPath: clipAt(c, 30), transform: 'translateY(0)' },
     ], { duration: dur, delay: wait, easing: GLIDE, fill: 'both' });
-    g.animate([at(from), at({ ...c, r: 30 })], { duration: dur, delay: wait, easing: GLIDE, fill: 'both' }).finished.then(() => {
+    g.animate([at(from), at(mv.video ? { ...c, r: 30 } : discAt(c))], { duration: dur, delay: wait, easing: GLIDE, fill: 'both' }).finished.then(() => {
+      card?.remove();
       player.classList.remove('off');
       sheet.hidden = true;
       [sheet, sheetScroll, ...sheetScroll.children].forEach((el) => el.getAnimations().forEach((an) => an.cancel()));
