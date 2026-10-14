@@ -70,13 +70,13 @@
     display: grid; place-items: center;
     overflow: hidden;
   }
-  .fit { width: calc(360px * var(--s, 1)); height: calc(780px * var(--s, 1)); }
+  .fit { width: calc(360px * var(--s, 1)); height: calc(var(--ph, 780px) * var(--s, 1)); }
 
   /* ---------- Phone ---------- */
   .phone {
     position: relative;
     width: 360px;
-    height: 780px;
+    height: var(--ph, 780px);
     border-radius: 36px;
     overflow: hidden;
     background: #fff;
@@ -154,7 +154,7 @@
       #fff;
   }
 
-  .serviceable { padding-top: 32px; }
+  .serviceable { padding-top: 2px; }
   .serviceable[hidden] { display: none; }
   .sv-head { padding: 0 16px; }
   .sv-title { display: flex; align-items: center; }
@@ -339,7 +339,7 @@
   .addr.off .name { color: var(--off-name); }
   .addr.off .chip { background: var(--off-chip); color: var(--off-ink); }
   .addr.off .full, .addr.off .phone-no, .addr.off .phone-no b { color: var(--muted-3); }
-  .addr.current { box-shadow: inset 0 0 0 1.5px var(--green); }
+  .addr.current .itile .ico { background: var(--green); color: #fff; }
   .empty { text-align: center; color: var(--muted); font-size: 14px; padding: 32px 0; }
 
   /* ---------- Screen 2: Serviceable home ---------- */
@@ -466,7 +466,7 @@
         </div>
       </div>
       <div class="hero-wrap">
-        <img class="hero" src="assets/hang-tight-hero.png" alt="Hang tight. Now live in select areas, expanding soon! Stay tuned." width="360" height="282">
+        <img class="hero" src="assets/hang-tight-hero.webp" alt="Hang tight. Now live in select areas, expanding soon! Stay tuned." width="360" height="312">
       </div>
 
       <section class="serviceable" id="serviceable">
@@ -502,6 +502,7 @@
         <div class="hdr">
           <div class="tile" aria-hidden="true"><span><span class="n" id="home-eta">10</span><span class="m">mins</span></span></div>
           <button class="addr-btn" data-open-sheet type="button">
+            <span class="kicker"><svg width="12" height="12"><use href="#i-clock"/></svg>Open till 2 AM</span>
             <span class="line"><b id="home-label">Other</b> - <span id="home-addr">Galleria Market, Gurugram</span><svg class="caret" width="18" height="18"><use href="#i-caret"/></svg></span>
           </button>
           <span class="round" aria-hidden="true"><svg width="24" height="24"><use href="#i-wallet"/></svg></span>
@@ -510,17 +511,17 @@
         <div class="search-row">
           <div class="hsearch">
             <svg width="20" height="20"><use href="#i-search"/></svg>
-            <span>Search "fast friendly"</span>
+            <span>Search "thali"</span>
             <i class="sep"></i>
             <svg width="20" height="20"><use href="#i-mic"/></svg>
           </div>
           <div class="veg">VEG<i></i></div>
         </div>
       </div>
-      <img class="feed" src="assets/home-feed.png" alt="Dinner time menu: meals, sandwich and drinks, with Navratri specials" width="360" height="550">
+      <img class="feed" src="assets/home-feed.webp" alt="Dinner time menu: meals, sandwich and drinks, with Navratri specials" width="360" height="541">
       <div class="free">
         <span class="ic"><svg width="22" height="22"><use href="#i-scooter"/></svg></span>
-        <div><b>Enjoy FREE Delivery</b><span>On orders worth ₹99 or more</span></div>
+        <div><b>Enjoy FREE Delivery</b><span>On orders worth ₹149 or more</span></div>
       </div>
       <div class="home-ind" style="background:#f7f9ff"></div>
     </div>
@@ -620,7 +621,7 @@
       : `<span class="chip">${icon('clock', 12)}Bistro not live here yet</span>`;
     return `
       <div class="card addr${live ? '' : ' off'}${a.id === currentId ? ' current' : ''}" role="button" tabindex="0" data-pick="${a.id}" style="animation-delay:${i * 45}ms">
-        <div class="itile"><div class="ico">${icon(a.icon, 20)}</div><div class="km">${esc(a.km)}</div></div>
+        <div class="itile"><div class="ico">${a.id === currentId ? icon('check', 18) : icon(a.icon, 20)}</div><div class="km">${esc(a.km)}</div></div>
         <div class="det">
           <div class="name-row"><span class="name">${esc(a.label)}</span><span class="pin">${icon('pin', 13)}</span></div>
           ${chip}
@@ -720,16 +721,24 @@
     if (previousId) selectAddress(previousId, { silent: true });
   });
 
-  // Scale the 360×780 screen to fit whatever space the viewer gives it.
-  // Small screens drop the device frame so the screen uses every pixel.
+  // Phones: scale the 360px-wide screen to the full width and stretch it to the full height,
+  // so it runs edge to edge. Larger screens: fit the whole 360×780 screen inside a device frame.
   function fit() {
     const stage = $('.stage');
     const w = stage.clientWidth, h = stage.clientHeight;
     const compact = w < 520;
     document.body.classList.toggle('compact', compact);
-    const pad = compact ? 0 : 48;
-    const sc = Math.min((w - pad) / 360, (h - pad) / 780, 1);
-    document.documentElement.style.setProperty('--s', Math.max(sc, 0.3).toFixed(4));
+    let sc, ph;
+    if (compact) {
+      sc = w / 360;
+      ph = h / sc;
+    } else {
+      sc = Math.max(Math.min((w - 48) / 360, (h - 48) / 780, 1), 0.3);
+      ph = 780;
+    }
+    const root = document.documentElement.style;
+    root.setProperty('--s', sc.toFixed(4));
+    root.setProperty('--ph', ph.toFixed(2) + 'px');
   }
   addEventListener('resize', fit);
   fit();
