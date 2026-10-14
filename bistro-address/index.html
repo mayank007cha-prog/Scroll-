@@ -63,35 +63,14 @@
   button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
   svg { display: block; flex-shrink: 0; }
 
-  /* ---------- Page layout ---------- */
+  /* ---------- Page layout: the phone scales to fit the viewport ---------- */
+  html, body { height: 100%; overflow: hidden; }
   .stage {
-    min-height: calc(100% - 40px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 56px;
-    padding: 40px 16px;
+    height: 100%;
+    display: grid; place-items: center;
+    overflow: hidden;
   }
-  .disclaimer {
-    font-size: 12.5px; line-height: 1.4; text-align: center; color: var(--page-muted);
-    padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-    border-bottom: 1px solid var(--page-line);
-  }
-  .disclaimer b { color: var(--page-ink); font-weight: 700; }
-  .notes { max-width: 340px; }
-  .notes .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--green); }
-  .notes h1 { font-size: 26px; line-height: 1.2; font-weight: 800; margin: 6px 0 12px; }
-  .notes p { font-size: 14px; line-height: 1.5; color: var(--page-muted); }
-  .notes ol { list-style: none; margin-top: 20px; display: grid; gap: 12px; }
-  .notes li {
-    background: var(--page-card); border-radius: 14px; padding: 14px 16px;
-    font-size: 14px; line-height: 1.45; color: var(--page-muted);
-  }
-  .notes li b { display: block; color: var(--page-ink); font-size: 15px; margin-bottom: 2px; }
-  .notes .reset {
-    margin-top: 18px; font-size: 14px; font-weight: 600; color: var(--green);
-    display: inline-flex; align-items: center; gap: 6px;
-  }
+  .fit { width: calc(360px * var(--s, 1)); height: calc(780px * var(--s, 1)); }
 
   /* ---------- Phone ---------- */
   .phone {
@@ -103,18 +82,12 @@
     background: #fff;
     color: var(--ink);
     box-shadow: 0 0 0 10px #111, 0 30px 80px rgba(0,0,0,.35);
-    flex-shrink: 0;
     isolation: isolate;
+    transform: scale(var(--s, 1));
+    transform-origin: 0 0;
   }
-  @media (max-width: 860px) {
-    .stage { flex-direction: column; gap: 32px; }
-    .notes { order: 2; }
-  }
-  @media (max-width: 420px) {
-    .stage { padding: 0; gap: 0; }
-    .phone { width: 100vw; height: 100dvh; border-radius: 0; box-shadow: none; }
-    .notes { padding: 24px 16px 40px; max-width: none; }
-  }
+  .compact .phone { border-radius: 0; box-shadow: none; }
+  body.compact { background: #fff; }
 
   .screen {
     position: absolute; inset: 0;
@@ -467,21 +440,8 @@
   </defs>
 </svg>
 
-<p class="disclaimer"><b>Unofficial UX concept.</b> Not affiliated with Bistro or Blinkit. This prototype can't place orders and uses placeholder addresses.</p>
 <main class="stage">
-  <section class="notes" aria-label="About this concept">
-    <div class="eyebrow">Unofficial UX concept</div>
-    <h1>Help people find where Bistro already delivers</h1>
-    <p>When Bistro isn't live where you are, the app shows "Hang tight" and stops there. The location sheet lists every saved address in the same style, so you can't tell which ones Bistro delivers to.</p>
-    <ol>
-      <li><b>1 · Show live addresses on the "Hang tight" screen</b>Saved addresses where Bistro is live appear as small cards with an ETA, plus View all. One tap switches you over.</li>
-      <li><b>2 · Sort the location sheet by serviceability</b>Live addresses come first with a green "Delivers in X mins" chip. Others sit below, greyed out, labelled "Bistro not live here yet".</li>
-    </ol>
-    <button class="reset" id="reset" type="button">
-      <svg width="16" height="16"><use href="#i-clock"/></svg>Restart prototype
-    </button>
-  </section>
-
+  <div class="fit" id="fit">
   <div class="phone" id="phone">
 
     <!-- ============ Screen 1 · Unserviceable landing ============ -->
@@ -598,6 +558,7 @@
       <span class="t" id="toast-text"></span>
       <button type="button" id="toast-undo">Undo</button>
     </div>
+  </div>
   </div>
 </main>
 
@@ -758,11 +719,20 @@
     $('#toast').classList.remove('show');
     if (previousId) selectAddress(previousId, { silent: true });
   });
-  $('#reset').addEventListener('click', () => {
-    previousId = null;
-    $('#toast').classList.remove('show');
-    selectAddress('work', { silent: true });
-  });
+
+  // Scale the 360×780 screen to fit whatever space the viewer gives it.
+  // Small screens drop the device frame so the screen uses every pixel.
+  function fit() {
+    const stage = $('.stage');
+    const w = stage.clientWidth, h = stage.clientHeight;
+    const compact = w < 520;
+    document.body.classList.toggle('compact', compact);
+    const pad = compact ? 0 : 48;
+    const sc = Math.min((w - pad) / 360, (h - pad) / 780, 1);
+    document.documentElement.style.setProperty('--s', Math.max(sc, 0.3).toFixed(4));
+  }
+  addEventListener('resize', fit);
+  fit();
 
   renderCarousel();
 </script>
