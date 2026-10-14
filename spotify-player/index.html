@@ -490,6 +490,7 @@
     background: linear-gradient(180deg, var(--pc1) 0%, var(--pc2) 42%, var(--pc3) 80%, color-mix(in srgb, var(--pc3) 60%, #121212) 100%);
   }
   .sheet[hidden] { display: none; }
+  .sheet { overflow: hidden; will-change: transform; }
   .sheet-scroll {
     position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
     padding: 50px 24px 48px;
@@ -1683,7 +1684,7 @@
     });
   }
 
-  function closeSheet() {
+  function closeSheet(pulled = 0) {
     if (!sheetOpen || sheetBusy) return;
     sheetBusy = true;
     const mv = MOVIES[current], c = cardRect(), dur = reduced ? 1 : 440;
@@ -1695,7 +1696,12 @@
     shBanner.classList.add('waiting');
 
     sheetScroll.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.35, easing: 'ease-out', fill: 'forwards' });
-    sheet.animate([{ clipPath: clipAt({ x: 0, y: 0, w: W, h: H }, 0) }, { clipPath: clipAt(c, 30) }], { duration: dur, easing: EASE, fill: 'forwards' });
+    // If it was pulled down, carry on from where the finger let go.
+    sheet.style.transform = ''; sheet.style.borderRadius = '';
+    sheet.animate([
+      { clipPath: clipAt({ x: 0, y: 0, w: W, h: H }, Math.min(28, pulled / 5)), transform: `translateY(${pulled}px)` },
+      { clipPath: clipAt(c, 30), transform: 'translateY(0)' },
+    ], { duration: dur, easing: EASE, fill: 'forwards' });
     g.animate([at(from), at({ ...c, r: 30 })], { duration: dur, easing: EASE, fill: 'forwards' }).finished.then(() => {
       player.classList.remove('off');
       sheet.hidden = true;
@@ -1731,7 +1737,50 @@
     addEventListener('pointermove', mv); addEventListener('pointerup', up);
   });
 
-  $('shClose').addEventListener('click', closeSheet);
+  $('shClose').addEventListener('click', () => closeSheet());
+
+  /* Pull down to minimise: at the top of the song page, drag down and the page follows your finger.
+     A quick flick or a long pull closes it like the down arrow; a short one springs back. */
+  let pull = null;
+  function pullStart(y, t, target) {
+    if (!sheetOpen || sheetBusy || target.closest('.sh-bar')) return;
+    pull = { y0: y, active: false, dy: 0, samples: [[t, y]] };
+  }
+  function pullMove(y, t, e) {
+    if (!pull) return;
+    const k = scale();
+    if (!pull.active) {
+      const d = (y - pull.y0) / k;
+      if (d > 8 && sheetScroll.scrollTop <= 0) { pull.active = true; pull.y0 = y; }
+      else if (Math.abs(d) > 8) { pull = null; return; }
+      else return;
+    }
+    if (e.cancelable) e.preventDefault();          // the page moves, not the scroll
+    pull.dy = Math.max(0, (y - pull.y0) / k);
+    pull.samples.push([t, y]);
+    while (pull.samples.length > 2 && t - pull.samples[0][0] > 100) pull.samples.shift();
+    sheet.style.transform = `translate3d(0, ${pull.dy}px, 0)`;
+    sheet.style.borderRadius = `${Math.min(28, pull.dy / 5)}px`;
+  }
+  function pullEnd() {
+    if (!pull) return;
+    const p = pull;
+    pull = null;
+    if (!p.active) return;
+    const [[t0, y0]] = p.samples, [t1, y1] = p.samples[p.samples.length - 1];
+    const v = (y1 - y0) / Math.max(16, t1 - t0) / scale();   // px per ms, downward
+    if (p.dy > 140 || (v > 0.3 && p.dy > 30)) { closeSheet(p.dy); return; }
+    sheet.animate([{ transform: `translateY(${p.dy}px)`, borderRadius: sheet.style.borderRadius }, { transform: 'translateY(0)', borderRadius: '0px' }],
+      { duration: 380, easing: EASE });
+    sheet.style.transform = ''; sheet.style.borderRadius = '';
+  }
+  sheet.addEventListener('touchstart', (e) => pullStart(e.touches[0].clientY, e.timeStamp, e.target), { passive: true });
+  sheet.addEventListener('touchmove', (e) => pullMove(e.touches[0].clientY, e.timeStamp, e), { passive: false });
+  sheet.addEventListener('touchend', pullEnd);
+  sheet.addEventListener('touchcancel', pullEnd);
+  sheet.addEventListener('mousedown', (e) => { if (e.button === 0) pullStart(e.clientY, e.timeStamp, e.target); });
+  addEventListener('mousemove', (e) => pull && pullMove(e.clientY, e.timeStamp, e));
+  addEventListener('mouseup', pullEnd);
   addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (sheetOpen) closeSheet(); else closeAlbum();
