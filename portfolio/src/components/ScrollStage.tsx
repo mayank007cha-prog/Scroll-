@@ -184,6 +184,12 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   let parkedX = 0; // trackState.x at the moment the row starts moving the video
 
   const bend = (d: number) => gsap.utils.clamp(-1.5, 1.5, d);
+  // The curve for a plane at bend `d` (0 = centred). Inward: like standing in
+  // a ring of cards, the side ones come closer and turn to face the viewer;
+  // outward: they recede and turn away.
+  const inward = config.curveInward;
+  const curveZ = (d: number) => (inward ? 1 : -1) * Math.abs(d) * cfg.curveDepth;
+  const curveDeg = (d: number) => (inward ? -1 : 1) * d * config.curveRotate;
   const toRad = Math.PI / 180;
   // On-screen x (from the frame centre) of a point at local x `lx` on a plane
   // centred at `cx`, depth `cz`, turned by `deg` around Y.
@@ -200,20 +206,63 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     // scaled so it moves at the same on-screen speed as the cards.
     const heroFactor = depthFactor(heroState.z);
     const shift = Math.min(0, trackState.x - parkedX);
-    const heroX = (shift * trackFactor) / heroFactor;
-    const dh = bend((heroX * heroFactor) / half);
+    const heroRide = (shift * trackFactor) / heroFactor;
+    // Its place on the curve for a given x.
+    const heroPose = (hx: number) => {
+      const dh = bend((hx * heroFactor) / half);
+      return { z: heroState.z + curveZ(dh), deg: curveDeg(dh) };
+    };
+    const heroRight = (hx: number) => {
+      const pose = heroPose(hx);
+      return project(hx, pose.z, half * heroState.scale, pose.deg);
+    };
     // Square while it fills the screen, then rounding to the cards' radius as
     // it moves back (counter-scaled so it matches the cards at trackDepth).
     const shrink = gsap.utils.clamp(0, 1, (1 - heroState.scale) / (1 - config.heroScale || 1));
     const onScreen = heroState.scale * heroFactor;
     const cornerRadius = (radius * trackFactor * shrink) / onScreen;
-    const heroZ = heroState.z - Math.abs(dh) * cfg.curveDepth;
-    const heroDeg = dh * config.curveRotate;
+
+    // Keep the first card at least one gap clear of the video's trailing
+    // edge (right, or bottom on phones) at every moment and viewport size,
+    // with both edges measured on screen including their curve, so they never
+    // overlap. While the video is still parked, the row waits for it; once
+    // it rides along, the video gives way instead, so the row never stalls
+    // (on the inward curve the first card's outer edge swings towards it).
+    const gap = gapPx * trackFactor;
+    const cardLeft = (x: number) => {
+      const c = (centers[0] ?? 0) + x - half;
+      const d = bend(c / half);
+      return project(c, cfg.trackDepth + curveZ(d), -(halfWidths[0] ?? 0), curveDeg(d));
+    };
+    let x = trackState.x;
+    let heroX = heroRide;
+    if (track && items.length) {
+      let pushed = x;
+      for (let k = 0; k < 4; k++) {
+        const left = cardLeft(pushed);
+        const minLeft = heroRight(heroRide) + gap;
+        if (left >= minLeft - 0.5) break;
+        pushed += (minLeft - left) / trackFactor;
+      }
+      // Hand over smoothly from "row waits" to "video gives way".
+      const wait = gsap.utils.clamp(0, 1, 1 + shift / (frameWidth * 0.25));
+      x += (pushed - x) * wait;
+      if (shift < 0) {
+        const maxRight = cardLeft(x) - gap;
+        for (let k = 0; k < 6; k++) {
+          const over = heroRight(heroX) - maxRight;
+          if (over <= 0.5) break;
+          heroX -= over / heroFactor;
+        }
+      }
+    }
+
+    const pose = heroPose(heroX);
     gsap.set(hero, {
       [AX]: heroX,
-      z: heroZ,
+      z: pose.z,
       scale: heroState.scale,
-      [ROT]: turn(heroDeg),
+      [ROT]: turn(pose.deg),
       borderRadius: cornerRadius,
     });
     // The fog on the video's sides and the background objects fade in as the
@@ -242,24 +291,6 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
 
     if (!track) return;
 
-    // Keep the first card at least one gap clear of the video's trailing
-    // edge (right, or bottom on phones)
-    // at every moment and viewport size (both edges measured on screen,
-    // including their curve), so they never overlap.
-    const heroRight = project(heroX, heroZ, half * heroState.scale, heroDeg);
-    const minLeft = heroRight + gapPx * trackFactor;
-    const cardLeft = (x: number) => {
-      const c = centers[0] + x - half;
-      const d = bend(c / half);
-      return project(c, cfg.trackDepth - Math.abs(d) * cfg.curveDepth, -(halfWidths[0] ?? 0), d * config.curveRotate);
-    };
-    let x = trackState.x;
-    for (let k = 0; k < 4 && items.length; k++) {
-      const left = cardLeft(x);
-      if (left >= minLeft - 0.5) break;
-      x += (minLeft - left) / trackFactor;
-    }
-
     // The floor cubes come out once the footer is (nearly) centred.
     if (cubes && items.length) {
       const endX = half - centers[items.length - 1];
@@ -269,9 +300,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     gsap.set(track, { [AX]: x, z: cfg.trackDepth });
     items.forEach((el, i) => {
       const d = bend((centers[i] + x - half) / half);
-      gsap.set(el, { [ROT]: turn(d * config.curveRotate), z: -Math.abs(d) * cfg.curveDepth, transformOrigin: "50% 50%" });
+      gsap.set(el, { [ROT]: turn(curveDeg(d)), z: curveZ(d), transformOrigin: "50% 50%" });
     });
   };
+
   const refreshPositions = () => {
     parkedX = rowStartX();
     if (tl.progress() === 0) trackState.x = offscreenX();

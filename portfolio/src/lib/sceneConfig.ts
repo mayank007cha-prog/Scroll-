@@ -20,6 +20,10 @@ export type SceneConfig = {
   curveRotate: number;
   /** Extra Z depth (px) for cards at the edges of the curve. */
   curveDepth: number;
+  /** true: the row curves around the viewer, like standing inside a ring
+   *  (side cards come forward and turn to face the centre). false: it bends
+   *  away like the outside of a drum. */
+  curveInward: boolean;
   /** How much the background objects drift relative to the row (0–1). */
   depthParallax: number;
   /** Degrees per px of drift that the spinning background objects turn. */
@@ -52,8 +56,9 @@ export const sceneConfig: SceneConfig = {
   heroDepth: -400,
   heroScale: 0.92,
   trackDepth: -80,
-  curveRotate: 18,
-  curveDepth: 200,
+  curveRotate: 16,
+  curveDepth: 120,
+  curveInward: true,
   depthParallax: 0.7,
   depthSpin: -0.012,
   scrub: 1,
