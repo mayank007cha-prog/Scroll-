@@ -24,6 +24,12 @@ export type SceneConfig = {
    *  (side cards come forward and turn to face the centre). false: it bends
    *  away like the outside of a drum. */
   curveInward: boolean;
+  /** Edge bend: how much taller (0.2 = 20%) a card grows at the very edge of
+   *  the frame as it curls towards the viewer. 0 turns the bend off. */
+  edgeBend: number;
+  /** Edge bend: width of the bending zone at each side, as a fraction of the
+   *  frame (the middle stays flat). */
+  edgeZone: number;
   /** Paper feel: how far (deg) a card leans into its motion at full speed;
    *  its trailing edge lags like a sheet pulled through air, then springs back. */
   paperLean: number;
@@ -62,10 +68,14 @@ export const sceneConfig: SceneConfig = {
   heroDepth: -400,
   heroScale: 0.92,
   trackDepth: -80,
-  curveRotate: 16,
-  curveDepth: 120,
+  // The row itself stays flat and level; the bend happens at the frame's
+  // edges (edgeBend), like paper curling as it enters and leaves.
+  curveRotate: 0,
+  curveDepth: 0,
   curveInward: true,
-  paperLean: 7,
+  edgeBend: 0.18,
+  edgeZone: 0.16,
+  paperLean: 0,
   paperShade: 0.34,
   depthParallax: 0.7,
   depthSpin: -0.012,
@@ -91,6 +101,9 @@ export const mobileOverrides: Partial<SceneConfig> = {
   trackDepth: -40,
   curveRotate: 9,
   curveDepth: 80,
+  // Phones keep the gentle ring; the screen-space bend is desktop-only
+  // (a full-screen filter every frame is too costly on phones).
+  edgeBend: 0,
 };
 
 export const MOBILE_QUERY = "(max-width: 767px)";

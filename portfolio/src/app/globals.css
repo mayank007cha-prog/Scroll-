@@ -150,6 +150,20 @@ a:focus-visible {
   isolation: isolate;
 }
 
+/* Holds the video card and the row; ScrollStage applies the edge-bend filter
+   to it. Clicks go through to the cards (and the floor cubes behind). */
+.scene-warp {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scene-warp__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
 .plane {
   position: absolute;
   inset: 0;
@@ -1021,6 +1035,12 @@ a:focus-visible {
     overflow: visible;
     perspective: none;
     background: none;
+  }
+
+  .scene-warp {
+    position: relative;
+    inset: auto;
+    pointer-events: auto;
   }
 
   .plane,

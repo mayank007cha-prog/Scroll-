@@ -101,6 +101,11 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const track = stage.querySelector<HTMLElement>("[data-track]");
   const items = track ? gsap.utils.toArray<HTMLElement>(".work-item", track) : [];
   const shades = items.map((el) => el.querySelector<HTMLElement>(".paper-shade"));
+  const warp = stage.querySelector<HTMLElement>("[data-warp]");
+  const warpMap = warp?.querySelector<SVGElement>("[data-warp-map]");
+  const warpDisp = warp?.querySelector<SVGElement>("[data-warp-disp]");
+  const warpFilter = warp?.querySelector<SVGElement>("[data-warp-filter]");
+  const bendOn = !!(warp && warpMap && warpDisp && warpFilter && config.edgeBend > 0);
   const heroShade = hero.querySelector<HTMLElement>(".paper-shade");
   const fog = hero.querySelector<HTMLElement>(".hero-fog");
   const border = hero.querySelector<HTMLElement>(".hero-border");
@@ -146,6 +151,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     cfg.curveDepth = config.curveDepth * zs;
     frame.style.setProperty("--zs", zs.toFixed(4));
     gsap.set(frame, { perspective: cfg.perspective });
+    // The warp wrapper holds the video and the row, so it carries the same
+    // perspective (same box, so the same vanishing point).
+    if (warp) gsap.set(warp, { perspective: cfg.perspective });
   };
   // Case-study cards are sized so that, at their depth, they appear exactly
   // as large as the video card once it has moved back.
@@ -161,7 +169,69 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     radius = parseFloat(getComputedStyle(frame).getPropertyValue("--radius")) || 0; // the cards' corner radius
     centers = items.map((el) => (vertical ? el.offsetTop + el.offsetHeight / 2 : el.offsetLeft + el.offsetWidth / 2));
     halfWidths = items.map((el) => (vertical ? el.offsetHeight : el.offsetWidth) / 2);
+    drawWarpMap();
   };
+
+  // ---- Edge bend map -------------------------------------------------------
+  // A displacement image the size of the frame: mid-grey (no shift) across
+  // the flat middle; in each edge zone the content is stretched across the
+  // row (taller, as if curling towards the viewer) and gently squeezed along
+  // it, easing in from nothing at the zone's inner side.
+  const warpPad = 0.15; // the filter also reaches this far past each side, so squeezed-in content is there
+  function drawWarpMap() {
+    if (!bendOn || !warpMap || !warpFilter || !frame) return;
+    const W = frame.clientWidth;
+    const H = frame.clientHeight;
+    const N = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = N;
+    canvas.height = N;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const img = ctx.createImageData(N, N);
+    const zone = config.edgeZone;
+    for (let j = 0; j < N; j++) {
+      for (let i = 0; i < N; i++) {
+        const along = vertical ? (j + 0.5) / N : (i + 0.5) / N;
+        const across = vertical ? (i + 0.5) / N : (j + 0.5) / N;
+        const tStart = gsap.utils.clamp(0, 1, (zone - along) / zone);
+        const tEnd = gsap.utils.clamp(0, 1, (along - (1 - zone)) / zone);
+        const t = Math.max(tStart, tEnd);
+        const p = t * t; // eases in: flat → curling
+        const sign = tEnd > tStart ? 1 : -1;
+        const alongCh = 0.5 + sign * 0.3 * p; // squeeze towards the edge
+        const acrossCh = 0.5 - (across - 0.5) * p; // stretch away from the middle line
+        const k = (j * N + i) * 4;
+        img.data[k] = Math.round((vertical ? acrossCh : alongCh) * 255);
+        img.data[k + 1] = Math.round((vertical ? alongCh : acrossCh) * 255);
+        img.data[k + 2] = 128;
+        img.data[k + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    warpMap.setAttribute("href", canvas.toDataURL("image/png"));
+    warpMap.setAttribute("width", String(W));
+    warpMap.setAttribute("height", String(H));
+    const px = vertical ? 0 : W * warpPad;
+    const py = vertical ? H * warpPad : 0;
+    warpFilter.setAttribute("x", String(-px));
+    warpFilter.setAttribute("y", String(-py));
+    warpFilter.setAttribute("width", String(W + px * 2));
+    warpFilter.setAttribute("height", String(H + py * 2));
+    lastBend = -1; // force the strength to be re-applied
+  }
+  let lastBend = -1;
+  const applyBend = (amount: number) => {
+    if (!bendOn || !warp || !warpDisp || !frame) return;
+    const a = Math.round(amount * 1000) / 1000;
+    if (a === lastBend) return;
+    lastBend = a;
+    // Height at the very edge grows by `a`: scale so that H / (H - scale) = 1 + a.
+    const size = vertical ? frame.clientWidth : frame.clientHeight;
+    warpDisp.setAttribute("scale", (size * (1 - 1 / (1 + a))).toFixed(2));
+    warp.style.filter = a > 0.002 ? "url(#edge-bend)" : "none";
+  };
+
   measure();
 
   // How much an element at depth z appears scaled on screen.
@@ -206,17 +276,29 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   // positive while the row moves towards the start (left / up). Cards lean
   // into the motion by it, and their shading follows lean and curve.
   const paper = { flex: 0, vel: 0, lastX: Number.NaN, shown: 0 };
-  const shadeSides = (d: number, lean: number) => {
+  // How far a plane's start/end edges reach into the bending zones (0–1),
+  // from its edges on screen (frame-centred px along the axis).
+  let bendNow = 0;
+  const zoneDepth = (startEdge: number, endEdge: number) => {
+    const half = frameWidth / 2 || 1;
+    const zonePx = config.edgeZone * frameWidth || 1;
+    const k = config.edgeBend > 0 ? Math.min(1, bendNow / config.edgeBend) : 0;
+    const a = gsap.utils.clamp(0, 1, (zonePx - (startEdge + half)) / zonePx);
+    const b = gsap.utils.clamp(0, 1, (endEdge + half - (frameWidth - zonePx)) / zonePx);
+    return { a: a * a * k, b: b * b * k };
+  };
+  const shadeSides = (d: number, lean: number, zone = { a: 0, b: 0 }) => {
     // Which edge recedes on the curve: for the inward ring it's the edge
-    // nearer the centre; leaning towards the start sinks the far edge.
-    const curve = Math.min(1, Math.abs(d) * 0.55);
+    // nearer the centre; leaning towards the start sinks the far edge. In
+    // the bending zones the curling edge darkens.
+    const curve = config.curveRotate > 0 ? Math.min(1, Math.abs(d) * 0.55) : 0;
     const startByCurve = (inward ? d > 0 : d < 0) ? curve : 0;
     const endByCurve = (inward ? d < 0 : d > 0) ? curve : 0;
     const k = config.paperShade;
     return {
-      "--shade-a": (Math.min(1, startByCurve + Math.max(0, -lean) * 0.9) * k).toFixed(3),
-      "--shade-b": (Math.min(1, endByCurve + Math.max(0, lean) * 0.9) * k).toFixed(3),
-      "--sheen": (Math.min(0.12, Math.abs(lean) * 0.1 + curve * 0.04)).toFixed(3),
+      "--shade-a": (Math.min(1, startByCurve + Math.max(0, -lean) * 0.9 + zone.a) * k).toFixed(3),
+      "--shade-b": (Math.min(1, endByCurve + Math.max(0, lean) * 0.9 + zone.b) * k).toFixed(3),
+      "--sheen": (Math.min(0.12, Math.abs(lean) * 0.1 + curve * 0.04 + Math.max(zone.a, zone.b) * 0.06)).toFixed(3),
     };
   };
 
@@ -245,6 +327,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const shrink = gsap.utils.clamp(0, 1, (1 - heroState.scale) / (1 - config.heroScale || 1));
     const onScreen = heroState.scale * heroFactor;
     const cornerRadius = (radius * trackFactor * shrink) / onScreen;
+    // The edge bend comes in as the video settles into a card, and deepens a
+    // little while the row moves fast (then springs back with `paper`).
+    bendNow = config.edgeBend * gsap.utils.clamp(0, 1, (shrink - 0.5) / 0.5) * (1 + 0.45 * Math.min(1, Math.abs(paper.flex)));
+    applyBend(bendNow);
 
     // Keep the first card at least one gap clear of the video's trailing
     // edge (right, or bottom on phones) at every moment and viewport size,
@@ -295,7 +381,11 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     if (fog) gsap.set(fog, { opacity: shrink });
     // Its hairline border only shows once it's a card, not at the screen edge.
     if (border) gsap.set(border, { opacity: shrink });
-    if (heroShade) gsap.set(heroShade, shadeSides(pose.dh, heroLean / (config.paperLean || 1)));
+    if (heroShade) {
+      const hc = heroX * heroFactor;
+      const hw = half * heroState.scale * heroFactor;
+      gsap.set(heroShade, shadeSides(pose.dh, heroLean / (config.paperLean || 1), zoneDepth(hc - hw, hc + hw)));
+    }
 
     // Background objects: the layer drifts with the row (deeper objects move
     // slower on screen thanks to perspective) and some objects slowly turn.
@@ -328,7 +418,11 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       const d = bend((centers[i] + x - half) / half);
       gsap.set(el, { [ROT]: turn(curveDeg(d) + leanDeg), z: curveZ(d), transformOrigin: "50% 50%" });
       const shade = shades[i];
-      if (shade) gsap.set(shade, shadeSides(d, paper.flex));
+      if (shade) {
+        const c = (centers[i] + x - half) * trackFactor;
+        const w = (halfWidths[i] ?? 0) * trackFactor;
+        gsap.set(shade, shadeSides(d, paper.flex, zoneDepth(c - w, c + w)));
+      }
     });
   };
 
@@ -499,6 +593,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     window.clearTimeout(settleTimer);
     gsap.ticker.remove(raf);
     gsap.ticker.remove(paperTick);
+    if (warp) warp.style.filter = "";
     lenis.destroy();
     video?.pause();
     frame.style.removeProperty("--card-w");
