@@ -898,6 +898,33 @@ a:focus-visible {
   color: rgb(var(--accent));
 }
 
+/* ---- Paper shading --------------------------------------------------------
+   Rolls across a card as it turns and leans (values set by ScrollStage), so
+   a flat card reads as a softly curved sheet: the receding edge darkens and
+   a faint sheen crosses the middle. */
+.paper-shade,
+.glass > .paper-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      var(--paper-dir, 90deg),
+      rgb(0 0 0 / var(--shade-a, 0)) 0%,
+      transparent 48%,
+      transparent 52%,
+      rgb(0 0 0 / var(--shade-b, 0)) 100%
+    ),
+    linear-gradient(
+      var(--paper-dir, 90deg),
+      transparent 28%,
+      rgb(255 255 255 / var(--sheen, 0)) 50%,
+      transparent 72%
+    );
+}
+
 /* ---- Footer (last item on the track) -------------------------------------- */
 
 .footer-card {
@@ -1178,6 +1205,11 @@ a:focus-visible {
 
   .project-card__title {
     font-size: clamp(22px, min(6.8vw, 3.8vh), 32px);
+  }
+
+  /* The row travels vertically on phones, so cards bend top to bottom. */
+  .paper-shade {
+    --paper-dir: 180deg;
   }
 
   /* The row travels vertically on phones: cards stack in a column. */

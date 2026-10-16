@@ -24,6 +24,12 @@ export type SceneConfig = {
    *  (side cards come forward and turn to face the centre). false: it bends
    *  away like the outside of a drum. */
   curveInward: boolean;
+  /** Paper feel: how far (deg) a card leans into its motion at full speed;
+   *  its trailing edge lags like a sheet pulled through air, then springs back. */
+  paperLean: number;
+  /** Paper feel: strength (0–1) of the shading that rolls across a card as it
+   *  turns, so it reads as a softly curved sheet. */
+  paperShade: number;
   /** How much the background objects drift relative to the row (0–1). */
   depthParallax: number;
   /** Degrees per px of drift that the spinning background objects turn. */
@@ -59,16 +65,18 @@ export const sceneConfig: SceneConfig = {
   curveRotate: 16,
   curveDepth: 120,
   curveInward: true,
+  paperLean: 7,
+  paperShade: 0.34,
   depthParallax: 0.7,
   depthSpin: -0.012,
-  scrub: 1,
+  scrub: 1.2,
   entryDistance: 110,
   videoDistance: 2.2,
   heroDistance: 0.8,
   cardDistance: 1,
   holdDistance: 0.45,
   settle: true,
-  smoothness: 0.085,
+  smoothness: 0.075,
   scrollPerUnit: 1,
   autoplayOnLoad: true,
 };

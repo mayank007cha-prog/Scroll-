@@ -57,6 +57,8 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
             )}
           </div>
         </div>
+        {/* Light and shadow that roll across the card as it turns (ScrollStage). */}
+        <span className="paper-shade" aria-hidden="true" />
       </article>
     </Link>
   );

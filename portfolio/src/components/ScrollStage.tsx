@@ -100,6 +100,8 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   // ---- Elements -----------------------------------------------------------
   const track = stage.querySelector<HTMLElement>("[data-track]");
   const items = track ? gsap.utils.toArray<HTMLElement>(".work-item", track) : [];
+  const shades = items.map((el) => el.querySelector<HTMLElement>(".paper-shade"));
+  const heroShade = hero.querySelector<HTMLElement>(".paper-shade");
   const fog = hero.querySelector<HTMLElement>(".hero-fog");
   const border = hero.querySelector<HTMLElement>(".hero-border");
   const depthField = stage.querySelector<HTMLElement>("[data-depth-field]");
@@ -199,18 +201,40 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     return (X * cfg.perspective) / (cfg.perspective - Z);
   };
 
+  // ---- Paper feel --------------------------------------------------------
+  // `paper.flex` follows the row's speed through a soft spring (see paperTick):
+  // positive while the row moves towards the start (left / up). Cards lean
+  // into the motion by it, and their shading follows lean and curve.
+  const paper = { flex: 0, vel: 0, lastX: Number.NaN, shown: 0 };
+  const shadeSides = (d: number, lean: number) => {
+    // Which edge recedes on the curve: for the inward ring it's the edge
+    // nearer the centre; leaning towards the start sinks the far edge.
+    const curve = Math.min(1, Math.abs(d) * 0.55);
+    const startByCurve = (inward ? d > 0 : d < 0) ? curve : 0;
+    const endByCurve = (inward ? d < 0 : d > 0) ? curve : 0;
+    const k = config.paperShade;
+    return {
+      "--shade-a": (Math.min(1, startByCurve + Math.max(0, -lean) * 0.9) * k).toFixed(3),
+      "--shade-b": (Math.min(1, endByCurve + Math.max(0, lean) * 0.9) * k).toFixed(3),
+      "--sheen": (Math.min(0.12, Math.abs(lean) * 0.1 + curve * 0.04)).toFixed(3),
+    };
+  };
+
   const render = () => {
     const half = frameWidth / 2 || 1;
+    const leanDeg = paper.flex * config.paperLean;
 
     // The video rides with the row once the row passes its parked position,
     // scaled so it moves at the same on-screen speed as the cards.
     const heroFactor = depthFactor(heroState.z);
     const shift = Math.min(0, trackState.x - parkedX);
     const heroRide = (shift * trackFactor) / heroFactor;
+    // The video only leans once it rides with the row (eased in, see `wait`).
+    let heroLean = 0;
     // Its place on the curve for a given x.
     const heroPose = (hx: number) => {
       const dh = bend((hx * heroFactor) / half);
-      return { z: heroState.z + curveZ(dh), deg: curveDeg(dh) };
+      return { z: heroState.z + curveZ(dh), deg: curveDeg(dh) + heroLean, dh };
     };
     const heroRight = (hx: number) => {
       const pose = heroPose(hx);
@@ -232,7 +256,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const cardLeft = (x: number) => {
       const c = (centers[0] ?? 0) + x - half;
       const d = bend(c / half);
-      return project(c, cfg.trackDepth + curveZ(d), -(halfWidths[0] ?? 0), curveDeg(d));
+      return project(c, cfg.trackDepth + curveZ(d), -(halfWidths[0] ?? 0), curveDeg(d) + leanDeg);
     };
     let x = trackState.x;
     let heroX = heroRide;
@@ -247,6 +271,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       // Hand over smoothly from "row waits" to "video gives way".
       const wait = gsap.utils.clamp(0, 1, 1 + shift / (frameWidth * 0.25));
       x += (pushed - x) * wait;
+      heroLean = leanDeg * (1 - wait);
       if (shift < 0) {
         const maxRight = cardLeft(x) - gap;
         for (let k = 0; k < 6; k++) {
@@ -270,6 +295,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     if (fog) gsap.set(fog, { opacity: shrink });
     // Its hairline border only shows once it's a card, not at the screen edge.
     if (border) gsap.set(border, { opacity: shrink });
+    if (heroShade) gsap.set(heroShade, shadeSides(pose.dh, heroLean / (config.paperLean || 1)));
 
     // Background objects: the layer drifts with the row (deeper objects move
     // slower on screen thanks to perspective) and some objects slowly turn.
@@ -300,7 +326,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     gsap.set(track, { [AX]: x, z: cfg.trackDepth });
     items.forEach((el, i) => {
       const d = bend((centers[i] + x - half) / half);
-      gsap.set(el, { [ROT]: turn(curveDeg(d)), z: curveZ(d), transformOrigin: "50% 50%" });
+      gsap.set(el, { [ROT]: turn(curveDeg(d) + leanDeg), z: curveZ(d), transformOrigin: "50% 50%" });
+      const shade = shades[i];
+      if (shade) gsap.set(shade, shadeSides(d, paper.flex));
     });
   };
 
@@ -436,6 +464,26 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     settleTimer = window.setTimeout(settle, 180);
   });
 
+  // ---- Paper spring: lean follows the row's speed, then settles softly ----
+  const paperTick = () => {
+    const dt = Math.min(0.05, gsap.ticker.deltaRatio(60) / 60);
+    const x = trackState.x;
+    const speed = Number.isNaN(paper.lastX) ? 0 : (x - paper.lastX) / dt;
+    paper.lastX = x;
+    // Full lean at about 1.6 frame widths per second, towards the start.
+    const target = gsap.utils.clamp(-1, 1, -speed / ((frameWidth || 1) * 1.6));
+    // Slightly under-damped: a tiny, paper-like overshoot as it settles.
+    paper.vel += (90 * (target - paper.flex) - 15 * paper.vel) * dt;
+    paper.flex += paper.vel * dt;
+    const moving = Math.abs(paper.flex) > 0.0005 || Math.abs(paper.vel) > 0.0005;
+    if (moving || paper.shown !== 0) {
+      if (!moving) paper.flex = paper.vel = 0;
+      paper.shown = paper.flex;
+      render();
+    }
+  };
+  gsap.ticker.add(paperTick);
+
   // Autoplay the intro once, but only if the visitor is at the very top.
   if (video && config.autoplayOnLoad && trigger.progress === 0) {
     video.play().catch(() => {
@@ -450,6 +498,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     cubes?.destroy();
     window.clearTimeout(settleTimer);
     gsap.ticker.remove(raf);
+    gsap.ticker.remove(paperTick);
     lenis.destroy();
     video?.pause();
     frame.style.removeProperty("--card-w");
