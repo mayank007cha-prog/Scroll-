@@ -54,6 +54,11 @@ export type SceneConfig = {
   holdDistance: number;
   /** After scrolling stops, glide to the nearest centred card. */
   settle: boolean;
+  /** Card by card: in the row, one wheel gesture glides to the next (or
+   *  previous) card instead of scrolling freely. */
+  snap: boolean;
+  /** Seconds each card-to-card glide takes (eased in and out). */
+  snapDuration: number;
   /** Lenis smoothing (lower = smoother, heavier). */
   smoothness: number;
   /** Viewport heights of scroll per timeline unit. */
@@ -79,13 +84,15 @@ export const sceneConfig: SceneConfig = {
   paperShade: 0.34,
   depthParallax: 0.7,
   depthSpin: -0.012,
-  scrub: 1.2,
+  scrub: 0.35,
   entryDistance: 110,
   videoDistance: 2.2,
   heroDistance: 0.8,
   cardDistance: 1,
-  holdDistance: 0.45,
+  holdDistance: 0.2,
   settle: true,
+  snap: true,
+  snapDuration: 1.25,
   smoothness: 0.075,
   scrollPerUnit: 1,
   autoplayOnLoad: true,

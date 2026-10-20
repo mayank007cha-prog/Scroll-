@@ -418,6 +418,11 @@ a:focus-visible {
   background-size: 240px 240px;
 }
 
+.depth-wall,
+.depth-floor {
+  filter: blur(0.8px); /* slightly soft, like the objects */
+}
+
 .depth-wall {
   bottom: 0;
   transform: translateZ(calc(-1100px * var(--zs, 1)));
@@ -527,6 +532,21 @@ a:focus-visible {
 
 .floor-cube__face--left { left: 0; }
 .floor-cube__face--right { left: 100%; }
+
+/* Depth of field: every background object is softly out of focus (more so
+   the deeper it sits; --obj-blur is set per object). The blur goes on the
+   drawn parts, not the 3D containers, which a filter would flatten. */
+.d-cube__face,
+.d-layers__plane,
+.d-pen,
+.d-cursor,
+.d-selection,
+.d-rings,
+.d-cross,
+.d-measure,
+.d-type {
+  filter: blur(var(--obj-blur, 1.6px));
+}
 
 /* Wireframe cube */
 .d-cube {
@@ -840,7 +860,7 @@ a:focus-visible {
 .project-card__text {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   gap: clamp(12px, 2vh, 20px);
   min-width: 0;
 }

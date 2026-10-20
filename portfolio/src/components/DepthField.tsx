@@ -56,6 +56,8 @@ function placement({ x, y, z, size }: DepthObject): CSSProperties {
     fontSize: `calc(${(size / f).toFixed(1)}px * var(--depth-scale, 1))`,
     // --zs: depth scale set by ScrollStage (depths grow with the frame width).
     transform: `translate(-50%, -50%) translateZ(calc(${z}px * var(--zs, 1)))`,
+    // Depth of field: the deeper the object, the softer it is.
+    ["--obj-blur" as string]: `${(1.2 + Math.abs(z) / 650).toFixed(2)}px`,
   };
 }
 

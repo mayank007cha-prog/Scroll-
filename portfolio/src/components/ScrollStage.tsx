@@ -69,7 +69,18 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   if (!frame || !hero) return;
 
   // ---- Smooth scrolling (Lenis) wired into GSAP's ticker ------------------
-  const lenis = new Lenis({ lerp: config.smoothness, wheelMultiplier: 0.9 });
+  // `wheelIntent` (set up with the timeline below) can take a wheel gesture
+  // over, to glide card by card; it returns false when it has.
+  let wheelIntent = (_deltaY: number) => true;
+  const lenis = new Lenis({
+    lerp: config.smoothness,
+    wheelMultiplier: 0.9,
+    virtualScroll: ({ deltaY, event }) => {
+      if (event.type !== "wheel" || wheelIntent(deltaY)) return true;
+      event.preventDefault();
+      return false;
+    },
+  });
   lenis.on("scroll", ScrollTrigger.update);
   const raf = (time: number) => lenis.raf(time * 1000);
   gsap.ticker.add(raf);
@@ -515,7 +526,8 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     tl.fromTo(
       trackState,
       { x: i === 0 ? rowStartX : centreOn(i - 1) },
-      { x: centreOn(i), duration: config.cardDistance, ease: "sine.inOut", onUpdate: render },
+      // Linear here: the card-by-card glide (or the settle) supplies the ease.
+      { x: centreOn(i), duration: config.cardDistance, ease: "none", onUpdate: render },
     );
     hold();
   });
@@ -534,12 +546,16 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     onRefresh: refreshPositions,
   });
 
-  // ---- Gentle settle: after scrolling stops, glide to the nearest rest -----
+  // ---- Settle: after a touch swipe, key press or scrollbar drag stops, ----
+  // carry on to the next card in the direction you moved (a small nudge is
+  // enough), with the same gentle ease as the wheel glide.
   let settleTimer = 0;
+  let settledT: number | null = null; // the rest we last arrived at
+  const glideEase = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
   const settle = () => {
     if (!config.settle || !trigger || !restTimes.length) return;
     // Never pull against a scroll in progress: wait until the smooth scroll
-    // (the visitor's, or a previous settle) has fully come to rest.
+    // (the visitor's, or a previous glide) has fully come to rest.
     if (lenis.isScrolling) {
       settleTimer = window.setTimeout(settle, 120);
       return;
@@ -551,14 +567,77 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     // Leave the video scrub alone; only settle once the row is on screen.
     if (t < restTimes[0] - config.heroDistance / 2) return;
     const nearest = restTimes.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a));
-    const target = trigger.start + (nearest / tl.duration()) * span;
-    if (Math.abs(target - y) < 2) return;
-    lenis.scrollTo(target, { duration: 1.1, easing: (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2) });
+    const from = settledT ?? nearest;
+    let target = from;
+    if (t > from + 0.03) target = restTimes.find((r) => r >= t - 0.001) ?? restTimes[restTimes.length - 1];
+    else if (t < from - 0.03) target = [...restTimes].reverse().find((r) => r <= t + 0.001) ?? restTimes[0];
+    const targetY = trigger.start + (target / tl.duration()) * span;
+    if (Math.abs(targetY - y) < 2) {
+      settledT = target;
+      return;
+    }
+    lenis.scrollTo(targetY, {
+      duration: config.snapDuration,
+      easing: glideEase,
+      onComplete: () => {
+        settledT = target;
+      },
+    });
   };
   lenis.on("scroll", () => {
     window.clearTimeout(settleTimer);
     settleTimer = window.setTimeout(settle, 180);
   });
+
+  // ---- Card by card: a wheel gesture in the row glides to the next card ---
+  let snapping = false;
+  let gestureUsed = false;
+  let lastWheelAt = 0;
+  let lastWheelSize = 0;
+  let gestureSize = 0; // strength of the push that started the last glide
+  wheelIntent = (deltaY: number) => {
+    if (!config.snap || !trigger || !restTimes.length || deltaY === 0) return true;
+    const now = performance.now();
+    const size = Math.abs(deltaY);
+    // A new gesture: after a short pause, or a push clearly stronger than
+    // the fading tail (trackpad inertia) of the last one. A wheel that keeps
+    // spinning at full strength after a glide also counts, to keep going.
+    const paused = now - lastWheelAt > 220;
+    if (gestureUsed && !paused) gestureSize = Math.max(gestureSize, size); // track the push's peak
+    const fresh = paused || size > lastWheelSize * 1.6 + 4 || (!snapping && size >= gestureSize * 0.8);
+    lastWheelAt = now;
+    lastWheelSize = size;
+    const span = trigger.end - trigger.start;
+    const t = ((window.scrollY - trigger.start) / span) * tl.duration();
+    const eps = 0.02;
+    const down = deltaY > 0;
+    // Free scrolling while the video plays, and back up into it from the
+    // first rest; card by card from the moment the video starts moving back.
+    const rowStart = restTimes[0] - config.holdDistance / 2 - config.heroDistance;
+    if (down ? t < rowStart - eps : t <= restTimes[0] + eps) {
+      gestureUsed = false;
+      settledT = null;
+      return true;
+    }
+    if (snapping || (gestureUsed && !fresh)) return false;
+    const target = down ? restTimes.find((r) => r > t + eps) : [...restTimes].reverse().find((r) => r < t - eps);
+    if (target === undefined) return true;
+    gestureUsed = true;
+    gestureSize = size;
+    snapping = true;
+    window.clearTimeout(settleTimer);
+    lenis.scrollTo(trigger.start + (target / tl.duration()) * span, {
+      duration: config.snapDuration,
+      easing: glideEase,
+      lock: true,
+      force: true,
+      onComplete: () => {
+        snapping = false;
+        settledT = target;
+      },
+    });
+    return false;
+  };
 
   // ---- Paper spring: lean follows the row's speed, then settles softly ----
   const paperTick = () => {
