@@ -1,9 +1,9 @@
 /* Theme tokens (dark only). */
 :root {
-  --bg-rgb: 15 15 17;
+  --bg-rgb: 9 9 11;
   --fg: 255 255 255;
   --bg: rgb(var(--bg-rgb));
-  --frame-bg: #131316;
+  --frame-bg: #0a0a0c;
   --hero-bg: #202024;
   --ink: #f5f5f6;
   --ink-2: rgb(245 245 246 / 0.72);
@@ -20,11 +20,6 @@
   /* No big blurred shadows: nearly invisible on this dark ground and they
      cost frames on moving 3D cards. The grey stroke defines the edge. */
   --glass-shadow: none;
-  /* Wall and floor share one 240px grid: vertical lines at x = 0.5 of each
-     cell in both; the wall's horizontal lines sit on the bottom of each cell
-     so its lowest line is exactly where the floor starts. */
-  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0.5 0V240M0 239.5H240' fill='none' stroke='%23ffffff' stroke-opacity='0.22' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
-  --floor-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0.5 0V240M0 0.5H240' fill='none' stroke='%23ffffff' stroke-opacity='0.14' stroke-width='1.5'/%3E%3C/svg%3E");
   /* Colour, used sparingly and with meaning:
      --accent: violet. Only for things you can
        act on or that mark "you are here" (links, the main button, current
@@ -39,7 +34,7 @@
 :root {
   /* The scene runs edge to edge; cards have small, crisp corners. */
   --gutter: 0px;
-  --radius: 8px;
+  --radius: 4px;
   /* Fallbacks; ScrollStage sets these so the cards match the shrunken video
      card's on-screen size exactly. */
   --card-w: 76vw;
@@ -116,7 +111,7 @@ a:focus-visible {
   flex: 0 0 auto;
   width: 36px;
   height: 36px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: rgb(255 255 255 / 0.9);
   color: #111113;
   font-size: 15px;
@@ -140,12 +135,8 @@ a:focus-visible {
      overflow can still be scrolled (e.g. by focusing a card), which would
      shift the whole scene. */
   overflow: clip;
-  /* Static backdrop: two faint violet lights. */
-  background:
-    radial-gradient(70% 60% at 50% 50%, transparent 30%, var(--frame-bg) 100%),
-    radial-gradient(55% 45% at 85% 0%, rgb(var(--accent) / 0.07), transparent 70%),
-    radial-gradient(60% 50% at 10% 100%, rgb(var(--dusk) / 0.08), transparent 70%),
-    var(--frame-bg);
+  /* Plain, dark backdrop. */
+  background: var(--frame-bg);
   perspective: 1400px;
   isolation: isolate;
 }
@@ -375,47 +366,12 @@ a:focus-visible {
   will-change: transform;
 }
 
-.depth-floor,
-.depth-wall {
-  opacity: 0;
-}
 
-/* The room: a dashed back wall and a floor built on one grid.
-   Both planes span the same x range; the wall stands at z -1100 with its
-   bottom edge at the frame's bottom edge (half a frame below eye level, which
-   puts the horizon just under the cards), and the floor lies flat
-   (rotateX 90deg) from that same edge towards the viewer. So each vertical
-   wall line continues into a floor line, and they meet on one horizon. */
+/* The 3D space for the floor cubes (shifted with the row by ScrollStage). */
 .depth-room {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-}
-
-.depth-wall,
-.depth-floor {
-  position: absolute;
-  left: -150%;
-  width: 400%;
-  height: calc(1440px * var(--zs, 1)); /* 6 grid cells at 1440 wide */
-  background-size: 240px 240px;
-}
-
-.depth-wall {
-  bottom: 0;
-  transform: translateZ(calc(-1100px * var(--zs, 1)));
-  background-image: var(--wall-img);
-  background-position: 0 100%; /* anchor the grid on the floor line */
-  mask-image: linear-gradient(0deg, #000 0%, #000 35%, transparent 95%);
-}
-
-.depth-floor {
-  top: 100%;
-  transform: translateZ(calc(-1100px * var(--zs, 1))) rotateX(90deg);
-  transform-origin: 50% 0;
-  background-image: var(--floor-img);
-  background-position: 0 0;
-  mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 100%);
 }
 
 /* Floor cubes: a plane laid exactly over the floor (same box and
@@ -616,7 +572,7 @@ a:focus-visible {
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--stroke);
-  border-radius: 4px;
+  border-radius: 2px;
   background:
     radial-gradient(80% 70% at 70% 30%, rgb(255 255 255 / 0.05), transparent 70%),
     #141417;
@@ -963,7 +919,7 @@ a:focus-visible {
   .logo-tile {
     width: 32px;
     height: 32px;
-    border-radius: 4px;
+    border-radius: 2px;
     font-size: 13px;
   }
 

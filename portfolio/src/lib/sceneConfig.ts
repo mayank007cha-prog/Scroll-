@@ -24,8 +24,8 @@ export type SceneConfig = {
    *  (side cards come forward and turn to face the centre). false: it bends
    *  away like the outside of a drum. */
   curveInward: boolean;
-  /** Edge bend: how much shorter a card gets at the very edge of the frame
-   *  as it curves away from the viewer (0.14 ≈ 12% shorter). 0 turns it off. */
+  /** Edge bend: how much taller (0.16 = 16%) a card grows at the very edge of
+   *  the frame as it curls towards the viewer. 0 turns the bend off. */
   edgeBend: number;
   /** Edge bend: width of the bending zone at each side, as a fraction of the
    *  frame (the middle stays flat). */
@@ -65,16 +65,16 @@ export type SceneConfig = {
 export const sceneConfig: SceneConfig = {
   axis: "x",
   perspective: 1400,
-  heroDepth: -400,
-  heroScale: 0.92,
+  heroDepth: -250,
+  heroScale: 0.95,
   trackDepth: -80,
   // The row itself stays flat and level; at the frame's edges the cards
-  // curve away (edgeBend), like the outside of a drum.
+  // curl towards the viewer (edgeBend), like paper entering and leaving.
   curveRotate: 0,
   curveDepth: 0,
   curveInward: true,
-  edgeBend: 0.14,
-  edgeZone: 0.2,
+  edgeBend: 0.16,
+  edgeZone: 0.12,
   paperLean: 0,
   paperShade: 0.34,
   depthParallax: 0.7,
@@ -101,7 +101,7 @@ export const mobileOverrides: Partial<SceneConfig> = {
   trackDepth: -40,
   curveRotate: 9,
   curveDepth: 80,
-  curveInward: false, // curves away, like the desktop edge bend
+  curveInward: true, // curls in, like the desktop edge bend
   // Phones keep the gentle ring; the screen-space bend is desktop-only
   // (a full-screen filter every frame is too costly on phones).
   edgeBend: 0,

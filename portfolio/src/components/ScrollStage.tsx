@@ -174,9 +174,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
 
   // ---- Edge bend map -------------------------------------------------------
   // A displacement image the size of the frame: mid-grey (no shift) across
-  // the flat middle; in each edge zone the content is drawn in across the
-  // row (shorter) and squeezed along it, as if wrapping round the outside of
-  // a drum, easing in from nothing at the zone's inner side.
+  // the flat middle; in each edge zone the content is stretched across the
+  // row (taller, as if curling towards the viewer) and gently squeezed along
+  // it, easing in from nothing at the zone's inner side.
   const warpPad = 0.15; // the filter also reaches this far past each side, so squeezed-in content is there
   function drawWarpMap() {
     if (!bendOn || !warpMap || !warpFilter || !frame) return;
@@ -197,10 +197,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
         const tStart = gsap.utils.clamp(0, 1, (zone - along) / zone);
         const tEnd = gsap.utils.clamp(0, 1, (along - (1 - zone)) / zone);
         const t = Math.max(tStart, tEnd);
-        const p = t * t; // eases in: flat → curving away
+        const p = t * t; // eases in: flat → curling
         const sign = tEnd > tStart ? 1 : -1;
         const alongCh = 0.5 + sign * 0.3 * p; // squeeze towards the edge
-        const acrossCh = 0.5 + (across - 0.5) * p; // draw in towards the middle line
+        const acrossCh = 0.5 - (across - 0.5) * p; // stretch away from the middle line
         const k = (j * N + i) * 4;
         img.data[k] = Math.round((vertical ? acrossCh : alongCh) * 255);
         img.data[k + 1] = Math.round((vertical ? alongCh : acrossCh) * 255);
@@ -226,9 +226,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const a = Math.round(amount * 1000) / 1000;
     if (a === lastBend) return;
     lastBend = a;
-    // Height at the very edge shrinks to 1 / (1 + a): scale so that H / (H + scale) = 1 / (1 + a).
+    // Height at the very edge grows by `a`: scale so that H / (H - scale) = 1 + a.
     const size = vertical ? frame.clientWidth : frame.clientHeight;
-    warpDisp.setAttribute("scale", (size * a).toFixed(2));
+    warpDisp.setAttribute("scale", (size * (1 - 1 / (1 + a))).toFixed(2));
     warp.style.filter = a > 0.002 ? "url(#edge-bend)" : "none";
   };
 
