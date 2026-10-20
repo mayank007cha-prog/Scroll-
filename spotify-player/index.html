@@ -375,17 +375,51 @@
   .paused .vfb { animation-play-state: paused; }
   #media { opacity: 0; transition: opacity .4s var(--ease-out); }
   #media.on { opacity: 1; }
-  .vglass {
-    position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%;
-    display: grid; place-items: center;
-    background: rgba(18, 18, 18, .36);
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
-    transition: transform .3s var(--ease-out);
+  /* Light glass that stays legible on bright video: dark tint, strong blur, hairline edge */
+  .glass {
+    position: absolute; width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center; color: #fff;
+    background: rgba(12, 12, 12, .36);
+    -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2), 0 2px 8px rgba(0, 0, 0, .18);
+    transition: opacity .22s ease, transform .3s var(--ease-out);
   }
-  .vglass:active { transform: scale(.88); }
-  .vglass svg { width: 16px; height: 16px; }
-  .vglass .alt { display: none; } .vglass.toggled .main { display: none; } .vglass.toggled .alt { display: block; }
+  .glass::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; }   /* 44px tap area */
+  .glass:active { transform: scale(.88); }
+  .glass svg { width: 15px; height: 15px; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, .35)); }
+
+  /* Resting: only pause, in the bottom corner on the screen-edge side */
+  .vglass { right: 10px; bottom: 10px; }
+  .player.on-left .vglass { right: auto; left: 10px; }
+  .vglass .alt, .v-ctrls .ctl .alt { display: none; }
+  .vglass.toggled .main { display: none; } .vglass.toggled .alt { display: block; }
+
+  /* Info: soft fades at top and bottom only, so the middle of the video stays clear */
+  .v-scrim { position: absolute; left: 0; right: 0; pointer-events: none; opacity: 0; transition: opacity .25s ease; }
+  .v-scrim.top { top: 0; height: 56px; background: linear-gradient(180deg, rgba(0, 0, 0, .62), rgba(0, 0, 0, 0)); }
+  .v-scrim.bottom { bottom: 0; height: 60px; background: linear-gradient(0deg, rgba(0, 0, 0, .66), rgba(0, 0, 0, 0)); }
+  .v-title {
+    position: absolute; left: 12px; right: 46px; top: 10px; text-align: left; color: #fff;
+    opacity: 0; transform: translateY(-4px); pointer-events: none;
+    transition: opacity .22s ease, transform .35s var(--ease-out);
+  }
+  .v-title b { display: block; font-size: 13px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+  .v-title span { display: block; margin-top: 1px; font-size: 11.5px; color: rgba(255, 255, 255, .72); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .v-expand { top: 8px; right: 8px; width: 28px; height: 28px; opacity: 0; pointer-events: none; }
+  .v-expand svg { width: 13px; height: 13px; }
+  .v-ctrls {
+    position: absolute; left: 0; right: 0; bottom: 7px; display: flex; justify-content: center; gap: 18px;
+    opacity: 0; transform: translateY(4px); pointer-events: none;
+    transition: opacity .22s ease, transform .35s var(--ease-out);
+  }
+  .v-ctrls .ctl { width: 30px; height: 30px; color: #fff; }
+  .v-ctrls .ctl svg { width: 21px; height: 21px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .4)); }
+  .v-ctrls .ctl.play svg { width: 23px; height: 23px; }
+
+  .video-face.info .v-scrim, .video-face.info .v-title, .video-face.info .v-expand, .video-face.info .v-ctrls {
+    opacity: 1; transform: none; pointer-events: auto; }
+  .video-face.info .vglass { opacity: 0; transform: scale(.9); pointer-events: none; }
 
   .np-controls { position: absolute; left: 28px; top: 84px; display: flex; gap: 16px; }
   .ctl {
@@ -605,7 +639,7 @@
   <p class="lede">A mini player that drifts, docks and tucks itself away, so your music stays close without covering what you're browsing.</p>
   <ol class="gestures">
     <li><span><b>Tap Koi Fariyaad</b> to open the song page. The down arrow shrinks it into the floating player.</span></li>
-    <li><span><b>Tap Tamasha</b> for the music video. Minimise it and the video keeps playing in the floating player.</span></li>
+    <li><span><b>Tap Tamasha</b>, then Matargashti, for the music video. Tap the video to see what's playing; tap the title to open it.</span></li>
     <li><span><b>Drag the player</b> anywhere, or push it into the edge to tuck it away as a spinning disc. Tap the disc to bring it back.</span></li>
     <li><span><b>Swipe the song title</b> left or right to skip. Tap the player to open the song page again.</span></li>
     <li><span><b>Scroll down</b> to hide the tab bar. Scroll up and it returns.</span></li>
@@ -734,10 +768,19 @@
             <img class="vfb" id="vfb" src="assets/posters/tumbin.jpg" alt="">
             <video id="media" playsinline preload="auto" loop></video>
           </div>
-          <button class="vglass" aria-label="Pause" data-action="play" style="color:#fff">
-            <svg class="main" viewBox="0 0 24 24" fill="currentColor"><rect x="5.6" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.8" y="4" width="4.6" height="16" rx="1.3"/></svg>
-            <svg class="alt" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.9v14.2c0 .8.9 1.3 1.6.9l11-7.1c.6-.4.6-1.4 0-1.8l-11-7.1C7.9 3.6 7 4.1 7 4.9Z"/></svg>
+          <!-- Tap the video to show what's playing; it fades away again on its own -->
+          <div class="v-scrim top"></div>
+          <div class="v-scrim bottom"></div>
+          <button class="v-title" data-action="open" aria-label="Open song page"><b id="vSong">Matargashti</b><span id="vArtist">Mohit Chauhan</span></button>
+          <button class="glass v-expand" data-action="open" aria-label="Open song page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg>
           </button>
+          <div class="v-ctrls">
+            <button class="ctl" aria-label="Connect to a device" data-action="devices"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.7 4.6H4.4c-.7 0-1.2.5-1.2 1.2v9.1c0 .7.5 1.2 1.2 1.2h4.3"/><rect x="10.6" y="3.4" width="10.2" height="17.2" rx="1.8"/><circle cx="15.7" cy="14" r="2.8"/><circle cx="15.7" cy="7.6" r="1" fill="#fff" stroke="none"/><circle cx="5.7" cy="19.5" r="1.05" fill="#fff" stroke="none"/></svg></button>
+            <button class="ctl" aria-label="Add to Liked Songs" aria-pressed="false" data-action="like"><svg class="main" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 8v8M8 12h8"/></svg><svg class="alt" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1ed760"/><path d="m7.8 12.3 2.8 2.8 5.6-5.8" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="ctl play" aria-label="Pause" data-action="play"><svg class="main" viewBox="0 0 24 24" fill="currentColor"><rect x="5.6" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.8" y="4" width="4.6" height="16" rx="1.3"/></svg><svg class="alt" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.9v14.2c0 .8.9 1.3 1.6.9l11-7.1c.6-.4.6-1.4 0-1.8l-11-7.1C7.9 3.6 7 4.1 7 4.9Z"/></svg></button>
+          </div>
+          <button class="glass vglass" aria-label="Pause" data-action="play"><svg class="main" viewBox="0 0 24 24" fill="currentColor"><rect x="5.6" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.8" y="4" width="4.6" height="16" rx="1.3"/></svg><svg class="alt" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.9v14.2c0 .8.9 1.3 1.6.9l11-7.1c.6-.4.6-1.4 0-1.8l-11-7.1C7.9 3.6 7 4.1 7 4.9Z"/></svg></button>
         </div>
 
         <div class="disc-face" id="discFace">
@@ -1142,6 +1185,7 @@
     discShadow.style.opacity = smooth(0.3, 0.9, mv);
 
     tabbar.style.transform = `translate3d(0, ${(tab.v * (tabH + 2)).toFixed(2)}px, 0)`;
+    player.classList.toggle('on-left', side === 'left');
 
     const hv = clamp(hint.v, 0, 1);
     edgeHint.style.opacity = hv;
@@ -1225,6 +1269,7 @@
         press.t = 1;
         npSlide.style.transition = 'none';
       } else {
+        hideInfo();
         player.classList.add('grabbing');
         cx.set(...FOLLOW); cy.set(...FOLLOW);
         press.t = mode === 'disc' ? 0.97 : 1.02;
@@ -1286,7 +1331,9 @@
       drag = null;
       if (e.type !== 'pointerup') return;
       if (mode === 'disc') undock();
-      else if (!d.btn) openSheet();
+      else if (d.btn) { /* buttons handle themselves */ }
+      else if (vm.t > 0.5) toggleInfo();      // video: first tap shows what's playing
+      else openSheet();
       return;
     }
 
@@ -1337,6 +1384,7 @@
   function dock(s, vy = 0) {
     const b = bounds();
     mode = 'disc'; side = s; unfoldPending = false;
+    hideInfo();
     cx.t = discX(s);
     cy.t = clamp(cy.v + vy * 100, b.cyMin, b.cyMax); cy.vel = vy * 600;
     stick = cy.t >= b.cyMax - 6;
@@ -1357,11 +1405,29 @@
     m.t = 0;
     player.removeAttribute('tabindex');
     player.setAttribute('aria-label', nowPlayingLabel());
+    if (vm.t > 0.5) peekInfo();
   }
 
   player.addEventListener('keydown', (e) => {
     if (mode === 'disc' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); undock(); }
   });
+
+  /* ─────────────────────────── Video info layer ─────────────────────────── */
+  // Resting: just the video and a pause button. Tap to show title and controls; they fade after 3s.
+
+  let infoTimer;
+  function showInfo(ms = 3000) {
+    if (mode !== 'card' || vm.t < 0.5 || sheetOpen || sheetBusy) return;
+    videoFace.classList.add('info');
+    clearTimeout(infoTimer);
+    infoTimer = setTimeout(hideInfo, ms);
+  }
+  function hideInfo() { clearTimeout(infoTimer); videoFace.classList.remove('info'); }
+  function toggleInfo() { videoFace.classList.contains('info') ? hideInfo() : showInfo(); }
+  // Shown on its own for a moment when a video starts or comes back out of the disc.
+  const peekInfo = () => setTimeout(() => showInfo(2500), 420);
+  // Touching the controls keeps them up.
+  videoFace.addEventListener('pointerdown', () => { if (videoFace.classList.contains('info')) showInfo(); });
 
   /* ─────────────────────────── Toast ─────────────────────────── */
 
@@ -1463,6 +1529,8 @@
     discArt.parentNode.style.setProperty('--pos', pos);
     npTitle.firstChild.textContent = mv.song;
     npArtist.textContent = mv.by;
+    $('vSong').textContent = mv.song;
+    $('vArtist').textContent = mv.by;
     fitTitle();
     vfb.src = mv.img;
     shArt.src = mv.img;
@@ -1495,6 +1563,8 @@
     device.style.setProperty('--pc3', mv.tint[2]);
     vm.t = mv.video ? 1 : 0;
     setPlaying(true);
+    hideInfo();
+    if (mv.video) peekInfo();
 
     if (how === 'instant') { clearTimeout(swapTimer); applyTrack(mv); return; }
 
@@ -1866,6 +1936,9 @@
           l.setAttribute('aria-pressed', on);
         });
         toast(on ? 'Added to Liked Songs' : 'Removed from Liked Songs');
+      } else if (a === 'open') {
+        hideInfo();
+        openSheet();
       } else if (a === 'devices') {
         toast('Listening on this phone');
       }
