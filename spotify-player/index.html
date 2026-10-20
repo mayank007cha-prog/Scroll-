@@ -439,6 +439,10 @@
   .v-ctrls .ctl svg { width: 25px; height: 25px; filter: drop-shadow(0 1px 2.5px rgba(0, 0, 0, .5)); }
   .v-ctrls .ctl.play svg { width: 27px; height: 27px; }
 
+  /* With the controls up, the empty video around them is a real target that puts them away, so a tap there
+     isn't pulled onto the name or an icon nearby */
+  .v-dismiss { position: absolute; inset: 0; pointer-events: none; }
+  .video-face.info .v-dismiss { pointer-events: auto; }
   .video-face.info .v-scrim, .video-face.info .v-title, .video-face.info .v-ctrls {
     opacity: 1; transform: none; pointer-events: auto; }
   .video-face.info .vglass { opacity: 0; transform: scale(.9); pointer-events: none; }
@@ -661,7 +665,7 @@
   <p class="lede">A mini player that drifts, docks and tucks itself away, so your music stays close without covering what you're browsing.</p>
   <ol class="gestures">
     <li><span><b>Tap Koi Fariyaad</b> to open the song page. The down arrow shrinks it into the floating player.</span></li>
-    <li><span><b>Tap Tamasha</b>, then Matargashti, for the music video. Tap the video to see what's playing, tap the name to open the song, or swipe it to change song.</span></li>
+    <li><span><b>Tap Tamasha</b>, then Matargashti, for the music video. Tap the top of the video to open the song, the bottom to see what's playing; then tap the name to open it, or swipe it to change song.</span></li>
     <li><span><b>Drag the player</b> anywhere, or push it into the edge to tuck it away as a spinning disc. Tap the disc to bring it back.</span></li>
     <li><span><b>Swipe the song title</b> left or right to skip. Tap the player to open the song page again.</span></li>
     <li><span><b>Scroll down</b> to hide the tab bar. Scroll up and it returns.</span></li>
@@ -794,6 +798,7 @@
           <div class="v-scrim all"></div>
           <div class="v-scrim top"></div>
           <div class="v-scrim bottom"></div>
+          <button class="v-dismiss" data-action="dismiss" aria-label="Hide controls"></button>
           <button class="v-title" id="vTitle" data-action="open" aria-label="Open song page. Swipe to change song"><span class="v-clip"><span class="v-name" id="vName"><b id="vSong"><span>Matargashti</span></b><span id="vArtist">Mohit Chauhan</span></span></span><svg class="v-line pill" viewBox="0 0 168 46" aria-hidden="true"><path class="track" d="M22 45H146"/><path class="fill" pathLength="100" d="M22 45H146"/></svg></button>
           <svg class="v-line card" viewBox="0 0 184 120" aria-hidden="true"><path class="track" d="M30 119H154"/><path class="fill" pathLength="100" d="M30 119H154"/></svg>
           <div class="v-ctrls">
@@ -1371,8 +1376,13 @@
       if (e.type !== 'pointerup') return;
       if (mode === 'disc') undock();
       else if (d.btn) { /* buttons handle themselves */ }
-      // Video: a tap shows what's playing; tapping the video again puts it away. Only the name opens the song page.
-      else if (vm.t > 0.5) { if (videoFace.classList.contains('info')) hideInfo(); else showInfo(); }
+      // Video at rest: the top half opens the song page, the bottom half shows the name and controls.
+      // With them showing, tapping any empty spot puts them away; only the name opens the song page.
+      else if (vm.t > 0.5) {
+        if (videoFace.classList.contains('info')) hideInfo();
+        else if (e.clientY - player.getBoundingClientRect().top < CARD_H / 2) openSheet();
+        else { showInfo(); swallowTap(); }
+      }
       else openSheet();
       return;
     }
@@ -1455,8 +1465,8 @@
   });
 
   /* ─────────────────────────── Video info layer ─────────────────────────── */
-  // Resting: just the video and a pause button. Tap to show title and controls (they fade after 3s);
-  // tap the video again to hide them. Tap the song name to open the song page.
+  // Resting: just the video and a pause button. Tap the top half to open the song page, the bottom half to show
+  // the title and controls (they fade after 3s). Tap an empty spot to hide them, or the song name to open the song page.
 
   let infoTimer;
   const vName = $('vName');
@@ -1469,6 +1479,10 @@
   function hideInfo() { clearTimeout(infoTimer); videoFace.classList.remove('info'); }
   // Shown on its own for a moment when a video starts or comes back out of the disc.
   const peekInfo = () => setTimeout(() => showInfo(2500), 650);
+  // The tap that brings the controls up must not also press the one that appears under the finger.
+  let swallow = false, swallowTimer;
+  function swallowTap() { swallow = true; clearTimeout(swallowTimer); swallowTimer = setTimeout(() => { swallow = false; }, 400); }
+  videoFace.addEventListener('click', (e) => { if (swallow) { swallow = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true);
   // Touching the controls keeps them up.
   videoFace.addEventListener('pointerdown', () => { if (videoFace.classList.contains('info')) showInfo(); });
 
@@ -2020,6 +2034,8 @@
       } else if (a === 'open') {
         hideInfo();
         openSheet();
+      } else if (a === 'dismiss') {
+        hideInfo();
       } else if (a === 'devices') {
         toast('Listening on this phone');
       }
