@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple launcher icon: orange ring with a dark orbit on white. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF" android:pathData="M0,0h108v108h-108z" />
+    <path android:strokeColor="#F68C1E" android:strokeWidth="9" android:fillColor="#00000000"
+        android:pathData="M54,30a24,24 0 1,0 0.1,0" />
+    <path android:strokeColor="#4D5055" android:strokeWidth="4" android:strokeLineCap="round"
+        android:fillColor="#00000000" android:pathData="M28,82 L80,26" />
+    <path android:fillColor="#4D5055" android:pathData="M58,46a5,5 0 1,0 0.1,0" />
+</vector>

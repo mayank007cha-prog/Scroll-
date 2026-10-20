@@ -1,0 +1,2180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EarthLink Fiber Checkout</title>
+<meta name="description" content="Prototype of the new four-step EarthLink Fiber checkout: Plan, Installation, Your Information, Review & Pay.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------
+   Design tokens (taken from the Figma "New Design" section).
+   Type sizes are scaled up from the mobile comps so nothing a customer
+   must read is below 15px, and tap targets are at least 48px tall.
+------------------------------------------------------------------- */
+:root{
+  color-scheme: light;
+  --blue:#0075a3;          /* action/primary */
+  --blue-ink:#00658d;
+  --blue-glow:#00a3e0;     /* button drop shadow */
+  --link:#007dba;
+  --blue-50:#e8f3f8;       /* surface/selected */
+  --orange:#f68d1f;
+  --orange-ink:#d9730b;
+  --ink:#333333;
+  --ink-strong:#262626;
+  --muted:#5f6368;
+  --muted-2:#666666;
+  --border:#c8c9c7;
+  --border-soft:#d3d3d3;
+  --divider:#e0e0e0;
+  --page:#f8f9f9;
+  --box:#f7f7f7;
+  --card:#ffffff;
+  --success-bg:#e6f4ea;
+  --success:#1e7a38;
+  --success-line:rgba(30,122,56,.5);
+  --due:#2a8a3e;
+  --warn-bg:#fff8e9;
+  --warn:#8a600b;
+  --warn-line:rgba(153,107,13,.16);
+  --error:#c0392b;
+  --error-bg:#fdecea;
+  --footer:#444444;
+
+  /* mobile scale: 16px base, secondary 14px, nothing under 13px */
+  --fs-h1:1.5rem;     /* 24 */
+  --fs-plan:1.375rem; /* 22 */
+  --fs-h2:1.125rem;   /* 18 */
+  --fs-lg:1rem;       /* 16 — buttons */
+  --fs-md:1rem;       /* 16 */
+  --fs-body:1rem;     /* 16 — base */
+  --fs-sm:.875rem;    /* 14 */
+  --fs-xs:.8125rem;   /* 13 — the floor */
+
+  --r-sm:6px; --r-md:8px; --r-card:10px; --r-lg:16px;
+  --tap:48px; --btn-h:52px;
+  --header-h:64px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+}
+html.text-large{font-size:112.5%}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;overflow-x:hidden;display:flex;flex-direction:column;min-height:100vh;background:var(--page);color:var(--ink);
+  font-family:"Montserrat",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:var(--fs-body);line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+img,svg{display:block}
+a{color:var(--link)}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+[hidden]{display:none!important}
+main{flex:1 0 auto}
+
+/* ---------- Header ---------- */
+.site-header{
+  position:sticky;top:0;z-index:40;background:#fff;
+  padding-top:env(safe-area-inset-top,0px);
+  border-top:3px solid #f68c1e;border-bottom:2px solid #e7e7e7;
+}
+.site-header__inner{
+  max-width:1120px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));
+  display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:58px;
+}
+.menu-btn{display:inline-grid;place-items:center;width:44px;height:44px;margin-left:-10px;border:0;background:none;border-radius:8px;flex:none}
+.menu-btn span{display:block;width:22px;height:2.5px;border-radius:2px;background:var(--blue);box-shadow:0 -7px 0 var(--blue),0 7px 0 var(--blue)}
+.logo{display:inline-flex;border:0;background:none;padding:4px 0;margin-right:auto}
+.logo svg{width:132px;height:auto}
+.header-tools{display:flex;align-items:center;gap:8px;flex:none}
+.lang-pill{position:relative;display:inline-flex;align-items:center;justify-content:flex-end;width:66px;height:32px;padding:0 10px;
+  border-radius:999px;border:0;background:#6b6e73;color:#fff;font-weight:700;font-size:var(--fs-xs);flex:none;transition:background-color .2s}
+.lang-pill::before{content:"";position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .25s var(--ease)}
+.lang-pill[aria-checked="true"]{justify-content:flex-start;background:var(--blue)}
+.lang-pill[aria-checked="true"]::before{transform:translateX(34px)}
+/* slide-in menu (mobile) */
+.drawer{position:fixed;inset:0;z-index:65;display:flex}
+.drawer__scrim{position:absolute;inset:0;background:rgba(32,33,36,.5);animation:fadeIn .2s ease}
+.drawer__panel{position:relative;width:min(86vw,330px);height:100%;background:#fff;box-shadow:8px 0 30px rgba(0,0,0,.2);overflow:auto;
+  padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  display:flex;flex-direction:column;animation:drawerIn .3s var(--ease-out)}
+@keyframes drawerIn{from{transform:translateX(-100%)}to{transform:none}}
+.drawer__top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.drawer__top > span svg{width:130px;height:auto}
+.drawer nav{display:flex;flex-direction:column}
+.drawer nav a{display:flex;align-items:center;min-height:52px;padding:0 4px;border-bottom:1px solid #ececec;color:var(--blue);font-weight:700;font-size:var(--fs-lg);text-decoration:none}
+.drawer nav.drawer__sub a{color:var(--ink);font-weight:600}
+.drawer__call{margin-top:20px;width:100%;text-decoration:none}
+
+/* ---------- Screens ---------- */
+.screen{display:none}
+.screen.is-active{display:block;animation:screenIn .45s var(--ease-out)}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:var(--btn-h);padding:0 28px;border-radius:var(--r-sm);border:0;
+  font-weight:600;font-size:var(--fs-lg);line-height:1.2;text-align:center;
+  transition:transform .12s var(--ease),background-color .2s,box-shadow .2s,opacity .2s;
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 2px 0 var(--blue-glow);width:100%}
+.btn-primary:hover{background:var(--blue-ink)}
+.btn-outline{background:#fff;color:var(--blue);border:1.5px solid var(--blue);width:100%}
+.btn-outline:hover{background:var(--blue-50)}
+.btn-orange{background:var(--orange);color:#262626;box-shadow:0 3px 0 #c76c0c}
+.btn.is-busy{pointer-events:none;opacity:.85}
+.btn .spinner{width:20px;height:20px;border-width:3px}
+.link-btn{
+  background:none;border:0;padding:6px 0;color:var(--blue);font-weight:600;
+  text-decoration:underline;text-underline-offset:3px;font-size:var(--fs-sm);
+  display:inline-flex;align-items:center;gap:6px;min-height:40px;
+}
+.link-btn:hover{color:var(--blue-ink)}
+.spinner{
+  width:28px;height:28px;border-radius:50%;
+  border:3px solid rgba(255,255,255,.4);border-top-color:#fff;animation:spin .8s linear infinite;
+}
+.spinner--blue{border-color:rgba(0,117,163,.2);border-top-color:var(--blue)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* =================================================================
+   01 — Enter location (landing)
+================================================================= */
+.landing{max-width:1120px;margin:0 auto;padding:16px 16px 0}
+.hero{
+  position:relative;overflow:hidden;border-radius:var(--r-card) var(--r-card) 0 0;
+  min-height:190px;background:#0a1430;color:#fff;
+}
+.hero svg.hero-art{position:absolute;inset:0;width:100%;height:100%}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,16,40,.92) 0%,rgba(9,16,40,.75) 55%,rgba(9,16,40,0) 100%)}
+.hero__copy{position:relative;padding:28px 20px 70px;max-width:560px}
+.hero__eyebrow{font-weight:700;font-size:var(--fs-sm);letter-spacing:.08em;text-transform:uppercase;color:#ffb36b;margin:0 0 6px}
+.hero__title{font-weight:800;font-size:1.625rem;line-height:1.15;margin:0 0 8px}
+.hero__text{margin:0;font-size:var(--fs-md);color:#e6ecf5;max-width:30ch}
+.trail{fill:none;stroke-linecap:round}
+.trail--anim{stroke-dasharray:160 340;animation:trail 6s linear infinite}
+@keyframes trail{to{stroke-dashoffset:-1000}}
+
+.finder{
+  background:#0a74a0;color:#fff;border-radius:0 0 var(--r-card) var(--r-card);
+  padding:22px 16px 26px;display:flex;flex-direction:column;align-items:center;gap:18px;
+}
+.finder .btn-orange{width:min(100%,340px);font-size:var(--fs-lg)}
+.finder__title{display:flex;align-items:center;gap:10px;margin:0;font-size:1.125rem;font-weight:600}
+.addr{width:min(100%,560px);position:relative}
+.addr__row{display:flex;border-radius:var(--r-sm);overflow:visible;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.addr__input{
+  flex:1;min-width:0;height:60px;border:2px solid #fff;border-right:0;border-radius:var(--r-sm) 0 0 var(--r-sm);
+  padding:0 16px;font-size:var(--fs-lg);color:#222;background:#fff;
+}
+.addr__input::placeholder{color:#5c5f63}
+.addr__input:focus{outline:none;border-color:var(--orange)}
+.addr__go{
+  width:64px;flex:none;border:0;border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--orange);
+  display:grid;place-items:center;
+}
+.addr__go:hover{background:var(--orange-ink)}
+.addr__error{
+  margin:10px 0 0;background:#fff;color:var(--error);border-radius:var(--r-sm);
+  padding:10px 12px;font-weight:600;font-size:var(--fs-sm);display:flex;gap:8px;align-items:flex-start;
+}
+.suggest{
+  position:absolute;left:0;right:0;top:64px;z-index:5;background:#fff;color:#222;border-radius:var(--r-md);
+  box-shadow:0 12px 30px rgba(0,0,0,.25);overflow:hidden;margin:0;padding:6px 0;list-style:none;
+  animation:pop .18s var(--ease-out);
+}
+.suggest button{
+  width:100%;text-align:left;border:0;background:none;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;
+  font-size:var(--fs-body);min-height:var(--tap);
+}
+.suggest button:hover,.suggest button.is-hl{background:var(--blue-50)}
+.suggest small{display:block;color:var(--muted);font-size:var(--fs-sm)}
+@keyframes pop{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+.check-line{display:flex;align-items:center;gap:10px;font-size:var(--fs-lg);cursor:pointer;min-height:var(--tap)}
+.check-line input{width:22px;height:22px;accent-color:var(--orange);margin:0}
+.finder .link-btn{color:#fff;font-size:var(--fs-md);font-weight:600}
+.manual-addr{
+  width:min(100%,560px);display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);border-radius:var(--r-md);padding:16px;
+}
+.manual-addr .field{grid-column:span 2}
+.manual-addr .field--half{grid-column:span 1}
+.manual-addr label{color:#fff}
+.manual-addr .btn{grid-column:span 2}
+
+.landing-intro{padding:34px 4px 6px;max-width:720px}
+.landing-intro h2{color:#0a74a0;font-weight:700;font-size:1.625rem;line-height:1.25;margin:0 0 12px}
+.landing-intro p{margin:0;font-size:var(--fs-lg);color:#333}
+.landing-plans{display:grid;gap:16px;padding:24px 4px 40px;grid-template-columns:1fr}
+.lplan{border-radius:var(--r-card);overflow:hidden;background:#fff;box-shadow:0 1px 0 #e3e3e3;border:1px solid #e5e5e5;
+  text-align:center;display:flex;flex-direction:column}
+.lplan__head{background:#0a74a0;color:#fff;font-weight:600;font-size:1.25rem;padding:16px}
+.lplan__body{background:#f2f2f2;padding:16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.lplan__fit{font-size:var(--fs-lg);margin:0}
+.lplan__price{font-size:var(--fs-h2);font-weight:700;color:#262626;margin:6px 0 0}
+.lplan__price small{font-size:var(--fs-sm);font-weight:500;color:var(--muted)}
+.lplan .btn{margin-top:12px;width:100%}
+.lplan.is-fav{border-color:var(--orange);box-shadow:0 0 0 2px var(--orange)}
+.lplan__tag{display:inline-block;background:var(--orange);color:#262626;font-weight:700;font-size:var(--fs-xs);
+  letter-spacing:.04em;padding:3px 8px;border-radius:var(--r-md);margin:0 auto 4px}
+
+/* =================================================================
+   02 — Skeleton loader
+================================================================= */
+.wrap{max-width:600px;margin:0 auto;padding:24px 16px 40px}
+.sk{background:#e4e5ea;border-radius:8px;position:relative;overflow:hidden}
+.sk::after{
+  content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);
+  animation:shimmer 1.2s infinite;
+}
+@keyframes shimmer{to{transform:translateX(100%)}}
+.sk-card{background:#fff;border:1px solid var(--border-soft);border-radius:var(--r-card);padding:17px;display:flex;flex-direction:column;gap:16px}
+.sk-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sk-step{background:#fff;border:1px solid var(--border);border-radius:var(--r-card);padding:16px 17px;margin-top:12px}
+.loading-note{margin:16px 0 0;color:var(--muted);font-size:var(--fs-body);display:flex;align-items:center;gap:10px}
+
+/* =================================================================
+   03–06 — Checkout
+================================================================= */
+.co{max-width:1120px;margin:0 auto;padding:24px 16px 48px;display:grid;gap:0;grid-template-columns:minmax(0,1fr)}
+.connected{max-width:600px;width:100%;margin:0 auto}
+.co__main{max-width:600px;width:100%;margin:0 auto;min-width:0}
+.connected h1{color:var(--blue);font-weight:700;font-size:var(--fs-h1);line-height:1.22;margin:0 0 10px}
+.connected__addr{display:flex;align-items:center;gap:12px;margin:0 0 18px}
+.connected__addr span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-body)}
+.connected__addr .link-btn{color:var(--link);font-weight:500;font-size:var(--fs-body);flex:none}
+.steps{display:flex;flex-direction:column;gap:12px}
+.step{scroll-margin-top:calc(var(--header-h) + 16px)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);position:relative}
+.card--open{border-color:var(--border-soft);padding:18px 16px 20px;display:flex;flex-direction:column;gap:22px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.step-upcoming{padding:16px;font-weight:600;font-size:var(--fs-md);color:var(--ink);display:flex;align-items:center;gap:12px}
+.step-upcoming .num{
+  width:28px;height:28px;flex:none;border-radius:50%;border:1.5px solid #b9bab8;color:#6b6b6b;
+  display:grid;place-items:center;font-size:var(--fs-sm);font-weight:700
+}
+.h-card{margin:0;font-size:var(--fs-h2);font-weight:600;color:var(--ink);line-height:1.25}
+.h-card--bold{font-weight:700}
+.sub{margin:6px 0 0;color:var(--muted-2);font-size:var(--fs-body)}
+.step-num-title{display:flex;align-items:center;gap:10px}
+.step-num-title .num{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;
+  font-size:var(--fs-sm);font-weight:700;flex:none}
+
+/* summary (completed) card */
+.summary{padding:14px 16px;display:flex;gap:10px;align-items:flex-start}
+.summary__main{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.summary__title{margin:0;font-weight:600;font-size:var(--fs-md);color:var(--ink-strong);display:flex;align-items:center;gap:8px}
+.summary__title .done-dot{width:22px;height:22px;flex:none}
+.summary__text{margin:0;font-weight:500;color:var(--muted-2);font-size:var(--fs-body);line-height:1.4;overflow-wrap:anywhere}
+.summary .link-btn{flex:none;margin-top:-8px}
+.when{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+/* date · time: if both don't fit on one line the time drops to the next line and its dot is clipped away */
+.when__dt{flex:0 1 auto;min-width:0;overflow:hidden;color:var(--muted-2);font-weight:500}
+.when__row{display:flex;flex-wrap:wrap;margin-left:-20px}
+.when__row > span{position:relative;padding-left:20px;white-space:nowrap}
+.when__row > span::before{content:"";position:absolute;left:7px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:#c4c4c4}
+.tag{display:inline-flex;align-items:center;gap:6px;background:var(--success-bg);border:1px solid var(--success-line);
+  color:var(--success);border-radius:var(--r-md);padding:2px 10px;font-weight:600;font-size:var(--fs-sm);line-height:1.5}
+.pills{display:flex;flex-direction:column;gap:6px}
+.pill{display:flex;align-items:center;gap:8px;background:var(--box);border-radius:var(--r-md);padding:6px 10px;
+  font-weight:500;font-size:var(--fs-sm);color:var(--ink)}
+.pill svg{width:18px;height:18px;flex:none}
+.flash{animation:flash 1.6s var(--ease)}
+@keyframes flash{0%{background:var(--blue-50);box-shadow:0 0 0 3px rgba(0,117,163,.25)}100%{background:#fff;box-shadow:0 0 0 0 rgba(0,117,163,0)}}
+
+/* plan step */
+.plan-hero{border:1.5px solid var(--orange);border-radius:var(--r-card);padding:20px 16px 14px;position:relative;margin-top:6px;
+  background:linear-gradient(180deg,#fff, #fffaf4)}
+.plan-hero__tag{position:absolute;top:-14px;left:16px;background:var(--orange);color:#262626;font-weight:700;font-size:var(--fs-xs);
+  letter-spacing:.04em;padding:4px 10px;border-radius:var(--r-md)}
+.plan-hero__name{margin:0;color:var(--blue);font-weight:700;font-size:var(--fs-plan);line-height:1.2}
+.plan-hero__price{margin:8px 0 0;font-weight:600;font-size:var(--fs-lg);color:var(--ink)}
+.plan-hero__blurb{margin:10px 0 2px;font-size:var(--fs-body)}
+.plan-hero .link-btn svg{transition:transform .25s var(--ease)}
+.plan-hero .link-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.plan-details{list-style:none;margin:6px 0 4px;padding:0;display:flex;flex-direction:column;gap:8px;animation:pop .25s var(--ease-out)}
+.plan-details li{display:flex;align-items:center;gap:10px;border:1px solid #e3e6e8;background:#fff;border-radius:var(--r-md);
+  padding:8px 12px;font-size:var(--fs-sm);font-weight:500}
+.plan-details li svg{width:18px;height:18px;flex:none}
+.swap{animation:swap .35s var(--ease-out)}
+@keyframes swap{from{opacity:.2;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.choice-label{margin:0;font-weight:600;font-size:var(--fs-sm);letter-spacing:.04em;text-transform:uppercase;color:var(--muted-2)}
+.tile-grid{display:grid;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.tile{
+  position:relative;min-height:84px;border-radius:var(--r-sm);border:1.5px solid var(--blue);background:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 4px;
+  color:var(--blue);transition:background-color .2s,box-shadow .2s,transform .12s;
+}
+.tile:hover{background:#f3f9fc}
+.tile:active{transform:scale(.97)}
+.tile__a{font-weight:600;font-size:var(--fs-md);line-height:1.25}
+.tile__b{font-weight:400;font-size:var(--fs-sm);color:var(--ink);line-height:1.3}
+.tile[aria-checked="true"]{background:var(--blue-50);border-width:2px}
+.tile[aria-checked="true"] .tile__b{color:var(--blue)}
+.tick{position:absolute;top:-8px;right:-8px;width:20px;height:20px;animation:tick .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes tick{from{transform:scale(0)}to{transform:scale(1)}}
+.tile[disabled]{border-color:#d0d1cf;color:#8a8a8a;background:#f4f4f4;cursor:not-allowed}
+.tile[disabled] .tile__b{color:#767676}
+
+.date-grid{display:grid;gap:8px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.date-grid .tile{min-height:66px}
+.tile--nav{border:1.5px dashed #9fb8c4;color:var(--blue);gap:4px}
+.tile--nav .tile__b{color:var(--blue);font-weight:600;font-size:var(--fs-sm)}
+.tile--nav svg{width:32px;height:32px}
+.time-grid{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.time-grid .tile{min-height:52px;gap:0;padding:6px}
+.time-grid .tile .tile__a{font-size:var(--fs-body)}
+.time-grid .tile[disabled] .tile__a{text-decoration:line-through}
+.time-grid .tile small{font-size:var(--fs-xs);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.appt-line{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-top:8px}
+
+/* info step */
+.social{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.social button{
+  min-height:var(--btn-h);border:1.5px solid #666;border-radius:var(--r-md);background:#fff;
+  display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;font-size:var(--fs-lg);
+  transition:background-color .2s,transform .12s;
+}
+.social button:hover{background:#f6f6f6}
+.social button:active{transform:scale(.98)}
+.social svg{width:24px;height:24px}
+.or{display:flex;align-items:center;gap:14px;color:#6b6b6b;font-weight:600;font-size:var(--fs-sm)}
+.or::before,.or::after{content:"";height:1px;background:var(--divider);flex:1}
+.center{text-align:center}
+.form{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+.form .span2{grid-column:span 2}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-weight:600;font-size:var(--fs-sm);color:var(--ink-strong)}
+.field input,.field select{
+  height:var(--btn-h);border:1.5px solid #8f9193;border-radius:var(--r-md);padding:0 14px;font-size:var(--fs-md);
+  background:#fff;color:#1f1f1f;width:100%;
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,117,163,.2)}
+.field.is-invalid input,.field.is-invalid select{border-color:var(--error);background:#fffafa}
+.field .hint{font-size:var(--fs-sm);color:var(--muted)}
+.field .err{font-size:var(--fs-sm);color:var(--error);font-weight:600;display:flex;gap:6px;align-items:flex-start}
+.prefill-note{display:flex;gap:10px;align-items:flex-start;background:var(--blue-50);border-radius:var(--r-md);padding:12px;
+  font-size:var(--fs-sm);color:#1f3b48}
+.prefill-note svg{flex:none;width:22px;height:22px}
+
+/* review & pay */
+.bill{background:var(--box);border-radius:var(--r-md);padding:14px}
+.bill__row{display:flex;justify-content:space-between;gap:12px;font-size:var(--fs-body);line-height:1.35;padding:3px 0}
+.bill__row--head{font-weight:600;color:var(--ink-strong);font-size:var(--fs-md)}
+.bill__row--head span:last-child{font-size:var(--fs-lg)}
+.bill__row--due{font-weight:700;color:var(--ink-strong);font-size:var(--fs-lg)}
+.bill__row--due span:last-child{color:var(--due)}
+.bill hr{border:0;height:1px;background:var(--divider);margin:10px 0}
+.due-callout{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1.5px solid #bfe0c7;background:#f2faf4;
+  border-radius:var(--r-md);padding:12px 14px}
+.due-callout b{font-size:var(--fs-lg);color:var(--ink-strong)}
+.due-callout strong{font-size:1.5rem;color:var(--due)}
+.due-callout small{display:block;color:var(--muted);font-size:var(--fs-sm);font-weight:500}
+.pm-title{margin:0;font-weight:600;font-size:var(--fs-lg);color:var(--ink-strong)}
+.radio{position:relative;display:flex;align-items:center;gap:10px;min-height:var(--tap);cursor:pointer;font-size:var(--fs-md);color:#191d31}
+.radio input{position:absolute;opacity:0;pointer-events:none}
+.radio .dot{width:24px;height:24px;flex:none;border-radius:50%;border:2px solid #b5b5b5;display:grid;place-items:center;background:#fff;
+  transition:border-color .2s}
+.radio .dot::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--link);transform:scale(0);transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.radio input:checked + .dot{border-color:var(--link)}
+.radio input:checked + .dot::after{transform:scale(1)}
+.radio input:focus-visible + .dot{outline:3px solid var(--orange);outline-offset:2px}
+.radio-row{display:flex;flex-wrap:wrap;gap:4px 28px}
+.wallets{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:2px}
+.wallet{position:relative;height:var(--btn-h);border-radius:var(--r-md);border:1.5px solid var(--blue);background:#fff;
+  display:grid;place-items:center;transition:background-color .2s}
+.wallet[aria-checked="true"]{border-width:2px;background:#fbfdfe}
+.wallet svg.wl{height:24px;width:auto}
+.wallet .sr-label{position:absolute;bottom:-26px;left:0;right:0;text-align:center;font-size:var(--fs-sm);color:var(--muted);font-weight:500}
+.wallet-names{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;font-size:var(--fs-sm);color:var(--muted);margin-top:-4px}
+.pay-sub{display:flex;flex-direction:column;gap:14px;animation:pop .25s var(--ease-out)}
+.secure-line{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:var(--fs-sm)}
+.agree{display:flex;flex-direction:column;gap:16px;border-top:1px solid #e6e6e6;padding-top:16px}
+.cbox{position:relative;display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.cbox input{position:absolute;opacity:0;pointer-events:none}
+.cbox .box{width:24px;height:24px;flex:none;border-radius:5px;border:1.5px solid #979797;background:#fff;display:grid;place-items:center;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:border-color .2s,background-color .2s;margin-top:1px}
+.cbox .box svg{width:18px;height:18px;transform:scale(0);transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.cbox input:checked + .box{border-color:#4a90e2}
+.cbox input:checked + .box svg{transform:scale(1)}
+.cbox input:focus-visible + .box{outline:3px solid var(--orange);outline-offset:2px}
+.cbox__text{font-size:var(--fs-body);line-height:1.45;color:var(--ink)}
+.cbox__text .link-btn{min-height:0;padding:0;font-weight:600;font-size:inherit;text-align:left;display:inline}
+.inline-link{color:var(--blue);font-weight:600;text-underline-offset:3px}
+.cbox.is-invalid .box{border-color:var(--error);box-shadow:0 0 0 3px rgba(192,57,43,.2)}
+.form-error{display:flex;gap:8px;align-items:flex-start;background:var(--error-bg);color:var(--error);border-radius:var(--r-md);
+  padding:10px 12px;font-weight:600;font-size:var(--fs-sm)}
+.terms-agreed{margin:6px 0 0;font-size:var(--fs-body);color:var(--ink);animation:pop .25s var(--ease-out)}
+
+.install-info{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:var(--r-card);padding:14px 16px;color:var(--warn)}
+.install-info h3{margin:0 0 8px;font-size:var(--fs-md);font-weight:600}
+.install-info ul{margin:0;padding:0 0 0 20px;display:flex;flex-direction:column;gap:6px;font-size:var(--fs-sm)}
+.install-info li::marker{font-weight:700}
+
+/* contextual order strip (mobile, Review & Pay) */
+.ostrip{
+  position:fixed;left:0;right:0;top:var(--header-h);z-index:30;
+  background:rgba(255,255,255,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid #e9eaec;box-shadow:0 4px 12px rgba(0,0,0,.08);
+  transform:translateY(-110%);opacity:0;transition:transform .35s var(--ease-out),opacity .25s;pointer-events:none;
+}
+.ostrip.is-shown{transform:none;opacity:1;pointer-events:auto}
+.ostrip__in{max-width:600px;margin:0 auto;padding:10px 16px;display:flex;flex-direction:column;gap:8px}
+.ostrip__row{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.ostrip__cell{display:flex;gap:8px;align-items:flex-start;min-width:0}
+.ostrip__cell svg{width:18px;height:18px;flex:none;margin-top:2px}
+.ostrip__cell b{display:block;font-size:var(--fs-sm);color:#16181c;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ostrip__cell span{display:block;font-size:var(--fs-sm);color:#5c6066;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ostrip__cell .big{font-size:var(--fs-md)}
+.ostrip__due span{font-size:var(--fs-sm)}
+.ostrip__due b{color:var(--due);font-size:var(--fs-lg)}
+.ostrip hr{border:0;height:1px;background:#e9eaec;margin:0}
+
+/* desktop order sidebar */
+.co__side{display:none}
+.side-card{background:#fff;border:1px solid var(--border-soft);border-radius:var(--r-card);padding:18px;display:flex;flex-direction:column;gap:14px}
+.side-card h2{margin:0;font-size:var(--fs-h2)}
+.side-line{display:flex;gap:10px;align-items:flex-start;font-size:var(--fs-body)}
+.side-line svg{width:20px;height:20px;flex:none;margin-top:2px}
+.side-line b{display:block;color:var(--ink-strong)}
+.side-line span{color:var(--muted-2)}
+.side-card .muted{color:var(--muted);font-size:var(--fs-sm);margin:0}
+
+/* footer */
+.site-footer{background:var(--footer);color:#fff;text-align:center;padding:24px 16px calc(30px + env(safe-area-inset-bottom,0px));font-size:var(--fs-sm)}
+.site-footer p{margin:0 0 6px}
+.site-footer nav{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap}
+.site-footer a{color:#fff;font-weight:500}
+.site-footer i{width:4px;height:4px;border-radius:50%;background:#fff;display:inline-block}
+
+/* =================================================================
+   07 — Order placed
+================================================================= */
+.done{max-width:600px;margin:0 auto;padding:28px 16px 48px;display:flex;flex-direction:column;gap:24px;align-items:center}
+.done h1{margin:0;color:var(--blue);font-weight:800;font-size:1.5rem;letter-spacing:-.02em;text-align:center}
+.burst{position:relative;width:120px;height:120px;display:grid;place-items:center}
+.burst svg{width:120px;height:120px;animation:boxPop .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes boxPop{0%{transform:scale(.3) rotate(-8deg);opacity:0}100%{transform:none;opacity:1}}
+.burst i{position:absolute;left:50%;top:50%;width:8px;height:12px;border-radius:2px;opacity:0;
+  animation:confetti 1.1s var(--ease-out) forwards;animation-delay:.25s}
+@keyframes confetti{0%{opacity:1;transform:translate(-50%,-50%) rotate(0)}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r))}}
+.done-card{width:100%;background:#fff;border:1px solid rgba(0,0,0,.2);border-radius:var(--r-card);padding:26px 18px;text-align:center;
+  display:flex;flex-direction:column;gap:18px}
+.done-card .ono{margin:0;font-size:var(--fs-md)}
+.done-card .ono b{font-weight:600;margin-right:6px}
+.done-card p{margin:0;font-size:var(--fs-md);line-height:1.5}
+.recap{width:100%;display:flex;flex-direction:column;gap:12px}
+.recap .card{padding:14px 16px}
+.recap h2{margin:0 0 4px;font-size:var(--fs-lg)}
+
+/* =================================================================
+   Modals / sheets
+================================================================= */
+.modal{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px));background:rgba(32,33,36,.55);
+  animation:fadeIn .2s ease}
+.modal[hidden]{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{width:min(100%,440px);max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:auto;background:#fff;border-radius:var(--r-lg);
+  box-shadow:0 20px 60px rgba(0,0,0,.3);animation:sheetIn .3s var(--ease-out)}
+@keyframes sheetIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
+.sheet--pad{padding:24px 20px 20px}
+.x-btn{width:44px;height:44px;border:0;background:none;border-radius:50%;display:grid;place-items:center;color:#444;flex:none}
+.x-btn:hover{background:#f1f1f1}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sheet-head h2{margin:0;font-size:var(--fs-h2);font-weight:600}
+/* google sign-in */
+.gsi{text-align:center;font-family:"Roboto","Montserrat",Arial,sans-serif}
+.gsi .g{width:44px;height:44px;margin:0 auto 14px}
+.gsi h2{margin:0;font-size:1.375rem;font-weight:500;color:#202124}
+.gsi .to{margin:6px 0 20px;color:#5f6368;font-size:var(--fs-body)}
+.acct{width:100%;display:flex;gap:14px;align-items:center;background:#f1f3f4;border:0;border-radius:12px;padding:14px;text-align:left}
+.acct:hover{background:#e8eaed}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;font-size:var(--fs-lg);flex:none}
+.acct b{display:block;color:#202124;font-size:var(--fs-md);font-weight:600}
+.acct span{color:#5f6368;font-size:var(--fs-sm)}
+.gsi .other{display:block;text-align:left;margin:14px 0 0;color:#1a73e8;background:none;border:0;padding:8px 0;font-weight:500;font-size:var(--fs-body)}
+.gsi .perm{text-align:left;color:#3c4043;font-size:var(--fs-sm);margin:12px 0 0}
+.gsi .perm ul{margin:8px 0 0;padding-left:18px}
+.sheet-actions{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:12px}
+.g-btn{min-height:48px;padding:0 24px;border-radius:8px;border:0;background:#1a73e8;color:#fff;font-weight:500;font-size:var(--fs-md)}
+.g-btn:hover{background:#1765cc}
+.g-text{min-height:48px;padding:0 12px;border:0;background:none;color:#1a73e8;font-weight:500;font-size:var(--fs-md)}
+/* apple */
+.asi{text-align:center;font-family:-apple-system,"SF Pro Text","Montserrat",Arial,sans-serif}
+.asi h2{margin:8px 0 6px;font-size:1.375rem;font-weight:700}
+.asi p{margin:0;color:#3c3c43;font-size:var(--fs-body)}
+.asi .opt{display:flex;flex-direction:column;gap:8px;margin:18px 0 0;text-align:left}
+.asi .opt .radio{border:1.5px solid #d1d1d6;border-radius:12px;padding:8px 12px}
+.a-btn{width:100%;min-height:52px;border-radius:12px;border:0;background:#000;color:#fff;font-weight:600;font-size:var(--fs-lg);margin-top:20px}
+.a-text{width:100%;min-height:48px;border:0;background:none;color:#007aff;font-weight:500;font-size:var(--fs-md);margin-top:6px}
+/* terms */
+.terms-box{background:#f7f7f7;border:1px solid #e6e6e6;border-radius:var(--r-md);padding:14px;max-height:220px;overflow:auto;margin-top:16px;
+  font-size:var(--fs-body);color:#444}
+.terms-box h3{margin:0 0 8px;font-size:var(--fs-md);color:#262626}
+.terms-box p{margin:0 0 12px}
+.terms-agree-text{margin:16px 0;font-size:var(--fs-md);color:#262626}
+/* google pay sheet */
+.gpay-top{display:flex;align-items:center;justify-content:center;position:relative;padding:12px 52px;border-bottom:1px solid #e0e0e0;color:#3c4043;font-size:var(--fs-body)}
+.gpay-top .x-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%)}
+.gpay-body{padding:20px 20px 18px;font-family:"Roboto","Montserrat",Arial,sans-serif}
+.gpay-brand{display:flex;justify-content:space-between;align-items:center}
+.gpay-brand svg{height:30px;width:auto}
+.gcard{width:100%;margin:20px 0;display:flex;align-items:center;gap:14px;background:#e8f0fe;border:0;border-radius:12px;padding:14px;text-align:left}
+.mc{width:46px;height:30px;border-radius:4px;background:#111;position:relative;flex:none}
+.mc::before,.mc::after{content:"";position:absolute;top:7px;width:16px;height:16px;border-radius:50%}
+.mc::before{left:9px;background:#eb001b}
+.mc::after{left:19px;background:#f79e1b;mix-blend-mode:screen;opacity:.95}
+.gcard b{display:block;font-weight:500;color:#202124;font-size:var(--fs-md)}
+.gcard span{color:#3c4043;font-size:var(--fs-sm)}
+.gpay-total{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-md);color:#202124}
+.gpay-total strong{font-size:1.625rem;font-weight:400}
+.gpay-cta{width:100%;min-height:52px;border:0;border-radius:999px;background:#1a73e8;color:#fff;font-weight:500;font-size:var(--fs-lg);margin-top:20px}
+.gpay-cta:hover{background:#1765cc}
+.gpay-enc{display:flex;justify-content:center;gap:6px;align-items:center;margin-top:14px;color:#3c4043;font-size:var(--fs-sm)}
+/* apple pay sheet */
+.apay{background:#f2f2f7;font-family:-apple-system,"SF Pro Text","Montserrat",Arial,sans-serif}
+.apay-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 8px}
+.apay-head svg{height:26px;width:auto}
+.apay-rows{margin:8px 14px;background:#fff;border-radius:12px;overflow:hidden}
+.apay-row{display:flex;justify-content:space-between;gap:12px;padding:14px;border-bottom:1px solid #e5e5ea;font-size:var(--fs-body)}
+.apay-row:last-child{border-bottom:0}
+.apay-row span{color:#8a8a8e;min-width:70px}
+.apay-row b{font-weight:500;text-align:right}
+.apay-foot{padding:6px 14px 18px}
+/* processing */
+.processing{position:fixed;inset:0;z-index:70;background:rgba(255,255,255,.92);display:grid;place-items:center;animation:fadeIn .2s}
+.processing__in{display:flex;flex-direction:column;align-items:center;gap:16px;font-size:var(--fs-lg);font-weight:600;color:var(--ink-strong)}
+.processing .spinner{width:48px;height:48px;border-width:4px}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:80;transform:translate(-50%,20px);opacity:0;background:#1f2a30;color:#fff;
+  padding:14px 18px;border-radius:12px;font-weight:600;font-size:var(--fs-body);display:flex;gap:10px;align-items:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);transition:transform .35s var(--ease-out),opacity .3s;max-width:calc(100% - 32px)}
+.toast.is-shown{transform:translate(-50%,0);opacity:1}
+
+/* ---------- Responsive ---------- */
+@media (max-width:359px){
+  .tile-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .date-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .textsize-btn .ts-label{display:none}
+  .logo svg{width:124px}
+}
+@media (min-width:700px){
+  .landing-plans{grid-template-columns:repeat(2,1fr)}
+  .hero{min-height:260px}
+  .hero::before{background:linear-gradient(90deg,rgba(9,16,40,.9) 0%,rgba(9,16,40,.4) 50%,rgba(9,16,40,0) 75%)}
+  .hero__copy{padding:48px 40px}
+  .hero__title{font-size:2.5rem}
+}
+/* =================================================================
+   WEB (≥1024px) — Figma "Checkout flow / Web"
+================================================================= */
+.desk-only{display:none}
+@media (min-width:1024px){
+  :root{--fs-h1:1.625rem;--fs-plan:1.5rem;--fs-h2:1.25rem;--fs-lg:1.125rem;--fs-md:1.0625rem;--fs-body:1rem;--fs-sm:.9375rem;--fs-xs:.8125rem;--tap:48px;--btn-h:56px}
+  .mob-only{display:none!important}
+  .ostrip{display:none}
+  /* header */
+  .site-header{border-bottom:1px solid #e7e7e7}
+  .site-header__inner{max-width:1202px;min-height:49px;padding:0 16px;gap:16px}
+  .logo svg{width:130px}
+  .header-tools{gap:6px}
+  .lang-pill{display:inline-flex}
+  .hphone{display:inline-flex;font-weight:700;font-size:1.125rem;color:#007dba;text-decoration:none;margin-right:10px}
+  .textsize-btn{display:none}
+  body[data-screen=location] .site-header__inner{min-height:55px;max-width:1218px}
+  body[data-screen=location] .logo,body[data-screen=location] .hphone{display:none}
+  body[data-screen=location] .logo-orb{display:inline-flex;border:0;background:none;padding:0}
+  .logo-orb svg{width:44px;height:40px}
+  body[data-screen=location] .mainnav{display:flex;gap:31px;margin:0 auto 0 28px}
+  .mainnav a{font-weight:700;font-size:1.125rem;color:#0075a3;text-decoration:none}
+  .mainnav a:hover{text-decoration:underline}
+  body[data-screen=location] .agent{display:inline-flex;align-items:center;gap:8px;text-decoration:none;margin-right:16px}
+  .agent img{width:24px;height:24px;border-radius:50%}
+  .agent b{display:block;color:#0075a3;font-weight:800;font-size:.9375rem;line-height:1.05}
+  .agent small{display:block;color:#333;font-size:.5625rem;letter-spacing:.08em;text-transform:uppercase}
+  body[data-screen=location] .hlink{display:inline-flex;align-items:center;gap:7px;color:#333;font-weight:600;font-size:1rem;text-decoration:none;margin-right:14px}
+  .hlink span{display:inline-flex}.hlink svg{height:16px;width:auto}
+  body[data-screen=location] .lang-pill{display:inline-flex}
+
+  /* footer */
+  .site-footer{display:flex;align-items:center;justify-content:space-between;min-height:60px;padding:8px max(16px,calc((100% - 1170px)/2));
+    background:#57585c;font-size:1rem;position:relative;overflow:hidden;text-align:left}
+  .site-footer p{margin:0}
+  .site-footer .desk-only{display:inline}
+  .site-footer .forb{display:block;position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:83px;height:40px}
+  .site-footer .forb svg{width:83px;height:40px}
+  .site-footer nav{gap:6px}
+  .site-footer i{width:auto;height:auto;background:none}.site-footer i::before{content:"·"}
+  .site-footer a{font-weight:400}
+
+  /* 01 · landing */
+  body[data-screen=location]{background:#f1f1f1}
+  .landing{display:none}
+  .landing-d{display:block;max-width:1214px;margin:0 auto;padding:12px 16px 64px}
+  .promo{max-width:1063px;margin:0 auto;background:#f68d1f;border-radius:4px;min-height:53px;display:flex;align-items:center;justify-content:center;
+    padding:8px 16px;font-size:1rem;color:#333;text-align:center}
+  .promo a{color:#0b6fa3}
+  .dhero-wrap{position:relative;margin-top:60px}
+  .dhero{position:relative;border-radius:8px;overflow:hidden;background:#03031e;min-height:540px;color:#fff}
+  .dhero__img{position:absolute;right:0;top:0;height:100%;width:51.5%;object-fit:cover;object-position:right center;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16%);mask-image:linear-gradient(90deg,transparent 0,#000 16%)}
+  .dhero__copy{position:relative;padding:34px 31px 40px;max-width:600px}
+  .dhero__kicker{margin:0;font-weight:700;font-size:1.25rem}
+  .dhero__title{margin:4px 0 14px;font-weight:800;font-size:2.25rem;line-height:1.08;color:#f68d1f}
+  .dhero__text{margin:0 0 18px;font-size:1.125rem;line-height:1.33}
+  .dhero ul{list-style:none;padding:0;margin:0 0 20px;display:grid;gap:6px;font-size:1rem}
+  .dhero li{display:flex;gap:8px;align-items:center}
+  .dhero li svg{width:14px;height:14px;flex:none}
+  .dhero__form{width:auto}
+  .dhero__row{display:flex;gap:20px}
+  .dhero__input{width:262px;height:50px;border-radius:4px;border:2px solid #d4d4d4;padding:0 14px;font-size:1rem;color:#222;background:#fff;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+  .dhero__input:focus{outline:none;border-color:#f68d1f}
+  .btn-check{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:50px;width:246px;border:0;border-radius:4px;background:#0075a3;
+    color:#fff;font-weight:600;font-size:1.0625rem;box-shadow:0 3px 0 #00a3e0;transition:background-color .2s,transform .12s}
+  .btn-check:hover{background:#00658d}.btn-check:active{transform:scale(.98)}
+  .btn-check svg{width:18px;height:18px}
+  .dhero__form .suggest{top:56px;right:auto;width:528px}
+  .dhero__form .addr__error{max-width:528px}
+  .dhero__opts{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:1rem}
+  .dhero__opts .biz{width:28px;height:28px;border-radius:50%;background:#8c8f94;display:grid;place-items:center}
+  .dhero__opts label{display:flex;align-items:center;gap:8px;cursor:pointer;margin-right:6px}
+  .dhero__opts input{width:16px;height:16px;margin:0;accent-color:#f68d1f}
+  .dhero__opts .link-btn{color:#fff;font-size:.875rem;min-height:0;padding:0}
+  .dhero-arrow{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:0;background:#c9c9c9;color:#fff;display:grid;place-items:center}
+  .dhero-arrow--prev{left:-49px}.dhero-arrow--next{right:-49px}
+  .dots{display:flex;justify-content:center;gap:6px;margin:22px 0 0}
+  .dots i{width:14px;height:14px;border-radius:50%;background:#c9c9c9}.dots i.on{background:#0075a3}
+  .dcards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+  .dpc{background:#fff;border:2px solid #0b74a5;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+  .dpc--orange{border-color:#e8820f}
+  .dpc__head{background:#0b74a5;color:#fff;font-style:italic;font-weight:800;font-size:1.25rem;text-transform:uppercase;min-height:80px;display:grid;place-items:center}
+  .dpc--orange .dpc__head{background:#e8820f}
+  .dpc__body{padding:30px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .dpc__brand{margin:0;font-size:.875rem;color:#333}
+  .dpc__speed{margin:0;font-weight:800;font-size:2.25rem;color:#0075a3;line-height:1.1}
+  .dpc__sub{margin:0;font-size:1rem;color:#333}
+  .dpc__price{margin:6px 0 0;font-weight:700;font-size:1.5rem;color:#262626}.dpc__price small{font-size:.9375rem;font-weight:500;color:#5f6368}
+  .dpc ul{list-style:none;margin:6px 0 10px;padding:0;display:grid;gap:8px;font-size:.9375rem}
+  .dpc li{display:flex;gap:8px;align-items:center}.dpc li svg{width:14px;height:14px;flex:none}
+  .dpc .btn-check{width:100%;margin-top:auto}
+
+  /* 02 · loading */
+  #screen-loading .wrap{display:none}
+  .sk-web{display:block;max-width:1202px;margin:0 auto;padding:43px 16px 72px}
+  .sk-web .sk-card{padding:24px;gap:24px;border-radius:8px}
+  .sk-web .sk-tiles{display:flex;gap:16px;max-width:700px}
+  .sk-web .sk-tiles .sk{flex:1;height:102px}
+  .sk-web .sk-step{padding:26px 24px;margin-top:16px;border-radius:8px}
+  .sk-web .loading-note{margin-top:20px}
+
+  /* 03–07 · checkout */
+  .co{max-width:1202px;padding:43px 16px 72px;row-gap:27px;column-gap:30px;align-items:start}
+  .co.has-cart{grid-template-columns:minmax(0,770px) 370px;justify-content:center}
+  .connected,.co__main{max-width:none;margin:0}
+  .connected{grid-column:1/-1}
+  .connected h1{font-size:2.25rem;font-weight:800;margin:0 0 8px;line-height:1.28}
+  .connected__addr{margin:0;gap:8px}
+  .connected__addr span{flex:0 1 auto;font-size:1.125rem;color:#333}
+  .connected__addr .link-btn{font-size:1.125rem;font-weight:400;flex-direction:row-reverse;gap:8px;padding:0;min-height:0;color:#007dba}
+  .co.has-cart .co__side{display:block;position:sticky;top:72px}
+  .steps{gap:16px}
+  .install-info{padding:16px 24px}
+  .install-info h3{font-size:1rem}
+  .install-info ul{font-size:.875rem;gap:4px}
+
+  .dcard{background:#fff;border:1px solid #c8c9c7;border-radius:8px;padding:24px;position:relative}
+  .dcard--open{border-color:#d3d3d3;display:flex;flex-direction:column;gap:24px}
+  .d-h{margin:0;font-weight:600;font-size:1.25rem;color:#262626;line-height:1.4}
+  .d-sub{margin:4px 0 0;font-size:1rem;color:#333}
+  .d-stack{display:flex;flex-direction:column;gap:24px}
+  .d-plan{position:relative;display:flex;gap:16px;padding:24px;border-radius:8px;border:1px solid transparent;
+    background:linear-gradient(#fff,#fff) padding-box,linear-gradient(120deg,#f68d1f 55%,#c4176c 80%,#0075a3) border-box}
+  .d-plan__tag{position:absolute;top:-12px;left:16px;background:#f68d1f;color:#262626;font-weight:700;font-size:.8125rem;letter-spacing:.01em;padding:3px 12px;border-radius:8px}
+  .d-plan__l{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:16px;padding-right:16px}
+  .d-plan__name{margin:0;font-weight:700;font-size:1.75rem;color:#0075a3;line-height:1.2}
+  .d-plan__price{margin:8px 0 0;font-weight:600;font-size:1.25rem;color:#262626}
+  .d-plan__blurb{margin:0;font-weight:500;font-size:1rem;color:#262626}
+  .d-plan__r{flex:0 1 650px;min-width:0;padding-left:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:center}
+  .d-pill{display:flex;align-items:center;gap:8px;min-height:44px;padding:10px 12px;background:#f7f7f7;border-radius:8px;font-weight:500;font-size:.875rem;color:#333}
+  .d-pill svg{width:20px;height:20px;flex:none}
+  .d-tiles{display:flex;gap:16px;max-width:867px}
+  .d-tile{flex:1 1 0;min-width:0;min-height:102px;padding:8px 14px;border:1px solid #0075a3;border-radius:8px;background:#fff;color:#0075a3;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;transition:background-color .2s,color .2s,transform .12s}
+  .d-tile:hover{background:#f1f8fb}.d-tile:active{transform:scale(.97)}
+  .d-tile b{font-weight:600;font-size:1.0625rem;line-height:1.25}.d-tile span{font-weight:500;font-size:.9375rem;color:#333}
+  .d-tile[aria-checked=true]{background:#0075a3;border:2px solid #0075a3;color:#fff}.d-tile[aria-checked=true] span{color:#fff}
+  .d-link{align-self:flex-start;background:none;border:0;padding:2px 0;color:#0075a3;font-weight:600;font-size:.875rem;text-decoration:underline;text-underline-offset:3px}
+  .d-btn{align-self:flex-start;width:220px;height:50px;border:0;border-radius:6px;background:#0075a3;color:#fff;font-weight:600;font-size:1rem;
+    box-shadow:0 3px 0 #00a3e0;transition:background-color .2s,transform .12s}
+  .d-btn:hover{background:#00658d}.d-btn:active{transform:scale(.98)}
+  .d-btn.is-busy{opacity:.85;pointer-events:none}
+  .d-sum{display:flex;gap:16px;align-items:flex-start}
+  .d-sum__main{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+  .d-sum__t{margin:0;font-weight:600;font-size:1.25rem;color:#262626}
+  .d-sum__v{margin:0;font-weight:500;font-size:1.25rem;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .d-change{flex:none;background:none;border:0;padding:4px 0;color:#0075a3;font-weight:600;font-size:.875rem;text-decoration:underline;text-underline-offset:3px}
+  .d-planrow{display:flex;gap:24px;align-items:flex-start}
+  .d-planrow > div:first-child{display:flex;flex-direction:column;gap:8px;min-width:0}
+  .d-pills{display:flex;flex-direction:column;gap:8px;width:306px;flex:none}
+  .d-when{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .d-tag{display:inline-flex;align-items:center;height:24px;padding:3px 9px;border-radius:8px;background:rgba(61,174,43,.1);border:1px solid rgba(61,174,43,.5);
+    color:#2c8a1c;font-weight:500;font-size:.875rem;white-space:nowrap}
+  .d-label{margin:0;font-weight:600;font-size:.875rem;color:#666;text-transform:uppercase}
+  .d-rowhead{display:flex;justify-content:space-between;align-items:center}
+  .d-dates{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:16px 12px}
+  .d-date{height:66px;border:1px solid #0075a3;border-radius:4px;background:#fff;color:#0075a3;font-weight:600;font-size:.9375rem;line-height:1.15;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;transition:background-color .2s,color .2s}
+  .d-date:hover{background:#f1f8fb}
+  .d-date[aria-checked=true]{background:#0075a3;color:#fff}
+  .d-times{display:flex;gap:12px;flex-wrap:wrap}
+  .d-time{height:40px;min-width:170px;padding:0 14px;border:1px solid #0075a3;border-radius:4px;background:#fff;color:#0075a3;font-weight:600;font-size:.9375rem}
+  .d-time:hover{background:#f1f8fb}
+  .d-time[aria-checked=true]{background:#0075a3;color:#fff}
+  .d-time[disabled]{border-color:#d0d1cf;background:#f4f4f4;color:#8a8a8a;cursor:not-allowed;text-decoration:line-through}
+  .d-time small{text-decoration:none;display:inline-block;font-size:.75rem;text-transform:uppercase;margin-left:4px}
+  .d-social{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .d-social button{height:42px;border:1px solid #333;border-radius:4px;background:#fff;display:flex;align-items:center;justify-content:center;gap:12px;
+    font-weight:600;font-size:.9375rem;color:#262626;transition:background-color .2s}
+  .d-social button:hover{background:#f6f6f6}
+  .d-social svg{width:20px;height:20px}
+  .d-or{display:flex;align-items:center;gap:24px;color:#666;font-weight:600;font-size:.75rem}
+  .d-or::before,.d-or::after{content:"";flex:1;height:1px;background:#e0e0e0}
+  .d-form{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+  .d-form4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .d-form .span2{grid-column:span 2}
+  .dcard .field{gap:4px}
+  .dcard .field label{font-size:.875rem;font-weight:600;color:#262626}
+  .dcard .field input,.dcard .field select{height:46px;border:1px solid #c8c9c7;border-radius:4px;font-size:1rem;padding:0 14px}
+  .dcard .field input::placeholder{color:#757575}
+  .d-due{display:flex;gap:8px;align-items:center;background:#f7f7f7;border-radius:8px;padding:12px 14px;font-size:1rem;color:#333}
+  .d-due b{color:#3d8b25}
+  .d-pm{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .d-pm .radio{min-height:32px;font-size:1rem;gap:8px}
+  .d-pm .radio .dot{width:24px;height:24px;border-width:2px}
+  .d-orline{display:inline-flex;align-items:center;gap:16px;color:#6b6b6b;font-weight:600;font-size:.875rem}
+  .d-orline::before,.d-orline::after{content:"";width:20px;height:1px;background:#c8c8c8}
+  .d-wallets{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .d-wallet{height:48px;border:1px solid #666;border-radius:8px;background:#fff;display:flex;align-items:center;gap:11px;padding:0 16px;transition:border-color .2s,box-shadow .2s}
+  .d-wallet[aria-checked=true]{border-color:#0075a3;box-shadow:0 0 0 1px #0075a3 inset}
+  .d-wallet svg.wl{height:22px;width:auto}
+  .d-wallet .dot{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid #b5b5b5;display:grid;place-items:center}
+  .d-wallet .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:#007dba;transform:scale(0);transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+  .d-wallet[aria-checked=true] .dot{border-color:#007dba}.d-wallet[aria-checked=true] .dot::after{transform:scale(1)}
+  .d-hr{border:0;height:1px;background:#e6e6e6;margin:0}
+  .d-terms{background:#f8f8f8;border:1px solid rgba(220,220,220,.6);border-radius:16px;padding:16px;height:153px;overflow:auto;font-size:.875rem;color:#5f5f5f;line-height:1.35}
+  .d-terms h3{margin:0 0 8px;font-weight:600;font-size:.9375rem;color:#333}
+  .d-terms p{margin:0}
+  .d-terms h3 + p{margin-top:0}.d-terms p + h3{margin-top:12px}
+  .d-agree{display:flex;flex-direction:column;gap:12px}
+  .d-agree .cbox{gap:10px}
+  .d-agree .cbox .box{width:22px;height:22px;border-width:1.5px;margin-top:2px}
+  .d-agree .cbox .box svg{width:16px;height:16px}
+  .d-agree .cbox__text{font-size:1rem}
+  .d-agree .cbox--sm .cbox__text{font-size:.875rem;line-height:1.45}
+
+  /* cart */
+  .cart{background:#fff;border:1px solid #d3d3d3;border-radius:8px;padding:16px;display:flex;flex-direction:column;color:#333}
+  .cart h2{margin:0;padding:8px 0 0;font-weight:600;font-size:1.25rem;line-height:24px}
+  .cart hr{border:0;height:1px;background:#d3d3d3;margin:20px -16px}
+  .cart hr.hr-in{margin:20px 0}
+  .cart .grp{display:flex;flex-direction:column;gap:8px}
+  .cart h3{margin:0;font-weight:600;font-size:1rem;line-height:24px}
+  .cart .grp > p{margin:0;font-size:1rem;line-height:24px}
+  .cart .grp--gap{gap:12px}
+  .cart .ln{display:flex;justify-content:space-between;gap:12px;font-size:1rem;line-height:24px}
+  .cart .ln b{font-weight:600}
+  .cart .terms h3,.cart .terms > p{font-size:.875rem;line-height:1.3}
+  .cart .tot{font-weight:600}
+  .cart .today{margin-top:24px;background:#f7f7f7;border-radius:8px;padding:16px;display:flex;justify-content:space-between;font-weight:600;font-size:1rem}
+
+  /* 08 · order placed */
+  .done{padding:100px 16px 80px;gap:40px}
+  .done h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .done .recap{display:none}
+  .burst,.burst svg{width:100px;height:100px}
+  .done-card{max-width:536px;padding:18px 24px;gap:12px;border:2px solid #d0d0d0;border-radius:8px}
+  .done-card .ono{font-size:.9375rem}
+  .ono-chip{display:inline-block;background:#f2f2f2;border-radius:4px;padding:2px 6px;font-weight:400}
+  .done-card p{font-size:.9375rem}
+
+  /* compare modal */
+  .sheet--wide{width:min(100%,1160px);padding:28px 32px 32px}
+  .cmp-title{color:#0075a3;font-weight:700;font-size:1.5rem}
+  .cmp{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:22px}
+  .cmp-col{border:1px solid #d3d3d3;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;text-align:center}
+  .cmp-col.is-sel{border:2px solid #0075a3}
+  .cmp-head{background:#4d4d4d;color:#fff;font-weight:700;font-size:1rem;padding:10px}
+  .cmp-col.is-sel .cmp-head{background:#0075a3}
+  .cmp-cell{padding:10px 10px;border-bottom:1px solid #e5e5e5;font-size:.875rem;color:#444}
+  .cmp-price{color:#0075a3;font-weight:700;font-size:1rem}
+  .cmp-dev{font-weight:600;color:#262626}
+  .cmp-use{min-height:110px}
+  .cmp-house{min-height:110px;flex:1;border-bottom:0}
+  .cmp-cta{margin:10px;height:40px;border-radius:4px;border:1px solid #bdbdbd;background:#fff;font-weight:600;font-size:.875rem;color:#262626}
+  .cmp-cta:hover{background:#f3f3f3}
+  .cmp-col.is-sel .cmp-cta{background:#0075a3;border-color:#0075a3;color:#fff}
+}
+@keyframes orbit{from{transform:rotate(-10deg)}to{transform:rotate(12deg)}}
+@keyframes ringPulse{from{transform:scale(.97)}to{transform:scale(1.03)}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body class="show-lang">
+
+<a class="sr-only" href="#main">Skip to content</a>
+
+<header class="site-header" id="siteHeader">
+  <div class="site-header__inner">
+    <button class="menu-btn mob-only" type="button" data-action="menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span></button>
+    <button class="logo" data-action="home" aria-label="EarthLink home" data-svg="logo"></button>
+    <button class="logo-orb desk-only" data-action="home" aria-label="EarthLink home" data-svg="orb"></button>
+    <nav class="mainnav desk-only" aria-label="Main"><a href="#">Residential</a><a href="#">Business</a><a href="#">Resources</a><a href="#">Tools</a><a href="#">Blog</a></nav>
+    <div class="header-tools">
+      <a class="agent desk-only" href="tel:8666180264"><img src="assets/agent.png" alt="" width="24" height="24"><span><b>866-618-0264</b><small>Agents available</small></span></a>
+      <a class="hlink desk-only" href="#"><span data-svg="acct"></span>My Account</a>
+      <a class="hlink desk-only" href="#"><span data-svg="mail"></span>Mail</a>
+      <button class="lang-pill" type="button" role="switch" aria-checked="false" aria-label="Español" data-action="lang"><span>EN</span></button>
+      <a class="hphone desk-only" href="tel:8336015646">833-601-5646</a>
+    </div>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="drawer__scrim" data-action="menu-close"></div>
+  <div class="drawer__panel">
+    <div class="drawer__top"><span data-svg="logo"></span><button class="x-btn" type="button" data-action="menu-close" aria-label="Close menu" data-svg="close"></button></div>
+    <nav aria-label="Main"><a href="#" data-action="menu-close">Residential</a><a href="#" data-action="menu-close">Business</a><a href="#" data-action="menu-close">Resources</a><a href="#" data-action="menu-close">Tools</a><a href="#" data-action="menu-close">Blog</a></nav>
+    <nav class="drawer__sub" aria-label="Account"><a href="#" data-action="menu-close">My Account</a><a href="#" data-action="menu-close">Mail</a></nav>
+    <a class="btn btn-orange drawer__call" href="tel:8666180264">Call 866-618-0264</a>
+  </div>
+</div>
+
+<main id="main">
+
+<!-- ============ 01 · ENTER LOCATION ============ -->
+<section class="screen is-active" id="screen-location" aria-label="Find internet near you">
+  <div class="landing-d desk-only">
+    <p class="promo">Real fiber for $24.95.* Not ‘fiber-powered’ like the other guys. Call&nbsp;<a href="tel:8666180264">866-618-0264</a>.</p>
+    <div class="dhero-wrap">
+      <button class="dhero-arrow dhero-arrow--prev" type="button" aria-label="Previous slide"><svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><path d="M8 1 2 7l6 6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="dhero">
+        <img class="dhero__img" src="assets/hero-fiber.jpg" width="608" height="538" alt="Two people relaxing on a glowing orange fiber Wi-Fi symbol, one working on a laptop">
+        <div class="dhero__copy">
+          <p class="dhero__kicker">Fiber to your door. Not just to your block.</p>
+          <h1 class="dhero__title">100% Fiber Internet.<br>$24.95/mo*</h1>
+          <p class="dhero__text">Other providers run fiber to your neighborhood, then switch to coax the last stretch. We’re 100% all the way in.</p>
+          <ul>
+            <li><span data-svg="bullet"></span>No coaxial handoff - pure fiber from the backbone to your door</li>
+            <li><span data-svg="bullet"></span>Symmetrical speeds — uploads as fast as downloads</li>
+            <li><span data-svg="bullet"></span>Unlimited data, no caps, no overage fees</li>
+            <li><span data-svg="bullet"></span>24/7 real human support — you call, we answer</li>
+          </ul>
+          <form class="addr dhero__form" id="addrFormD" novalidate autocomplete="off">
+            <label class="sr-only" for="addrInputD">Your street address</label>
+            <div class="dhero__row">
+              <input class="dhero__input" id="addrInputD" type="text" placeholder="Enter your address here" aria-autocomplete="list" aria-controls="addrSuggestD" aria-expanded="false" aria-describedby="addrErrorD">
+              <button class="btn-check" type="submit"><span data-svg="goCircle"></span>Check Availability</button>
+            </div>
+            <ul class="suggest" id="addrSuggestD" role="listbox" aria-label="Address suggestions" hidden></ul>
+            <p class="addr__error" id="addrErrorD" role="alert" hidden></p>
+          </form>
+          <div class="dhero__opts">
+            <span class="biz" aria-hidden="true"><svg width="14" height="13" viewBox="0 0 14 13"><rect x="1" y="3.5" width="12" height="8.5" rx="1.2" fill="#fff"/><path d="M4.8 3.5V2a1 1 0 0 1 1-1h2.4a1 1 0 0 1 1 1v1.5" stroke="#fff" stroke-width="1.4" fill="none"/></svg></span>
+            <label><input type="checkbox"> Business Address</label>
+            <button class="link-btn" type="button" data-action="manual-address-d">Enter address Manually</button>
+          </div>
+        </div>
+      </div>
+      <button class="dhero-arrow dhero-arrow--next" type="button" aria-label="Next slide"><svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><path d="M2 1l6 6-6 6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="dots" aria-hidden="true"><i class="on"></i><i></i></div>
+    <div class="dcards" id="landingCardsD"></div>
+  </div>
+  <div class="landing">
+    <div class="hero">
+      <svg class="hero-art" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="hbg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#0b1530"/><stop offset=".55" stop-color="#14183a"/><stop offset="1" stop-color="#2a1630"/>
+          </linearGradient>
+          <filter id="glow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="3.5"/></filter>
+        </defs>
+        <rect width="400" height="220" fill="url(#hbg)"/>
+        <g filter="url(#glow)" opacity=".9">
+          <path class="trail" d="M-20 190 C 90 120, 200 230, 420 110" stroke="#f68d1f" stroke-width="6"/>
+          <path class="trail" d="M-20 170 C 110 110, 210 210, 420 90" stroke="#ff6a2a" stroke-width="3"/>
+          <path class="trail" d="M-20 205 C 120 150, 240 240, 420 140" stroke="#00a3e0" stroke-width="3"/>
+        </g>
+        <path class="trail trail--anim" d="M-20 190 C 90 120, 200 230, 420 110" stroke="#ffd1a0" stroke-width="2"/>
+        <path class="trail trail--anim" style="animation-delay:-2s" d="M-20 205 C 120 150, 240 240, 420 140" stroke="#a6e6ff" stroke-width="1.6"/>
+        <path class="trail trail--anim" style="animation-delay:-4s" d="M-20 170 C 110 110, 210 210, 420 90" stroke="#ffb27a" stroke-width="1.4"/>
+        <g fill="#fff" opacity=".5"><circle cx="300" cy="40" r="1"/><circle cx="340" cy="70" r="1.2"/><circle cx="250" cy="30" r=".8"/><circle cx="370" cy="30" r="1"/></g>
+      </svg>
+      <div class="hero__copy">
+        <p class="hero__eyebrow">EarthLink Fiber</p>
+        <h1 class="hero__title">Fiber internet that keeps up with you</h1>
+        <p class="hero__text">Fast, reliable speeds with no data caps.</p>
+      </div>
+    </div>
+
+    <div class="finder">
+      <a class="btn btn-orange" href="tel:8774600325">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="#262626"/><path d="M15 3.5a6 6 0 0 1 5.5 5.5M15 6.5a3 3 0 0 1 2.5 2.5" stroke="#262626" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Call&nbsp;&nbsp;877-460-0325
+      </a>
+
+      <h2 class="finder__title">
+        <svg width="22" height="28" viewBox="0 0 22 28" aria-hidden="true"><path d="M11 0C4.9 0 0 4.9 0 11c0 8.2 11 17 11 17s11-8.8 11-17C22 4.9 17.1 0 11 0zm0 15a4 4 0 1 1 0-8 4 4 0 0 1 0 8z" fill="#f68d1f"/></svg>
+        Find Internet Near Me
+      </h2>
+
+      <form class="addr" id="addrForm" novalidate autocomplete="off">
+        <label class="sr-only" for="addrInput">Your street address</label>
+        <div class="addr__row">
+          <input class="addr__input" id="addrInput" type="text" inputmode="text" placeholder="Enter your address here"
+                 aria-autocomplete="list" aria-controls="addrSuggest" aria-expanded="false" aria-describedby="addrError">
+          <button class="addr__go" type="submit" aria-label="Check availability at this address">
+            <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="13" fill="#1d1d1d"/><path d="M11.5 8.5 17 14l-5.5 5.5" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <ul class="suggest" id="addrSuggest" role="listbox" aria-label="Address suggestions" hidden></ul>
+        <p class="addr__error" id="addrError" role="alert" hidden></p>
+      </form>
+
+      <label class="check-line"><input type="checkbox" id="bizAddr"> Business Address</label>
+      <button class="link-btn" type="button" data-action="manual-address" aria-expanded="false" aria-controls="manualAddr">Enter address Manually</button>
+
+      <form class="manual-addr manual-form" id="manualAddr" hidden novalidate>
+        <div class="field"><label for="mStreet">Street address</label><input id="mStreet" name="street" autocomplete="address-line1" placeholder="980 Hammond Dr NE"></div>
+        <div class="field"><label for="mApt">Apt / Suite <span style="font-weight:400">(optional)</span></label><input id="mApt" name="apt" autocomplete="address-line2" placeholder="Suite 400"></div>
+        <div class="field field--half"><label for="mCity">City</label><input id="mCity" name="city" autocomplete="address-level2" placeholder="Atlanta"></div>
+        <div class="field field--half"><label for="mZip">ZIP code</label><input id="mZip" name="zip" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="30328"></div>
+        <div class="field"><label for="mState">State</label>
+          <select id="mState" name="state" autocomplete="address-level1"><option>GA</option><option>AL</option><option>FL</option><option>NC</option><option>SC</option><option>TN</option><option>TX</option></select></div>
+        <button class="btn btn-orange" type="submit">Check Availability</button>
+      </form>
+    </div>
+
+    <div class="landing-intro">
+      <h2>Find the perfect fiber internet plan for your needs</h2>
+      <p>Unlock your internet’s potential with gigabit speeds on the largest fiber optic network in the U.S.</p>
+    </div>
+    <div class="landing-plans" id="landingPlans"></div>
+  </div>
+</section>
+
+<!-- ============ 02 · LOADING ============ -->
+<section class="screen" id="screen-loading" aria-label="Loading plans" aria-busy="true">
+  <div class="sk-web desk-only">
+    <div class="sk" style="height:40px;width:900px;max-width:100%"></div>
+    <div class="sk" style="height:20px;width:528px;max-width:100%;margin:14px 0 27px"></div>
+    <div class="sk-card">
+      <div class="sk" style="height:22px;width:220px"></div>
+      <div class="sk" style="height:16px;width:340px;margin-top:-14px"></div>
+      <div class="sk" style="height:150px"></div>
+      <div class="sk-tiles"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+      <div class="sk" style="height:14px;width:190px"></div>
+      <div class="sk" style="height:50px;width:220px"></div>
+    </div>
+    <div class="sk-step"><div class="sk" style="height:20px;width:260px"></div></div>
+    <div class="sk-step"><div class="sk" style="height:20px;width:200px"></div></div>
+    <div class="sk-step"><div class="sk" style="height:20px;width:160px"></div></div>
+    <p class="loading-note"><span class="spinner spinner--blue" style="width:20px;height:20px"></span>Finding plans at your address…</p>
+  </div>
+  <div class="wrap">
+    <div class="sk" style="height:26px;width:84%"></div>
+    <div class="sk" style="height:26px;width:56%;margin-top:12px"></div>
+    <div class="sk" style="height:16px;width:70%;margin-top:14px;margin-bottom:16px"></div>
+    <div class="sk-card">
+      <div class="sk" style="height:18px;width:46%"></div>
+      <div class="sk" style="height:14px;width:70%"></div>
+      <div class="sk" style="height:120px"></div>
+      <div class="sk-row"><div class="sk" style="height:72px"></div><div class="sk" style="height:72px"></div></div>
+      <div class="sk-row"><div class="sk" style="height:72px"></div><div class="sk" style="height:72px"></div></div>
+      <div class="sk" style="height:56px"></div>
+    </div>
+    <div class="sk-step"><div class="sk" style="height:16px;width:60%"></div></div>
+    <div class="sk-step"><div class="sk" style="height:16px;width:60%"></div></div>
+    <div class="sk-step"><div class="sk" style="height:16px;width:60%"></div></div>
+    <p class="loading-note" role="status"><span class="spinner spinner--blue" style="width:20px;height:20px"></span>Finding plans at your address…</p>
+  </div>
+</section>
+
+<!-- ============ 03–06 · CHECKOUT ============ -->
+<section class="screen" id="screen-checkout" aria-label="Checkout">
+  <div class="co">
+    <div class="connected" id="connected">
+      <h1>Great news! EarthLink is already connected at:</h1>
+      <p class="connected__addr"><span id="addrText"></span>
+        <button class="link-btn" type="button" data-action="edit-address">Edit <span data-svg="edit"></span></button></p>
+    </div>
+    <div class="co__main">
+      <div class="steps">
+        <section class="step" id="step-plan" aria-label="Step 1 of 4: Your Internet Plan"></section>
+        <section class="step" id="step-install" aria-label="Step 2 of 4: Installation Appointment"></section>
+        <section class="step" id="step-info" aria-label="Step 3 of 4: Your Information"></section>
+        <section class="step" id="step-pay" aria-label="Step 4 of 4: Review and Pay"></section>
+        <div id="installInfo"></div>
+      </div>
+    </div>
+    <aside class="co__side" id="sideCart" aria-label="Order summary"></aside>
+  </div>
+  <div class="ostrip" id="ostrip" aria-hidden="true"></div>
+</section>
+
+<!-- ============ 07 · ORDER PLACED ============ -->
+<section class="screen" id="screen-done" aria-label="Order placed">
+  <div class="done" id="doneBody"></div>
+</section>
+
+</main>
+
+<footer class="site-footer" id="siteFooter">
+  <p><span class="mob-only">© Copyright 2025 EarthLink LLC<br>All rights reserved</span><span class="desk-only">© 2025 EarthLink, LLC · All rights reserved</span></p>
+  <span class="forb desk-only" data-svg="footerOrb" aria-hidden="true"></span>
+  <nav><a href="#">Privacy Policy</a><i></i><a href="#">Interest-Based Ads</a></nav>
+</footer>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div>
+<div class="processing" id="processing" hidden><div class="processing__in"><span class="spinner spinner--blue"></span><span id="processingText">Placing your order…</span></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="sr-only" id="announcer" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ------------------------------------------------------------------
+   Icons exported from the Figma file (247:8935 "New Design")
+------------------------------------------------------------------- */
+const SVG = {
+  logo:`<svg width="130" height="25" viewBox="0 0 130 25" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M36.2553 7.69664V11.7645H42.8984V14.0456H36.2553V18.1996H44.0176V20.4811H33.7155V5.41553H43.7594V7.69664H36.2553Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M51.2813 10.9355C48.8552 10.9355 47.6804 13.1008 47.6804 14.7975C47.6804 16.7486 49.1777 18.6021 51.2626 18.6021C53.3285 18.6021 54.9201 16.8655 54.9201 14.7975C54.9201 12.4956 53.3091 10.9355 51.2813 10.9355ZM54.9919 20.4811V18.7101H54.9506C54.1266 20.1109 52.6236 20.7695 51.0793 20.7695C47.2284 20.7695 45.0255 17.8251 45.0255 14.8183C45.0255 12.0386 46.9816 8.76489 51.0793 8.76489C52.6648 8.76489 54.1266 9.4235 54.9506 10.6794H54.9919V9.07339H57.3157V20.4811H54.9919Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M61.5825 11.3126C62.3574 9.76295 63.7349 8.94507 65.5428 8.94507V11.3126C63.2398 11.1838 61.7763 12.5395 61.5825 14.4977V20.4812H59.1077V9.03152H61.5825V11.3126Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M72.2284 17.9891C71.6638 18.2219 71.1224 18.3503 70.7867 18.3503C70.0118 18.3503 69.5599 17.9848 69.5599 16.8006V11.3125H72.939V9.10282H69.5599V5.41553H67.1062V17.2526C67.1062 19.599 68.5917 20.5887 70.3135 20.5887C70.9635 20.5887 71.6038 20.4503 72.2284 20.1981V17.9891Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M85.6572 13.3569V20.4807H83.182V14.0456C83.182 12.3241 82.1489 11.2699 80.427 11.2699C78.3827 11.2907 77.1558 12.8188 77.1558 14.8424V20.4807H74.6803V4.15283H77.1558V11.2699C77.9734 9.65562 79.4369 8.94499 81.3956 8.94499C84.0644 8.94499 85.6572 10.6238 85.6572 13.3569Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M96.5904 18.1779V20.4809H87.5295V5.41528H90.0692V18.1779H96.5904Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M97.9208 20.4809H100.374V9.03125H97.9208V20.4809Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M113.152 13.357V20.4808H110.677V14.0457C110.677 12.3242 109.644 11.2699 107.922 11.2699C106.028 11.2907 104.844 12.6037 104.672 14.3905V20.4808H102.197V9.03116H104.672V11.2265C105.49 9.63381 106.953 8.94507 108.89 8.94507C111.559 8.94507 113.152 10.6239 113.152 13.357Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M117.349 17.2742V20.4809H114.874V5.41528H117.349V14.1537L122.407 9.03119H125.248L121.008 13.465L125.571 20.4809H122.644L119.286 15.2299L117.349 17.2742Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M100.59 6.55241C100.59 7.34877 99.9439 7.99447 99.1476 7.99447C98.3516 7.99447 97.7059 7.34877 97.7059 6.55241C97.7059 5.75605 98.3516 5.11035 99.1476 5.11035C99.9439 5.11035 100.59 5.75605 100.59 6.55241Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M127.589 7.15357C127.809 7.15357 127.939 7.04057 127.939 6.84148C127.939 6.64203 127.809 6.53441 127.589 6.53441H127.234V7.15357H127.589ZM127.976 7.38996L128.358 7.97109H127.911L127.632 7.4653H127.589H127.234V7.97109H126.846V6.22233H127.589C128.051 6.22233 128.31 6.4433 128.31 6.82534C128.31 7.09976 128.192 7.29347 127.976 7.38996ZM128.971 7.14783C128.971 6.36797 128.347 5.72729 127.54 5.72729C126.728 5.72729 126.103 6.37873 126.103 7.15895C126.103 7.93881 126.723 8.57948 127.53 8.57948C128.347 8.57948 128.971 7.92805 128.971 7.14783ZM129.359 7.14783C129.359 8.14364 128.557 8.98305 127.53 8.98305C126.507 8.98305 125.716 8.15404 125.716 7.15895C125.716 6.16314 126.513 5.32373 127.54 5.32373C128.563 5.32373 129.359 6.147 129.359 7.14783Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4.49409 14.6193C4.33302 13.9256 4.24514 13.2038 4.24514 12.4613C4.24514 7.20599 8.50531 2.94582 13.7606 2.94582C15.0408 2.94582 16.2612 3.20051 17.3761 3.65896C18.2812 3.05882 19.2849 2.43034 20.3076 1.85889C18.4046 0.681212 16.1626 0 13.7606 0C6.87851 0 1.29932 5.57919 1.29932 12.4613C1.29932 14.1426 1.63436 15.745 2.23809 17.2086C2.91105 16.3749 3.66724 15.5072 4.49409 14.6193Z" fill="#F68C1E"/><path fill-rule="evenodd" clip-rule="evenodd" d="M22.0016 3.17955C21.4779 3.45397 20.9072 3.77718 20.3056 4.13949C19.9903 4.32961 19.6638 4.53229 19.3302 4.74573C21.7204 6.47405 23.2758 9.28606 23.2758 12.4611C23.2758 17.7164 19.0156 21.9765 13.7607 21.9765C10.0444 21.9765 6.82557 19.8461 5.2594 16.7399C4.59612 17.4886 3.92352 18.29 3.24518 19.1498C5.45705 22.6204 9.33985 24.9224 13.7607 24.9224C20.6428 24.9224 26.222 19.3432 26.222 12.4611C26.222 8.7609 24.6088 5.4377 22.0479 3.15552C22.0325 3.16377 22.0171 3.17166 22.0016 3.17955Z" fill="#F68C1E"/><path fill-rule="evenodd" clip-rule="evenodd" d="M20.3054 4.13973C20.907 3.77706 21.4777 3.45421 22.0015 3.17979C23.6964 2.2898 25.0366 1.81916 25.8774 1.81916C26.1838 1.81916 26.3933 1.8823 26.5005 2.00605C26.7631 2.31169 26.6591 3.57008 24.6205 6.34586C24.7851 6.63786 24.9387 6.9374 25.08 7.24338C27.2847 4.36357 27.9996 2.36262 27.1853 1.41668C26.9002 1.0845 26.46 0.91626 25.8774 0.91626C24.0003 0.91626 20.2111 2.86519 15.8566 6.02445C16.0696 6.23861 16.2483 6.48612 16.3882 6.75732C17.7273 5.78554 19.0965 4.86757 20.3054 4.13973Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M6.22013 22.3823C4.21775 23.5004 2.5827 24.1167 1.61415 24.1167C1.33865 24.1167 1.13669 24.0446 1.01401 23.9022C0.710175 23.5488 1.02872 21.9697 3.17638 19.237C6.19897 15.3901 9.11107 12.7165 11.5611 10.6083C11.6935 10.4942 12.2761 10.0053 12.7471 9.61286C13.0362 9.80801 13.3852 9.92244 13.7605 9.92244C14.762 9.92244 15.5741 9.1103 15.5741 8.10875C15.5741 7.10755 14.762 6.29541 13.7605 6.29541C12.7593 6.29541 11.9471 7.10755 11.9471 8.10875C11.9471 8.40613 12.0257 8.68234 12.1523 8.92986C11.7104 9.29791 11.182 9.74129 11.0543 9.85141C7.54955 12.8675 4.49648 16.006 2.45751 18.6889C0.2094 21.6469 -0.486519 23.5452 0.329572 24.4915C0.623006 24.8334 1.04307 24.9999 1.61415 24.9999C2.80475 24.9999 4.72211 24.2781 7.01327 22.9677L7.03694 22.9541C6.75678 22.7743 6.48451 22.5835 6.22013 22.3823Z" fill="#4D5055"/></svg>`,
+  edit:`<svg width="18" height="16" viewBox="0 0 18 16" fill="none" aria-hidden="true"><path d="M12.5821 2.59687L15.4008 5.41563C15.5196 5.53438 15.5196 5.72812 15.4008 5.84687L8.5758 12.6719L5.6758 12.9937C5.2883 13.0375 4.96018 12.7094 5.00393 12.3219L5.3258 9.42188L12.1508 2.59687C12.2696 2.47812 12.4633 2.47812 12.5821 2.59687Z" fill="#007DB0"/><path d="M17.6445 1.88125L16.1195 0.35625C15.6445 -0.11875 14.8727 -0.11875 14.3945 0.35625L13.2883 1.4625C13.1695 1.58125 13.1695 1.775 13.2883 1.89375L16.107 4.7125C16.2258 4.83125 16.4195 4.83125 16.5383 4.7125L17.6445 3.60625C18.1195 3.12812 18.1195 2.35625 17.6445 1.88125Z" fill="#007DB0"/><path d="M12 10.8156V13.9968H2V3.99683H9.18125C9.28125 3.99683 9.375 3.9562 9.44687 3.88745L10.6969 2.63745C10.9344 2.39995 10.7656 1.99683 10.4312 1.99683H1.5C0.671875 1.99683 0 2.6687 0 3.49683V14.4968C0 15.325 0.671875 15.9968 1.5 15.9968H12.5C13.3281 15.9968 14 15.325 14 14.4968V9.56558C14 9.2312 13.5969 9.06558 13.3594 9.29995L12.1094 10.55C12.0406 10.6218 12 10.7156 12 10.8156Z" fill="#007DB0"/></svg>`,
+  chevron:`<svg width="12" height="6" viewBox="0 0 10 5" fill="none" aria-hidden="true"><path d="M0 0L5 5L10 0H0Z" fill="#0075A3"/></svg>`,
+  check:`<svg class="tick" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8Z" fill="#0075A3"/><path d="M4 8.25L7 11.25L12 4.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  doneDot:`<svg class="done-dot" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8Z" fill="#1e7a38"/><path d="M4 8.25L7 11.25L12 4.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  lock:`<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect width="16" height="16" rx="8" fill="#0075A3"/><path d="M6.66675 10.6667C6.66675 11.4001 7.26008 12.0001 8.00008 12.0001C8.74008 12.0001 9.33341 11.4001 9.33341 10.6667C9.33341 9.9334 8.73341 9.3334 8.00008 9.3334C7.26675 9.3334 6.66675 9.9334 6.66675 10.6667ZM11.7734 8.2934C10.7667 7.28673 9.42675 6.7334 8.00008 6.7334C6.57341 6.7334 5.23341 7.28673 4.22675 8.2934L5.16675 9.2334C5.92008 8.48007 6.92675 8.06007 7.99341 8.06007C9.06008 8.06007 10.0667 8.4734 10.8201 9.2334L11.7601 8.2934H11.7734Z" fill="white"/><path d="M3.28669 7.32011C4.54669 6.06011 6.22003 5.36678 8.00003 5.36678C9.78003 5.36678 11.4534 6.06011 12.7134 7.32011L13.66 6.38011C12.1467 4.86678 10.14 4.03345 8.00003 4.03345C5.86003 4.03345 3.85336 4.86678 2.34003 6.38011L3.28669 7.32011Z" fill="white"/></svg>`,
+  gauge:`<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.67" fill="white"/><path d="M0 8C0 5.87827 0.842855 3.84344 2.34315 2.34315C3.84344 0.842855 5.87827 0 8 0C10.1217 0 12.1566 0.842855 13.6569 2.34315C15.1571 3.84344 16 5.87827 16 8C16 10.1217 15.1571 12.1566 13.6569 13.6569C12.1566 15.1571 10.1217 16 8 16C5.87827 16 3.84344 15.1571 2.34315 13.6569C0.842855 12.1566 0 10.1217 0 8ZM9 3C9 2.73478 8.89464 2.48043 8.70711 2.29289C8.51957 2.10536 8.26522 2 8 2C7.73478 2 7.48043 2.10536 7.29289 2.29289C7.10536 2.48043 7 2.73478 7 3C7 3.26522 7.10536 3.51957 7.29289 3.70711C7.48043 3.89464 7.73478 4 8 4C8.26522 4 8.51957 3.89464 8.70711 3.70711C8.89464 3.51957 9 3.26522 9 3ZM8 13C9.10312 13 10 12.1031 10 11C10 10.4563 9.78438 9.96562 9.43437 9.60625L11.4375 5.05312C11.6031 4.675 11.4313 4.23125 11.0531 4.06563C10.675 3.9 10.2312 4.07187 10.0656 4.45L8.05937 9H8C6.89687 9 6 9.89688 6 11C6 12.1031 6.89687 13 8 13ZM5.5 4.5C5.5 4.23478 5.39464 3.98043 5.20711 3.79289C5.01957 3.60536 4.76522 3.5 4.5 3.5C4.23478 3.5 3.98043 3.60536 3.79289 3.79289C3.60536 3.98043 3.5 4.23478 3.5 4.5C3.5 4.76522 3.60536 5.01957 3.79289 5.20711C3.98043 5.39464 4.23478 5.5 4.5 5.5C4.76522 5.5 5.01957 5.39464 5.20711 5.20711C5.39464 5.01957 5.5 4.76522 5.5 4.5ZM3 9C3.26522 9 3.51957 8.89464 3.70711 8.70711C3.89464 8.51957 4 8.26522 4 8C4 7.73478 3.89464 7.48043 3.70711 7.29289C3.51957 7.10536 3.26522 7 3 7C2.73478 7 2.48043 7.10536 2.29289 7.29289C2.10536 7.48043 2 7.73478 2 8C2 8.26522 2.10536 8.51957 2.29289 8.70711C2.48043 8.89464 2.73478 9 3 9ZM14 8C14 7.73478 13.8946 7.48043 13.7071 7.29289C13.5196 7.10536 13.2652 7 13 7C12.7348 7 12.4804 7.10536 12.2929 7.29289C12.1054 7.48043 12 7.73478 12 8C12 8.26522 12.1054 8.51957 12.2929 8.70711C12.4804 8.89464 12.7348 9 13 9C13.2652 9 13.5196 8.89464 13.7071 8.70711C13.8946 8.51957 14 8.26522 14 8Z" fill="#0075A3"/></svg>`,
+  dateArrow:`<svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="0.5" y="0.5" width="27" height="27" rx="13.5" fill="white" stroke="#C8C9C7"/><path d="M11.75 9.5L16.25 14L11.75 18.5" stroke="#0075A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  dateArrowBack:`<svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="0.5" y="0.5" width="27" height="27" rx="13.5" fill="white" stroke="#C8C9C7"/><path d="M16.25 9.5L11.75 14L16.25 18.5" stroke="#0075A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  google:`<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M18.1719 8.3678H17.5006V8.33322H10V11.6668H14.71C14.0228 13.6074 12.1764 15.0004 10 15.0004C7.23854 15.0004 4.99962 12.7615 4.99962 10C4.99962 7.23854 7.23854 4.99962 10 4.99962C11.2747 4.99962 12.4344 5.48049 13.3174 6.26597L15.6746 3.90869C14.1862 2.5215 12.1952 1.66602 10 1.66602C5.39756 1.66602 1.66602 5.39756 1.66602 10C1.66602 14.6025 5.39756 18.334 10 18.334C14.6025 18.334 18.334 14.6025 18.334 10C18.334 9.44122 18.2765 8.89576 18.1719 8.3678Z" fill="#FFC107"/><path d="M2.62695 6.12163L5.36515 8.13002C6.10606 6.29542 7.90041 5.00012 10.0002 5.00012C11.2749 5.00012 12.4346 5.48107 13.3176 6.26667L15.675 3.90904C14.1865 2.52163 12.1954 1.66602 10.0002 1.66602C6.79905 1.66602 4.02293 3.47352 2.62695 6.12163Z" fill="#FF3D00"/><path d="M10.0009 18.3339C12.1534 18.3339 14.1093 17.5102 15.588 16.1707L13.0088 13.9882C12.1442 14.6461 11.0874 15.0019 10.0009 15.0007C7.83335 15.0007 5.99291 13.6186 5.29957 11.6899L2.58203 13.7836C3.96122 16.4823 6.76208 18.3339 10.0009 18.3339Z" fill="#4CAF50"/><path d="M18.1719 8.36856H17.5006V8.33398H10V11.6669H14.71C14.3813 12.5902 13.7892 13.3971 13.0069 13.9878L13.0082 13.9869L15.5875 16.1691C15.405 16.3349 18.334 14.1665 18.334 10.0004C18.334 9.44175 18.2765 8.89641 18.1719 8.36856Z" fill="#1976D2"/></svg>`,
+  apple:`<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.2093 16.9001C13.3926 17.6918 12.5008 17.5668 11.6425 17.1918C10.7341 16.8084 9.90068 16.7918 8.94229 17.1918C7.74221 17.7084 7.10884 17.5584 6.39213 16.9001C2.32522 12.7084 2.92525 6.32503 7.5422 6.09169C8.66727 6.15003 9.45065 6.70836 10.109 6.75836C11.0924 6.55836 12.0341 5.98336 13.0842 6.05836C14.3426 6.15836 15.2927 6.65836 15.9177 7.55837C13.3176 9.11671 13.9343 12.5417 16.3177 13.5001C15.8427 14.7501 15.226 15.9918 14.2009 16.9084L14.2093 16.9001ZM10.0257 6.04169C9.90068 4.18335 11.4091 2.65 13.1425 2.5C13.3842 4.65002 11.1924 6.25003 10.0257 6.04169Z" fill="#333333"/></svg>`,
+  gpay:`<svg class="wl" width="51" height="20" viewBox="0 0 51 20" fill="none" aria-hidden="true"><path d="M36.4411 5.3982C37.8156 5.3982 38.8778 5.77458 39.6901 6.52732C40.5023 7.27997 40.8771 8.2836 40.8771 9.53811V15.5597H39.1277V14.1799H39.0652C38.3155 15.309 37.2533 15.8735 36.0037 15.8735C34.9415 15.8735 34.0043 15.5598 33.2546 14.9326C32.5673 14.3054 32.1299 13.4272 32.1299 12.4863C32.1299 11.4827 32.5048 10.6672 33.2546 10.04C34.0043 9.41271 35.0665 9.16183 36.3161 9.16183C37.4407 9.16183 38.3155 9.35007 39.0027 9.78909V9.35007C39.0027 8.76458 38.7851 8.17918 38.3496 7.79771L38.2529 7.71919C37.7531 7.28007 37.1283 7.02919 36.4411 7.02919C35.3789 7.02919 34.5667 7.46827 34.0043 8.34644L32.3799 7.34262C33.3795 6.02536 34.6916 5.3982 36.4411 5.3982ZM27.6313 1.13281C28.7524 1.13281 29.8179 1.52448 30.6697 2.25487L30.8179 2.38722C31.6926 3.13997 32.1299 4.26909 32.1299 5.46085C32.1299 6.65262 31.6926 7.71899 30.8179 8.53438C29.9432 9.34977 28.881 9.78889 27.6313 9.78889L24.6323 9.72615V15.5597H22.7578V1.13281H27.6313ZM36.6909 10.6671C35.9412 10.6671 35.3164 10.8553 34.8166 11.2316C34.3167 11.5452 34.0668 11.9843 34.0668 12.5488C34.0668 13.0507 34.3168 13.4897 34.6916 13.7407C35.129 14.0543 35.6288 14.2424 36.1287 14.2424C36.8284 14.2424 37.5282 13.9692 38.0756 13.4738L38.1905 13.3643C38.8153 12.7998 39.1277 12.1098 39.1277 11.357C38.5654 10.918 37.7531 10.667 36.691 10.667M27.7564 2.88899H24.6324V7.90732H27.7564C28.4437 7.90732 29.131 7.65644 29.5684 7.15468C30.568 6.21379 30.568 4.64566 29.6309 3.70468L29.5684 3.64193C29.0685 3.14017 28.4437 2.82654 27.7563 2.88928M50.999 5.71183L44.8135 19.9506H42.9391L45.2508 14.9953L41.1896 5.77458H43.189L46.1255 12.8625H46.188L49.0621 5.77458H50.999V5.71183Z" fill="#5F6368"/><path d="M17.1966 8.47087C17.1966 7.90636 17.1341 7.34185 17.0716 6.77734H9.26172V9.97636H13.6978C13.5104 10.9799 12.948 11.9208 12.0733 12.4854V14.5553H14.76C16.322 13.1126 17.1967 10.9799 17.1967 8.47097" fill="#4285F4"/><path d="M9.26328 16.5632C11.5125 16.5632 13.3869 15.8105 14.7615 14.556L12.0749 12.4861C11.3251 12.9878 10.3879 13.3015 9.26328 13.3015C7.13887 13.3015 5.26445 11.8588 4.63965 9.85156H1.89062V11.9842C3.32764 14.8069 6.13926 16.5632 9.26328 16.5632Z" fill="#34A853"/><path d="M4.63943 9.8512C4.26462 8.84757 4.26462 7.71855 4.63943 6.65218V4.51953H1.89041C0.703198 6.84041 0.703198 9.60032 1.89041 11.9838L4.63943 9.8512Z" fill="#FBBC04"/><path d="M9.26338 3.26513C10.4505 3.26513 11.5751 3.70425 12.4499 4.51964L14.8241 2.13611C13.3245 0.756112 11.3252 -0.0592803 9.32578 0.00336671C6.20176 0.00336671 3.32773 1.75974 1.95312 4.58239L4.70225 6.71503C5.26455 4.70778 7.13896 3.26513 9.26338 3.26513Z" fill="#EA4335"/></svg>`,
+  applepay:`<svg class="wl" width="50" height="20" viewBox="0 0 50 20" fill="none" aria-hidden="true"><path d="M9.95314 2.60563C9.37892 3.27861 8.45998 3.80961 7.54114 3.73368C7.42629 2.82373 7.8761 1.85672 8.40256 1.25946C8.97678 0.567522 9.98185 0.0745358 10.7954 0.0366211C10.8911 0.984583 10.5178 1.91359 9.95314 2.60563ZM10.786 3.91387C9.45549 3.83804 8.31652 4.66269 7.68479 4.66269C7.04358 4.66269 6.07678 3.95179 5.02395 3.97074C3.6553 3.9897 2.38226 4.75747 1.68353 5.98041C0.247792 8.42619 1.31029 12.0475 2.69808 14.0382C3.37767 15.0241 4.19124 16.1048 5.26321 16.0669C6.27785 16.0289 6.67981 15.4128 7.905 15.4128C9.13967 15.4128 9.49386 16.0669 10.5658 16.0479C11.6761 16.0289 12.3748 15.0621 13.0544 14.0761C13.8296 12.9576 14.1455 11.8673 14.1647 11.8105C14.1455 11.7915 12.0207 10.9858 12.0016 8.5589C11.9824 6.53027 13.6766 5.56335 13.7531 5.50648C12.7959 4.10345 11.3028 3.95179 10.786 3.91387ZM18.4719 1.16468V15.9437H20.7881V10.891H23.9945C26.9233 10.891 28.9812 8.90032 28.9812 6.01842C28.9812 3.13662 26.9616 1.16477 24.0711 1.16477L18.4719 1.16468ZM20.7881 3.09861H23.4585C25.4685 3.09861 26.6171 4.16032 26.6171 6.02781C26.6171 7.89529 25.4685 8.96657 23.4489 8.96657H20.7881V3.09861ZM33.2117 16.0574C34.6666 16.0574 36.0161 15.3275 36.6287 14.1709H36.6765V15.9436H38.8206V8.58733C38.8206 6.45444 37.0977 5.07984 34.4463 5.07984C31.9865 5.07984 30.1679 6.4734 30.1009 8.38828H32.1876C32.3598 7.47823 33.2116 6.88098 34.3794 6.88098C35.796 6.88098 36.5904 7.5351 36.5904 8.73909V9.55425L33.6998 9.72487C31.0102 9.886 29.5554 10.9762 29.5554 12.8723C29.5554 14.7871 31.0581 16.0574 33.2117 16.0574ZM33.8338 14.3036C32.5992 14.3036 31.8142 13.716 31.8142 12.8153C31.8142 11.8864 32.5704 11.346 34.0157 11.2607L36.5904 11.0996V11.9337C36.5904 13.3178 35.4036 14.3036 33.8338 14.3036M41.6825 19.9631C43.9413 19.9631 45.0037 19.11 45.9322 16.5219L49.9999 5.22202H47.6453L44.9175 13.9528H44.8697L42.1418 5.22202H39.7203L43.6445 15.9815L43.4339 16.6357C43.0798 17.7448 42.5055 18.1714 41.4814 18.1714C41.2996 18.1714 40.9455 18.1524 40.8018 18.1335V19.9062C40.9358 19.9441 41.51 19.9631 41.6824 19.9631" fill="black"/></svg>`,
+  boxTick:`<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.22103 14.2695L4.66309 10.7116L6.08626 9.28841L8.22103 11.4232L13.9137 5.73047L15.3369 7.15365L8.22103 14.2695Z" fill="#4A90E2" transform="translate(0 0)"/></svg>`,
+  wifi:`<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.39551 5.64484C5.92196 2.11839 10.9597 2.11839 14.4862 5.64484M4.61213 8.26448C6.82876 6.24937 10.0529 6.24937 12.2696 8.26448M6.82876 10.7834C7.73556 9.97733 9.14614 9.97733 10.0529 10.7834M8.44085 12.8992V13" stroke="#0075A3" stroke-width="1.51134" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  cal:`<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1 6.5H13M4.5 1V4.5M9.5 1V4.5M2 3H12C12.6667 3 13 3.33333 13 4V12C13 12.6667 12.6667 13 12 13H2C1.33333 13 1 12.6667 1 12V4C1 3.33333 1.33333 3 2 3Z" stroke="#0075A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  user:`<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1 12.5C1 9.7 3.5 8.3 6.5 8.3C9.5 8.3 12 9.7 12 12.5M6.5 1C8.16 1 9.5 2.34 9.5 4C9.5 5.66 8.16 7 6.5 7C4.84 7 3.5 5.66 3.5 4C3.5 2.34 4.84 1 6.5 1Z" stroke="#0075A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  pin:`<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 15s5-4.6 5-8.5A5 5 0 0 0 3 6.5C3 10.4 8 15 8 15z" stroke="#0075A3" stroke-width="1.5"/><circle cx="8" cy="6.5" r="1.8" stroke="#0075A3" stroke-width="1.5"/></svg>`,
+  orb:`<svg viewBox="0 0 157 142" fill="none" aria-hidden="true"><path fill-rule="evenodd" d="M26.15 83.25C25.24 79.3 24.74 75.19 24.74 70.96 24.74 41.04 48.94 16.78 78.8 16.78c7.27 0 14.21 1.45 20.54 4.06 5.14-3.42 10.85-7 16.66-10.25C105.19 3.88 92.45 0 78.8 0 39.7 0 8 31.77 8 70.96 8 80.54 9.9 89.67 13.33 98c3.83-4.75 8.12-9.69 12.82-14.75Z" fill="#F68C1E"/><path fill-rule="evenodd" d="M125.2 18c-.09.05-.18.09-.26.14-2.99 1.56-6.24 3.4-9.67 5.47-1.8 1.08-3.66 2.24-5.56 3.45 13.63 9.85 22.5 25.87 22.5 43.95 0 29.94-24.29 54.21-54.25 54.21-21.19 0-39.54-12.14-48.47-29.83-3.78 4.26-7.62 8.83-11.48 13.73C30.61 128.89 52.75 142 77.95 142 117.19 142 149 110.22 149 71.01 149 49.93 139.8 31 125.2 18Z" fill="#F68C1E"/><path fill-rule="evenodd" d="M115.58 23.34c3.46-2.06 6.74-3.9 9.75-5.46 9.74-5.06 17.45-7.74 22.28-7.74 1.76 0 2.97.36 3.58 1.06 1.51 1.74.91 8.9-10.81 24.69.95 1.66 1.83 3.37 2.64 5.11 12.67-16.39 16.78-27.77 12.1-33.15C153.49 5.96 150.96 5 147.61 5 136.82 5 115.03 16.09 90 34.06c1.22 1.22 2.25 2.63 3.06 4.17 7.7-5.53 15.57-10.75 22.52-14.89Z" fill="#4D5055"/><path fill-rule="evenodd" d="M35.55 127.03c-11.45 6.39-20.79 9.92-26.33 9.92-1.57 0-2.73-.41-3.43-1.23-1.74-2.02.08-11.05 12.36-26.69C35.42 87.03 52.07 71.73 66.07 59.67c.76-.65 4.09-3.45 6.77-5.69a10.33 10.33 0 0 0 5.79 1.77C84.36 55.75 89 51.1 89 45.37 89 39.65 84.36 35 78.64 35c-5.72 0-10.36 4.65-10.36 10.37 0 1.7.45 3.28 1.17 4.7-2.53 2.1-5.55 4.64-6.27 5.27-20.03 17.25-37.48 35.21-49.13 50.56C1.2 122.82-2.78 133.68 1.88 139.09 3.56 141.05 5.96 142 9.22 142c6.81 0 17.76-4.13 30.86-11.62l.13-.08a68 68 0 0 1-4.66-3.27Z" fill="#4D5055"/></svg>`,
+  loader:`<svg viewBox="0 0 157 142" fill="none" aria-hidden="true"><g class="ring"><path fill-rule="evenodd" d="M26.15 83.25C25.24 79.3 24.74 75.19 24.74 70.96 24.74 41.04 48.94 16.78 78.8 16.78c7.27 0 14.21 1.45 20.54 4.06 5.14-3.42 10.85-7 16.66-10.25C105.19 3.88 92.45 0 78.8 0 39.7 0 8 31.77 8 70.96 8 80.54 9.9 89.67 13.33 98c3.83-4.75 8.12-9.69 12.82-14.75Z" fill="#F68C1E"/><path fill-rule="evenodd" d="M125.2 18c-.09.05-.18.09-.26.14-2.99 1.56-6.24 3.4-9.67 5.47-1.8 1.08-3.66 2.24-5.56 3.45 13.63 9.85 22.5 25.87 22.5 43.95 0 29.94-24.29 54.21-54.25 54.21-21.19 0-39.54-12.14-48.47-29.83-3.78 4.26-7.62 8.83-11.48 13.73C30.61 128.89 52.75 142 77.95 142 117.19 142 149 110.22 149 71.01 149 49.93 139.8 31 125.2 18Z" fill="#F68C1E"/></g><g class="orbit"><path fill-rule="evenodd" d="M115.58 23.34c3.46-2.06 6.74-3.9 9.75-5.46 9.74-5.06 17.45-7.74 22.28-7.74 1.76 0 2.97.36 3.58 1.06 1.51 1.74.91 8.9-10.81 24.69.95 1.66 1.83 3.37 2.64 5.11 12.67-16.39 16.78-27.77 12.1-33.15C153.49 5.96 150.96 5 147.61 5 136.82 5 115.03 16.09 90 34.06c1.22 1.22 2.25 2.63 3.06 4.17 7.7-5.53 15.57-10.75 22.52-14.89Z" fill="#4D5055"/><path fill-rule="evenodd" d="M35.55 127.03c-11.45 6.39-20.79 9.92-26.33 9.92-1.57 0-2.73-.41-3.43-1.23-1.74-2.02.08-11.05 12.36-26.69C35.42 87.03 52.07 71.73 66.07 59.67c.76-.65 4.09-3.45 6.77-5.69a10.33 10.33 0 0 0 5.79 1.77C84.36 55.75 89 51.1 89 45.37 89 39.65 84.36 35 78.64 35c-5.72 0-10.36 4.65-10.36 10.37 0 1.7.45 3.28 1.17 4.7-2.53 2.1-5.55 4.64-6.27 5.27-20.03 17.25-37.48 35.21-49.13 50.56C1.2 122.82-2.78 133.68 1.88 139.09 3.56 141.05 5.96 142 9.22 142c6.81 0 17.76-4.13 30.86-11.62l.13-.08a68 68 0 0 1-4.66-3.27Z" fill="#4D5055"/></g></svg>`,
+  footerOrb:`<svg viewBox="0 0 83 40" fill="none" aria-hidden="true"><path fill-rule="evenodd" d="M13.48 43.86a28.6 28.6 0 0 1-.75-6.48c0-15.76 12.78-28.54 28.55-28.54 3.84 0 7.5.76 10.85 2.14 2.71-1.8 5.72-3.69 8.79-5.4A37.2 37.2 0 0 0 41.28 0C20.64 0 3.9 16.74 3.9 37.38c0 5.05 1 9.86 2.81 14.25 2.02-2.5 4.29-5.1 6.77-7.77" fill="#F68C1E"/><path fill-rule="evenodd" d="M66.14 9.47l-.14.07c-1.57.82-3.28 1.8-5.09 2.88-.94.57-1.92 1.18-2.92 1.82 7.17 5.18 11.84 13.62 11.84 23.15 0 15.76-12.78 28.55-28.55 28.55-11.15 0-20.8-6.4-25.5-15.71-1.99 2.24-4.01 4.65-6.05 7.23 6.64 10.41 18.29 17.32 31.55 17.32 20.65 0 37.38-16.74 37.38-37.38 0-11.1-4.84-21.07-12.52-27.92" fill="#F68C1E"/><path fill-rule="evenodd" d="M18.66 67.15c-6 3.35-10.91 5.2-13.82 5.2-.83 0-1.43-.22-1.8-.64-.91-1.06.04-5.8 6.49-14 9.07-11.54 17.8-19.56 25.15-25.88.4-.34 2.15-1.81 3.56-2.99.87.59 1.92.93 3.04.93a5.44 5.44 0 1 0-4.82-2.98c-1.33 1.1-2.91 2.43-3.3 2.77C22.65 38.6 13.49 48.02 7.37 56.07.63 64.94-1.46 70.64.99 73.48 1.87 74.5 3.13 75 4.84 75c3.57 0 9.33-2.17 16.2-6.1l.07-.04c-.84-.54-1.66-1.11-2.45-1.71" fill="#FEFEFE"/><path fill-rule="evenodd" d="M60.92 12.42c1.8-1.09 3.51-2.06 5.08-2.88 5.09-2.67 9.11-4.08 11.63-4.08.92 0 1.55.19 1.87.56.79.92.47 4.7-5.64 13.02.5.88.96 1.78 1.38 2.7 6.61-8.64 8.76-14.65 6.32-17.48-.86-1-2.18-1.5-3.93-1.5-5.63 0-17 5.85-30.06 15.32.64.65 1.18 1.39 1.6 2.2 4.01-2.91 8.12-5.67 11.75-7.86" fill="#FEFEFE"/></svg>`,
+  acct:`<svg width="14" height="15" viewBox="0 0 14 15" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.875 6.5625H2.27051C2.99707 8.21777 4.64062 9.375 6.5625 9.375C8.48438 9.375 10.1309 8.21777 10.8545 6.5625H11.25C11.5063 6.5625 11.7188 6.3501 11.7188 6.09375V3.28125C11.7188 3.02637 11.5078 2.8125 11.25 2.8125H10.8545C10.1309 1.15723 8.48438 0 6.5625 0C4.64062 0 2.99707 1.15723 2.27051 2.8125H1.875C1.61865 2.8125 1.40625 3.02637 1.40625 3.28125V6.09375C1.40625 6.35156 1.61865 6.5625 1.875 6.5625ZM4.6875 13.5938C4.6875 13.3389 4.90137 13.125 5.15625 13.125C5.41406 13.125 5.625 13.3389 5.625 13.5938V15H4.6875V13.5938ZM7.5 13.5938C7.5 13.3374 7.7124 13.125 7.96875 13.125C8.22656 13.125 8.4375 13.3374 8.4375 13.5938C8.4375 13.8501 8.2251 14.0625 7.96875 14.0625C7.7124 14.0625 7.5 13.8501 7.5 13.5938ZM6.5625 10.3125C7.7666 10.3125 8.90625 9.91992 9.84668 9.24023C11.7627 9.9668 13.125 11.8154 13.125 13.9834C13.125 14.5459 12.6709 15 12.1096 15H9.375V13.125C9.375 12.605 8.95752 12.1875 8.4375 12.1875H4.6875C4.16748 12.1875 3.75 12.605 3.75 13.125V15H1.01543C0.454688 15 0 14.5459 0 13.9834C0 11.8154 1.36377 9.9668 3.27832 9.24053C4.21787 9.91904 5.3584 10.3125 6.5625 10.3125ZM4.45312 2.8125C3.67676 2.8125 3.04688 3.33691 3.04688 3.98438V4.6875C3.04688 6.24023 4.30664 7.5 5.85938 7.5H7.26562C8.81836 7.5 10.0781 6.24023 10.0781 4.6875V3.98438C10.0781 3.33633 9.44824 2.8125 8.67188 2.8125H4.45312Z" fill="#F68D1F"/></svg>`,
+  mail:`<svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.14031 7.7L0.509063 2.54062C0.187812 2.29062 0 1.90625 0 1.5C0 0.671562 0.671563 0 1.5 0H14.5C15.3281 0 16 0.671562 16 1.5C16 1.90625 15.7844 2.29062 15.4922 2.54063L8.86094 7.7C8.355 8.09375 7.64625 8.09375 7.14031 7.7ZM6.52625 8.48719C6.96688 8.83056 7.48344 9 8 9C8.51562 9 9.03438 8.83125 9.475 8.49063L16 3.4125V10.5C16 11.3284 15.3284 12 14.5 12H1.5C0.671563 12 0 11.3281 0 10.5V3.4125L6.52625 8.48719Z" fill="#F68D1F"/></svg>`,
+  bullet:`<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#2a9fd8"/><path d="M4.5 8.3l2.3 2.3 4.7-5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  goCircle:`<svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="9" fill="#fff"/><path d="M7.5 5.5 11 9l-3.5 3.5" stroke="#0075a3" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  shieldC:`<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#0075A3"/><path d="M5.6 11.2V9.6a4.4 4.4 0 0 1 8.8 0v1.6" stroke="#fff" stroke-width="1.6" fill="none"/><rect x="4.6" y="10.2" width="2.6" height="3.8" rx="1.1" fill="#fff"/><rect x="12.8" y="10.2" width="2.6" height="3.8" rx="1.1" fill="#fff"/></svg>`,
+  padlock:`<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="8.6" width="12" height="9.6" rx="1.8" fill="#0075A3"/><path d="M6.8 8.6V6.3a3.2 3.2 0 0 1 6.4 0v2.3" stroke="#0075A3" stroke-width="2" fill="none"/></svg>`,
+  close:`<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+  alert:`<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="9" fill="currentColor"/><path d="M10 5.5v5.5M10 14v.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`,
+  shield:`<svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><path d="M8 0 0 3v6c0 4.6 3.4 8.4 8 9 4.6-.6 8-4.4 8-9V3L8 0z" fill="#1a73e8"/><path d="M5 9l2 2 4-4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  info:`<svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="#0075a3"/><path d="M11 10v6M11 6.5v.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`,
+  lockSmall:`<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="#5f6368"/><path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="#5f6368" stroke-width="1.6" fill="none"/></svg>`,
+  graphic:`<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M36.104 32.9588C35.8574 31.8578 35.7229 30.7123 35.7229 29.5339C35.7229 21.1935 42.2431 14.4325 50.2863 14.4325C52.2458 14.4325 54.1136 14.8367 55.8199 15.5642C57.2051 14.6118 58.7413 13.6144 60.3066 12.7075C57.394 10.8384 53.9626 9.75732 50.2863 9.75732C39.7533 9.75732 31.2144 18.6117 31.2144 29.5339C31.2144 32.2022 31.7271 34.7453 32.6511 37.068C33.6811 35.745 34.8385 34.3678 36.104 32.9588Z" fill="#F68C1E"/><path fill-rule="evenodd" clip-rule="evenodd" d="M62.8904 14.8033C62.0888 15.2388 61.2153 15.7517 60.2946 16.3267C59.812 16.6285 59.3124 16.9501 58.8018 17.2889C62.4599 20.0318 64.8405 24.4946 64.8405 29.5335C64.8405 37.8738 58.3203 44.6349 50.2777 44.6349C44.5898 44.6349 39.6634 41.2538 37.2664 36.3242C36.2512 37.5123 35.2218 38.7841 34.1836 40.1488C37.5689 45.6568 43.5115 49.31 50.2777 49.31C60.8107 49.31 69.3496 40.4556 69.3496 29.5335C69.3496 23.6611 66.8807 18.3871 62.9612 14.7651C62.9376 14.7782 62.914 14.7908 62.8904 14.8033Z" fill="#F68C1E"/><path fill-rule="evenodd" clip-rule="evenodd" d="M60.2919 16.3262C61.2126 15.7507 62.0861 15.2383 62.8877 14.8028C65.4818 13.3903 67.533 12.6434 68.8199 12.6434C69.2887 12.6434 69.6094 12.7436 69.7735 12.94C70.1754 13.425 70.0162 15.4222 66.8961 19.8275C67.1481 20.2909 67.3831 20.7662 67.5994 21.2519C70.9737 16.6815 72.0679 13.5059 70.8216 12.0046C70.3851 11.4775 69.7115 11.2104 68.8199 11.2104C65.9468 11.2104 60.1475 14.3035 53.4829 19.3174C53.809 19.6572 54.0824 20.0501 54.2966 20.4805C56.3461 18.9382 58.4417 17.4813 60.2919 16.3262Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M38.7416 45.2781C35.677 47.0526 33.1745 48.0307 31.6921 48.0307C31.2705 48.0307 30.9614 47.9162 30.7736 47.6902C30.3086 47.1294 30.7961 44.6234 34.0831 40.2864C38.7092 34.1812 43.1662 29.9381 46.916 26.5923C47.1186 26.4113 48.0102 25.6353 48.7311 25.0125C49.1736 25.3222 49.7078 25.5038 50.2821 25.5038C51.8149 25.5038 53.0579 24.2149 53.0579 22.6254C53.0579 21.0365 51.8149 19.7476 50.2821 19.7476C48.7497 19.7476 47.5068 21.0365 47.5068 22.6254C47.5068 23.0974 47.627 23.5357 47.8208 23.9285C47.1444 24.5126 46.3357 25.2163 46.1402 25.3911C40.7763 30.1778 36.1035 35.1587 32.9829 39.4165C29.5422 44.111 28.4771 47.1238 29.7261 48.6256C30.1752 49.1681 30.8181 49.4323 31.6921 49.4323C33.5144 49.4323 36.4489 48.2868 39.9555 46.2072L39.9917 46.1855C39.5629 45.9003 39.1462 45.5974 38.7416 45.2781Z" fill="#4D5055"/><path fill-rule="evenodd" clip-rule="evenodd" d="M88.6506 33.8052C88.5016 33.4248 88.1406 33.1688 87.7313 33.1548L69.9259 32.5293C69.6428 32.5192 69.3684 32.6258 69.1672 32.8242L58.1362 43.7148L47.8997 32.0766C47.7134 31.865 47.4475 31.7389 47.1645 31.7288L19.4205 30.754C19.0111 30.74 18.633 30.9695 18.4575 31.3391C18.2821 31.7078 18.3429 32.1458 18.6135 32.4531L29.2998 44.6017L28.124 77.8969C28.1045 78.4617 28.5474 78.9354 29.1134 78.9557L56.8582 79.9305L74.6636 80.5559C75.2297 80.5762 75.7053 80.1343 75.7248 79.5695L76.8999 46.2743L88.4167 34.9052C88.7075 34.6182 88.7995 34.1856 88.6506 33.8052Z" fill="#E9E9E9"/><path fill-rule="evenodd" clip-rule="evenodd" d="M71.1698 46.3384H56.1723L65.6274 36.3237H80.6242L71.1698 46.3384ZM54.8439 80.0582H70.608V48.3843H54.8439V80.0582ZM27.0664 80.0582H52.7753V48.3843H27.0664V80.0582ZM41.9682 36.3237L51.4226 46.3384H26.4802L17.0259 36.3237H41.9682ZM83.9485 34.8934C83.7856 34.5184 83.416 34.2749 83.0066 34.2749H65.1895C64.9065 34.2749 64.6367 34.3916 64.4425 34.597L53.8022 45.8681L43.161 34.597C42.9677 34.3916 42.6979 34.2749 42.4148 34.2749H14.6529C14.2436 34.2749 13.874 34.5184 13.711 34.8934C13.5488 35.2684 13.6252 35.7032 13.9067 36.0012L25.0149 47.7671V81.0824C25.0149 81.648 25.4742 82.1062 26.041 82.1062H53.8022H71.6193C72.1853 82.1062 72.6446 81.648 72.6446 81.0824V47.7678L83.7536 36.0012C84.0343 35.7032 84.1107 35.2684 83.9485 34.8934Z" fill="#047DB9"/><path fill-rule="evenodd" clip-rule="evenodd" d="M11.0735 5.3803C11.0735 5.3803 10.6275 4.10432 12.0894 3.10369C13.5514 2.10305 14.914 0.475973 14.914 0.475973C14.914 0.475973 14.3632 3.46037 14.914 5.3803C15.4648 7.30023 17.8324 10.6489 17.8324 10.6489C17.8324 10.6489 15.4146 9.7576 13.839 8.77186C12.2634 7.78611 11.0735 5.3803 11.0735 5.3803Z" fill="#BA0C2F"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12.7473 16.3622C12.7473 16.3622 11.7581 15.5048 11.3935 14.1474C11.029 12.79 11.1328 10.3506 11.1328 10.3506C11.1328 10.3506 13.6033 12.1849 15.3555 12.8569C17.1078 13.529 21.0322 14.1474 21.0322 14.1474C21.0322 14.1474 16.7679 16.1884 15.1977 16.6184C13.6275 17.0484 12.7473 16.3622 12.7473 16.3622Z" fill="#FFE161"/><path fill-rule="evenodd" clip-rule="evenodd" d="M19.3529 4.49976C19.3529 4.49976 20.1303 2.92713 22.4464 2.65085C24.7625 2.37458 24.7038 2.65085 24.7038 2.65085C24.7038 2.65085 23.2361 4.26192 22.4464 6.20938C21.6567 8.15683 20.7262 12.4599 20.7262 12.4599C20.7262 12.4599 19.5779 10.472 19.1895 8.91795C18.8012 7.36392 19.3529 4.49976 19.3529 4.49976Z" fill="#509E2F"/><path fill-rule="evenodd" clip-rule="evenodd" d="M50.3241 97.1007C50.3241 97.1007 49.3794 96.1323 50.2805 94.609C51.1816 93.0857 51.7273 91.0365 51.7273 91.0365C51.7273 91.0365 52.4923 93.9735 53.8047 95.4813C55.1171 96.9891 58.6814 99.0257 58.6814 99.0257C58.6814 99.0257 56.1126 99.2374 54.2671 99.0084C52.4215 98.7794 50.3241 97.1007 50.3241 97.1007Z" fill="#BA0C2F"/><path fill-rule="evenodd" clip-rule="evenodd" d="M61.0268 89.5018C61.0268 89.5018 61.9597 90.7718 61.5479 92.1157C61.1361 93.4595 57.5802 94.3544 57.5802 94.3544C57.5802 94.3544 58.7093 92.8116 57.5802 91.3152C56.4512 89.8189 52.2714 89.5018 52.2714 89.5018C52.2714 89.5018 56.0202 88.5437 57.5802 89.0092C59.1402 89.4747 61.0268 89.5018 61.0268 89.5018Z" fill="#FFE161"/><path fill-rule="evenodd" clip-rule="evenodd" d="M42.2735 94.7667C42.2735 94.7667 40.0507 95.1978 38.8142 94.3025C37.5778 93.4072 37.5848 92.4136 37.5848 92.4136C37.5848 92.4136 39.7384 92.7643 41.8055 92.3644C43.8726 91.9645 48.4978 91.0665 48.4978 91.0665C48.4978 91.0665 46.6511 91.8236 45.5563 92.995C44.4615 94.1663 42.2735 94.7667 42.2735 94.7667Z" fill="#509E2F"/><path fill-rule="evenodd" clip-rule="evenodd" d="M89.6185 12.8078C89.6185 12.8078 90.4754 14.3776 91.3464 15.0324C92.2174 15.6873 94.6004 16.5533 94.6004 16.5533C94.6004 16.5533 91.9258 16.5427 89.8324 17.1802C87.739 17.8176 84.4567 19.6422 84.4567 19.6422C84.4567 19.6422 86.2055 16.4431 87.2709 15.0324C88.3364 13.6218 89.6185 12.8078 89.6185 12.8078Z" fill="#BA0C2F"/><path fill-rule="evenodd" clip-rule="evenodd" d="M78.6613 14.6711C78.6613 14.6711 79.8177 13.1528 81.0255 12.8073C82.2332 12.4617 84.6576 12.9557 84.6576 12.9557C84.6576 12.9557 82.9652 15.1764 82.2968 17.0059C81.6283 18.8355 81.0255 22.8972 81.0255 22.8972C81.0255 22.8972 79.4542 19.6906 78.9472 17.9264C78.4402 16.1623 78.6613 14.6711 78.6613 14.6711Z" fill="#FFE161"/><path fill-rule="evenodd" clip-rule="evenodd" d="M97.2094 18.8037C97.2094 18.8037 98.8459 20.2025 99.1451 21.3169C99.4444 22.4313 98.8239 24.8153 98.8239 24.8153C98.8239 24.8153 96.1203 22.7205 94.4131 22.0658C92.7059 21.411 88.9245 21.0185 88.9245 21.0185C88.9245 21.0185 92.0607 19.6657 93.654 19.2398C95.2474 18.8138 97.2094 18.8037 97.2094 18.8037Z" fill="#00A3E0"/><path fill-rule="evenodd" clip-rule="evenodd" d="M7.2666 87.4443C7.2666 87.4443 8.24156 87.9987 8.91232 87.9987C9.58309 87.9987 11.1111 87.4443 11.1111 87.4443C11.1111 87.4443 10.678 86.7035 11.1111 86.3095C11.5441 85.9155 13.6056 85.1747 13.6056 85.1747C13.6056 85.1747 13.591 84.8687 12.8172 84.8687C12.0433 84.8687 9.97523 85.1747 9.97523 85.1747C9.97523 85.1747 9.43026 85.1781 8.55763 85.7236C7.68499 86.2692 7.2666 87.4443 7.2666 87.4443Z" fill="#00A3E0"/><path fill-rule="evenodd" clip-rule="evenodd" d="M6.35056 82.1089C6.35056 82.1089 5.27251 82.5205 4.04186 82.6713C2.81121 82.8221 0 82.8868 0 82.8868C0 82.8868 1.76189 83.3836 2.4541 83.734C3.14631 84.0843 3.17528 84.4939 3.17528 84.4939C3.17528 84.4939 5.00071 84.4193 5.87684 84.1325C6.75298 83.8456 8.08372 82.8868 8.08372 82.8868L6.35056 82.1089Z" fill="#509E2F"/><path fill-rule="evenodd" clip-rule="evenodd" d="M80.5586 85.7491C80.5586 85.7491 83.1487 86.2592 83.4507 87.6525C83.7526 89.0459 86.6539 89.8257 86.6539 89.8257L90.3962 88.4272C90.3962 88.4272 87.4047 87.7994 86.6539 86.4187C85.9031 85.038 84.4054 84.7728 83.1937 85.0434C81.982 85.314 80.5586 85.7491 80.5586 85.7491Z" fill="#BA0C2F"/><path fill-rule="evenodd" clip-rule="evenodd" d="M85.7158 82.7778C85.7158 82.7778 87.9091 85.5859 90.3734 85.5859L95.0247 84.1818C95.0247 84.1818 90.3734 83.6126 89.3613 82.5901C89.3409 82.5695 88.0903 82.9854 88.0118 82.9867C87.3158 82.9981 85.7158 82.7778 85.7158 82.7778Z" fill="#CB741A"/></svg>`
+};
+
+/* ------------------------------------------------------------------
+   Dummy data
+------------------------------------------------------------------- */
+const PLANS = [
+  {id:"100", speed:"100 Mbps", name:"Fiber 100 Mbps", price:39.95, tag:"CUSTOMER FAVORITE", devices:"Best for up to 5 devices.",
+   blurb:"Great for super-connected homes",
+   features:[["lock","Ideal for small households"],["gauge","Great for streaming, casual gaming"]],
+   details:[["lock","Up to 100 Mbps download and upload"],["gauge","Connect up to 5 devices at once"],["lock","No data caps — ever"],["gauge","Wi-Fi router included"]]},
+  {id:"300", speed:"300 Mbps", name:"Fiber 300 Mbps", price:49.95, tag:"", devices:"Best for up to 10 devices.",
+   blurb:"Great for busy, multi-device homes",
+   features:[["lock","Ideal for families of 3 to 5"],["gauge","Great for HD streaming and video calls"]],
+   details:[["lock","Up to 300 Mbps download and upload"],["gauge","Connect up to 10 devices at once"],["lock","No data caps — ever"],["gauge","Wi-Fi router included"]]},
+  {id:"500", speed:"500 Mbps", name:"Fiber 500 Mbps", price:64.95, tag:"", devices:"Best for up to 15 devices.",
+   blurb:"Great for working from home and gaming",
+   features:[["lock","Ideal for large households"],["gauge","Great for 4K streaming, online gaming"]],
+   details:[["lock","Up to 500 Mbps download and upload"],["gauge","Connect up to 15 devices at once"],["lock","No data caps — ever"],["gauge","Wi-Fi 6 router included"]]},
+  {id:"1000", speed:"1 Gig", name:"Fiber 1 Gig", price:74.95, tag:"FASTEST SPEED", devices:"Best for 20+ devices.",
+   blurb:"Our fastest speed for power users",
+   features:[["lock","Ideal for smart homes and creators"],["gauge","Great for 4K on many screens at once"]],
+   details:[["lock","Up to 1,000 Mbps download and upload"],["gauge","Connect 20+ devices at once"],["lock","No data caps — ever"],["gauge","Wi-Fi 6 router included"]]},
+  {id:"5000", speed:"5 Gigs", name:"Fiber 5 Gigs", price:189.95, tag:"FASTEST SPEED", devices:"Best for 25+ devices.",
+   blurb:"Multi-gig speed for the most demanding homes",
+   features:[["lock","Ideal for power users and creators"],["gauge","Great for 8K streaming, AR/VR"]],
+   details:[["lock","Up to 5,000 Mbps download and upload"],["gauge","Connect 25+ devices at once"],["lock","No data caps — ever"],["gauge","Wi-Fi 7 router included"]]}
+];
+const COMPARE = {
+  "100":["1-5 Devices","Basic browsing, email, SD streaming","Small households"],
+  "300":["6-10 Devices","HD streaming, casual gaming, remote work","Small to medium households"],
+  "500":["11-15 Devices","4K streaming, online gaming, video conferencing","Medium households or multiple users"],
+  "1000":["16-25 Devices","4K/8K streaming, heavy gaming, smart home","Large households, gamers, tech enthusiasts"],
+  "5000":["25+ Devices","8K streaming, AR/VR, advanced smart home","Power users, tech-heavy households"]
+};
+const MOB_TILES=["100","300","500","1000"], DESK_TILES=["100","300","500","1000"], COMPARE_IDS=["100","300","500","1000","5000"];
+const PERKS=[["shieldC","Private, secure internet connection"],["padlock","Lock in our best rate for 12 months"]];
+const FEES = {install:24.95, modem:14.95, admin:3.00, taxRate:0.0333};
+const SLOTS = ["8 am – 10 am","10 am – 12 pm","12 pm – 2 pm","2 pm – 4 pm"];
+const SLOTS_LONG = ["8:00 am and 10:00 am","10:00 am and 12:00 pm","12:00 pm and 2:00 pm","2:00 pm and 4:00 pm"];
+const ADDRESSES = [
+  ["980 Hammond Dr NE, Suite 400","Atlanta, GA 30328"],
+  ["1375 Peachtree St NE","Atlanta, GA 30309"],
+  ["2100 Riverside Pkwy","Lawrenceville, GA 30043"],
+  ["455 Roswell Rd","Marietta, GA 30062"],
+  ["3290 Northside Pkwy NW","Atlanta, GA 30327"],
+  ["88 Main St","Alpharetta, GA 30009"]
+];
+const GOOGLE_USER = {first:"Alex", last:"Kessler", email:"alex.kessler@gmail.com", phone:"(404) 555-0148"};
+const APPLE_USER  = {first:"Alex", last:"Kessler", email:"alex.kessler@icloud.com", relay:"k7q2xm9p4d@privaterelay.appleid.com", phone:""};
+
+/* install dates: 14 days starting 3 days from today; a few slots booked */
+const DATES = (function(){
+  const out=[]; const d=new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()+3);
+  for(let i=0;i<28;i++){
+    const booked = i===0 ? [0,1] : (i%5===2 ? [0] : (i%6===4 ? [3] : []));
+    out.push({date:new Date(d), booked}); d.setDate(d.getDate()+1);
+  }
+  return out;
+})();
+const FIRST = (function(){ for(let i=0;i<DATES.length;i++){ for(let s=0;s<SLOTS.length;s++){ if(!DATES[i].booked.includes(s)) return {d:i,s}; } } return {d:0,s:0}; })();
+
+/* ------------------------------------------------------------------
+   State
+------------------------------------------------------------------- */
+const S = {
+  screen:"location",
+  address:"", preferredPlan:"100",
+  plan:"100", showDetails:false,
+  dateIdx:FIRST.d, slot:FIRST.s, datePage:0,
+  info:null, infoMode:"choose", infoErrors:{},
+  pay:{method:"wallet", wallet:"gpay", card:{name:"",num:"",exp:"",mm:"",yyyy:"",cvv:"",zip:""}, ach:{name:"",routing:"",account:"",account2:"",type:"checking"}},
+  datePageD:0, draft:null, ono:"",
+  terms:false, autopay:false, payErrors:{},
+  open:"plan", done:{plan:false, install:false, info:false},
+  justDone:null
+};
+
+/* ------------------------------------------------------------------
+   Helpers
+------------------------------------------------------------------- */
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>Array.from(el.querySelectorAll(s));
+const money = n => "$"+n.toFixed(2);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const plan = () => PLANS.find(p=>p.id===S.plan);
+const day = (d,opt) => d.toLocaleDateString("en-US",opt);
+const dShort = i => day(DATES[i].date,{weekday:"short"});
+const dMonth = i => day(DATES[i].date,{month:"short",day:"numeric"});
+const dFull = i => day(DATES[i].date,{weekday:"short",month:"short",day:"numeric"});
+const dLong = i => day(DATES[i].date,{weekday:"long",month:"long",day:"numeric"});
+const isFirst = () => S.dateIdx===FIRST.d && S.slot===FIRST.s;
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function totals(){
+  const p=plan(); const tax=Math.round(p.price*FEES.taxRate*100)/100;
+  const monthly=p.price+FEES.modem+FEES.admin+tax;
+  return {tax, monthly, due:FEES.install};
+}
+function announce(msg){ const a=$("#announcer"); a.textContent=""; setTimeout(()=>a.textContent=msg,30); }
+let toastTimer;
+function toast(html){ const t=$("#toast"); t.innerHTML=html; t.classList.add("is-shown"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("is-shown"),2600); }
+function fillSvgs(root=document){ $$("[data-svg]",root).forEach(el=>{ el.innerHTML=SVG[el.dataset.svg]; }); }
+
+/* Animate a container's height between two renders so steps open and
+   close smoothly instead of jumping. */
+function morph(el, html){
+  const focusKey = document.activeElement && el.contains(document.activeElement) ? document.activeElement.dataset.key : null;
+  const from = el.offsetHeight;
+  el.innerHTML = html;
+  if(focusKey){ const f=el.querySelector(`[data-key="${focusKey}"]`); if(f) f.focus({preventScroll:true}); }
+  if(reduceMotion || !from) return;
+  const to = el.offsetHeight;
+  if(Math.abs(to-from)<2) return;
+  el.animate([{height:from+"px",overflow:"hidden"},{height:to+"px",overflow:"hidden"}],{duration:320,easing:"cubic-bezier(.2,.8,.2,1)"});
+}
+function scrollToEl(el){
+  const y = el.getBoundingClientRect().top + window.scrollY - (headerH()+12);
+  window.scrollTo({top:Math.max(0,y),behavior:reduceMotion?"auto":"smooth"});
+}
+function headerH(){ return $("#siteHeader").offsetHeight; }
+
+/* ------------------------------------------------------------------
+   Screens
+------------------------------------------------------------------- */
+function show(name, push=true){
+  S.screen=name;
+  $$(".screen").forEach(s=>s.classList.toggle("is-active", s.id==="screen-"+name));
+  document.body.classList.toggle("show-lang", name==="location"||name==="loading");
+  document.body.dataset.screen=name;
+  window.scrollTo(0,0);
+  if(push) history.pushState({screen:name},"","#"+name);
+  updateStrip();
+}
+window.addEventListener("popstate",e=>{
+  const name=(e.state&&e.state.screen)||"location";
+  if(name==="loading") return show("location",false);
+  if(name==="done" && S.screen!=="done") return show("location",false);
+  show(name,false);
+});
+
+/* ------------------------------------------------------------------
+   01 · Location
+------------------------------------------------------------------- */
+function renderLandingPlans(){
+  $("#landingPlans").innerHTML = PLANS.filter(p=>MOB_TILES.includes(p.id)).map(p=>`
+    <article class="lplan ${p.tag==="CUSTOMER FAVORITE"?"is-fav":""}">
+      <div class="lplan__head">${p.speed}</div>
+      <div class="lplan__body">
+        ${p.tag?`<span class="lplan__tag">${p.tag}</span>`:""}
+        <p class="lplan__fit">${p.devices}</p>
+        <p class="lplan__price">${money(p.price)}<small> / month</small></p>
+        <button class="btn btn-outline" type="button" data-action="landing-plan" data-plan="${p.id}">Check availability</button>
+      </div>
+    </article>`).join("");
+  const cards=[["CUSTOMER FAVORITE","100",""],["SEAMLESS POWER","500","dpc--orange"],["UNSTOPPABLE SPEED","1000",""]];
+  $("#landingCardsD").innerHTML = cards.map(([h,id,cls])=>{ const p=PLANS.find(x=>x.id===id);
+    return `<article class="dpc ${cls}"><div class="dpc__head">${h}</div><div class="dpc__body">
+      <p class="dpc__brand">EarthLink Fiber</p><p class="dpc__speed">${p.speed}</p><p class="dpc__sub">${p.blurb}</p>
+      <p class="dpc__price">${money(p.price)}<small> / month</small></p>
+      <ul>${p.details.slice(0,3).map(d=>`<li>${SVG.bullet}${d[1]}</li>`).join("")}</ul>
+      <button class="btn-check" type="button" data-action="landing-plan" data-plan="${id}">${SVG.goCircle}Check Availability</button>
+    </div></article>`; }).join("");
+}
+function bindAddress(form, input, sugg, err){
+  let hl=-1;
+  function suggest(){
+    const q=input.value.trim().toLowerCase();
+    const list = q.length<1 ? [] : ADDRESSES.filter(a=>(a[0]+" "+a[1]).toLowerCase().includes(q)).slice(0,5);
+    if(!list.length){ sugg.hidden=true; input.setAttribute("aria-expanded","false"); return; }
+    hl=-1;
+    sugg.innerHTML = list.map((a,i)=>`<li role="option" id="${sugg.id}-${i}"><button type="button" data-action="pick-address" data-addr="${esc(a[0]+", "+a[1])}">
+       <span data-svg="pin" style="width:20px;height:20px;flex:none;margin-top:2px"></span><span>${esc(a[0])}<small>${esc(a[1])}</small></span></button></li>`).join("");
+    fillSvgs(sugg);
+    sugg.hidden=false; input.setAttribute("aria-expanded","true");
+  }
+  input.addEventListener("input",()=>{ err.hidden=true; suggest(); });
+  input.addEventListener("keydown",e=>{
+    const items=$$("button",sugg); if(sugg.hidden||!items.length) return;
+    if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); hl=(hl+(e.key==="ArrowDown"?1:-1)+items.length)%items.length;
+      items.forEach((b,i)=>b.classList.toggle("is-hl",i===hl)); input.setAttribute("aria-activedescendant",sugg.id+"-"+hl); }
+    else if(e.key==="Enter" && hl>=0){ e.preventDefault(); items[hl].click(); }
+    else if(e.key==="Escape"){ sugg.hidden=true; }
+  });
+  form.addEventListener("submit",e=>{
+    e.preventDefault();
+    const v=input.value.trim();
+    if(v.length<6 || !/\d/.test(v)){
+      err.innerHTML=SVG.alert+`<span>Please enter your full street address, including the house number. For example: 980 Hammond Dr NE, Atlanta, GA 30328</span>`;
+      err.hidden=false; input.focus(); return;
+    }
+    startCheckout(v);
+  });
+}
+const addrInput=$("#addrInput");
+bindAddress($("#addrForm"), addrInput, $("#addrSuggest"), $("#addrError"));
+bindAddress($("#addrFormD"), $("#addrInputD"), $("#addrSuggestD"), $("#addrErrorD"));
+const visibleAddrInput = () => D() ? $("#addrInputD") : addrInput;
+document.addEventListener("click",e=>{ if(!e.target.closest(".addr")) $$(".suggest").forEach(x=>x.hidden=true); });
+function submitManualAddress(form){
+  const g=n=>form.querySelector(`[name="${n}"]`);
+  const st=g("street").value.trim(), apt=g("apt").value.trim(), city=g("city").value.trim(), zip=g("zip").value.trim(), state=g("state").value;
+  let ok=true;
+  [["street",st.length>3],["city",city.length>1],["zip",/^\d{5}$/.test(zip)]].forEach(([n,valid])=>{
+    const f=g(n).closest(".field"); f.classList.toggle("is-invalid",!valid);
+    let er=f.querySelector(".err"); if(!valid&&!er){ er=document.createElement("span"); er.className="err"; er.innerHTML=SVG.alert+"<span>Please fill this in</span>"; f.appendChild(er);} if(valid&&er) er.remove();
+    if(!valid) ok=false;
+  });
+  if(!ok){ form.querySelector(".is-invalid input").focus(); return; }
+  closeModal();
+  startCheckout(`${st}${apt?", "+apt:""}, ${city}, ${state} ${zip}`);
+}
+function manualAddressSheet(){
+  openModal(`<div class="sheet sheet--pad">
+    <div class="sheet-head"><h2 id="modalTitle">Enter your address</h2><button class="x-btn" type="button" data-action="close-modal" aria-label="Close">${SVG.close}</button></div>
+    <form class="d-form manual-form" novalidate style="margin-top:16px">
+      <div class="field span2"><label for="dmStreet">Street address</label><input id="dmStreet" name="street" autocomplete="address-line1" placeholder="980 Hammond Dr NE" data-autofocus></div>
+      <div class="field span2"><label for="dmApt">Apt / Suite (optional)</label><input id="dmApt" name="apt" autocomplete="address-line2" placeholder="Suite 400"></div>
+      <div class="field"><label for="dmCity">City</label><input id="dmCity" name="city" autocomplete="address-level2" placeholder="Atlanta"></div>
+      <div class="field"><label for="dmZip">ZIP code</label><input id="dmZip" name="zip" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="30328"></div>
+      <div class="field span2"><label for="dmState">State</label><select id="dmState" name="state"><option>GA</option><option>AL</option><option>FL</option><option>NC</option><option>SC</option><option>TN</option><option>TX</option></select></div>
+      <div class="span2" style="margin-top:8px"><button class="btn btn-primary" type="submit">Check Availability</button></div>
+    </form></div>`);
+  $$("#modal .field").forEach(f=>f.closest(".sheet").classList.add("dcard-fields"));
+}
+function startCheckout(address){
+  S.address=address; $$(".suggest").forEach(x=>x.hidden=true);
+  show("loading");
+  $("#screen-loading").setAttribute("aria-busy","true");
+  setTimeout(()=>{
+    $("#screen-loading").setAttribute("aria-busy","false");
+    if(!S.done.plan){ S.plan=S.preferredPlan; }
+    renderCheckout(); show("checkout");
+    announce("Great news! EarthLink fiber is available at your address. Step 1 of 4: choose your internet plan.");
+  }, reduceMotion?400:1700);
+}
+
+/* ------------------------------------------------------------------
+   03–06 · Checkout steps
+------------------------------------------------------------------- */
+const ORDER = ["plan","install","info","pay"];
+const TITLES = {plan:"Your Internet Plan", install:"Installation Appointment", info:"Your Information", pay:"Review & Pay"};
+
+function upcoming(step){
+  const n=ORDER.indexOf(step)+1;
+  return `<div class="card step-upcoming"><span class="num" aria-hidden="true">${n}</span>${TITLES[step]}<span class="sr-only"> — step ${n} of 4, not started</span></div>`;
+}
+function summaryCard(step, body){
+  const flash = S.justDone===step ? " flash" : "";
+  return `<div class="card summary${flash}">
+    <div class="summary__main">
+      <p class="summary__title">${TITLES[step]} -</p>
+      ${body}
+    </div>
+    <button class="link-btn" type="button" data-action="change" data-step="${step}" aria-label="Change ${TITLES[step]}">Change</button>
+  </div>`;
+}
+function whenHtml(){
+  return `<span class="when"><span class="when__dt"><span class="when__row"><span>${dFull(S.dateIdx)}</span><span>${SLOTS[S.slot]}</span></span></span>${isFirst()?`<span class="tag">First available</span>`:""}</span>`;
+}
+
+/* step 1 */
+function planBody(){
+  const p=plan();
+  return `<div class="card card--open">
+    <div>
+      <h2 class="h-card step-num-title"><span class="num" aria-hidden="true">1</span>Your Internet Plan</h2>
+      <p class="sub">Select the product that best fits your needs</p>
+    </div>
+    <div class="plan-hero swap" id="planHero" aria-live="polite">
+      ${p.tag?`<span class="plan-hero__tag">${p.tag}</span>`:""}
+      <h3 class="plan-hero__name">${p.name}</h3>
+      <p class="plan-hero__price">${money(p.price)} / month</p>
+      <p class="plan-hero__blurb">${p.blurb}</p>
+      <button class="link-btn" type="button" data-action="toggle-details" data-key="details" aria-expanded="${S.showDetails}" aria-controls="planDetails">${S.showDetails?"Hide plan details":"See plan details"} ${SVG.chevron}</button>
+      ${S.showDetails?`<ul class="plan-details" id="planDetails">${p.details.map(d=>`<li>${SVG[d[0]]}${d[1]}</li>`).join("")}</ul>`:""}
+    </div>
+    <div>
+      <p class="choice-label" id="speedLbl" style="margin-bottom:12px">Choose a speed</p>
+      <div class="tile-grid" role="radiogroup" aria-labelledby="speedLbl">
+        ${tileIds(MOB_TILES).map(id=>PLANS.find(q=>q.id===id)).map(x=>`<button class="tile" type="button" role="radio" aria-checked="${x.id===S.plan}" data-action="pick-plan" data-plan="${x.id}" data-key="plan-${x.id}">
+            <span class="tile__a">${x.speed}</span><span class="tile__b">${money(x.price)} / mo</span>${x.id===S.plan?SVG.check:""}
+          </button>`).join("")}
+      </div>
+    </div>
+    <button class="btn btn-primary" type="button" data-action="save-plan">Select This Plan</button>
+  </div>`;
+}
+function planSummary(){
+  const p=plan();
+  return summaryCard("plan", `<p class="summary__text">${p.name} — ${money(p.price)} / mo</p>
+     <div class="pills">${p.features.map(f=>`<span class="pill">${SVG[f[0]]}${f[1]}</span>`).join("")}</div>`);
+}
+
+/* step 2 */
+function installBody(){
+  const start=S.datePage*7, idx=[...Array(7)].map((_,i)=>start+i);
+  const nav = S.datePage===0
+    ? `<button class="tile tile--nav" type="button" data-action="date-page" data-page="1" data-key="dnav">${SVG.dateArrow}<span class="tile__b">More dates</span></button>`
+    : `<button class="tile tile--nav" type="button" data-action="date-page" data-page="0" data-key="dnav">${SVG.dateArrowBack}<span class="tile__b">Earlier</span></button>`;
+  const dates = idx.map(i=>`<button class="tile" type="button" role="radio" aria-checked="${i===S.dateIdx}" data-action="pick-date" data-i="${i}" data-key="d${i}"
+        aria-label="${dLong(i)}${i===FIRST.d?" (first available)":""}">
+      <span class="tile__a">${dShort(i)}</span><span class="tile__b">${dMonth(i)}</span>${i===S.dateIdx?SVG.check:""}</button>`).join("");
+  const booked=DATES[S.dateIdx].booked;
+  return `<div class="card card--open">
+    <div>
+      <h2 class="h-card step-num-title"><span class="num" aria-hidden="true">2</span>Installation Appointment</h2>
+      <div class="appt-line">${whenHtml()}</div>
+    </div>
+    <div>
+      <p class="choice-label" id="dateLbl" style="margin-bottom:12px">Choose a date</p>
+      <div class="date-grid" role="radiogroup" aria-labelledby="dateLbl">${S.datePage===0?dates+nav:nav+dates}</div>
+    </div>
+    <div>
+      <p class="choice-label" id="timeLbl" style="margin-bottom:12px">Choose a time</p>
+      <div class="time-grid" role="radiogroup" aria-labelledby="timeLbl">
+        ${SLOTS.map((s,i)=>{ const b=booked.includes(i);
+          return `<button class="tile" type="button" role="radio" aria-checked="${!b&&i===S.slot}" data-action="pick-slot" data-i="${i}" data-key="s${i}" ${b?"disabled":""}>
+            <span class="tile__a">${s}</span>${b?`<small>Booked</small>`:""}${!b&&i===S.slot?SVG.check:""}</button>`; }).join("")}
+      </div>
+    </div>
+    <button class="btn btn-primary" type="button" data-action="save-install">Save Date &amp; Time</button>
+  </div>`;
+}
+function installSummary(){ return summaryCard("install", `<div class="summary__text">${whenHtml()}</div>`); }
+
+/* step 3 */
+function infoField(id,label,type,value,attrs=""){
+  const err=S.infoErrors[id];
+  return `<div class="field ${err?"is-invalid":""}">
+    <label for="f-${id}">${label}</label>
+    <input id="f-${id}" type="${type}" value="${esc(value||"")}" data-info="${id}" data-key="f-${id}" ${attrs} ${err?`aria-invalid="true" aria-describedby="e-${id}"`:""}>
+    ${err?`<span class="err" id="e-${id}">${SVG.alert}<span>${err}</span></span>`:""}
+  </div>`;
+}
+function infoBody(){
+  const head = `<div><h2 class="h-card step-num-title"><span class="num" aria-hidden="true">3</span>Your Information</h2>`;
+  if(S.infoMode==="choose"){
+    return `<div class="card card--open" style="gap:18px">
+      ${head}<p class="sub" style="color:var(--ink)">Set up your Account – you can edit anything before you order.</p></div>
+      <div class="social">
+        <button type="button" data-action="google" data-key="google">${SVG.google}Google</button>
+        <button type="button" data-action="apple" data-key="apple">${SVG.apple}Apple</button>
+      </div>
+      <div class="or">OR</div>
+      <div class="center"><button class="link-btn" type="button" data-action="manual-info" data-key="manual">Enter Account Info Manually</button></div>
+    </div>`;
+  }
+  const d = S.draft;
+  const note = S.infoMode==="apple"
+    ? `<div class="prefill-note">${SVG.info}<span>We filled in your name and email from Apple. Apple doesn’t share phone numbers, so please add one — your installer will call it on the day.</span></div>`
+    : "";
+  return `<div class="card card--open" style="gap:18px">
+    ${head}<p class="sub" style="color:var(--ink)">${S.infoMode==="apple"?"Almost done — just one more detail.":"We’ll use this to set up your account and contact you about installation."}</p></div>
+    ${note}
+    <form class="form" id="infoForm" novalidate>
+      ${infoField("first","First name","text",d.first,'autocomplete="given-name"')}
+      ${infoField("last","Last name","text",d.last,'autocomplete="family-name"')}
+      <div class="span2">${infoField("email","Email address","email",d.email,'autocomplete="email" inputmode="email"')}</div>
+      <div class="span2">${infoField("phone","Mobile phone number","tel",d.phone,'autocomplete="tel" inputmode="tel" placeholder="(404) 555-0148"')}</div>
+      <button class="btn btn-primary span2" type="submit">Save &amp; Continue</button>
+    </form>
+    <div class="center"><button class="link-btn" type="button" data-action="info-back">Use Google or Apple instead</button></div>
+  </div>`;
+}
+function infoSummary(){
+  const u=S.info;
+  return summaryCard("info", `<p class="summary__text">${esc(u.first+" "+u.last)}<br>${esc(u.email)}<br>${esc(u.phone)}</p>`);
+}
+
+/* step 4 */
+function payField(group,id,label,value,attrs="",cls=""){
+  const err=S.payErrors[group+"."+id];
+  return `<div class="field ${cls} ${err?"is-invalid":""}">
+    <label for="p-${group}-${id}">${label}</label>
+    <input id="p-${group}-${id}" value="${esc(value)}" data-pay="${group}.${id}" data-key="p-${group}-${id}" ${attrs} ${err?`aria-invalid="true" aria-describedby="pe-${group}-${id}"`:""}>
+    ${err?`<span class="err" id="pe-${group}-${id}">${SVG.alert}<span>${err}</span></span>`:""}
+  </div>`;
+}
+function payBody(){
+  const p=plan(), t=totals(), P=S.pay, E=S.payErrors;
+  let sub="";
+  if(P.method==="wallet"){
+    sub=`<div class="pay-sub">
+      <div class="wallets" role="radiogroup" aria-label="Choose a digital wallet">
+        <button class="wallet" type="button" role="radio" aria-checked="${P.wallet==="gpay"}" data-action="pick-wallet" data-w="gpay" data-key="w-gpay" aria-label="Google Pay">${SVG.gpay}${P.wallet==="gpay"?SVG.check:""}</button>
+        <button class="wallet" type="button" role="radio" aria-checked="${P.wallet==="apay"}" data-action="pick-wallet" data-w="apay" data-key="w-apay" aria-label="Apple Pay">${SVG.applepay}${P.wallet==="apay"?SVG.check:""}</button>
+      </div>
+      <div class="wallet-names" aria-hidden="true"><span>Google Pay</span><span>Apple Pay</span></div>
+    </div>`;
+  } else if(P.method==="card"){
+    sub=`<div class="pay-sub form">
+      ${payField("card","name","Name on card",P.card.name,'autocomplete="cc-name"',"span2")}
+      ${payField("card","num","Card number",P.card.num,'inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="19"',"span2")}
+      ${payField("card","exp","Expiry (MM/YY)",P.card.exp,'inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5"')}
+      ${payField("card","cvv","Security code",P.card.cvv,'inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4"')}
+      ${payField("card","zip","Billing ZIP code",P.card.zip,'inputmode="numeric" autocomplete="postal-code" maxlength="5"',"span2")}
+      <p class="secure-line span2">${SVG.lockSmall} Your card details are encrypted and stored securely.</p>
+    </div>`;
+  } else {
+    sub=`<div class="pay-sub form">
+      ${payField("ach","name","Account holder name",P.ach.name,'autocomplete="name"',"span2")}
+      ${payField("ach","routing","Routing number (9 digits)",P.ach.routing,'inputmode="numeric" maxlength="9"',"span2")}
+      ${payField("ach","account","Account number",P.ach.account,'inputmode="numeric" maxlength="17"',"span2")}
+      <div class="span2 radio-row" role="radiogroup" aria-label="Account type">
+        <label class="radio"><input type="radio" name="achType" value="checking" data-action="ach-type" ${P.ach.type==="checking"?"checked":""}><span class="dot"></span>Checking</label>
+        <label class="radio"><input type="radio" name="achType" value="savings" data-action="ach-type" ${P.ach.type==="savings"?"checked":""}><span class="dot"></span>Savings</label>
+      </div>
+      <p class="secure-line span2">${SVG.lockSmall} Your bank details are encrypted and stored securely.</p>
+    </div>`;
+  }
+  const errList = E._summary ? `<div class="form-error" role="alert" id="payErrSummary">${SVG.alert}<span>${E._summary}</span></div>` : "";
+  return `<div class="card card--open" style="gap:18px">
+    <h2 class="h-card h-card--bold step-num-title"><span class="num" aria-hidden="true">4</span>Review &amp; Pay</h2>
+    <div class="bill" aria-label="Bill breakdown">
+      <div class="bill__row bill__row--head"><span>One-time Charge*</span><span>${money(FEES.install)}</span></div>
+      <div class="bill__row"><span>Installation Cost</span><span>${money(FEES.install)}</span></div>
+      <hr>
+      <div class="bill__row bill__row--head"><span>Monthly Charges*</span><span>${money(t.monthly)}</span></div>
+      <div class="bill__row"><span>${p.name}</span><span>${money(p.price)}</span></div>
+      <div class="bill__row"><span>Modem Lease</span><span>${money(FEES.modem)}</span></div>
+      <div class="bill__row"><span>Admin &amp; Support Fee</span><span>${money(FEES.admin)}</span></div>
+      <div class="bill__row"><span>Taxes (Estimated)</span><span>${money(t.tax)}</span></div>
+      <hr>
+      <div class="bill__row bill__row--due"><span>Due Today</span><span>${money(t.due)}</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <p class="pm-title" id="pmLbl">Payment Method</p>
+      <div role="radiogroup" aria-labelledby="pmLbl" style="display:flex;flex-direction:column;gap:6px">
+        <label class="radio"><input type="radio" name="pm" value="wallet" data-action="pick-method" data-key="pm-wallet" ${P.method==="wallet"?"checked":""}><span class="dot"></span>Digital Wallets</label>
+        ${P.method==="wallet"?sub:""}
+        <div class="or" style="margin:6px 0">Or</div>
+        <div class="radio-row">
+          <label class="radio"><input type="radio" name="pm" value="card" data-action="pick-method" data-key="pm-card" ${P.method==="card"?"checked":""}><span class="dot"></span>Credit Card</label>
+          <label class="radio"><input type="radio" name="pm" value="ach" data-action="pick-method" data-key="pm-ach" ${P.method==="ach"?"checked":""}><span class="dot"></span>Bank Draft (ACH)</label>
+        </div>
+        ${P.method!=="wallet"?sub:""}
+      </div>
+    </div>
+    <div class="agree">
+      <label class="cbox ${E.terms?"is-invalid":""}" id="termsRow">
+        <input type="checkbox" data-action="terms-box" data-key="terms" ${S.terms?"checked":""} ${E.terms?'aria-invalid="true"':""}>
+        <span class="box">${SVG.boxTick}</span>
+        <span class="cbox__text"><button class="link-btn" type="button" data-action="open-terms">Terms &amp; Conditions</button>
+          ${S.terms?`<span class="terms-agreed" style="display:block">I am at least 18 years old and agree to EarthLink's Terms, including the Service Agreement, Acceptable Use Policy, and Privacy Policy.</span>`:""}
+        </span>
+      </label>
+      <label class="cbox ${E.autopay?"is-invalid":""}" id="autopayRow">
+        <input type="checkbox" data-action="autopay-box" data-key="autopay" ${S.autopay?"checked":""} ${E.autopay?'aria-invalid="true"':""}>
+        <span class="box">${SVG.boxTick}</span>
+        <span class="cbox__text">By submitting my information as my electronic signature, I agree to EarthLink's
+          <a class="inline-link" href="#autopay-terms" role="button" data-action="open-autopay">Automatic Payments Authorization</a>
+          and storage of the Method of Payment for future account transactions. By continuing, I confirm I understand this.</span>
+      </label>
+    </div>
+    ${errList}
+    <button class="btn btn-primary" type="button" data-action="place-order" id="placeBtn">Place Order · ${money(t.due)}</button>
+  </div>`;
+}
+
+function renderStep(step){
+  const el=$("#step-"+step);
+  let html;
+  const d=D();
+  if(S.open===step) html = (d?{plan:planBodyD,install:installBodyD,info:infoBodyD,pay:payBodyD}:{plan:planBody,install:installBody,info:infoBody,pay:payBody})[step]();
+  else if(S.done[step]) html = (d?{plan:planSummaryD,install:installSummaryD,info:infoSummaryD}:{plan:planSummary,install:installSummary,info:infoSummary})[step]();
+  else html = d ? dUpcoming(step) : upcoming(step);
+  morph(el, html);
+  renderStrip();
+}
+function renderCheckout(){
+  $(".co").classList.toggle("has-cart", S.done.plan);
+  $("#addrText").textContent = S.address;
+  $("#addrText").title = S.address;
+  ORDER.forEach(renderStep);
+  renderInstallInfo(); renderSide(); renderStrip();
+  S.justDone=null;
+}
+function renderInstallInfo(){
+  const el=$("#installInfo");
+  if(!S.done.install){ el.innerHTML=""; return; }
+  el.innerHTML = `<div class="install-info" style="margin-top:0">
+    <h3>Installation Information</h3>
+    <ul>
+      <li>Professional installation provided by AT&amp;T with ${money(FEES.install)} charged today.</li>
+      <li>Your installation date will be ${dFull(S.dateIdx)} between ${SLOTS_LONG[S.slot]}.</li>
+      <li>Once installed, you will be charged for your first month's service to your designated method of payment.</li>
+    </ul></div>`;
+}
+function renderSide(){
+  const p=plan(), t=totals(), dt=DATES[S.dateIdx].date;
+  const parts=S.address.split(", "); const l1=parts.shift()||""; const l2=parts.join(", ");
+  const dateLine=`${day(dt,{weekday:"long",month:"long",day:"numeric"}).replace(",","")}, ${dt.getFullYear()}`;
+  $("#sideCart").innerHTML = `<div class="cart">
+    <h2>Cart</h2><hr>
+    <div class="grp grp--gap"><h3>Appointment Date</h3><p>${dateLine}<br>${SLOTS_CART[S.slot]}</p></div>
+    <div class="grp grp--gap" style="margin-top:20px"><h3>Service Address</h3><p>${esc(l1)}<br>${esc(l2)}</p></div>
+    <hr>
+    <div class="grp"><h3>One-Time Charges*</h3>
+      <div class="ln"><span>Installation Cost</span><b>${money(FEES.install)}</b></div>
+      <div class="ln"><span>Taxes</span><span>$0.00</span></div></div>
+    <hr>
+    <div class="grp"><h3>Monthly Charges*</h3>
+      <div class="ln"><span>Internet ${p.name}</span><b>${money(p.price)}</b></div>
+      <div class="ln"><span>Modem Lease</span><span>${money(FEES.modem)}</span></div>
+      <div class="ln"><span>Admin &amp; Support Fee</span><span>${money(FEES.admin)}</span></div>
+      <div class="ln"><span>Taxes (Estimated)</span><span>${money(t.tax)}</span></div></div>
+    <hr>
+    <div class="grp terms"><h3>Terms</h3><p>12-month internet Agreement</p></div>
+    <hr class="hr-in">
+    <div class="ln tot"><span>Total Monthly Charges</span><span>${money(t.monthly)}</span></div>
+    <div class="today"><span>What You Pay Today</span><span>${money(t.due)}</span></div>
+  </div>`;
+}
+
+/* ------------------------------------------------------------------
+   Web layout (≥1024px) — Figma "Checkout flow / Web"
+------------------------------------------------------------------- */
+const mqD = window.matchMedia("(min-width:1024px)");
+function D(){ return mqD.matches; }
+const SLOTS_D = ["8:00 am – 10:00 am","10:00 am – 12:00 pm","12:00 pm – 2:00 pm","2:00 pm – 4:00 pm"];
+const SLOTS_CART = ["08:00 am - 10:00 am","10:00 am - 12:00 pm","12:00 pm - 02:00 pm","02:00 pm - 04:00 pm"];
+const TERMS_HTML = `<h3>Internet</h3>
+  <p>Your EarthLink Internet Service requires a 12 month subscription that includes an Early Termination Fee of up to $200.00.</p>
+  <p>This service includes Professional Installation with a nonrefundable Installation Fee charged today.</p>
+  <p>To reschedule or make changes to your installation, please ensure they are made at least 24 hours in advance to avoid fees.</p>
+  <h3>General</h3>
+  <p>Service charges will be billed monthly in advance to your designated Method of Payment.</p>
+  <p>At the end of your initial term, your Service will continue on a month-to-month basis at the then-applicable rates.</p>
+  <p>If applicable, EarthLink does not grant refunds or credits for any prior usage including partial use during the last month of Service.</p>
+  <p>You can learn more about our Terms of Service, Acceptable Use and Privacy Policy at earthlink.net/tcs and/or earthlink.net/tcs/promotions as applicable.</p>
+  <h3>5G Internet</h3>
+  <p>5G Internet Plans do not provide guaranteed upload or download speeds and can only be used at the Service location. Performance depends on the customer's device and the network technology available at the customer's Service address.</p>
+  <h3>Equipment</h3>
+  <p>Upon Service termination, you are responsible for returning the Equipment. If you do not return the Equipment, you will be charged a Non Returned Equipment Fee. You will have 15 days from termination of your Service to return the Equipment and EarthLink will provide a prepaid return label to facilitate the return.</p>`;
+function tileIds(list){ return list.includes(S.plan) ? list : [...list, S.plan]; }
+function dBtn(label, action, type="button", id=""){ return `<button class="d-btn" type="${type}" ${action?`data-action="${action}"`:""} ${id?`id="${id}"`:""}>${label}</button>`; }
+function dUpcoming(step){ return `<div class="dcard"><h2 class="d-h">${TITLES[step]}</h2></div>`; }
+function dSummary(step, inner){
+  return `<div class="dcard d-sum${S.justDone===step?" flash":""}"><div class="d-sum__main">${inner}</div>
+    <button class="d-change" type="button" data-action="change" data-step="${step}" aria-label="Change ${TITLES[step]}">Change</button></div>`;
+}
+function planBodyD(){
+  const p=plan(), pills=[...p.features, ...PERKS];
+  return `<div class="dcard dcard--open" style="gap:32px">
+    <div><h2 class="d-h">Your Internet Plan</h2><p class="d-sub">Select the product that best fits your needs</p></div>
+    <div class="d-stack">
+      <div class="d-plan swap" aria-live="polite">
+        ${p.tag?`<span class="d-plan__tag">${p.tag}</span>`:""}
+        <div class="d-plan__l">
+          <div><h3 class="d-plan__name">${p.name}</h3><p class="d-plan__price">${money(p.price)} / month</p></div>
+          <p class="d-plan__blurb">${p.blurb}</p>
+        </div>
+        <div class="d-plan__r">${pills.map(f=>`<span class="d-pill">${SVG[f[0]]}${f[1]}</span>`).join("")}</div>
+      </div>
+      <div class="d-stack" style="gap:16px">
+        <div class="d-tiles" role="radiogroup" aria-label="Choose a speed">
+          ${tileIds(DESK_TILES).map(id=>{ const x=PLANS.find(q=>q.id===id);
+            return `<button class="d-tile" type="button" role="radio" aria-checked="${id===S.plan}" data-action="pick-plan" data-plan="${id}" data-key="plan-${id}"><b>${x.speed}</b><span>${money(x.price)} / mo</span></button>`; }).join("")}
+        </div>
+        <button class="d-link" type="button" data-action="compare">Not sure? Compare all plans</button>
+      </div>
+      ${dBtn("Select This Plan","save-plan")}
+    </div>
+  </div>`;
+}
+function planSummaryD(){
+  const p=plan();
+  return dSummary("plan", `<div class="d-planrow">
+      <div><p class="d-sum__t">Your Internet Plan -</p><p class="d-sum__v">${p.name} — ${money(p.price)} / mo</p></div>
+      <div class="d-pills">${p.features.map(f=>`<span class="d-pill">${SVG[f[0]]}${f[1]}</span>`).join("")}</div>
+    </div>`);
+}
+function installBodyD(){
+  const start=S.datePageD*14, booked=DATES[S.dateIdx].booked;
+  return `<div class="dcard dcard--open">
+    <h2 class="d-h">Installation Appointment</h2>
+    <div class="d-stack" style="gap:14px">
+      <div class="d-rowhead"><p class="d-label" id="dDateLbl">Choose a date</p>
+        <button class="d-link" type="button" data-action="date-page-d" data-key="dpage">${S.datePageD?"Earlier Dates":"Other Dates"}</button></div>
+      <div class="d-dates" role="radiogroup" aria-labelledby="dDateLbl">
+        ${[...Array(14)].map((_,k)=>{ const i=start+k;
+          return `<button class="d-date" type="button" role="radio" aria-checked="${i===S.dateIdx}" data-action="pick-date" data-i="${i}" data-key="d${i}" aria-label="${dLong(i)}${i===FIRST.d?" (first available)":""}"><span>${dShort(i)}</span><span>${dMonth(i)}</span></button>`; }).join("")}
+      </div>
+    </div>
+    <div class="d-stack" style="gap:16px">
+      <p class="d-label" id="dTimeLbl">Choose a time</p>
+      <div class="d-times" role="radiogroup" aria-labelledby="dTimeLbl">
+        ${SLOTS_D.map((t,i)=>{ const b=booked.includes(i);
+          return `<button class="d-time" type="button" role="radio" aria-checked="${!b&&i===S.slot}" data-action="pick-slot" data-i="${i}" data-key="s${i}" ${b?"disabled":""}>${t}${b?"<small>Booked</small>":""}</button>`; }).join("")}
+      </div>
+    </div>
+    ${dBtn("Save Date &amp; Time","save-install")}
+  </div>`;
+}
+function installSummaryD(){
+  return dSummary("install", `<p class="d-sum__t">Installation Appointment -</p>
+    <div class="d-when"><p class="d-sum__v">${dFull(S.dateIdx)} · ${SLOTS_D[S.slot]}</p>${isFirst()?`<span class="d-tag">First Available</span>`:""}</div>`);
+}
+function infoBodyD(){
+  if(!S.draft) S.draft={first:"",last:"",email:"",phone:""};
+  const d=S.draft;
+  const note = S.infoMode==="apple" ? `<div class="prefill-note">${SVG.info}<span>We filled in your name and email from Apple. Apple doesn’t share phone numbers, so please add one — your installer will call it on the day.</span></div>` : "";
+  return `<div class="dcard dcard--open" style="gap:18px">
+    <div><h2 class="d-h">Your Information</h2><p class="d-sub" style="margin-top:12px">Set up your Account – you can edit anything before you order.</p></div>
+    <div class="d-social">
+      <button type="button" data-action="google" data-key="google">${SVG.google}Continue with Google</button>
+      <button type="button" data-action="apple" data-key="apple">${SVG.apple}Continue with Apple</button>
+    </div>
+    <div class="d-or">OR</div>
+    ${note}
+    <form class="d-form" id="infoForm" novalidate>
+      ${infoField("first","First Name","text",d.first,'autocomplete="given-name" placeholder="First Name"')}
+      ${infoField("last","Last Name","text",d.last,'autocomplete="family-name" placeholder="Last Name"')}
+      ${infoField("email","Email","email",d.email,'autocomplete="email" inputmode="email" placeholder="Email Address"')}
+      ${infoField("phone","Mobile Phone (for order updates)","tel",d.phone,'autocomplete="tel" inputmode="tel" placeholder="Mobile Number"')}
+      <div class="span2" style="margin-top:10px">${dBtn("Save Information","","submit")}</div>
+    </form>
+  </div>`;
+}
+function infoSummaryD(){
+  const u=S.info;
+  return dSummary("info", `<p class="d-sum__t">Your Information -</p><p class="d-sum__v" title="${esc(u.first+" "+u.last+", "+u.email+", "+u.phone)}">${esc(u.first+" "+u.last)}, ${esc(u.email)}, ${esc(u.phone)}</p>`);
+}
+function payBodyD(){
+  const t=totals(), P=S.pay, E=S.payErrors;
+  let sub="";
+  if(P.method==="wallet"){
+    sub=`<div class="d-wallets pay-sub" role="radiogroup" aria-label="Choose a digital wallet">
+      ${[["gpay","Google Pay",SVG.gpay],["apay","Apple Pay",SVG.applepay]].map(([w,l,svg])=>`<button class="d-wallet" type="button" role="radio" aria-checked="${P.wallet===w}" data-action="pick-wallet" data-w="${w}" data-key="w-${w}" aria-label="${l}"><span class="dot" aria-hidden="true"></span>${svg}</button>`).join("")}
+    </div>`;
+  } else if(P.method==="card"){
+    sub=`<div class="d-form d-form4 pay-sub">
+      ${payField("card","name","Name on Card",P.card.name,'autocomplete="cc-name" placeholder="Name on Card"',"span2")}
+      ${payField("card","num","Card Number",P.card.num,'inputmode="numeric" autocomplete="cc-number" placeholder="Card Number" maxlength="19"',"span2")}
+      ${payField("card","mm","Month",P.card.mm,'inputmode="numeric" autocomplete="cc-exp-month" placeholder="MM" maxlength="2"')}
+      ${payField("card","yyyy","Year",P.card.yyyy,'inputmode="numeric" autocomplete="cc-exp-year" placeholder="YYYY" maxlength="4"')}
+      ${payField("card","cvv","CSC",P.card.cvv,'inputmode="numeric" autocomplete="cc-csc" placeholder="1234" maxlength="4"')}
+      ${payField("card","zip","Zip Code",P.card.zip,'inputmode="numeric" autocomplete="postal-code" placeholder="12345" maxlength="5"')}
+    </div>`;
+  } else {
+    sub=`<div class="d-form pay-sub">
+      ${payField("ach","routing","Bank Routing Number",P.ach.routing,'inputmode="numeric" maxlength="9" placeholder="Routing Number"')}
+      ${payField("ach","account","Bank Account Number",P.ach.account,'inputmode="numeric" maxlength="17" placeholder="Account Number"')}
+      ${payField("ach","account2","Re-enter Bank Account Number",P.ach.account2,'inputmode="numeric" maxlength="17" placeholder="Re-enter Account Number"')}
+      <div class="field"><label for="p-ach-type">Select Account Type</label>
+        <select id="p-ach-type" data-action="ach-type" data-key="p-ach-type"><option value="checking" ${P.ach.type==="checking"?"selected":""}>Checking</option><option value="savings" ${P.ach.type==="savings"?"selected":""}>Savings</option></select></div>
+    </div>`;
+  }
+  const radio=(v,l)=>`<label class="radio"><input type="radio" name="pm" value="${v}" data-action="pick-method" data-key="pm-${v}" ${P.method===v?"checked":""}><span class="dot"></span>${l}</label>`;
+  const errList = E._summary ? `<div class="form-error" role="alert" id="payErrSummary">${SVG.alert}<span>${E._summary}</span></div>` : "";
+  return `<div class="dcard dcard--open" style="gap:18px">
+    <h2 class="d-h">Review &amp; Pay</h2>
+    <div class="d-due">Due Today <b>${money(t.due)}</b></div>
+    <div class="d-stack">
+      <p class="d-h" style="font-size:1rem" id="pmLbl">Payment Method</p>
+      <div class="d-pm" role="radiogroup" aria-labelledby="pmLbl">${radio("card","Credit Card")}${radio("ach","Bank Draft (ACH)")}<span class="d-orline" aria-hidden="true">Or</span>${radio("wallet","Digital Wallets")}</div>
+      ${sub}
+    </div>
+    <hr class="d-hr">
+    <div class="d-terms" tabindex="0" aria-label="Terms and conditions">${TERMS_HTML}</div>
+    <div class="d-agree">
+      <label class="cbox ${E.terms?"is-invalid":""}" id="termsRow">
+        <input type="checkbox" data-action="terms-box" data-key="terms" ${S.terms?"checked":""} ${E.terms?'aria-invalid="true"':""}>
+        <span class="box">${SVG.boxTick}</span>
+        <span class="cbox__text">I am at least 18 years old and agree to EarthLink's Terms, including the Service Agreement, Acceptable Use Policy, and Privacy Policy.</span>
+      </label>
+      <label class="cbox cbox--sm ${E.autopay?"is-invalid":""}" id="autopayRow">
+        <input type="checkbox" data-action="autopay-box" data-key="autopay" ${S.autopay?"checked":""} ${E.autopay?'aria-invalid="true"':""}>
+        <span class="box">${SVG.boxTick}</span>
+        <span class="cbox__text">By submitting my information as my electronic signature, I agree to EarthLink's <a class="inline-link" href="#autopay-terms" role="button" data-action="open-autopay">Automatic Payments Authorization</a> and storage of the Method of Payment for future account transactions. By continuing, I confirm I understand this.</span>
+      </label>
+    </div>
+    ${errList}
+    ${dBtn("Place Order","place-order","button","placeBtn")}
+  </div>`;
+}
+function compareSheet(){
+  openModal(`<div class="sheet sheet--wide">
+    <div class="sheet-head"><h2 id="modalTitle" class="cmp-title">Which Speed Should I Choose?</h2><button class="x-btn" type="button" data-action="close-modal" aria-label="Close">${SVG.close}</button></div>
+    <div class="cmp">${COMPARE_IDS.map(id=>{ const x=PLANS.find(q=>q.id===id), c=COMPARE[id], sel=id===S.plan;
+      return `<div class="cmp-col ${sel?"is-sel":""}"><div class="cmp-head">${x.speed}</div>
+        <div class="cmp-cell cmp-price">${money(x.price)} / mo</div><div class="cmp-cell cmp-dev">${c[0]}</div>
+        <div class="cmp-cell cmp-use">${c[1]}</div><div class="cmp-cell cmp-house">${c[2]}</div>
+        <button class="cmp-cta" type="button" data-action="cmp-choose" data-plan="${id}" ${sel?'aria-pressed="true" data-autofocus':""}>${sel?"Selected":"Choose This"}</button></div>`; }).join("")}</div>
+  </div>`);
+}
+mqD.addEventListener("change",()=>{
+  if(S.screen==="checkout") renderCheckout();
+  if(S.screen==="done") renderDone();
+});
+
+/* contextual order strip — appears on mobile once the summary cards scroll away */
+function renderStrip(){
+  const p=plan(), t=totals();
+  const planCell=`<div class="ostrip__cell">${SVG.wifi}<div><b class="big">${p.name}</b><span>${money(p.price)}/mo</span></div></div>`;
+  const dueCell=`<div class="ostrip__cell ostrip__due"><div><span>Due today</span><b>${money(t.due)}</b></div></div>`;
+  const dateCell=S.done.install?`<div class="ostrip__cell">${SVG.cal}<div><b>${dFull(S.dateIdx)}</b><span>${SLOTS[S.slot]}</span></div></div>`:"";
+  const userCell=S.done.info&&S.info?`<div class="ostrip__cell">${SVG.user}<div><b>${esc(S.info.first+" "+S.info.last)}</b><span>${esc(S.info.phone)}</span></div></div>`:"";
+  // the strip grows as steps are completed: plan → plan + installation → everything (+ due today on Review & Pay)
+  const rows = S.open==="pay" ? [[planCell,dueCell],[dateCell,userCell]] : [[planCell,dateCell],[userCell]];
+  $("#ostrip").innerHTML = `<div class="ostrip__in">${rows.map(r=>r.filter(Boolean)).filter(r=>r.length)
+    .map(r=>`<div class="ostrip__row">${r.join("")}</div>`).join("<hr>")}</div>`;
+}
+function updateStrip(){
+  const strip=$("#ostrip");
+  const active = S.screen==="checkout" && S.done.plan;
+  if(!active){ strip.classList.remove("is-shown"); return; }
+  // show once the first completed card has scrolled up under the header, while the open step is still on screen
+  const first=$("#step-plan").getBoundingClientRect(), open=$("#step-"+S.open).getBoundingClientRect();
+  const visible = first.bottom < headerH()+4 && open.bottom > headerH()+160;
+  strip.classList.toggle("is-shown", visible);
+}
+window.addEventListener("scroll",updateStrip,{passive:true});
+window.addEventListener("resize",()=>{ document.documentElement.style.setProperty("--header-h",headerH()+"px"); updateStrip(); });
+
+/* move to the next step that still needs doing */
+function advance(from){
+  S.done[from]=true; S.justDone=from;
+  if(from==="plan" && D() && !S.done.install){ S.dateIdx=FIRST.d; S.slot=FIRST.s; S.done.install=true; }
+  const next = ORDER.find(s=>s!=="pay" && !S.done[s]) || "pay";
+  S.open=next;
+  renderCheckout();
+  const target=$("#step-"+next);
+  setTimeout(()=>scrollToEl(target), reduceMotion?0:360);
+  const n=ORDER.indexOf(next)+1;
+  announce(`${TITLES[from]} saved. Step ${n} of 4: ${TITLES[next]}.`);
+  setTimeout(()=>{ const f=target.querySelector("h2"); if(f){ f.setAttribute("tabindex","-1"); f.focus({preventScroll:true}); } }, 450);
+}
+
+/* ------------------------------------------------------------------
+   Info: google / apple / manual
+------------------------------------------------------------------- */
+function openModal(html, onOpen){
+  const m=$("#modal"); m.innerHTML=html; m.hidden=false; document.body.style.overflow="hidden";
+  m._returnFocus=document.activeElement;
+  const first=m.querySelector("[data-autofocus]")||m.querySelector("button");
+  if(first) first.focus();
+  if(onOpen) onOpen(m);
+}
+function closeModal(){
+  const m=$("#modal"); if(m.hidden) return;
+  m.hidden=true; m.innerHTML=""; document.body.style.overflow="";
+  if(m._returnFocus && document.contains(m._returnFocus)) m._returnFocus.focus({preventScroll:true});
+}
+$("#modal").addEventListener("click",e=>{ if(e.target.id==="modal") closeModal(); });
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape" && !$("#modal").hidden) closeModal();
+  if(e.key==="Tab" && !$("#modal").hidden){
+    const f=$$("#modal button, #modal input, #modal [href]").filter(x=>!x.disabled);
+    if(!f.length) return; const a=f[0], z=f[f.length-1];
+    if(e.shiftKey && document.activeElement===a){ e.preventDefault(); z.focus(); }
+    else if(!e.shiftKey && document.activeElement===z){ e.preventDefault(); a.focus(); }
+  }
+});
+
+function googleSheet(){
+  openModal(`<div class="sheet sheet--pad gsi">
+    <div class="g">${SVG.google}</div>
+    <h2 id="modalTitle">Sign in with Google</h2>
+    <p class="to">to continue to earthlink.net</p>
+    <button class="acct" type="button" data-action="google-continue">
+      <span class="avatar" style="background:#e8711c">A</span>
+      <span><b>${GOOGLE_USER.first} ${GOOGLE_USER.last}</b><span>${GOOGLE_USER.email}</span></span>
+    </button>
+    <button class="other" type="button" data-action="google-other">Use another account</button>
+    <div class="perm">This will allow EarthLink to access:
+      <ul><li>Your name and profile photo</li><li>Your email address</li><li>Your phone number (if available)</li></ul></div>
+    <div class="sheet-actions">
+      <button class="g-text" type="button" data-action="close-modal">Cancel</button>
+      <button class="g-btn" type="button" data-action="google-continue" data-autofocus>Continue</button>
+    </div>
+  </div>`);
+}
+function appleSheet(){
+  openModal(`<div class="sheet sheet--pad asi">
+    <div style="width:44px;height:44px;margin:0 auto">${SVG.apple}</div>
+    <h2 id="modalTitle">Sign in with Apple</h2>
+    <p>Create an EarthLink account using your Apple ID <b>${APPLE_USER.email}</b>.</p>
+    <div class="opt" role="radiogroup" aria-label="Email to share">
+      <label class="radio"><input type="radio" name="aEmail" value="share" checked><span class="dot"></span>Share My Email</label>
+      <label class="radio"><input type="radio" name="aEmail" value="hide"><span class="dot"></span>Hide My Email</label>
+    </div>
+    <button class="a-btn" type="button" data-action="apple-continue" data-autofocus>Continue</button>
+    <button class="a-text" type="button" data-action="close-modal">Cancel</button>
+  </div>`);
+}
+function busyThen(btn, ms, fn){
+  if(btn){ btn.classList.add("is-busy"); btn.innerHTML=`<span class="spinner"></span>`+btn.innerHTML; }
+  setTimeout(fn, reduceMotion?50:ms);
+}
+function useGoogle(){
+  closeModal();
+  S.info={...GOOGLE_USER, via:"google"}; S.draft={...GOOGLE_USER};
+  if(S.pay.method==="wallet") S.pay.wallet="gpay";
+  toast(`${SVG.doneDot.replace('class="done-dot"','width="22" height="22"')} Details filled in from Google`);
+  advance("info");
+}
+function useApple(){
+  const hide = $('#modal input[name="aEmail"]:checked').value==="hide";
+  closeModal();
+  S.draft={first:APPLE_USER.first,last:APPLE_USER.last,email:hide?APPLE_USER.relay:APPLE_USER.email,phone:""};
+  S.infoMode="apple"; S.infoErrors={};
+  if(S.pay.method==="wallet") S.pay.wallet="apay";
+  renderStep("info");
+  setTimeout(()=>{ const f=$("#f-phone"); if(f){ f.focus(); } },350);
+}
+function validateInfo(d){
+  const e={};
+  if(!d.first.trim()) e.first="Please enter your first name";
+  if(!d.last.trim()) e.last="Please enter your last name";
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim())) e.email="Please enter an email like name@example.com";
+  if(d.phone.replace(/\D/g,"").length!==10) e.phone="Please enter a 10-digit phone number";
+  return e;
+}
+function fmtPhone(v){
+  const d=v.replace(/\D/g,"").slice(0,10);
+  if(d.length<4) return d;
+  if(d.length<7) return `(${d.slice(0,3)}) ${d.slice(3)}`;
+  return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+}
+
+/* ------------------------------------------------------------------
+   Review & Pay
+------------------------------------------------------------------- */
+function termsSheet(){
+  openModal(`<div class="sheet sheet--pad">
+    <div class="sheet-head"><h2 id="modalTitle">Terms &amp; Conditions</h2><button class="x-btn" type="button" data-action="close-modal" aria-label="Close">${SVG.close}</button></div>
+    <div class="terms-box" tabindex="0" aria-label="Terms and conditions text">
+      <h3>Internet</h3>
+      <p>Your EarthLink Internet Service requires a 12 month subscription that includes an Early Termination Fee of up to $200.00.</p>
+      <p>This service includes Professional Installation with a nonrefundable Installation Fee of ${money(FEES.install)} charged today.</p>
+      <h3>Equipment</h3>
+      <p>The modem is leased for ${money(FEES.modem)} per month and must be returned within 30 days if you cancel service.</p>
+      <h3>Billing</h3>
+      <p>Monthly charges begin on your installation date and are billed in advance. Prices exclude some taxes and fees, which may vary by location.</p>
+    </div>
+    <p class="terms-agree-text">I am at least 18 years old and agree to EarthLink's Terms, including the Service Agreement, Acceptable Use Policy, and Privacy Policy.</p>
+    <button class="btn btn-outline" type="button" data-action="agree-terms" data-autofocus>Agree to Terms</button>
+  </div>`);
+}
+function autopaySheet(){
+  openModal(`<div class="sheet sheet--pad">
+    <div class="sheet-head"><h2 id="modalTitle">Automatic Payments Authorization</h2><button class="x-btn" type="button" data-action="close-modal" aria-label="Close">${SVG.close}</button></div>
+    <div class="terms-box" tabindex="0">
+      <p>You authorize EarthLink to charge your selected payment method each month for your service charges, on or after your bill date, until you cancel this authorization.</p>
+      <p>You can change your payment method or cancel automatic payments at any time by calling 877-460-0325 or in your online account. Changes take effect on your next bill.</p>
+    </div>
+    <button class="btn btn-outline" type="button" data-action="agree-autopay" data-autofocus style="margin-top:18px">I Understand &amp; Agree</button>
+  </div>`);
+}
+function validatePay(){
+  const e={}, P=S.pay;
+  if(P.method==="card"){
+    const c=P.card, n=c.num.replace(/\D/g,"");
+    if(c.name.trim().length<2) e["card.name"]="Please enter the name shown on the card";
+    if(n.length<15||n.length>16) e["card.num"]="Please enter the 15 or 16 digits on the front of your card";
+    if(D()){
+      const now=new Date(), mm=+c.mm, yy=+c.yyyy;
+      if(!(mm>=1&&mm<=12)) e["card.mm"]="Use 01 to 12";
+      if(!/^\d{4}$/.test(c.yyyy)||yy<now.getFullYear()) e["card.yyyy"]="Enter a valid year";
+      else if(yy===now.getFullYear()&&mm&&mm<now.getMonth()+1) e["card.mm"]="This card has expired";
+    } else {
+      const m=c.exp.match(/^(\d{2})\/(\d{2})$/);
+      if(!m||+m[1]<1||+m[1]>12) e["card.exp"]="Use the format MM/YY";
+      else { const now=new Date(), yy=now.getFullYear()%100, mm=now.getMonth()+1; if(+m[2]<yy||(+m[2]===yy&&+m[1]<mm)) e["card.exp"]="This card has expired"; }
+    }
+    if(!/^\d{3,4}$/.test(c.cvv)) e["card.cvv"]="3 or 4 digits on the back";
+    if(!/^\d{5}$/.test(c.zip)) e["card.zip"]="Please enter a 5-digit ZIP code";
+  }
+  if(P.method==="ach"){
+    const a=P.ach;
+    if(!D() && a.name.trim().length<2) e["ach.name"]="Please enter the account holder’s name";
+    if(!/^\d{9}$/.test(a.routing)) e["ach.routing"]="Routing numbers are 9 digits";
+    if(!/^\d{4,17}$/.test(a.account)) e["ach.account"]="Please enter your account number";
+    else if(D() && a.account2!==a.account) e["ach.account2"]="Account numbers don’t match";
+  }
+  if(!S.terms) e.terms=true;
+  if(!S.autopay) e.autopay=true;
+  const missing=[];
+  if(Object.keys(e).some(k=>k.includes("."))) missing.push("check your payment details");
+  if(e.terms) missing.push("agree to the Terms & Conditions");
+  if(e.autopay) missing.push("agree to the Automatic Payments Authorization");
+  if(missing.length) e._summary="To place your order, please "+missing.join(", ").replace(/, ([^,]*)$/," and $1")+".";
+  return e;
+}
+function placeOrder(){
+  S.payErrors=validatePay();
+  if(Object.keys(S.payErrors).length){
+    renderStep("pay");
+    const firstBad=$("#step-pay .is-invalid input")||$("#payErrSummary");
+    if(firstBad){ scrollToEl(firstBad.closest(".field,.cbox")||firstBad); setTimeout(()=>firstBad.focus({preventScroll:true}),300); }
+    return;
+  }
+  if(S.pay.method==="wallet" && S.pay.wallet==="gpay") return gpaySheet();
+  if(S.pay.method==="wallet" && S.pay.wallet==="apay") return apaySheet();
+  processAndFinish();
+}
+function gpaySheet(){
+  openModal(`<div class="sheet">
+    <div class="gpay-top"><span id="modalTitle">pay.google.com</span><button class="x-btn" type="button" data-action="close-modal" aria-label="Close Google Pay">${SVG.close}</button></div>
+    <div class="gpay-body">
+      <div class="gpay-brand">${SVG.gpay}<span class="avatar" style="background:#5e35b1">A</span></div>
+      <button class="gcard" type="button" aria-label="Payment card: Mastercard Debit Standard ending 8951">
+        <span class="mc" aria-hidden="true"></span>
+        <span style="flex:1"><b>Mastercard Debit Standard</b><span>Mastercard •• 8951</span></span>
+        <svg width="10" height="16" viewBox="0 0 10 16" aria-hidden="true"><path d="M2 2l6 6-6 6" stroke="#3c4043" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      <div class="gpay-total"><span>Pay EarthLink</span><strong>${money(totals().due)}</strong></div>
+      <button class="gpay-cta" type="button" data-action="wallet-pay" data-autofocus>Continue</button>
+      <p class="gpay-enc">${SVG.shield} Your payment details are encrypted</p>
+    </div>
+  </div>`);
+}
+function apaySheet(){
+  const u=S.info||GOOGLE_USER;
+  openModal(`<div class="sheet apay">
+    <div class="apay-head">${SVG.applepay}<button class="a-text" style="width:auto;margin:0" type="button" data-action="close-modal">Cancel</button></div>
+    <h2 class="sr-only" id="modalTitle">Apple Pay</h2>
+    <div class="apay-rows">
+      <div class="apay-row"><span>Card</span><b>Apple Card •••• 4021</b></div>
+      <div class="apay-row"><span>Contact</span><b>${esc(u.email)}</b></div>
+      <div class="apay-row"><span>Pay</span><b>EarthLink &nbsp;<strong>${money(totals().due)}</strong></b></div>
+    </div>
+    <div class="apay-foot"><button class="a-btn" type="button" data-action="wallet-pay" data-autofocus>Pay with Apple Pay</button></div>
+  </div>`);
+}
+function processAndFinish(){
+  closeModal();
+  const pr=$("#processing"); $("#processingText").textContent="Placing your order…"; pr.hidden=false;
+  setTimeout(()=>{ $("#processingText").textContent="Confirming your installation…"; }, reduceMotion?10:900);
+  setTimeout(()=>{ pr.hidden=true; renderDone(); show("done"); announce("Thank you for your order."); }, reduceMotion?60:1800);
+}
+
+/* ------------------------------------------------------------------
+   07 · Order placed
+------------------------------------------------------------------- */
+function renderDone(){
+  const p=plan(), t=totals();
+  const ono = S.ono || (S.ono = "EL" + Math.floor(10000000+Math.random()*89999999) + "FBR");
+  const colors=["#f68d1f","#00a3e0","#509e2f","#ba0c2f","#ffe161","#0075a3"];
+  const bits=[...Array(16)].map((_,i)=>{ const a=i/16*Math.PI*2, r=70+(i%3)*14;
+    return `<i style="background:${colors[i%colors.length]};--x:${Math.cos(a)*r}px;--y:${Math.sin(a)*r}px;--r:${(i*47)%360}deg"></i>`; }).join("");
+  const pm = S.pay.method==="wallet" ? (S.pay.wallet==="gpay"?"Google Pay":"Apple Pay") : S.pay.method==="card" ? "Card ending "+S.pay.card.num.replace(/\D/g,"").slice(-4) : "Bank account ending "+S.pay.ach.account.slice(-4);
+  $("#doneBody").innerHTML = `
+    <h1 tabindex="-1" id="doneTitle">Thank you for your order</h1>
+    <div class="burst" aria-hidden="true">${SVG.graphic}${bits}</div>
+    <div class="done-card">
+      <p class="ono"><b>Order Number<span class="mob-only">:</span></b> <span class="ono-chip">${ono}</span></p>
+      <p>We are getting started on your order right away. You will receive an order confirmation email shortly at <b>${esc(S.info.email)}</b>.</p>
+    </div>
+    <div class="recap">
+      <div class="card"><h2>Installation</h2><p class="summary__text">${dLong(S.dateIdx)}, between ${SLOTS_LONG[S.slot]}</p>
+        <p class="summary__text" style="margin-top:4px">${esc(S.address)}</p></div>
+      <div class="card"><h2>Your plan</h2><p class="summary__text">${p.name} — ${money(p.price)} / mo (about ${money(t.monthly)} / mo with fees)</p></div>
+      <div class="card"><h2>Paid today</h2><p class="summary__text">${money(t.due)} with ${pm}</p></div>
+      <button class="btn btn-outline" type="button" data-action="restart">Back to EarthLink home</button>
+    </div>`;
+  setTimeout(()=>$("#doneTitle").focus({preventScroll:true}),100);
+}
+
+/* ------------------------------------------------------------------
+   Events
+------------------------------------------------------------------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-action]"); if(!t) return;
+  const a=t.dataset.action;
+  switch(a){
+    case "home": if(S.screen!=="done") show("location"); break;
+    case "menu": { const d=$("#drawer"); d.hidden=false; document.body.style.overflow="hidden"; t.setAttribute("aria-expanded","true"); $(".x-btn",d).focus(); break; }
+    case "menu-close": { e.preventDefault(); closeDrawer(); break; }
+    case "lang": { const on=t.getAttribute("aria-checked")!=="true"; t.setAttribute("aria-checked",on); t.setAttribute("aria-label",on?"English":"Español");
+      $("span",t).textContent=on?"ES":"EN"; if(on) toast("Español: coming soon in this prototype"); break; }
+    case "restart": location.hash=""; location.reload(); break;
+    case "manual-address": {
+      const f=$("#manualAddr"); f.hidden=!f.hidden; t.setAttribute("aria-expanded",!f.hidden);
+      if(!f.hidden){ $("#mStreet").value=$("#mStreet").value||""; $("#mStreet").focus(); }
+      break; }
+    case "pick-address": addrInput.value=$("#addrInputD").value=t.dataset.addr; startCheckout(t.dataset.addr); break;
+    case "manual-address-d": manualAddressSheet(); break;
+    case "compare": compareSheet(); break;
+    case "cmp-choose": S.plan=t.dataset.plan; closeModal(); renderStep("plan"); renderSide(); renderStrip(); announce(plan().name+" selected"); break;
+    case "date-page-d": S.datePageD=S.datePageD?0:1; renderStep("install"); break;
+    case "landing-plan":
+      S.preferredPlan=t.dataset.plan; visibleAddrInput().focus({preventScroll:true});
+      scrollToEl(D()?$(".dhero"):$(".finder")); toast(`${PLANS.find(p=>p.id===t.dataset.plan).speed} picked — now enter your address`);
+      break;
+    case "edit-address":
+      addrInput.value=$("#addrInputD").value=S.address; show("location"); setTimeout(()=>{ const i=visibleAddrInput(); i.focus(); i.select(); },200); break;
+
+    case "pick-plan":
+      if(S.plan===t.dataset.plan) break;
+      S.plan=t.dataset.plan; renderStep("plan"); renderSide(); renderStrip();
+      announce(plan().name+", "+money(plan().price)+" per month, selected"); break;
+    case "toggle-details": S.showDetails=!S.showDetails; renderStep("plan"); break;
+    case "save-plan": advance("plan"); break;
+
+    case "date-page": S.datePage=+t.dataset.page; renderStep("install"); break;
+    case "pick-date": {
+      S.dateIdx=+t.dataset.i; const b=DATES[S.dateIdx].booked;
+      if(b.includes(S.slot)) S.slot=SLOTS.findIndex((_,i)=>!b.includes(i));
+      renderStep("install"); announce(dLong(S.dateIdx)+", "+SLOTS[S.slot]+" selected"); break; }
+    case "pick-slot": S.slot=+t.dataset.i; renderStep("install"); announce(SLOTS[S.slot]+" selected"); break;
+    case "save-install": advance("install"); break;
+
+    case "google": googleSheet(); break;
+    case "google-continue": busyThen(t.classList.contains("g-btn")?t:null, 700, useGoogle); break;
+    case "google-other": closeModal(); S.infoMode="manual"; S.draft={first:"",last:"",email:"",phone:""}; S.infoErrors={}; renderStep("info"); setTimeout(()=>$("#f-first")&&$("#f-first").focus(),350); break;
+    case "apple": appleSheet(); break;
+    case "apple-continue": busyThen(t, 700, useApple); break;
+    case "manual-info": S.infoMode="manual"; S.draft=S.info?{...S.info}:{first:"",last:"",email:"",phone:""}; S.infoErrors={}; renderStep("info"); setTimeout(()=>$("#f-first")&&$("#f-first").focus(),350); break;
+    case "info-back": S.infoMode="choose"; S.infoErrors={}; renderStep("info"); break;
+
+    case "change": {
+      const st=t.dataset.step; S.open=st;
+      if(st==="info"){ S.infoMode=S.info?"manual":"choose"; S.draft=S.info?{...S.info}:{first:"",last:"",email:"",phone:""}; S.infoErrors={}; }
+      if(st==="install"){ S.datePage=S.dateIdx>6?1:0; S.datePageD=S.dateIdx>13?1:0; }
+      renderCheckout(); updateStrip(); setTimeout(()=>scrollToEl($("#step-"+st)),reduceMotion?0:360); break; }
+
+    case "pick-wallet": S.pay.wallet=t.dataset.w; renderStep("pay"); break;
+    case "open-terms": e.preventDefault(); termsSheet(); break;
+    case "open-autopay": e.preventDefault(); autopaySheet(); break;
+    case "agree-terms": S.terms=true; delete S.payErrors.terms; refreshPayErrors(); closeModal(); renderStep("pay"); $('[data-key="terms"]').focus({preventScroll:true}); break;
+    case "agree-autopay": S.autopay=true; delete S.payErrors.autopay; refreshPayErrors(); closeModal(); renderStep("pay"); break;
+    case "place-order": placeOrder(); break;
+    case "wallet-pay": busyThen(t, 900, processAndFinish); break;
+    case "close-modal": closeModal(); break;
+  }
+});
+function closeDrawer(){
+  const d=$("#drawer"); if(d.hidden) return;
+  d.hidden=true; document.body.style.overflow=""; const b=$(".menu-btn"); b.setAttribute("aria-expanded","false"); b.focus({preventScroll:true});
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
+function refreshPayErrors(){ if(S.payErrors._summary){ const e=validatePay(); S.payErrors=e; if(!Object.keys(e).length) S.payErrors={}; } }
+
+document.addEventListener("change",e=>{
+  const t=e.target, a=t.dataset.action;
+  if(a==="pick-method"){ S.pay.method=t.value; S.payErrors={}; renderStep("pay");
+    if(t.value!=="wallet") setTimeout(()=>{ const f=$("#step-pay .pay-sub input"); if(f) f.focus(); },320); }
+  if(a==="ach-type"){ S.pay.ach.type=t.value; }
+  if(a==="terms-box"){
+    if(t.checked && !S.terms && !D()){ t.checked=false; termsSheet(); return; }  // mobile: read the terms before agreeing (web shows them inline)
+    S.terms=t.checked; refreshPayErrors(); renderStep("pay");
+  }
+  if(a==="autopay-box"){ S.autopay=t.checked; if(t.checked) delete S.payErrors.autopay; refreshPayErrors(); renderStep("pay"); }
+});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.info){
+    if(t.dataset.info==="phone"){ t.value=fmtPhone(t.value); }
+    S.draft[t.dataset.info]=t.value;
+    if(S.infoErrors[t.dataset.info]){ delete S.infoErrors[t.dataset.info]; const f=t.closest(".field"); f.classList.remove("is-invalid"); const er=f.querySelector(".err"); if(er) er.remove(); t.removeAttribute("aria-invalid"); }
+  }
+  if(t.dataset.pay){
+    const [g,k]=t.dataset.pay.split(".");
+    let v=t.value;
+    if(g==="card"&&k==="num") v=v.replace(/\D/g,"").slice(0,16).replace(/(\d{4})(?=\d)/g,"$1 ");
+    if(g==="card"&&k==="exp"){ v=v.replace(/\D/g,"").slice(0,4); if(v.length>2) v=v.slice(0,2)+"/"+v.slice(2); }
+    if((g==="card"&&["cvv","zip","mm","yyyy"].includes(k))||(g==="ach"&&k!=="name")) v=v.replace(/\D/g,"");
+    t.value=v; S.pay[g][k]=v;
+    if(S.payErrors[t.dataset.pay]){ delete S.payErrors[t.dataset.pay]; const f=t.closest(".field"); f.classList.remove("is-invalid"); const er=f.querySelector(".err"); if(er) er.remove(); }
+  }
+});
+document.addEventListener("submit",e=>{
+  if(e.target.classList.contains("manual-form")){ e.preventDefault(); submitManualAddress(e.target); return; }
+  if(e.target.id!=="infoForm") return;
+  e.preventDefault();
+  S.infoErrors=validateInfo(S.draft);
+  if(Object.keys(S.infoErrors).length){ renderStep("info"); const f=$("#step-info .is-invalid input"); if(f) f.focus(); return; }
+  S.info={...S.draft, via:S.infoMode}; S.infoMode="choose";
+  advance("info");
+});
+
+/* ------------------------------------------------------------------
+   Init
+------------------------------------------------------------------- */
+fillSvgs();
+renderLandingPlans();
+document.documentElement.style.setProperty("--header-h",headerH()+"px");
+document.body.dataset.screen="location";
+history.replaceState({screen:"location"},"","#location");
+})();
+</script>
+</body>
+</html>
