@@ -840,9 +840,6 @@ body:not(.show-lang) .lang-pill{display:none}
       <a class="hlink desk-only" href="#"><span data-svg="mail"></span>Mail</a>
       <button class="lang-pill" type="button" aria-label="Language: English">EN</button>
       <a class="hphone desk-only" href="tel:8336015646">833-601-5646</a>
-      <button class="textsize-btn" type="button" id="textSizeBtn" aria-pressed="false" data-action="text-size">
-        <span aria-hidden="true">A<span class="a-big">A</span></span><span class="ts-label">Larger text</span>
-      </button>
     </div>
   </div>
 </header>
@@ -1444,7 +1441,7 @@ function infoBody(){
 }
 function infoSummary(){
   const u=S.info;
-  return summaryCard("info", `<p class="summary__text">${esc(u.first+" "+u.last)}, ${esc(u.email)}, ${esc(u.phone)}</p>`);
+  return summaryCard("info", `<p class="summary__text">${esc(u.first+" "+u.last)}<br>${esc(u.email)}<br>${esc(u.phone)}</p>`);
 }
 
 /* step 4 */
@@ -1545,6 +1542,7 @@ function renderStep(step){
   else if(S.done[step]) html = (d?{plan:planSummaryD,install:installSummaryD,info:infoSummaryD}:{plan:planSummary,install:installSummary,info:infoSummary})[step]();
   else html = d ? dUpcoming(step) : upcoming(step);
   morph(el, html);
+  renderStrip();
 }
 function renderCheckout(){
   $(".co").classList.toggle("has-cart", S.done.plan);
@@ -1771,23 +1769,22 @@ mqD.addEventListener("change",()=>{
 /* contextual order strip — appears on mobile once the summary cards scroll away */
 function renderStrip(){
   const p=plan(), t=totals();
-  $("#ostrip").innerHTML = `<div class="ostrip__in">
-    <div class="ostrip__row">
-      <div class="ostrip__cell">${SVG.wifi}<div><b class="big">${p.name}</b><span>${money(p.price)}/mo</span></div></div>
-      <div class="ostrip__cell ostrip__due"><div><span>Due today</span><b>${money(t.due)}</b></div></div>
-    </div>
-    <hr>
-    <div class="ostrip__row">
-      <div class="ostrip__cell">${SVG.cal}<div><b>${dFull(S.dateIdx)}</b><span>${SLOTS[S.slot]}</span></div></div>
-      <div class="ostrip__cell">${SVG.user}<div><b>${S.info?esc(S.info.first+" "+S.info.last):""}</b><span>${S.info?esc(S.info.phone):""}</span></div></div>
-    </div></div>`;
+  const planCell=`<div class="ostrip__cell">${SVG.wifi}<div><b class="big">${p.name}</b><span>${money(p.price)}/mo</span></div></div>`;
+  const dueCell=`<div class="ostrip__cell ostrip__due"><div><span>Due today</span><b>${money(t.due)}</b></div></div>`;
+  const dateCell=S.done.install?`<div class="ostrip__cell">${SVG.cal}<div><b>${dFull(S.dateIdx)}</b><span>${SLOTS[S.slot]}</span></div></div>`:"";
+  const userCell=S.done.info&&S.info?`<div class="ostrip__cell">${SVG.user}<div><b>${esc(S.info.first+" "+S.info.last)}</b><span>${esc(S.info.phone)}</span></div></div>`:"";
+  // the strip grows as steps are completed: plan → plan + installation → everything (+ due today on Review & Pay)
+  const rows = S.open==="pay" ? [[planCell,dueCell],[dateCell,userCell]] : [[planCell,dateCell],[userCell]];
+  $("#ostrip").innerHTML = `<div class="ostrip__in">${rows.map(r=>r.filter(Boolean)).filter(r=>r.length)
+    .map(r=>`<div class="ostrip__row">${r.join("")}</div>`).join("<hr>")}</div>`;
 }
 function updateStrip(){
   const strip=$("#ostrip");
-  const active = S.screen==="checkout" && S.open==="pay";
+  const active = S.screen==="checkout" && S.done.plan;
   if(!active){ strip.classList.remove("is-shown"); return; }
-  const payCard=$("#step-pay").getBoundingClientRect();
-  const visible = payCard.top < headerH()-70 && payCard.bottom > headerH()+160;
+  // show once the first completed card has scrolled up under the header, while the open step is still on screen
+  const first=$("#step-plan").getBoundingClientRect(), open=$("#step-"+S.open).getBoundingClientRect();
+  const visible = first.bottom < headerH()+4 && open.bottom > headerH()+160;
   strip.classList.toggle("is-shown", visible);
 }
 window.addEventListener("scroll",updateStrip,{passive:true});
@@ -2047,13 +2044,6 @@ document.addEventListener("click",e=>{
   switch(a){
     case "home": if(S.screen!=="done") show("location"); break;
     case "restart": location.hash=""; location.reload(); break;
-    case "text-size": {
-      const on=!document.documentElement.classList.contains("text-large");
-      document.documentElement.classList.toggle("text-large",on);
-      t.setAttribute("aria-pressed",on); $(".ts-label",t).textContent=on?"Normal text":"Larger text";
-      try{ localStorage.setItem("elTextLarge",on?"1":"0"); }catch(_){}
-      document.documentElement.style.setProperty("--header-h",headerH()+"px");
-      break; }
     case "manual-address": {
       const f=$("#manualAddr"); f.hidden=!f.hidden; t.setAttribute("aria-expanded",!f.hidden);
       if(!f.hidden){ $("#mStreet").value=$("#mStreet").value||""; $("#mStreet").focus(); }
@@ -2154,7 +2144,6 @@ document.addEventListener("submit",e=>{
 ------------------------------------------------------------------- */
 fillSvgs();
 renderLandingPlans();
-try{ if(localStorage.getItem("elTextLarge")==="1") $("#textSizeBtn").click(); }catch(_){}
 document.documentElement.style.setProperty("--header-h",headerH()+"px");
 document.body.dataset.screen="location";
 history.replaceState({screen:"location"},"","#location");
