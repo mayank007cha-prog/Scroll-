@@ -161,6 +161,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const cardScale = (config.heroScale * (Pm / (Pm - config.heroDepth))) / (Pm / (Pm - config.trackDepth));
   const measure = () => {
     scaleDepths();
+    // Background objects fit the thin bands above and below the cards, which
+    // are a fixed share of the frame height, so size them by that height.
+    if (depthField) depthField.style.setProperty("--depth-scale", ((frame.clientHeight / 900) * 0.62).toFixed(3));
     frame.style.setProperty("--card-w", `${(frame.clientWidth * cardScale).toFixed(1)}px`);
     frame.style.setProperty("--card-h", `${(frame.clientHeight * cardScale).toFixed(1)}px`);
     frameWidth = vertical ? frame.clientHeight : frame.clientWidth;
