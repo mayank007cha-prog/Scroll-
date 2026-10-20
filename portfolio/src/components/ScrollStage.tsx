@@ -584,10 +584,14 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       },
     });
   };
-  lenis.on("scroll", () => {
+  const scheduleSettle = () => {
     window.clearTimeout(settleTimer);
     settleTimer = window.setTimeout(settle, 180);
-  });
+  };
+  lenis.on("scroll", scheduleSettle);
+  // Also the browser's own scroll event: right after a programmatic glide,
+  // Lenis can skip the next native scroll (a key press or small swipe).
+  window.addEventListener("scroll", scheduleSettle, { passive: true });
 
   // ---- Card by card: a wheel gesture in the row glides to the next card ---
   let snapping = false;
@@ -671,6 +675,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
 
   return () => {
     cubes?.destroy();
+    window.removeEventListener("scroll", scheduleSettle);
     window.clearTimeout(settleTimer);
     gsap.ticker.remove(raf);
     gsap.ticker.remove(paperTick);
