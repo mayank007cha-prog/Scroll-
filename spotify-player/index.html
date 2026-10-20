@@ -373,7 +373,8 @@
   .vfb { animation: drift 16s ease-in-out infinite alternate; transform-origin: 55% 40%; }
   @keyframes drift { from { transform: scale(1.03); } to { transform: scale(1.16) translate(-2%, 2%); } }
   .paused .vfb { animation-play-state: paused; }
-  #media { opacity: 0; transition: opacity .4s var(--ease-out); }
+  .vfb.still { animation: none; transform: none; }
+  #media { opacity: 0; transition: opacity .25s ease-out; }
   #media.on { opacity: 1; }
   /* Light glass that stays legible on bright video: dark tint, strong blur, hairline edge */
   .glass {
@@ -401,7 +402,7 @@
   /* A light dim over the whole video so text and icons read on any frame */
   .v-scrim.all { inset: 0; height: auto; background: rgba(0, 0, 0, .14); }
   .v-title {
-    position: absolute; left: 8px; right: 46px; top: 8px; padding: 6px 12px 7px; text-align: left; color: #fff;
+    position: absolute; left: 8px; right: 8px; top: 8px; padding: 6px 12px 7px; text-align: left; color: #fff;
     border-radius: 22px; background: rgba(255, 255, 255, .16);
     -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); overflow: hidden;
@@ -428,9 +429,7 @@
   .v-line .fill { stroke: #fff; stroke-dasharray: 100 200; stroke-dashoffset: calc(100 - 100 * var(--p, 0)); }
   .v-line.card { width: 184px; height: 120px; transition: opacity .2s ease; }
   .video-face.info .v-line.card { opacity: 0; }
-  .v-line.pill { width: 130px; height: 46px; }
-  .v-expand { top: 8px; right: 8px; width: 30px; height: 30px; opacity: 0; pointer-events: none; }
-  .v-expand svg { width: 14px; height: 14px; }
+  .v-line.pill { width: 168px; height: 46px; }
   .v-ctrls {
     position: absolute; left: 0; right: 0; bottom: 5px; display: flex; justify-content: center; gap: 14px;
     opacity: 0; transform: translateY(4px); pointer-events: none;
@@ -440,7 +439,7 @@
   .v-ctrls .ctl svg { width: 25px; height: 25px; filter: drop-shadow(0 1px 2.5px rgba(0, 0, 0, .5)); }
   .v-ctrls .ctl.play svg { width: 27px; height: 27px; }
 
-  .video-face.info .v-scrim, .video-face.info .v-title, .video-face.info .v-expand, .video-face.info .v-ctrls {
+  .video-face.info .v-scrim, .video-face.info .v-title, .video-face.info .v-ctrls {
     opacity: 1; transform: none; pointer-events: auto; }
   .video-face.info .vglass { opacity: 0; transform: scale(.9); pointer-events: none; }
 
@@ -795,11 +794,8 @@
           <div class="v-scrim all"></div>
           <div class="v-scrim top"></div>
           <div class="v-scrim bottom"></div>
-          <button class="v-title" id="vTitle" data-action="open" aria-label="Open song page. Swipe to change song"><span class="v-clip"><span class="v-name" id="vName"><b id="vSong"><span>Matargashti</span></b><span id="vArtist">Mohit Chauhan</span></span></span><svg class="v-line pill" viewBox="0 0 130 46" aria-hidden="true"><path class="track" d="M22 45H108"/><path class="fill" pathLength="100" d="M22 45H108"/></svg></button>
+          <button class="v-title" id="vTitle" data-action="open" aria-label="Open song page. Swipe to change song"><span class="v-clip"><span class="v-name" id="vName"><b id="vSong"><span>Matargashti</span></b><span id="vArtist">Mohit Chauhan</span></span></span><svg class="v-line pill" viewBox="0 0 168 46" aria-hidden="true"><path class="track" d="M22 45H146"/><path class="fill" pathLength="100" d="M22 45H146"/></svg></button>
           <svg class="v-line card" viewBox="0 0 184 120" aria-hidden="true"><path class="track" d="M30 119H154"/><path class="fill" pathLength="100" d="M30 119H154"/></svg>
-          <button class="glass v-expand" data-action="open" aria-label="Open song page">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg>
-          </button>
           <div class="v-ctrls">
             <button class="ctl" aria-label="Connect to a device" data-action="devices"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.7 4.6H4.4c-.7 0-1.2.5-1.2 1.2v9.1c0 .7.5 1.2 1.2 1.2h4.3"/><rect x="10.6" y="3.4" width="10.2" height="17.2" rx="1.8"/><circle cx="15.7" cy="14" r="2.8"/><circle cx="15.7" cy="7.6" r="1" fill="#fff" stroke="none"/><circle cx="5.7" cy="19.5" r="1.05" fill="#fff" stroke="none"/></svg></button>
             <button class="ctl" aria-label="Add to Liked Songs" aria-pressed="false" data-action="like"><svg class="main" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 8v8M8 12h8"/></svg><svg class="alt" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1ed760"/><path d="m7.8 12.3 2.8 2.8 5.6-5.8" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -980,6 +976,8 @@
     .forEach(([k, song, by, dur]) => { MOVIES[k] = { ...MOVIES.tamasha, song, by, dur, video: false, media: null }; });
   MOVIES['t-agar'] = { ...MOVIES.tamasha, song: 'Agar Tum Saath Ho', by: 'Alka Yagnik, Arijit Singh', dur: 45, video: true,
     media: M('tamasha-agar', 'standin-video') };
+  // A video's opening frame shows while it loads, so playback starts without a jump.
+  for (const mv of Object.values(MOVIES)) if (mv.video) mv.still = mv.media[0][0].replace(/\.mp4$/, '.jpg');
 
   // The Tum Bin soundtrack (Koi Fariyaad is the one with media).
   [['tb-chhoti', 'Chhoti Chhoti Raatein', 'Sonu Nigam, Anuradha Paudwal', 334],
@@ -1192,16 +1190,17 @@
     const e = easeInOut(mv), vv = clamp(vm.v, 0, 1);
     const cardOut = smooth(0.1, 0.7, mv);
     cardBg.style.opacity = 1 - smooth(0.3, 0.9, mv);
-    cardFace.style.opacity = (1 - cardOut) * (1 - vv);
+    cardFace.style.opacity = (1 - cardOut) * (1 - smooth(0, 0.45, vv));
     cardFace.style.transform = `scale(${1 - cardOut * 0.03})`;
     cardFace.style.pointerEvents = mv > 0.15 || vv > 0.5 ? 'none' : '';
-    videoFace.style.opacity = (1 - cardOut) * vv;
+    videoFace.style.opacity = (1 - cardOut) * smooth(0.3, 1, vv);
     videoFace.style.pointerEvents = mv > 0.15 || vv < 0.5 ? 'none' : 'auto';
 
     const X0 = lerp(w / 2 - CARD_W / 2 + 40, w / 2, vv), Y0 = lerp(42, CARD_H / 2, vv), R0 = lerp(31, 48, vv);
     const R = lerp(R0, DISC / 2, e), X = lerp(X0, w / 2, e), Y = lerp(Y0, CARD_H / 2, e);
     const disc = `translate3d(${X - R}px, ${Y - R}px, 0)`;
-    discFace.style.opacity = vv > 0.5 ? smooth(0, 0.25, mv) : smooth(0, 0.04, mv);
+    // Into the video card the disc clears early, so no circle sits over the video as it opens.
+    discFace.style.opacity = vv > 0.5 ? smooth(0.5, 0.85, mv) : smooth(0, 0.04, mv);
     for (const el of [spinEl, discStatic, discShadow]) { el.style.width = el.style.height = `${2 * R}px`; }
     const rot = unfold ? unfold.to + (unfold.from - unfold.to) * clamp(e / unfold.e0, 0, 1) : angle + e * TURN;
     spinEl.style.transform = `${disc} rotate(${rot}deg)`;
@@ -1469,7 +1468,7 @@
   }
   function hideInfo() { clearTimeout(infoTimer); videoFace.classList.remove('info'); }
   // Shown on its own for a moment when a video starts or comes back out of the disc.
-  const peekInfo = () => setTimeout(() => showInfo(2500), 420);
+  const peekInfo = () => setTimeout(() => showInfo(2500), 650);
   // Touching the controls keeps them up.
   videoFace.addEventListener('pointerdown', () => { if (videoFace.classList.contains('info')) showInfo(); });
 
@@ -1579,7 +1578,7 @@
     fitMarquee($('vSong'));
     $('vArtist').textContent = mv.by;
     fitTitle();
-    vfb.src = mv.img;
+    setStill(mv);
     shArt.src = mv.img;
     shBanner.style.setProperty('--pos', mv.pos || '50% 30%');
     $('shTitle').textContent = mv.song;
@@ -1593,6 +1592,14 @@
     placeMedia();
   }
 
+  function setStill(mv) {
+    const src = mv.still || mv.img;
+    if (vfb.getAttribute('src') === src) return;
+    vfb.classList.toggle('still', !!mv.still);
+    vfb.onerror = mv.still ? () => { vfb.onerror = null; vfb.classList.remove('still'); vfb.src = mv.img; } : null;
+    vfb.src = src;
+  }
+
   let swapTimer;
   function setTrack(key, how = 'fade', keepInfo = false) {
     const mv = MOVIES[key];
@@ -1601,6 +1608,7 @@
     current = key;
     started = true;
     if (!mv.media) progress = 0;
+    setStill(mv);
     loadMedia();
     markPlaying();
     if (mode === 'card') player.setAttribute('aria-label', nowPlayingLabel());
