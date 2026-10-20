@@ -2070,12 +2070,11 @@ document.addEventListener("click",e=>{
   const t=e.target.closest("[data-action]"); if(!t) return;
   const a=t.dataset.action;
   switch(a){
-    case "home": if(S.screen!=="done") show("location"); break;
+    case "home": case "restart": resetApp(); break;
     case "menu": { const d=$("#drawer"); d.hidden=false; document.body.style.overflow="hidden"; t.setAttribute("aria-expanded","true"); $(".x-btn",d).focus(); break; }
     case "menu-close": { e.preventDefault(); closeDrawer(); break; }
     case "lang": { const on=t.getAttribute("aria-checked")!=="true"; t.setAttribute("aria-checked",on); t.setAttribute("aria-label",on?"English":"Español");
       $("span",t).textContent=on?"ES":"EN"; if(on) toast("Español: coming soon in this prototype"); break; }
-    case "restart": location.hash=""; location.reload(); break;
     case "manual-address": {
       const f=$("#manualAddr"); f.hidden=!f.hidden; t.setAttribute("aria-expanded",!f.hidden);
       if(!f.hidden){ $("#mStreet").value=$("#mStreet").value||""; $("#mStreet").focus(); }
@@ -2133,6 +2132,12 @@ document.addEventListener("click",e=>{
     case "close-modal": closeModal(); break;
   }
 });
+/* Logo tap: forget everything stored for this page and start the flow again from the address screen. */
+function resetApp(){
+  try{ localStorage.clear(); }catch(_){}
+  try{ sessionStorage.clear(); }catch(_){}
+  location.replace(location.href.split("#")[0]);
+}
 function closeDrawer(){
   const d=$("#drawer"); if(d.hidden) return;
   d.hidden=true; document.body.style.overflow=""; const b=$(".menu-btn"); b.setAttribute("aria-expanded","false"); b.focus({preventScroll:true});
