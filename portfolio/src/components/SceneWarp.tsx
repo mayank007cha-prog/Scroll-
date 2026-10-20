@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 /**
  * Wraps the video card and the card row in a screen-space warp: near the left
- * and right edges of the frame, whatever passes through bends towards the
- * viewer like a sheet of paper curling (taller and slightly squeezed at the
+ * and right edges of the frame, whatever passes through curves away from the
+ * viewer, like the outside of a drum (shorter and slightly squeezed at the
  * very edge), while the middle stays flat. ScrollStage draws the warp map
  * (a displacement image) and sets how strong it is.
  */
