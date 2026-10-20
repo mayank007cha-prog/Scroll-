@@ -401,13 +401,21 @@
   /* A light dim over the whole video so text and icons read on any frame */
   .v-scrim.all { inset: 0; height: auto; background: rgba(0, 0, 0, .14); }
   .v-title {
-    position: absolute; left: 12px; right: 48px; top: 9px; text-align: left; color: #fff;
+    position: absolute; left: 8px; right: 46px; top: 8px; padding: 6px 12px 7px; text-align: left; color: #fff;
+    border-radius: 22px; background: rgba(255, 255, 255, .16);
+    -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
     opacity: 0; transform: translateY(-4px); pointer-events: none;
     transition: opacity .22s ease, transform .35s var(--ease-out);
   }
-  .v-title b { display: block; font-size: 15px; font-weight: 700; letter-spacing: -.015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .v-title b { display: block; font-size: 14.5px; font-weight: 700; letter-spacing: -.015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     text-shadow: 0 1px 3px rgba(0, 0, 0, .45); }
-  .v-title span { display: block; margin-top: 1px; font-size: 12.5px; font-weight: 500; color: rgba(255, 255, 255, .86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .v-title b span { display: inline-block; }
+  .v-title b.marquee { text-overflow: clip;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 5px, #000 85%, transparent);
+    mask: linear-gradient(90deg, transparent, #000 5px, #000 85%, transparent); }
+  .v-title b.marquee span { animation: marquee var(--dur, 8s) cubic-bezier(.45, 0, .55, 1) 1s infinite; }
+  .v-title > span { display: block; margin-top: 1px; font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, .86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
   .v-expand { top: 8px; right: 8px; width: 30px; height: 30px; opacity: 0; pointer-events: none; }
   .v-expand svg { width: 14px; height: 14px; }
@@ -629,7 +637,7 @@
   @media (max-width: 520px) { .toast { top: calc(env(safe-area-inset-top) + 64px); } }
 
   @media (prefers-reduced-motion: reduce) {
-    .np-title.marquee span, .vfb { animation: none; }
+    .np-title.marquee span, .v-title b.marquee span, .vfb { animation: none; }
     .eq i { animation: none; transform: scaleY(.6); }
   }
 </style>
@@ -642,7 +650,7 @@
   <p class="lede">A mini player that drifts, docks and tucks itself away, so your music stays close without covering what you're browsing.</p>
   <ol class="gestures">
     <li><span><b>Tap Koi Fariyaad</b> to open the song page. The down arrow shrinks it into the floating player.</span></li>
-    <li><span><b>Tap Tamasha</b>, then Matargashti, for the music video. Tap the video to see what's playing; tap it again to open it.</span></li>
+    <li><span><b>Tap Tamasha</b>, then Matargashti, for the music video. Tap the video to see what's playing; swipe the song name to change song.</span></li>
     <li><span><b>Drag the player</b> anywhere, or push it into the edge to tuck it away as a spinning disc. Tap the disc to bring it back.</span></li>
     <li><span><b>Swipe the song title</b> left or right to skip. Tap the player to open the song page again.</span></li>
     <li><span><b>Scroll down</b> to hide the tab bar. Scroll up and it returns.</span></li>
@@ -775,7 +783,7 @@
           <div class="v-scrim all"></div>
           <div class="v-scrim top"></div>
           <div class="v-scrim bottom"></div>
-          <button class="v-title" data-action="open" aria-label="Open song page"><b id="vSong">Matargashti</b><span id="vArtist">Mohit Chauhan</span></button>
+          <button class="v-title" id="vTitle" data-action="open" aria-label="Open song page. Swipe to change song"><b id="vSong"><span>Matargashti</span></b><span id="vArtist">Mohit Chauhan</span></button>
           <button class="glass v-expand" data-action="open" aria-label="Open song page">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg>
           </button>
@@ -950,14 +958,15 @@
   };
 
   // The rest of the Tamasha soundtrack (only Matargashti has media).
-  const TAMASHA = ['tamasha', 't-heer', 't-agar', 't-chali', 't-wat', 't-safar', 't-tukoi'];
+  const TAMASHA = ['tamasha', 't-agar', 't-heer', 't-chali', 't-wat', 't-safar', 't-tukoi'];
   [['t-heer', 'Heer Toh Badi Sad Hai', 'Mika Singh, Nakash Aziz', 213],
-   ['t-agar', 'Agar Tum Saath Ho', 'Alka Yagnik, Arijit Singh', 341],
    ['t-chali', 'Chali Kahani', 'Sukhwinder Singh, Haricharan', 263],
    ['t-wat', 'Wat Wat Wat', 'Arijit Singh, Shashwat Singh', 239],
    ['t-safar', 'Safarnama', 'Lucky Ali', 291],
    ['t-tukoi', 'Tu Koi Aur Hai', 'A. R. Rahman, Alma Ferovic, Arjun Chandy', 252]]
     .forEach(([k, song, by, dur]) => { MOVIES[k] = { ...MOVIES.tamasha, song, by, dur, video: false, media: null }; });
+  MOVIES['t-agar'] = { ...MOVIES.tamasha, song: 'Agar Tum Saath Ho', by: 'Alka Yagnik, Arijit Singh', dur: 45, video: true,
+    media: M('tamasha-agar', 'standin-video') };
 
   // The Tum Bin soundtrack (Koi Fariyaad is the one with media).
   [['tb-chhoti', 'Chhoti Chhoti Raatein', 'Sonu Nigam, Anuradha Paudwal', 334],
@@ -1252,7 +1261,10 @@
       id: e.pointerId, sx: e.clientX, sy: e.clientY,
       scx: cx.v, scy: cy.v, moved: false, over: 0, push: null, dx: 0,
       // Horizontal drags that start on the song info skip songs; everything else moves the player.
-      zone: mode === 'card' && vm.t < 0.5 && e.target.closest('.np-pill') ? 'pill' : 'card',
+      // With the video info showing, the card stays put and only the song name can be swiped.
+      zone: mode === 'card' && vm.t > 0.5 && videoFace.classList.contains('info')
+        ? (e.target.closest('.v-title') ? 'vtitle' : 'pinned')
+        : (mode === 'card' && vm.t < 0.5 && e.target.closest('.np-pill') ? 'pill' : 'card'),
       btn: e.target.closest('button'),
       samples: [{ t: e.timeStamp, x: e.clientX, y: e.clientY }],
     };
@@ -1267,9 +1279,18 @@
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < 6) return;
       drag.moved = true;
-      drag.kind = drag.zone === 'pill' && Math.abs(dx) > Math.abs(dy) ? 'swipe' : 'move';
+      const sideways = Math.abs(dx) > Math.abs(dy);
+      drag.kind = drag.zone === 'pinned' || drag.zone === 'vtitle'
+        ? (drag.zone === 'vtitle' && sideways ? 'vswipe' : 'none')
+        : (drag.zone === 'pill' && sideways ? 'swipe' : 'move');
       player.setPointerCapture(e.pointerId);
-      if (drag.kind === 'swipe') {
+      if (drag.kind === 'none') {
+        press.t = 1;
+      } else if (drag.kind === 'vswipe') {
+        press.t = 1;
+        clearTimeout(infoTimer);            // keep the info up while swiping
+        vTitle.style.transition = 'none';
+      } else if (drag.kind === 'swipe') {
         press.t = 1;
         npSlide.style.transition = 'none';
       } else {
@@ -1283,10 +1304,12 @@
     drag.samples.push({ t: e.timeStamp, x: e.clientX, y: e.clientY });
     while (drag.samples.length > 2 && e.timeStamp - drag.samples[0].t > 90) drag.samples.shift();
 
-    if (drag.kind === 'swipe') {
+    if (drag.kind === 'none') return;
+    if (drag.kind === 'swipe' || drag.kind === 'vswipe') {
+      const el = drag.kind === 'swipe' ? npSlide : vTitle;
       drag.dx = dx;
-      npSlide.style.transform = `translate3d(${dx}px, 0, 0)`;
-      npSlide.style.opacity = 1 - Math.min(0.7, Math.abs(dx) / 220);
+      el.style.transform = `translate3d(${dx}px, 0, 0)`;
+      el.style.opacity = 1 - Math.min(0.7, Math.abs(dx) / 220);
       return;
     }
 
@@ -1348,12 +1371,14 @@
     drag = null;
     const b = bounds();
 
-    if (d.kind === 'swipe') {
-      if (Math.abs(d.dx) > 46 || (Math.abs(vx) > 0.45 && Math.sign(vx) === Math.sign(d.dx))) skip(d.dx < 0 ? 1 : -1);
-      else {
-        npSlide.style.transition = 'transform .45s var(--ease-out), opacity .3s ease-out';
-        npSlide.style.transform = ''; npSlide.style.opacity = '';
-      }
+    if (d.kind === 'none') { showInfo(); return; }
+    if (d.kind === 'swipe' || d.kind === 'vswipe') {
+      const flick = Math.abs(d.dx) > 46 || (Math.abs(vx) > 0.45 && Math.sign(vx) === Math.sign(d.dx));
+      if (flick) { d.kind === 'swipe' ? skip(d.dx < 0 ? 1 : -1) : videoSkip(d.dx < 0 ? 1 : -1); return; }
+      const el = d.kind === 'swipe' ? npSlide : vTitle;
+      el.style.transition = 'transform .45s var(--ease-out), opacity .3s ease-out';
+      el.style.transform = ''; el.style.opacity = '';
+      if (d.kind === 'vswipe') { setTimeout(() => { el.style.transition = ''; }, 460); showInfo(); }
       return;
     }
 
@@ -1422,6 +1447,7 @@
   // tap the video again while they show to open the song page.
 
   let infoTimer;
+  const vTitle = $('vTitle');
   function showInfo(ms = 3000) {
     if (mode !== 'card' || vm.t < 0.5 || sheetOpen || sheetBusy) return;
     videoFace.classList.add('info');
@@ -1452,16 +1478,18 @@
   const nowPlayingLabel = () => `Now playing: ${MOVIES[current].song} by ${MOVIES[current].by}`;
   let ctx = 'Bollywood throwback';
 
-  function fitTitle() {
-    const span = npTitle.firstChild;
-    npTitle.classList.remove('marquee');
-    const over = span.offsetWidth - npTitle.clientWidth;
+  // Long names drift slowly to show themselves in full.
+  function fitMarquee(box) {
+    const span = box.firstChild;
+    box.classList.remove('marquee');
+    const over = span.offsetWidth - box.clientWidth;
     if (over > 2) {
-      npTitle.style.setProperty('--shift', `${-(over + 14)}px`);
-      npTitle.style.setProperty('--dur', `${Math.max(6, 4 + over / 12)}s`);
-      npTitle.classList.add('marquee');
+      box.style.setProperty('--shift', `${-(over + 14)}px`);
+      box.style.setProperty('--dur', `${Math.max(6, 4 + over / 12)}s`);
+      box.classList.add('marquee');
     }
   }
+  const fitTitle = () => { fitMarquee(npTitle); fitMarquee($('vSong')); };
 
   /* ── Media: one element serves the audio card, the video card and the song page ── */
 
@@ -1534,7 +1562,8 @@
     discArt.parentNode.style.setProperty('--pos', pos);
     npTitle.firstChild.textContent = mv.song;
     npArtist.textContent = mv.by;
-    $('vSong').textContent = mv.song;
+    $('vSong').firstChild.textContent = mv.song;
+    fitMarquee($('vSong'));
     $('vArtist').textContent = mv.by;
     fitTitle();
     vfb.src = mv.img;
@@ -1552,7 +1581,7 @@
   }
 
   let swapTimer;
-  function setTrack(key, how = 'fade') {
+  function setTrack(key, how = 'fade', keepInfo = false) {
     const mv = MOVIES[key];
     if (!mv) return;
     if (key === current && started) { setPlaying(true); return; }
@@ -1568,8 +1597,8 @@
     device.style.setProperty('--pc3', mv.tint[2]);
     vm.t = mv.video ? 1 : 0;
     setPlaying(true);
-    hideInfo();
-    if (mv.video) peekInfo();
+    if (keepInfo && mv.video) showInfo();
+    else { hideInfo(); if (mv.video) peekInfo(); }
 
     if (how === 'instant') { clearTimeout(swapTimer); applyTrack(mv); return; }
 
@@ -1588,10 +1617,33 @@
     (pre.decode ? pre.decode() : Promise.resolve()).then(go, go);
   }
 
+  // Next/previous follows where you're playing from: the album's list, or the Home queue.
+  let queue = QUEUE, albumKey = null;
+  function nextKey(dir) {
+    const i = queue.indexOf(current);
+    return queue[i < 0 ? (dir > 0 ? 0 : queue.length - 1) : (i + dir + queue.length) % queue.length];
+  }
+
+  // Swipe on the video's song name: the name slides away, the next song slides in, and the info stays open.
+  function videoSkip(dir) {
+    const key = nextKey(dir), out = dir > 0 ? -1 : 1;
+    vTitle.style.transition = 'transform .2s cubic-bezier(.4, 0, 1, 1), opacity .2s linear';
+    vTitle.style.transform = `translate3d(${out * 150}px, 0, 0)`;
+    vTitle.style.opacity = '0';
+    setTimeout(() => {
+      setTrack(key, 'instant', true);
+      vTitle.style.transition = 'none';
+      vTitle.style.transform = `translate3d(${-out * 90}px, 0, 0)`;
+      void vTitle.offsetWidth;
+      vTitle.style.transition = 'transform .5s var(--ease-out), opacity .35s ease-out';
+      vTitle.style.transform = ''; vTitle.style.opacity = '';
+      setTimeout(() => { vTitle.style.transition = ''; }, 520);
+    }, 190);
+  }
+
   function skip(dir) {
-    const i = QUEUE.indexOf(current);
-    const n = i < 0 ? (dir > 0 ? 0 : QUEUE.length - 1) : (i + dir + QUEUE.length) % QUEUE.length;
-    if (sheetOpen || mode !== 'card' || vm.t > 0.5) { setTrack(QUEUE[n]); return; }
+    const key = nextKey(dir);
+    if (sheetOpen || mode !== 'card' || vm.t > 0.5) { setTrack(key); return; }
 
     // Slide the song info out, swap, and slide the next one in from the other side.
     const out = dir > 0 ? -1 : 1;
@@ -1599,7 +1651,7 @@
     npSlide.style.transform = `translate3d(${out * 180}px, 0, 0)`;
     npSlide.style.opacity = '0';
     setTimeout(() => {
-      setTrack(QUEUE[n], 'instant');
+      setTrack(key, 'instant');
       npSlide.style.transition = 'none';
       npSlide.style.transform = `translate3d(${-out * 110}px, 0, 0)`;
       void npSlide.offsetWidth;
@@ -1616,6 +1668,7 @@
   function pick(el, from, name) {
     if (sheetBusy || sheetOpen) return;
     ctxFrom = from; ctx = name;
+    queue = from === 'Playing from album' && albumKey ? ALBUMS[albumKey].tracks : QUEUE;
     setTrack(el.dataset.movie);
     $('shFrom').textContent = ctxFrom;
     $('shCtx').textContent = ctx;
@@ -1659,6 +1712,7 @@
 
   function openAlbum(key) {
     if (!album.hidden) return;
+    albumKey = key;
     fillAlbum(ALBUMS[key]);
     album.hidden = false;
     $('albumScroll').scrollTop = 0;

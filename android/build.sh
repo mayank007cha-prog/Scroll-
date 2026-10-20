@@ -14,7 +14,7 @@ fetch apksig.jar https://repo.maven.apache.org/maven2/com/android/tools/build/ap
 rm -rf "$OUT/app" && cp -r app "$OUT/app"
 W="$OUT/app/assets/www"; mkdir -p "$W/assets/media" "$W/assets/fonts"
 cp -r "$WEB/assets/posters" "$WEB/assets/icons" "$W/assets/"
-for f in koi-fariyaad.mp3 tamasha.mp4 standin-ghazal.mp3 standin-video.mp4; do
+for f in koi-fariyaad.mp3 tamasha.mp4 tamasha-agar.mp4 standin-ghazal.mp3 standin-video.mp4; do
   [ -f "$WEB/assets/media/$f" ] && cp "$WEB/assets/media/$f" "$W/assets/media/"
 done
 # Skip a stand-in when the real recording is there.
