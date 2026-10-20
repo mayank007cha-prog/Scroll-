@@ -172,9 +172,6 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const cardScale = (config.heroScale * (Pm / (Pm - config.heroDepth))) / (Pm / (Pm - config.trackDepth));
   const measure = () => {
     scaleDepths();
-    // Background objects fit the thin bands above and below the cards, which
-    // are a fixed share of the frame height, so size them by that height.
-    if (depthField) depthField.style.setProperty("--depth-scale", ((frame.clientHeight / 900) * 0.62).toFixed(3));
     frame.style.setProperty("--card-w", `${(frame.clientWidth * cardScale).toFixed(1)}px`);
     frame.style.setProperty("--card-h", `${(frame.clientHeight * cardScale).toFixed(1)}px`);
     frameWidth = vertical ? frame.clientHeight : frame.clientWidth;
@@ -274,8 +271,14 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   // a ring of cards, the side ones come closer and turn to face the viewer;
   // outward: they recede and turn away.
   const inward = config.curveInward;
-  const curveZ = (d: number) => (inward ? 1 : -1) * Math.abs(d) * cfg.curveDepth;
-  const curveDeg = (d: number) => (inward ? -1 : 1) * d * config.curveRotate;
+  // Flat in the middle, then a smooth (smoothstep) ease into the full curve
+  // by the time a card reaches its resting spot beside the centre.
+  const curveShape = (d: number) => {
+    const k = gsap.utils.clamp(0, 1, (Math.abs(d) - config.curveFlat) / (1.4 - config.curveFlat));
+    return Math.sign(d) * k * k * (3 - 2 * k);
+  };
+  const curveZ = (d: number) => (inward ? 1 : -1) * Math.abs(curveShape(d)) * cfg.curveDepth;
+  const curveDeg = (d: number) => (inward ? -1 : 1) * curveShape(d) * config.curveRotate;
   const toRad = Math.PI / 180;
   // On-screen x (from the frame centre) of a point at local x `lx` on a plane
   // centred at `cx`, depth `cz`, turned by `deg` around Y.
@@ -305,7 +308,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     // Which edge recedes on the curve: for the inward ring it's the edge
     // nearer the centre; leaning towards the start sinks the far edge. In
     // the bending zones the curling edge darkens.
-    const curve = config.curveRotate > 0 ? Math.min(1, Math.abs(d) * 0.55) : 0;
+    const curve = config.curveRotate > 0 ? Math.abs(curveShape(d)) : 0;
     const startByCurve = (inward ? d > 0 : d < 0) ? curve : 0;
     const endByCurve = (inward ? d < 0 : d > 0) ? curve : 0;
     const k = config.paperShade;

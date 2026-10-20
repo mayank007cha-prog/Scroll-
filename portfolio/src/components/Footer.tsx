@@ -11,7 +11,7 @@ export function Footer({ headline, supporting, cta, links }: FooterProps) {
           <span key={line}>{line}</span>
         ))}
       </p>
-      <a className="footer-card__cta" href={cta.href}>
+      <a className="btn-glass footer-card__cta" href={cta.href}>
         {cta.label}
       </a>
       <ul className="footer-card__links">

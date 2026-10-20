@@ -16,10 +16,13 @@ export type SceneConfig = {
   heroScale: number;
   /** Z of the floating card row (negative = further back in space). */
   trackDepth: number;
-  /** Max rotateY (deg) for cards at the edges, which bends the row into a curve. */
+  /** Max rotateY (deg) for cards towards the edges, which bends the row into a curve. */
   curveRotate: number;
-  /** Extra Z depth (px) for cards at the edges of the curve. */
+  /** Max extra Z depth (px) for cards towards the edges of the curve. */
   curveDepth: number;
+  /** How much of the middle stays flat (0–1 of the distance to a card's
+   *  resting spot beside the centre); the curve eases in smoothly beyond it. */
+  curveFlat: number;
   /** true: the row curves around the viewer, like standing inside a ring
    *  (side cards come forward and turn to face the centre). false: it bends
    *  away like the outside of a drum. */
@@ -70,29 +73,32 @@ export type SceneConfig = {
 export const sceneConfig: SceneConfig = {
   axis: "x",
   perspective: 1400,
-  heroDepth: -250,
-  heroScale: 0.95,
+  heroDepth: -300,
+  heroScale: 0.86,
   trackDepth: -80,
-  // The row itself stays flat and level; at the frame's edges the cards
-  // curl towards the viewer (edgeBend), like paper entering and leaving.
-  curveRotate: 0,
-  curveDepth: 0,
+  // The centred card is flat and level; cards ease into a light inward
+  // curve (facing the viewer, outer edge nearer) as they move to the edges.
+  // A plain 3D tilt, so it costs nothing per frame. (edgeBend, a screen-space
+  // warp, is off: a full-screen filter every frame can stutter.)
+  curveRotate: 12,
+  curveDepth: 70,
+  curveFlat: 0.3,
   curveInward: true,
-  edgeBend: 0.16,
+  edgeBend: 0,
   edgeZone: 0.12,
   paperLean: 0,
-  paperShade: 0.34,
+  paperShade: 0.25,
   depthParallax: 0.7,
   depthSpin: -0.012,
   scrub: 0.35,
   entryDistance: 110,
   videoDistance: 2.2,
   heroDistance: 0.8,
-  cardDistance: 1,
-  holdDistance: 0.2,
+  cardDistance: 0.6,
+  holdDistance: 0.1,
   settle: true,
   snap: true,
-  snapDuration: 1.25,
+  snapDuration: 0.9,
   smoothness: 0.075,
   scrollPerUnit: 1,
   autoplayOnLoad: true,
@@ -106,9 +112,9 @@ export const mobileOverrides: Partial<SceneConfig> = {
   heroDepth: -200,
   heroScale: 0.9,
   trackDepth: -40,
-  curveRotate: 9,
-  curveDepth: 80,
-  curveInward: true, // curls in, like the desktop edge bend
+  curveRotate: 10,
+  curveDepth: 50,
+  curveInward: true,
   // Phones keep the gentle ring; the screen-space bend is desktop-only
   // (a full-screen filter every frame is too costly on phones).
   edgeBend: 0,

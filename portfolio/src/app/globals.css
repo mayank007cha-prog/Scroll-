@@ -4,7 +4,7 @@
   --fg: 255 255 255;
   --bg: rgb(var(--bg-rgb));
   --frame-bg: #0a0a0c;
-  --hero-bg: #202024;
+  --hero-bg: #121c28;
   --ink: #f5f5f6;
   --ink-2: rgb(245 245 246 / 0.72);
   --ink-3: rgb(245 245 246 / 0.48);
@@ -20,10 +20,11 @@
   /* No big blurred shadows: nearly invisible on this dark ground and they
      cost frames on moving 3D cards. The grey stroke defines the edge. */
   --glass-shadow: none;
-  /* Wall and floor share one 240px grid: vertical lines at x = 0.5 of each
-     cell in both; the wall's horizontal lines sit on the bottom of each cell
-     so its lowest line is exactly where the floor starts. */
-  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0.5 0V240M0 239.5H240' fill='none' stroke='%23ffffff' stroke-opacity='0.22' stroke-width='1.5' stroke-dasharray='10 10'/%3E%3C/svg%3E");
+  /* Wall and floor share one solid 240px grid (same lines, same weight):
+     vertical lines at x = 0.5 of each cell in both; the wall's horizontal
+     lines sit on the bottom of each cell so its lowest line is exactly where
+     the floor starts. */
+  --wall-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0.5 0V240M0 239.5H240' fill='none' stroke='%23ffffff' stroke-opacity='0.14' stroke-width='1.5'/%3E%3C/svg%3E");
   --floor-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath d='M0.5 0V240M0 0.5H240' fill='none' stroke='%23ffffff' stroke-opacity='0.14' stroke-width='1.5'/%3E%3C/svg%3E");
   /* Colour, used sparingly and with meaning:
      --accent: violet. Only for things you can
@@ -32,14 +33,16 @@
      --dusk: a deeper violet, only as a faint light in the background.
      Everything else is neutral. */
   --accent: 132 116 232;
+  /* Dusk blue from the video's window light: tints the video card. */
+  --hero-tint: 14 24 38;
   --dusk: 92 70 190;
   color-scheme: dark;
 }
 
 :root {
-  /* The scene runs edge to edge; cards have small, crisp corners. */
+  /* The scene runs edge to edge; cards have soft, rounded corners. */
   --gutter: 0px;
-  --radius: 6px;
+  --radius: 24px;
   /* Fallbacks; ScrollStage sets these so the cards match the shrunken video
      card's on-screen size exactly. */
   --card-w: 76vw;
@@ -69,7 +72,7 @@ a {
 }
 
 a:focus-visible {
-  outline: 2px solid rgb(var(--accent));
+  outline: 2px solid rgb(var(--fg) / 0.85);
   outline-offset: 4px;
 }
 
@@ -116,7 +119,7 @@ a:focus-visible {
   flex: 0 0 auto;
   width: 36px;
   height: 36px;
-  border-radius: 3px;
+  border-radius: 8px;
   background: rgb(255 255 255 / 0.9);
   color: #111113;
   font-size: 15px;
@@ -219,19 +222,19 @@ a:focus-visible {
 .hero-fog {
   opacity: 0;
   background:
-    radial-gradient(90% 80% at 62% 48%, transparent 40%, rgb(var(--bg-rgb) / 0.55) 78%, rgb(var(--bg-rgb) / 0.9) 100%),
-    linear-gradient(180deg, rgb(var(--bg-rgb) / 0.5) 0%, transparent 26%, transparent 70%, rgb(var(--bg-rgb) / 0.6) 100%),
-    rgb(var(--bg-rgb) / 0.18);
+    radial-gradient(90% 80% at 62% 48%, transparent 40%, rgb(var(--hero-tint) / 0.55) 78%, rgb(var(--hero-tint) / 0.9) 100%),
+    linear-gradient(180deg, rgb(var(--hero-tint) / 0.5) 0%, transparent 26%, transparent 70%, rgb(var(--hero-tint) / 0.6) 100%),
+    rgb(var(--hero-tint) / 0.18);
 }
 
 /* Theme-coloured gradient over the window side, behind the intro text. */
 .hero-shade {
   background: linear-gradient(
     90deg,
-    rgb(var(--bg-rgb) / 0.92) 0%,
-    rgb(var(--bg-rgb) / 0.78) 26%,
-    rgb(var(--bg-rgb) / 0.35) 48%,
-    rgb(var(--bg-rgb) / 0) 68%
+    rgb(var(--hero-tint) / 0.92) 0%,
+    rgb(var(--hero-tint) / 0.78) 26%,
+    rgb(var(--hero-tint) / 0.35) 48%,
+    rgb(var(--hero-tint) / 0) 68%
   );
 }
 
@@ -274,7 +277,7 @@ a:focus-visible {
   display: grid; /* both parts share one cell, so they occupy the same spot */
   align-items: center;
   /* Left column only, vertically centred: clear of the face on the right. */
-  max-width: min(40%, 600px);
+  max-width: min(44%, 760px);
   transform: translateY(-50%);
 }
 
@@ -299,73 +302,51 @@ a:focus-visible {
   height: 0;
 }
 
-/* Part two: a short "about me" paragraph, hidden until you scroll. */
+/* Part two: two short "about me" paragraphs, hidden until you scroll. */
 [data-intro-point] {
   opacity: 0;
 }
 
 .hero-intro__about {
-  max-width: 34ch;
+  max-width: 30ch;
   margin: 0;
-  font-size: clamp(18px, min(1.7vw, 3vh), 26px);
+  font-size: clamp(18px, min(1.6vw, 2.8vh), 26px);
   line-height: 1.5;
   letter-spacing: -0.01em;
+  color: var(--ink-2);
+}
+
+/* The first paragraph leads: bigger and brighter, so it reads at a glance. */
+.hero-intro__about--lead {
+  max-width: 22ch;
+  font-size: clamp(26px, min(2.7vw, 4.6vh), 44px);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.025em;
   color: var(--ink);
-}
-
-.hero-intro__eyebrow span::before {
-  content: "";
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 9px;
-  border-radius: 50%;
-  background: rgb(var(--accent));
-  vertical-align: 1px;
-}
-
-.hero-intro__eyebrow {
-  margin: 0;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .hero-intro__title {
   margin: 0;
-
-  font-size: clamp(34px, min(4.6vw, 8vh), 84px);
-  font-weight: 650;
-  line-height: 0.98;
-  letter-spacing: -0.04em;
+  font-size: clamp(42px, min(6.2vw, 10vh), 116px);
+  font-weight: 700;
+  line-height: 0.96;
+  letter-spacing: -0.045em;
   text-wrap: balance;
 }
 
-.hero-intro__subtext {
-  max-width: 44ch;
-  margin: 0;
-  font-size: clamp(15px, min(1.35vw, 2.4vh), 20px);
-  line-height: 1.45;
-  color: var(--ink-2);
-}
-
+/* Set well apart from the title. */
 .hero-intro__hint {
-  font-size: 13px;
-  letter-spacing: 0.06em;
+  margin-top: clamp(28px, 7vh, 80px);
+  font-size: 14px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
 
-/* ---- Depth field: quiet product-design objects behind everything --------- */
+/* ---- Depth field: the grid room behind everything ----------------------- */
 
 .depth-field {
-  --line: rgb(var(--fg) / 0.3);
-  --soft: rgb(var(--fg) / 0.16);
-  --fill: rgb(var(--fg) / 0.035);
-  --depth-scale: 1;
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
@@ -375,26 +356,9 @@ a:focus-visible {
   will-change: transform;
 }
 
-.depth-obj,
 .depth-floor,
 .depth-wall {
   opacity: 0;
-}
-
-
-.depth-obj {
-  position: absolute;
-  width: 1em;
-  height: 1em;
-  transform-style: preserve-3d;
-}
-
-.depth-spin,
-.depth-spin > *,
-.depth-obj > * {
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
 }
 
 /* The room: a dashed back wall and a floor built on one grid.
@@ -533,239 +497,6 @@ a:focus-visible {
 .floor-cube__face--left { left: 0; }
 .floor-cube__face--right { left: 100%; }
 
-/* Depth of field: every background object is softly out of focus (more so
-   the deeper it sits; --obj-blur is set per object). The blur goes on the
-   drawn parts, not the 3D containers, which a filter would flatten. */
-.d-cube__face,
-.d-layers__plane,
-.d-pen,
-.d-cursor,
-.d-selection,
-.d-rings,
-.d-cross,
-.d-measure,
-.d-type {
-  filter: blur(var(--obj-blur, 1.6px));
-}
-
-/* Wireframe cube */
-.d-cube {
-  position: relative;
-  transform: rotateX(-24deg) rotateY(38deg);
-  transform-style: preserve-3d;
-}
-
-.d-cube__face {
-  position: absolute;
-  inset: 0;
-  border: 2px solid var(--line);
-  border-radius: 0.08em;
-  background: var(--fill);
-}
-
-.d-cube__face--front { transform: translateZ(0.5em); }
-.d-cube__face--back { transform: rotateY(180deg) translateZ(0.5em); }
-.d-cube__face--left { transform: rotateY(-90deg) translateZ(0.5em); }
-.d-cube__face--right { transform: rotateY(90deg) translateZ(0.5em); }
-.d-cube__face--top { transform: rotateX(90deg) translateZ(0.5em); }
-.d-cube__face--bottom { transform: rotateX(-90deg) translateZ(0.5em); }
-
-/* Exploded layer stack (like a design file's layers) */
-.d-layers {
-  position: relative;
-  transform: rotateX(58deg) rotateZ(-38deg);
-  transform-style: preserve-3d;
-}
-
-.d-layers__plane {
-  position: absolute;
-  inset: 0 -20%;
-  border: 2px solid var(--line);
-  border-radius: 0.1em;
-  background: var(--fill);
-}
-
-.d-layers__plane:nth-child(2) { transform: translateZ(0.22em); }
-
-.d-layers__plane--top {
-  display: flex;
-  flex-direction: column;
-  gap: 0.08em;
-  padding: 0.14em;
-  transform: translateZ(0.44em);
-  background: rgb(var(--fg) / 0.06);
-}
-
-.d-layers__plane--top i {
-  height: 0.08em;
-  border-radius: 1em;
-  background: var(--soft);
-}
-
-.d-layers__plane--top i:first-child { width: 60%; height: 0.14em; }
-.d-layers__plane--top i:last-child { width: 40%; }
-
-/* Pen tool bezier */
-.d-pen {
-  width: 1em;
-  height: auto;
-  overflow: visible;
-  stroke: rgb(var(--fg) / 0.4);
-  stroke-width: 2.5;
-}
-
-.d-pen .d-pen__handle { stroke: var(--soft); stroke-width: 1.5; }
-.d-pen circle,
-.d-pen rect { fill: var(--bg); stroke: rgb(var(--fg) / 0.55); }
-
-/* Multiplayer cursor */
-.d-cursor {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.08em;
-}
-
-.d-cursor svg {
-  flex: 0 0 auto;
-  width: 0.4em;
-  height: 0.4em;
-  fill: rgb(var(--accent) / 0.85);
-}
-
-.d-cursor span {
-  margin-top: 0.3em;
-  padding: 0.12em 0.45em;
-  border: 1.5px solid rgb(var(--accent) / 0.55);
-  border-radius: 1em;
-  color: rgb(var(--accent));
-  font-size: 0.2em;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-/* Selection frame with handles and size label */
-.d-selection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.05em;
-}
-
-.d-selection__box {
-  position: relative;
-  width: 1em;
-  height: 0.62em;
-  border: 1.5px solid var(--line);
-}
-
-.d-selection__box i {
-  position: absolute;
-  width: 0.045em;
-  height: 0.045em;
-  border: 1.5px solid rgb(var(--fg) / 0.55);
-  background: var(--bg);
-}
-
-.d-selection__box i:nth-child(1) { left: -0.025em; top: -0.025em; }
-.d-selection__box i:nth-child(2) { right: -0.025em; top: -0.025em; }
-.d-selection__box i:nth-child(3) { left: -0.025em; bottom: -0.025em; }
-.d-selection__box i:nth-child(4) { right: -0.025em; bottom: -0.025em; }
-
-.d-selection__label {
-  color: rgb(var(--fg) / 0.4);
-  font-size: 0.07em;
-  white-space: nowrap;
-}
-
-/* Type specimen with guide lines */
-.d-type {
-  position: relative;
-  transform: rotateY(18deg);
-}
-
-.d-type__glyph {
-  display: block;
-  font-size: 0.62em;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: rgb(var(--fg) / 0.45);
-}
-
-.d-type__line {
-  position: absolute;
-  left: -0.1em;
-  right: -0.3em;
-  height: 0;
-  border-top: 1px dashed var(--soft);
-}
-
-.d-type__line--cap { top: 0.1em; }
-.d-type__line--x { top: 0.24em; }
-.d-type__line--base { top: 0.55em; }
-
-.d-type__meta {
-  display: block;
-  margin-top: 0.1em;
-  font-size: 0.08em;
-  color: rgb(var(--fg) / 0.4);
-  white-space: nowrap;
-}
-
-/* Dashed orbit rings */
-.d-rings {
-  width: 1em;
-  height: 1em;
-  overflow: visible;
-  stroke: var(--soft);
-  stroke-width: 1.2;
-  stroke-dasharray: 4 6;
-  transform: rotateX(62deg);
-}
-
-.d-rings .d-rings__dot {
-  fill: rgb(var(--fg) / 0.5);
-  stroke: none;
-}
-
-/* Registration "+" marks */
-.d-cross {
-  width: 1em;
-  height: 1em;
-  stroke: rgb(var(--fg) / 0.28);
-  stroke-width: 1.5;
-}
-
-/* Spacing measurement between two boxes */
-.d-measure {
-  display: flex;
-  align-items: center;
-  transform: rotateX(20deg) rotateY(-16deg);
-}
-
-.d-measure__box {
-  flex: 1;
-  height: 0.34em;
-  border: 1.5px solid var(--line);
-  border-radius: 0.04em;
-  background: var(--fill);
-}
-
-.d-measure__gap {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 0.26em;
-  height: 0.34em;
-  border-block: 1px dashed var(--soft);
-}
-
-.d-measure__gap b {
-  font-size: 0.07em;
-  font-weight: 500;
-  color: rgb(var(--fg) / 0.5);
-}
-
 /* ---- Floating track ------------------------------------------------------ */
 
 .work-track {
@@ -790,47 +521,65 @@ a:focus-visible {
   pointer-events: auto;
 }
 
-/* ---- Project card: one glass card -------------------------------------
-   Label row on top; below it the text (bottom left) and a media slot
-   (right) for a video or GIF of the work. */
+/* ---- Project card: one gradient-glass card ------------------------------
+   Coloured per project (tone-*), Spotify-style: a rich two-stop gradient
+   with a soft light from the top left, the glass grain and sheen on top.
+   Left: client, big title, one-liner and a glass button, vertically
+   centred; right: a slot for a video or GIF of the work. */
 
 .project-card {
   display: block;
-  color: var(--ink);
+  color: #fff;
   text-decoration: none;
 }
 
 .project-card__body {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: clamp(16px, 3vh, 32px);
   height: var(--card-h);
-  padding: clamp(18px, min(2.6vw, 4vh), 40px);
+  padding: clamp(22px, min(3vw, 4.6vh), 52px);
   border-radius: var(--radius);
+  border-color: rgb(255 255 255 / 0.16);
+  background:
+    radial-gradient(110% 90% at 0% 0%, rgb(255 255 255 / 0.16), transparent 55%),
+    linear-gradient(140deg, var(--tone-a), var(--tone-b));
   transition:
     transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1),
     border-color 0.4s;
 }
 
+.project-card__body.tone-orange { --tone-a: #f7742d; --tone-b: #6e1f08; }
+.project-card__body.tone-blue { --tone-a: #3b7bf0; --tone-b: #0a1a45; }
+.project-card__body.tone-red { --tone-a: #ec3f3a; --tone-b: #520a0e; }
+
 .project-card:hover .project-card__body,
 .project-card:focus-visible .project-card__body {
   transform: translateY(-6px);
-  border-color: var(--stroke-hover);
+  border-color: rgb(255 255 255 / 0.32);
 }
 
-.project-card__meta {
+.project-card__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 52px);
+  min-height: 0;
+}
+
+.project-card__text {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  font-size: 15px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
 }
 
+/* Client sits right above the title: logo, name and topic. */
 .project-card__client {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-weight: 500;
+  gap: 14px;
+  margin-bottom: clamp(16px, 3vh, 28px);
+  font-size: clamp(15px, min(1.2vw, 2vh), 19px);
+  font-weight: 600;
 }
 
 .project-card__client-text {
@@ -839,30 +588,64 @@ a:focus-visible {
   gap: 2px;
 }
 
-.project-card__topic,
-.project-card__index {
-  color: var(--ink-3);
+.project-card__topic {
   font-weight: 400;
+  color: rgb(255 255 255 / 0.72);
 }
 
-.project-card__index {
-  font-variant-numeric: tabular-nums;
+.project-card .logo-tile {
+  width: clamp(40px, 3.4vw, 52px);
+  height: clamp(40px, 3.4vw, 52px);
+  border-radius: 12px;
+  font-size: clamp(15px, 1.2vw, 19px);
+  font-weight: 700;
+}
+
+.project-card__title {
+  margin: 0;
+  /* Big and bold; scales with width and height so it always fits. */
+  font-size: clamp(30px, min(4.3vw, 7.2vh), 84px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.project-card__line {
+  margin: clamp(14px, 2.4vh, 24px) 0 0;
+  max-width: 34ch;
+  font-size: clamp(16px, min(1.45vw, 2.5vh), 23px);
+  line-height: 1.4;
+  color: rgb(255 255 255 / 0.86);
+}
+
+.project-card__cta {
+  margin-top: clamp(20px, 3.6vh, 36px);
+}
+
+/* Glass buttons, used throughout (no colour of their own). */
+.btn-glass {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.08));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+  color: #fff;
+  font-size: clamp(14px, 1.05vw, 16px);
+  font-weight: 600;
+  text-decoration: none;
   white-space: nowrap;
+  transition: background 0.3s, border-color 0.3s;
 }
 
-.project-card__main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  gap: clamp(20px, 3vw, 48px);
-  min-height: 0;
-}
-
-.project-card__text {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: clamp(12px, 2vh, 20px);
-  min-width: 0;
+.btn-glass:hover,
+.project-card:hover .btn-glass {
+  border-color: rgb(255 255 255 / 0.5);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.12));
 }
 
 /* Media slot: a video or GIF fills it; until then a quiet placeholder. */
@@ -870,11 +653,9 @@ a:focus-visible {
   position: relative;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--stroke);
-  border-radius: 3px;
-  background:
-    radial-gradient(80% 70% at 70% 30%, rgb(255 255 255 / 0.05), transparent 70%),
-    #141417;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 16px;
+  background: rgb(0 0 0 / 0.22);
 }
 
 .project-card__media video,
@@ -893,7 +674,7 @@ a:focus-visible {
   place-content: center;
   justify-items: center;
   gap: 10px;
-  color: var(--ink-3);
+  color: rgb(255 255 255 / 0.6);
   font-size: 13px;
   letter-spacing: 0.04em;
 }
@@ -901,31 +682,7 @@ a:focus-visible {
 .project-card__media-hint svg {
   width: 40px;
   height: 40px;
-  opacity: 0.7;
-}
-
-.project-card__title {
-  margin: 0;
-  /* Scale with width and height so short screens don't overflow the card. */
-  font-size: clamp(26px, min(3.5vw, 5.8vh), 64px);
-  font-weight: 550;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  text-wrap: balance;
-}
-
-.project-card__line {
-  margin: 0;
-  max-width: 42ch;
-  font-size: clamp(14px, min(1.2vw, 2.2vh), 19px);
-  line-height: 1.45;
-  color: var(--ink-2);
-}
-
-.project-card__cta {
-  font-size: 15px;
-  font-weight: 500;
-  color: rgb(var(--accent));
+  opacity: 0.8;
 }
 
 /* ---- Paper shading --------------------------------------------------------
@@ -996,35 +753,11 @@ a:focus-visible {
   color: var(--ink-2);
 }
 
+/* The main button: a larger glass button (see .btn-glass). */
 .footer-card__cta {
-  position: relative;
   align-self: flex-start;
-  overflow: hidden;
-  padding: 16px 28px;
-  border: 1px solid rgb(255 255 255 / 0.14);
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgb(104 88 206), rgb(76 62 170));
-  color: #f5f5f6;
-  text-decoration: none;
-  font-weight: 500;
+  padding: 16px 30px;
   font-size: 17px;
-  transition: filter 0.25s;
-}
-
-/* Grain on the button so it sits in the same matte finish. */
-.footer-card__cta::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: var(--noise);
-  background-size: 120px;
-  opacity: 0.3;
-  mix-blend-mode: overlay;
-  pointer-events: none;
-}
-
-.footer-card__cta:hover {
-  filter: brightness(1.12);
 }
 
 .footer-card__links {
@@ -1118,9 +851,9 @@ a:focus-visible {
   .hero-shade {
     background: linear-gradient(
       0deg,
-      rgb(var(--bg-rgb) / 0.95) 0%,
-      rgb(var(--bg-rgb) / 0.75) 34%,
-      rgb(var(--bg-rgb) / 0) 62%
+      rgb(var(--hero-tint) / 0.95) 0%,
+      rgb(var(--hero-tint) / 0.75) 34%,
+      rgb(var(--hero-tint) / 0) 62%
     );
   }
 
@@ -1162,9 +895,9 @@ a:focus-visible {
   .hero-shade {
     background: linear-gradient(
       0deg,
-      rgb(var(--bg-rgb) / 0.95) 0%,
-      rgb(var(--bg-rgb) / 0.75) 34%,
-      rgb(var(--bg-rgb) / 0) 62%
+      rgb(var(--hero-tint) / 0.95) 0%,
+      rgb(var(--hero-tint) / 0.75) 34%,
+      rgb(var(--hero-tint) / 0) 62%
     );
   }
 
@@ -1191,13 +924,24 @@ a:focus-visible {
 
   /* Phones have no empty band above or below the cards, so keep only the
      grid, guides and light in the background. */
-  .depth-obj,
   .depth-cubes {
     display: none;
   }
 
-  .project-card__meta {
+  .project-card__client {
+    margin-bottom: 12px;
     font-size: 14px;
+  }
+
+  .project-card .logo-tile {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    font-size: 13px;
+  }
+
+  .project-card__cta {
+    margin-top: 14px;
   }
 
   /* Phones: media on top, text below. */
@@ -1212,6 +956,7 @@ a:focus-visible {
   }
 
   .project-card__line {
+    margin-top: 10px;
     font-size: 14px;
   }
 
@@ -1219,12 +964,12 @@ a:focus-visible {
   .logo-tile {
     width: 32px;
     height: 32px;
-    border-radius: 3px;
+    border-radius: 8px;
     font-size: 13px;
   }
 
   .project-card__title {
-    font-size: clamp(22px, min(6.8vw, 3.8vh), 32px);
+    font-size: clamp(22px, min(7.4vw, 4vh), 34px);
   }
 
   /* The row travels vertically on phones, so cards bend top to bottom. */
