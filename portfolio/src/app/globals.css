@@ -39,7 +39,7 @@
 :root {
   /* The scene runs edge to edge; cards have small, crisp corners. */
   --gutter: 0px;
-  --radius: 4px;
+  --radius: 6px;
   /* Fallbacks; ScrollStage sets these so the cards match the shrunken video
      card's on-screen size exactly. */
   --card-w: 76vw;
@@ -116,7 +116,7 @@ a:focus-visible {
   flex: 0 0 auto;
   width: 36px;
   height: 36px;
-  border-radius: 2px;
+  border-radius: 3px;
   background: rgb(255 255 255 / 0.9);
   color: #111113;
   font-size: 15px;
@@ -851,7 +851,7 @@ a:focus-visible {
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--stroke);
-  border-radius: 2px;
+  border-radius: 3px;
   background:
     radial-gradient(80% 70% at 70% 30%, rgb(255 255 255 / 0.05), transparent 70%),
     #141417;
@@ -1199,7 +1199,7 @@ a:focus-visible {
   .logo-tile {
     width: 32px;
     height: 32px;
-    border-radius: 2px;
+    border-radius: 3px;
     font-size: 13px;
   }
 
