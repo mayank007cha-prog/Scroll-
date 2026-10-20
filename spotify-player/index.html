@@ -662,7 +662,7 @@
   <p class="lede">A mini player that drifts, docks and tucks itself away, so your music stays close without covering what you're browsing.</p>
   <ol class="gestures">
     <li><span><b>Tap Koi Fariyaad</b> to open the song page. The down arrow shrinks it into the floating player.</span></li>
-    <li><span><b>Tap Tamasha</b>, then Matargashti, for the music video. Tap the video to see what's playing; swipe the song name to change song.</span></li>
+    <li><span><b>Tap Tamasha</b>, then Matargashti, for the music video. Tap the video to see what's playing, tap the name to open the song, or swipe it to change song.</span></li>
     <li><span><b>Drag the player</b> anywhere, or push it into the edge to tuck it away as a spinning disc. Tap the disc to bring it back.</span></li>
     <li><span><b>Swipe the song title</b> left or right to skip. Tap the player to open the song page again.</span></li>
     <li><span><b>Scroll down</b> to hide the tab bar. Scroll up and it returns.</span></li>
@@ -1372,8 +1372,8 @@
       if (e.type !== 'pointerup') return;
       if (mode === 'disc') undock();
       else if (d.btn) { /* buttons handle themselves */ }
-      // Video: the first tap shows what's playing; tapping the video again opens the song page.
-      else if (vm.t > 0.5) { if (videoFace.classList.contains('info')) { hideInfo(); openSheet(); } else showInfo(); }
+      // Video: a tap shows what's playing; tapping the video again puts it away. Only the name opens the song page.
+      else if (vm.t > 0.5) { if (videoFace.classList.contains('info')) hideInfo(); else showInfo(); }
       else openSheet();
       return;
     }
@@ -1457,7 +1457,7 @@
 
   /* ─────────────────────────── Video info layer ─────────────────────────── */
   // Resting: just the video and a pause button. Tap to show title and controls (they fade after 3s);
-  // tap the video again while they show to open the song page.
+  // tap the video again to hide them. Tap the song name to open the song page.
 
   let infoTimer;
   const vName = $('vName');
