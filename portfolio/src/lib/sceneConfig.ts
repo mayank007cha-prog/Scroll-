@@ -76,16 +76,16 @@ export const sceneConfig: SceneConfig = {
   heroDepth: -300,
   heroScale: 0.86,
   trackDepth: -80,
-  // The centred card is flat and level; cards ease into a light inward
-  // curve (facing the viewer, outer edge nearer) as they move to the edges.
-  // A plain 3D tilt, so it costs nothing per frame. (edgeBend, a screen-space
-  // warp, is off: a full-screen filter every frame can stutter.)
-  curveRotate: 12,
-  curveDepth: 70,
+  // The row stays flat and level; at the frame's edges the cards curl
+  // towards the viewer like paper (edgeBend, a screen-space warp), so a card
+  // bends as it enters and leaves. The 3D tilt (curveRotate/curveDepth) is
+  // off so the two don't stack; turn it on for a ring instead.
+  curveRotate: 0,
+  curveDepth: 0,
   curveFlat: 0.3,
   curveInward: true,
-  edgeBend: 0,
-  edgeZone: 0.12,
+  edgeBend: 0.14,
+  edgeZone: 0.17,
   paperLean: 0,
   paperShade: 0.25,
   depthParallax: 0.7,
