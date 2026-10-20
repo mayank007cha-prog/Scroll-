@@ -88,22 +88,29 @@ main{flex:1 0 auto}
   max-width:1120px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));
   display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:58px;
 }
-.logo{display:inline-flex;border:0;background:none;padding:4px 0}
+.menu-btn{display:inline-grid;place-items:center;width:44px;height:44px;margin-left:-10px;border:0;background:none;border-radius:8px;flex:none}
+.menu-btn span{display:block;width:22px;height:2.5px;border-radius:2px;background:var(--blue);box-shadow:0 -7px 0 var(--blue),0 7px 0 var(--blue)}
+.logo{display:inline-flex;border:0;background:none;padding:4px 0;margin-right:auto}
 .logo svg{width:132px;height:auto}
 .header-tools{display:flex;align-items:center;gap:8px;flex:none}
-.lang-pill{
-  display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 4px;
-  border-radius:999px;background:#6b6e73;color:#fff;font-weight:700;font-size:var(--fs-xs);border:0;
-}
-.lang-pill::before{content:"";width:22px;height:22px;border-radius:50%;background:#fff}
-.textsize-btn{
-  display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px;
-  border:1.5px solid var(--blue);background:#fff;color:var(--blue);border-radius:999px;
-  font-weight:700;font-size:var(--fs-sm);white-space:nowrap;
-}
-.textsize-btn[aria-pressed="true"]{background:var(--blue);color:#fff}
-.textsize-btn .a-big{font-size:1.15em}
-body:not(.show-lang) .lang-pill{display:none}
+.lang-pill{position:relative;display:inline-flex;align-items:center;justify-content:flex-end;width:66px;height:32px;padding:0 10px;
+  border-radius:999px;border:0;background:#6b6e73;color:#fff;font-weight:700;font-size:var(--fs-xs);flex:none;transition:background-color .2s}
+.lang-pill::before{content:"";position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .25s var(--ease)}
+.lang-pill[aria-checked="true"]{justify-content:flex-start;background:var(--blue)}
+.lang-pill[aria-checked="true"]::before{transform:translateX(34px)}
+/* slide-in menu (mobile) */
+.drawer{position:fixed;inset:0;z-index:65;display:flex}
+.drawer__scrim{position:absolute;inset:0;background:rgba(32,33,36,.5);animation:fadeIn .2s ease}
+.drawer__panel{position:relative;width:min(86vw,330px);height:100%;background:#fff;box-shadow:8px 0 30px rgba(0,0,0,.2);overflow:auto;
+  padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  display:flex;flex-direction:column;animation:drawerIn .3s var(--ease-out)}
+@keyframes drawerIn{from{transform:translateX(-100%)}to{transform:none}}
+.drawer__top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.drawer__top > span svg{width:130px;height:auto}
+.drawer nav{display:flex;flex-direction:column}
+.drawer nav a{display:flex;align-items:center;min-height:52px;padding:0 4px;border-bottom:1px solid #ececec;color:var(--blue);font-weight:700;font-size:var(--fs-lg);text-decoration:none}
+.drawer nav.drawer__sub a{color:var(--ink);font-weight:600}
+.drawer__call{margin-top:20px;width:100%;text-decoration:none}
 
 /* ---------- Screens ---------- */
 .screen{display:none}
@@ -581,7 +588,7 @@ body:not(.show-lang) .lang-pill{display:none}
   .site-header__inner{max-width:1202px;min-height:49px;padding:0 16px;gap:16px}
   .logo svg{width:130px}
   .header-tools{gap:6px}
-  .lang-pill{display:none}
+  .lang-pill{display:inline-flex}
   .hphone{display:inline-flex;font-weight:700;font-size:1.125rem;color:#007dba;text-decoration:none;margin-right:10px}
   .textsize-btn{display:none}
   body[data-screen=location] .site-header__inner{min-height:55px;max-width:1218px}
@@ -831,6 +838,7 @@ body:not(.show-lang) .lang-pill{display:none}
 
 <header class="site-header" id="siteHeader">
   <div class="site-header__inner">
+    <button class="menu-btn mob-only" type="button" data-action="menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span></button>
     <button class="logo" data-action="home" aria-label="EarthLink home" data-svg="logo"></button>
     <button class="logo-orb desk-only" data-action="home" aria-label="EarthLink home" data-svg="orb"></button>
     <nav class="mainnav desk-only" aria-label="Main"><a href="#">Residential</a><a href="#">Business</a><a href="#">Resources</a><a href="#">Tools</a><a href="#">Blog</a></nav>
@@ -838,11 +846,21 @@ body:not(.show-lang) .lang-pill{display:none}
       <a class="agent desk-only" href="tel:8666180264"><img src="assets/agent.png" alt="" width="24" height="24"><span><b>866-618-0264</b><small>Agents available</small></span></a>
       <a class="hlink desk-only" href="#"><span data-svg="acct"></span>My Account</a>
       <a class="hlink desk-only" href="#"><span data-svg="mail"></span>Mail</a>
-      <button class="lang-pill" type="button" aria-label="Language: English">EN</button>
+      <button class="lang-pill" type="button" role="switch" aria-checked="false" aria-label="Español" data-action="lang"><span>EN</span></button>
       <a class="hphone desk-only" href="tel:8336015646">833-601-5646</a>
     </div>
   </div>
 </header>
+
+<div class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="drawer__scrim" data-action="menu-close"></div>
+  <div class="drawer__panel">
+    <div class="drawer__top"><span data-svg="logo"></span><button class="x-btn" type="button" data-action="menu-close" aria-label="Close menu" data-svg="close"></button></div>
+    <nav aria-label="Main"><a href="#" data-action="menu-close">Residential</a><a href="#" data-action="menu-close">Business</a><a href="#" data-action="menu-close">Resources</a><a href="#" data-action="menu-close">Tools</a><a href="#" data-action="menu-close">Blog</a></nav>
+    <nav class="drawer__sub" aria-label="Account"><a href="#" data-action="menu-close">My Account</a><a href="#" data-action="menu-close">Mail</a></nav>
+    <a class="btn btn-orange drawer__call" href="tel:8666180264">Call 866-618-0264</a>
+  </div>
+</div>
 
 <main id="main">
 
@@ -2043,6 +2061,10 @@ document.addEventListener("click",e=>{
   const a=t.dataset.action;
   switch(a){
     case "home": if(S.screen!=="done") show("location"); break;
+    case "menu": { const d=$("#drawer"); d.hidden=false; document.body.style.overflow="hidden"; t.setAttribute("aria-expanded","true"); $(".x-btn",d).focus(); break; }
+    case "menu-close": { e.preventDefault(); closeDrawer(); break; }
+    case "lang": { const on=t.getAttribute("aria-checked")!=="true"; t.setAttribute("aria-checked",on); t.setAttribute("aria-label",on?"English":"Español");
+      $("span",t).textContent=on?"ES":"EN"; if(on) toast("Español: coming soon in this prototype"); break; }
     case "restart": location.hash=""; location.reload(); break;
     case "manual-address": {
       const f=$("#manualAddr"); f.hidden=!f.hidden; t.setAttribute("aria-expanded",!f.hidden);
@@ -2099,6 +2121,11 @@ document.addEventListener("click",e=>{
     case "close-modal": closeModal(); break;
   }
 });
+function closeDrawer(){
+  const d=$("#drawer"); if(d.hidden) return;
+  d.hidden=true; document.body.style.overflow=""; const b=$(".menu-btn"); b.setAttribute("aria-expanded","false"); b.focus({preventScroll:true});
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
 function refreshPayErrors(){ if(S.payErrors._summary){ const e=validatePay(); S.payErrors=e; if(!Object.keys(e).length) S.payErrors={}; } }
 
 document.addEventListener("change",e=>{
