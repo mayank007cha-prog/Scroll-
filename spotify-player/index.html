@@ -421,15 +421,14 @@
   .v-title b.marquee span { animation: marquee var(--dur, 8s) cubic-bezier(.45, 0, .55, 1) 1s infinite; }
   .v-name > span { display: block; margin-top: 1px; font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, .86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
-  /* Timer line: rests on the video's bottom border between the corner curves; with the info open it lifts onto
-     the name pill's bottom border, like the audio card. Same left edge both ways (card corner 30 = pill 8 + 22). */
-  .v-line {
-    position: absolute; left: 30px; right: 30px; bottom: 0; height: 2px; border-radius: 1px; overflow: hidden;
-    background: rgba(255, 255, 255, .26); transform-origin: left bottom; pointer-events: none;
-    transition: transform .45s var(--ease-out), background-color .3s ease;
-  }
-  .v-line i { position: absolute; inset: 0; background: #fff; transform-origin: left; transform: scaleX(var(--p, 0)); }
-  .video-face.info .v-line { transform: translate3d(0, -67px, 0) scaleX(calc(86 / 124)); background-color: rgba(255, 255, 255, .2); }
+  /* Timer line: traces the bottom border edge to edge, round both corners. The card's line shows at rest; with the
+     info open it gives way to the same line on the name pill. Paths run on a 0–100 length so --p drives the fill. */
+  .v-line { position: absolute; left: 0; bottom: 0; overflow: visible; pointer-events: none; fill: none; stroke-width: 2; }
+  .v-line .track { stroke: rgba(255, 255, 255, .24); }
+  .v-line .fill { stroke: #fff; stroke-dasharray: 100 200; stroke-dashoffset: calc(100 - 100 * var(--p, 0)); }
+  .v-line.card { width: 184px; height: 120px; transition: opacity .2s ease; }
+  .video-face.info .v-line.card { opacity: 0; }
+  .v-line.pill { width: 130px; height: 46px; }
   .v-expand { top: 8px; right: 8px; width: 30px; height: 30px; opacity: 0; pointer-events: none; }
   .v-expand svg { width: 14px; height: 14px; }
   .v-ctrls {
@@ -796,8 +795,8 @@
           <div class="v-scrim all"></div>
           <div class="v-scrim top"></div>
           <div class="v-scrim bottom"></div>
-          <button class="v-title" id="vTitle" data-action="open" aria-label="Open song page. Swipe to change song"><span class="v-clip"><span class="v-name" id="vName"><b id="vSong"><span>Matargashti</span></b><span id="vArtist">Mohit Chauhan</span></span></span></button>
-          <div class="v-line"><i></i></div>
+          <button class="v-title" id="vTitle" data-action="open" aria-label="Open song page. Swipe to change song"><span class="v-clip"><span class="v-name" id="vName"><b id="vSong"><span>Matargashti</span></b><span id="vArtist">Mohit Chauhan</span></span></span><svg class="v-line pill" viewBox="0 0 130 46" aria-hidden="true"><path class="track" d="M1 24A21 21 0 0 0 22 45H108A21 21 0 0 0 129 24"/><path class="fill" pathLength="100" d="M1 24A21 21 0 0 0 22 45H108A21 21 0 0 0 129 24"/></svg></button>
+          <svg class="v-line card" viewBox="0 0 184 120" aria-hidden="true"><path class="track" d="M1 90A29 29 0 0 0 30 119H154A29 29 0 0 0 183 90"/><path class="fill" pathLength="100" d="M1 90A29 29 0 0 0 30 119H154A29 29 0 0 0 183 90"/></svg>
           <button class="glass v-expand" data-action="open" aria-label="Open song page">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg>
           </button>
