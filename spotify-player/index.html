@@ -396,26 +396,29 @@
 
   /* Info: soft fades at top and bottom only, so the middle of the video stays clear */
   .v-scrim { position: absolute; left: 0; right: 0; pointer-events: none; opacity: 0; transition: opacity .25s ease; }
-  .v-scrim.top { top: 0; height: 56px; background: linear-gradient(180deg, rgba(0, 0, 0, .62), rgba(0, 0, 0, 0)); }
-  .v-scrim.bottom { bottom: 0; height: 60px; background: linear-gradient(0deg, rgba(0, 0, 0, .66), rgba(0, 0, 0, 0)); }
+  .v-scrim.top { top: 0; height: 66px; background: linear-gradient(180deg, rgba(0, 0, 0, .74), rgba(0, 0, 0, .3) 60%, rgba(0, 0, 0, 0)); }
+  .v-scrim.bottom { bottom: 0; height: 70px; background: linear-gradient(0deg, rgba(0, 0, 0, .78), rgba(0, 0, 0, .32) 60%, rgba(0, 0, 0, 0)); }
+  /* A light dim over the whole video so text and icons read on any frame */
+  .v-scrim.all { inset: 0; height: auto; background: rgba(0, 0, 0, .14); }
   .v-title {
-    position: absolute; left: 12px; right: 46px; top: 10px; text-align: left; color: #fff;
+    position: absolute; left: 12px; right: 48px; top: 9px; text-align: left; color: #fff;
     opacity: 0; transform: translateY(-4px); pointer-events: none;
     transition: opacity .22s ease, transform .35s var(--ease-out);
   }
-  .v-title b { display: block; font-size: 13px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
-  .v-title span { display: block; margin-top: 1px; font-size: 11.5px; color: rgba(255, 255, 255, .72); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .v-expand { top: 8px; right: 8px; width: 28px; height: 28px; opacity: 0; pointer-events: none; }
-  .v-expand svg { width: 13px; height: 13px; }
+  .v-title b { display: block; font-size: 15px; font-weight: 700; letter-spacing: -.015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .45); }
+  .v-title span { display: block; margin-top: 1px; font-size: 12.5px; font-weight: 500; color: rgba(255, 255, 255, .86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
+  .v-expand { top: 8px; right: 8px; width: 30px; height: 30px; opacity: 0; pointer-events: none; }
+  .v-expand svg { width: 14px; height: 14px; }
   .v-ctrls {
-    position: absolute; left: 0; right: 0; bottom: 7px; display: flex; justify-content: center; gap: 18px;
+    position: absolute; left: 0; right: 0; bottom: 5px; display: flex; justify-content: center; gap: 14px;
     opacity: 0; transform: translateY(4px); pointer-events: none;
     transition: opacity .22s ease, transform .35s var(--ease-out);
   }
-  .v-ctrls .ctl { width: 30px; height: 30px; color: #fff; }
-  .v-ctrls .ctl svg { width: 21px; height: 21px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .4)); }
-  .v-ctrls .ctl.play svg { width: 23px; height: 23px; }
+  .v-ctrls .ctl { width: 36px; height: 36px; color: #fff; }
+  .v-ctrls .ctl svg { width: 25px; height: 25px; filter: drop-shadow(0 1px 2.5px rgba(0, 0, 0, .5)); }
+  .v-ctrls .ctl.play svg { width: 27px; height: 27px; }
 
   .video-face.info .v-scrim, .video-face.info .v-title, .video-face.info .v-expand, .video-face.info .v-ctrls {
     opacity: 1; transform: none; pointer-events: auto; }
@@ -639,7 +642,7 @@
   <p class="lede">A mini player that drifts, docks and tucks itself away, so your music stays close without covering what you're browsing.</p>
   <ol class="gestures">
     <li><span><b>Tap Koi Fariyaad</b> to open the song page. The down arrow shrinks it into the floating player.</span></li>
-    <li><span><b>Tap Tamasha</b>, then Matargashti, for the music video. Tap the video to see what's playing; tap the title to open it.</span></li>
+    <li><span><b>Tap Tamasha</b>, then Matargashti, for the music video. Tap the video to see what's playing; tap it again to open it.</span></li>
     <li><span><b>Drag the player</b> anywhere, or push it into the edge to tuck it away as a spinning disc. Tap the disc to bring it back.</span></li>
     <li><span><b>Swipe the song title</b> left or right to skip. Tap the player to open the song page again.</span></li>
     <li><span><b>Scroll down</b> to hide the tab bar. Scroll up and it returns.</span></li>
@@ -769,6 +772,7 @@
             <video id="media" playsinline preload="auto" loop></video>
           </div>
           <!-- Tap the video to show what's playing; it fades away again on its own -->
+          <div class="v-scrim all"></div>
           <div class="v-scrim top"></div>
           <div class="v-scrim bottom"></div>
           <button class="v-title" data-action="open" aria-label="Open song page"><b id="vSong">Matargashti</b><span id="vArtist">Mohit Chauhan</span></button>
@@ -1332,7 +1336,8 @@
       if (e.type !== 'pointerup') return;
       if (mode === 'disc') undock();
       else if (d.btn) { /* buttons handle themselves */ }
-      else if (vm.t > 0.5) toggleInfo();      // video: first tap shows what's playing
+      // Video: the first tap shows what's playing; tapping the video again opens the song page.
+      else if (vm.t > 0.5) { if (videoFace.classList.contains('info')) { hideInfo(); openSheet(); } else showInfo(); }
       else openSheet();
       return;
     }
@@ -1413,7 +1418,8 @@
   });
 
   /* ─────────────────────────── Video info layer ─────────────────────────── */
-  // Resting: just the video and a pause button. Tap to show title and controls; they fade after 3s.
+  // Resting: just the video and a pause button. Tap to show title and controls (they fade after 3s);
+  // tap the video again while they show to open the song page.
 
   let infoTimer;
   function showInfo(ms = 3000) {
@@ -1423,7 +1429,6 @@
     infoTimer = setTimeout(hideInfo, ms);
   }
   function hideInfo() { clearTimeout(infoTimer); videoFace.classList.remove('info'); }
-  function toggleInfo() { videoFace.classList.contains('info') ? hideInfo() : showInfo(); }
   // Shown on its own for a moment when a video starts or comes back out of the disc.
   const peekInfo = () => setTimeout(() => showInfo(2500), 420);
   // Touching the controls keeps them up.
