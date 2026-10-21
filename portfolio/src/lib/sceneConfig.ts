@@ -20,6 +20,13 @@ export type SceneConfig = {
   curveRotate: number;
   /** Max extra Z depth (px) for cards towards the edges of the curve. */
   curveDepth: number;
+  /** Case-study cards bend like paper towards the frame edges: they are
+   *  drawn as thin slices laid along a smooth curve (flat in the middle,
+   *  then an arc). Plain 3D transforms, so it stays smooth. */
+  curl: boolean;
+  /** Radius of that arc, as a fraction of the frame width (smaller = a
+   *  tighter, stronger curl). */
+  curlRadius: number;
   /** Turn each card about its inner edge (the one nearer the centre), like
    *  a page curling, instead of about its middle. */
   curveHinge: boolean;
@@ -79,11 +86,14 @@ export const sceneConfig: SceneConfig = {
   heroDepth: -300,
   heroScale: 0.86,
   trackDepth: -80,
-  // The centred card is flat and level. Towards the edges each card eases
-  // into a gentle curl: it turns about its inner edge like a page, its
-  // outer side swinging towards the viewer. Plain 3D transforms (GPU), so
-  // it stays smooth. (edgeBend, a screen-space warp filter, looks similar
-  // but is costly every frame, so it's off.)
+  // The centred card is flat and level. Case-study cards bend like paper as
+  // they pass the frame edges (curl: thin slices laid on a curve, plain 3D
+  // transforms on the GPU). The video card (and footer) instead ease into a
+  // gentle hinge: they turn about their inner edge, outer side towards the
+  // viewer. (edgeBend, a screen-space warp filter, looks similar but costs
+  // a full-screen filter every frame, so it's off.)
+  curl: true,
+  curlRadius: 0.32,
   curveRotate: 11,
   curveDepth: 30,
   curveHinge: true,
@@ -119,6 +129,7 @@ export const mobileOverrides: Partial<SceneConfig> = {
   trackDepth: -40,
   curveRotate: 10,
   curveDepth: 50,
+  curl: false, // phones keep the gentle tilt
   curveHinge: false,
   curveInward: true,
   // Phones keep the gentle ring; the screen-space bend is desktop-only

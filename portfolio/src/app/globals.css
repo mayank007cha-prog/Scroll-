@@ -528,6 +528,59 @@ a:focus-visible {
   text-decoration: none;
 }
 
+/* Sliced cards: the card is drawn as --n thin slices, each showing its own
+   strip of a full card face, so ScrollStage can lay them along a curve. */
+.project-card--sliced {
+  position: relative;
+  height: var(--card-h);
+  transform-style: preserve-3d;
+}
+
+.card-strips {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.card-strip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--card-w) * var(--i) / var(--n));
+  /* 1px overlap hides hairline seams between slices. */
+  width: calc(var(--card-w) / var(--n) + 1px);
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+
+.card-strip__face {
+  position: absolute;
+  top: 0;
+  left: calc(var(--card-w) * var(--i) / var(--n) * -1);
+  width: var(--card-w);
+  height: 100%;
+}
+
+/* Light falling off as the paper curls (--sh set per slice). */
+.card-strip__face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: var(--radius);
+  background: rgb(0 0 0 / var(--sh, 0));
+  pointer-events: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .project-card__body {
   display: grid;
   height: var(--card-h);
@@ -837,6 +890,21 @@ a:focus-visible {
 
   .project-card__media {
     min-height: 240px;
+  }
+
+  .project-card--sliced {
+    height: auto;
+  }
+
+  .card-strips,
+  .card-strip,
+  .card-strip__face {
+    position: static;
+    width: auto;
+  }
+
+  .card-strip:not(:first-child) {
+    display: none;
   }
 }
 

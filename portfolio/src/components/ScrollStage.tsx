@@ -112,6 +112,11 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const track = stage.querySelector<HTMLElement>("[data-track]");
   const items = track ? gsap.utils.toArray<HTMLElement>(".work-item", track) : [];
   const shades = items.map((el) => el.querySelector<HTMLElement>(".paper-shade"));
+  // Sliced cards (see ProjectCard): their slices and each slice's offset from
+  // the card's middle (measured below).
+  const strips = items.map((el) => gsap.utils.toArray<HTMLElement>("[data-strip]", el));
+  let stripOffsets: number[][] = [];
+  const stripCache = new Map<HTMLElement, string>();
   const warp = stage.querySelector<HTMLElement>("[data-warp]");
   const warpMap = warp?.querySelector<SVGElement>("[data-warp-map]");
   const warpDisp = warp?.querySelector<SVGElement>("[data-warp-disp]");
@@ -180,6 +185,11 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     radius = parseFloat(getComputedStyle(frame).getPropertyValue("--radius")) || 0; // the cards' corner radius
     centers = items.map((el) => (vertical ? el.offsetTop + el.offsetHeight / 2 : el.offsetLeft + el.offsetWidth / 2));
     halfWidths = items.map((el) => (vertical ? el.offsetHeight : el.offsetWidth) / 2);
+    stripOffsets = strips.map((list, i) => {
+      const w = (halfWidths[i] * 2) / (list.length || 1);
+      return list.map((_, j) => (j + 0.5) * w - halfWidths[i]);
+    });
+    stripCache.clear();
     drawWarpMap();
   };
 
@@ -288,6 +298,26 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const Z = cz - (lx - h) * Math.sin(deg * toRad);
     return (X * cfg.perspective) / (cfg.perspective - Z);
   };
+  // ---- Paper curl for sliced cards ----------------------------------------
+  // The row's path (in track px from the frame centre): straight across the
+  // middle, then a circular arc that bends towards the viewer, so a card
+  // laid along it curls like paper as it enters and leaves. The straight
+  // part covers the centred card plus half the gap, so that card stays flat.
+  const curlOn = config.curl && !vertical && strips.some((s) => s.length > 0);
+  const curlPoint = (u: number) => {
+    const start = (halfWidths[0] ?? 0) + gapPx / 2;
+    const s = Math.abs(u) - start;
+    if (!curlOn || s <= 0) return { X: u, Z: 0, phi: 0 };
+    const R = Math.max(1, config.curlRadius * frameWidth);
+    const phi = Math.min(Math.PI / 2, s / R);
+    const sign = Math.sign(u);
+    return {
+      X: sign * (start + R * Math.sin(phi)),
+      Z: (inward ? 1 : -1) * R * (1 - Math.cos(phi)),
+      phi: sign * phi,
+    };
+  };
+
   // The hinge for a card at bend `d`: its inner edge (nearer the centre).
   const hingeOrigin = (d: number) =>
     !config.curveHinge || d === 0 ? "50% 50%" : vertical ? (d > 0 ? "50% 0%" : "50% 100%") : d > 0 ? "0% 50%" : "100% 50%";
@@ -361,6 +391,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const gap = gapPx * trackFactor;
     const cardLeft = (x: number) => {
       const c = (centers[0] ?? 0) + x - half;
+      if (curlOn && strips[0]?.length) {
+        const p = curlPoint(c - (halfWidths[0] ?? 0));
+        return project(p.X, cfg.trackDepth + p.Z, 0, 0);
+      }
       const d = bend(c / half);
       const hw = halfWidths[0] ?? 0;
       const h = config.curveHinge && d !== 0 ? (d > 0 ? -hw : hw) : 0;
@@ -438,6 +472,23 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     gsap.set(track, { [AX]: x, z: cfg.trackDepth });
     items.forEach((el, i) => {
       const d = bend((centers[i] + x - half) / half);
+      if (curlOn && strips[i].length) {
+        // Sliced card: it stays flat itself; each slice sits on the curve.
+        gsap.set(el, { [ROT]: 0, z: 0 });
+        const c = centers[i] + x - half;
+        strips[i].forEach((strip, j) => {
+          const u = c + stripOffsets[i][j];
+          const p = curlPoint(u);
+          const deg = ((inward ? -1 : 1) * p.phi * 180) / Math.PI;
+          const t = `translate3d(${(p.X - u).toFixed(2)}px,0,${p.Z.toFixed(2)}px) rotateY(${deg.toFixed(2)}deg)`;
+          if (stripCache.get(strip) === t) return;
+          stripCache.set(strip, t);
+          strip.style.transform = t;
+          // The curling part darkens a little, like light falling off paper.
+          strip.style.setProperty("--sh", ((1 - Math.cos(p.phi)) * 0.9 * config.paperShade * 2).toFixed(3));
+        });
+        return;
+      }
       gsap.set(el, { [ROT]: turn(curveDeg(d) + leanDeg), z: curveZ(d), transformOrigin: hingeOrigin(d) });
       const shade = shades[i];
       if (shade) {
