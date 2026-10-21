@@ -281,12 +281,16 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const curveDeg = (d: number) => (inward ? -1 : 1) * curveShape(d) * config.curveRotate;
   const toRad = Math.PI / 180;
   // On-screen x (from the frame centre) of a point at local x `lx` on a plane
-  // centred at `cx`, depth `cz`, turned by `deg` around Y.
-  const project = (cx: number, cz: number, lx: number, deg: number) => {
-    const X = cx + lx * Math.cos(deg * toRad);
-    const Z = cz - lx * Math.sin(deg * toRad);
+  // centred at `cx`, depth `cz`, turned by `deg` around Y about local x `h`
+  // (0 = its middle; ± half its width = an edge, for the hinged curl).
+  const project = (cx: number, cz: number, lx: number, deg: number, h = 0) => {
+    const X = cx + h + (lx - h) * Math.cos(deg * toRad);
+    const Z = cz - (lx - h) * Math.sin(deg * toRad);
     return (X * cfg.perspective) / (cfg.perspective - Z);
   };
+  // The hinge for a card at bend `d`: its inner edge (nearer the centre).
+  const hingeOrigin = (d: number) =>
+    !config.curveHinge || d === 0 ? "50% 50%" : vertical ? (d > 0 ? "50% 0%" : "50% 100%") : d > 0 ? "0% 50%" : "100% 50%";
 
   // ---- Paper feel --------------------------------------------------------
   // `paper.flex` follows the row's speed through a soft spring (see paperTick):
@@ -358,7 +362,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const cardLeft = (x: number) => {
       const c = (centers[0] ?? 0) + x - half;
       const d = bend(c / half);
-      return project(c, cfg.trackDepth + curveZ(d), -(halfWidths[0] ?? 0), curveDeg(d) + leanDeg);
+      const hw = halfWidths[0] ?? 0;
+      const h = config.curveHinge && d !== 0 ? (d > 0 ? -hw : hw) : 0;
+      return project(c, cfg.trackDepth + curveZ(d), -hw, curveDeg(d) + leanDeg, h);
     };
     let x = trackState.x;
     let heroX = heroRide;
@@ -432,7 +438,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     gsap.set(track, { [AX]: x, z: cfg.trackDepth });
     items.forEach((el, i) => {
       const d = bend((centers[i] + x - half) / half);
-      gsap.set(el, { [ROT]: turn(curveDeg(d) + leanDeg), z: curveZ(d), transformOrigin: "50% 50%" });
+      gsap.set(el, { [ROT]: turn(curveDeg(d) + leanDeg), z: curveZ(d), transformOrigin: hingeOrigin(d) });
       const shade = shades[i];
       if (shade) {
         const c = (centers[i] + x - half) * trackFactor;
@@ -554,7 +560,8 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   // enough), with the same gentle ease as the wheel glide.
   let settleTimer = 0;
   let settledT: number | null = null; // the rest we last arrived at
-  const glideEase = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+  // Soft sine ease-in-out: no sudden push in the middle.
+  const glideEase = (k: number) => -(Math.cos(Math.PI * k) - 1) / 2;
   const settle = () => {
     if (!config.settle || !trigger || !restTimes.length) return;
     // Never pull against a scroll in progress: wait until the smooth scroll
@@ -664,7 +671,8 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       render();
     }
   };
-  gsap.ticker.add(paperTick);
+  // Only needed when cards lean with speed (paperLean); skip the per-frame work otherwise.
+  if (config.paperLean) gsap.ticker.add(paperTick);
 
   // Autoplay the intro once, but only if the visitor is at the very top.
   if (video && config.autoplayOnLoad && trigger.progress === 0) {

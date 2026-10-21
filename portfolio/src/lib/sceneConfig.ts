@@ -20,6 +20,9 @@ export type SceneConfig = {
   curveRotate: number;
   /** Max extra Z depth (px) for cards towards the edges of the curve. */
   curveDepth: number;
+  /** Turn each card about its inner edge (the one nearer the centre), like
+   *  a page curling, instead of about its middle. */
+  curveHinge: boolean;
   /** How much of the middle stays flat (0–1 of the distance to a card's
    *  resting spot beside the centre); the curve eases in smoothly beyond it. */
   curveFlat: number;
@@ -76,15 +79,17 @@ export const sceneConfig: SceneConfig = {
   heroDepth: -300,
   heroScale: 0.86,
   trackDepth: -80,
-  // The row stays flat and level; at the frame's edges the cards curl
-  // towards the viewer like paper (edgeBend, a screen-space warp), so a card
-  // bends as it enters and leaves. The 3D tilt (curveRotate/curveDepth) is
-  // off so the two don't stack; turn it on for a ring instead.
-  curveRotate: 0,
-  curveDepth: 0,
+  // The centred card is flat and level. Towards the edges each card eases
+  // into a gentle curl: it turns about its inner edge like a page, its
+  // outer side swinging towards the viewer. Plain 3D transforms (GPU), so
+  // it stays smooth. (edgeBend, a screen-space warp filter, looks similar
+  // but is costly every frame, so it's off.)
+  curveRotate: 11,
+  curveDepth: 30,
+  curveHinge: true,
   curveFlat: 0.3,
   curveInward: true,
-  edgeBend: 0.14,
+  edgeBend: 0,
   edgeZone: 0.17,
   paperLean: 0,
   paperShade: 0.25,
@@ -98,7 +103,7 @@ export const sceneConfig: SceneConfig = {
   holdDistance: 0.1,
   settle: true,
   snap: true,
-  snapDuration: 0.9,
+  snapDuration: 1,
   smoothness: 0.075,
   scrollPerUnit: 1,
   autoplayOnLoad: true,
@@ -114,6 +119,7 @@ export const mobileOverrides: Partial<SceneConfig> = {
   trackDepth: -40,
   curveRotate: 10,
   curveDepth: 50,
+  curveHinge: false,
   curveInward: true,
   // Phones keep the gentle ring; the screen-space bend is desktop-only
   // (a full-screen filter every frame is too costly on phones).

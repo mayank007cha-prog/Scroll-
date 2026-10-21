@@ -382,11 +382,6 @@ a:focus-visible {
   background-size: 240px 240px;
 }
 
-.depth-wall,
-.depth-floor {
-  filter: blur(0.8px); /* slightly soft, like the objects */
-}
-
 .depth-wall {
   bottom: 0;
   transform: translateZ(calc(-1100px * var(--zs, 1)));
