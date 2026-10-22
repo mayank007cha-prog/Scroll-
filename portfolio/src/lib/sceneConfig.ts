@@ -30,6 +30,10 @@ export type SceneConfig = {
   /** The curl turns no further than this (deg); beyond it the card keeps
    *  receding in a straight line, so it stays visible up to the frame edge. */
   curlMaxAngle: number;
+  /** Curve style: as a card turns aside, its top and bottom edges arc away
+   *  towards the outer edge by up to this share of its height, so it reads as
+   *  a bent page (an outline change on one solid plane: no seams). */
+  bendDip: number;
   /** Cards shrink to this scale as they move one card away from the centre,
    *  and scale back up as they arrive (1 = no change). */
   sideScale: number;
@@ -110,6 +114,7 @@ export const sceneConfig: SceneConfig = {
   curlRadius: 0.16,
   curlMaxAngle: 38,
   sideScale: 0.78,
+  bendDip: 0.13,
   curlSides: "both",
   curveRotate: 40,
   curveDepth: 120,
@@ -149,6 +154,7 @@ export const mobileOverrides: Partial<SceneConfig> = {
   curveDepth: 0,
   curl: false,
   sideScale: 0.86,
+  bendDip: 0,
   curveHinge: false,
   curveInward: true,
   // Phones keep the gentle ring; the screen-space bend is desktop-only

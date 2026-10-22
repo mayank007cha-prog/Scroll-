@@ -126,7 +126,6 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const warpDisp = warp?.querySelector<SVGElement>("[data-warp-disp]");
   const warpFilter = warp?.querySelector<SVGElement>("[data-warp-filter]");
   const bendOn = !!(warp && warpMap && warpDisp && warpFilter && config.edgeBend > 0);
-  const heroShade = hero.querySelector<HTMLElement>(".paper-shade");
   const fog = hero.querySelector<HTMLElement>(".hero-fog");
   const border = hero.querySelector<HTMLElement>(".hero-border");
   const depthField = stage.querySelector<HTMLElement>("[data-depth-field]");
@@ -157,6 +156,30 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   let halfWidths: number[] = [];
   let radius = 0;
   let gapPx = 0;
+  let boxes: number[][] = [];
+  // ---- Curve style: bent-page outline -------------------------------------
+  // A clip-path on the (single, solid) card: its top and bottom edges arc
+  // away towards the outer edge, so the turned card reads as a bent page.
+  const clipCache = new Map<HTMLElement, string>();
+  const bendOutline = (el: HTMLElement, amount: number, side: number, W: number, H: number, r: number) => {
+    const D = Math.round(amount * config.bendDip * H);
+    let v = "none";
+    if (!vertical && D >= 1 && W > 0) {
+      const rr = Math.min(r, W / 4, H / 4);
+      const t = (W - rr) / W;
+      const yA = D * t * t;
+      // Right-hand outer edge; mirrored for the left.
+      const X = (x: number) => (side > 0 ? x : W - x).toFixed(1);
+      const f = (n: number) => n.toFixed(1);
+      v =
+        `path('M ${X(0)} 0 Q ${X((W * t) / 2)} 0 ${X(W - rr)} ${f(yA)} ` +
+        `Q ${X(W)} ${f(yA)} ${X(W)} ${f(yA + rr)} L ${X(W)} ${f(H - yA - rr)} ` +
+        `Q ${X(W)} ${f(H - yA)} ${X(W - rr)} ${f(H - yA)} Q ${X((W * t) / 2)} ${f(H)} ${X(0)} ${f(H)} Z')`;
+    }
+    if (clipCache.get(el) === v) return;
+    clipCache.set(el, v);
+    el.style.clipPath = v === "none" ? "" : v;
+  };
   // Depths are tuned for a 1440px-wide frame. On desktop they scale with the
   // frame width (perspective too), so the curve and the background keep the
   // same proportions on any screen; only absolute distances change, and
@@ -189,6 +212,8 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     radius = parseFloat(getComputedStyle(frame).getPropertyValue("--radius")) || 0; // the cards' corner radius
     centers = items.map((el) => (vertical ? el.offsetTop + el.offsetHeight / 2 : el.offsetLeft + el.offsetWidth / 2));
     halfWidths = items.map((el) => (vertical ? el.offsetHeight : el.offsetWidth) / 2);
+    boxes = items.map((el) => [el.offsetWidth, el.offsetHeight]);
+    clipCache.clear();
     drawWarpMap();
   };
 
@@ -391,10 +416,17 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     let x = trackState.x;
     let heroX = heroRide;
     if (track && items.length) {
+      // The gap the row itself gives the slot beside the parked video card
+      // (side cards sit further back, so it's a little under `gap` on
+      // screen). Using it here means the video hands over to that slot
+      // without a jump.
+      const hw0 = halfWidths[0] ?? 0;
+      const slotX = half + hw0 * 2 + gapPx - (centers[0] ?? 0);
+      const rowGap = Math.min(gap, cardLeft(slotX) - hw0 * trackFactor);
       let pushed = x;
       for (let k = 0; k < 4; k++) {
         const left = cardLeft(pushed);
-        const minLeft = heroRight(heroRide) + gap;
+        const minLeft = heroRight(heroRide) + rowGap;
         if (left >= minLeft - 0.5) break;
         pushed += (minLeft - left) / trackFactor;
       }
@@ -402,7 +434,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       const wait = gsap.utils.clamp(0, 1, 1 + shift / (frameWidth * 0.25));
       x += (pushed - x) * wait;
       heroLean = leanDeg * (1 - wait);
-      if (shift < 0) {
+      if (shift < 0 && !items.length) {
         const maxRight = cardLeft(x) - gap;
         for (let k = 0; k < 6; k++) {
           const over = heroRight(heroX) - maxRight;
@@ -412,28 +444,47 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       }
     }
 
-    const pose = heroPose(heroX);
-    const hinged = heroHinged(pose.dh);
-    gsap.set(hero, {
-      // Scaling about the inner edge instead of the middle shifts the plane;
-      // move it back by the same amount so nothing jumps.
-      [AX]: heroX - (hinged ? half * (1 - pose.s) : 0),
-      z: pose.z,
-      scale: pose.s,
-      [ROT]: turn(pose.deg),
-      transformOrigin: hinged ? (vertical ? "50% 100%" : "100% 50%") : "50% 50%",
-      borderRadius: cornerRadius,
-    });
+    if (shift < 0 && items.length) {
+      // Riding with the row: the video card sits exactly in the row's slot
+      // before the first case study (one card spacing to its left), with the
+      // same depth, turn and size as any card there, so every gap is equal.
+      // (At the hand-over this slot is centred and the same size on screen
+      // as the parked video, so nothing jumps.)
+      const hw0 = halfWidths[0] ?? 0;
+      const c0 = (centers[0] ?? 0) + x - half - (hw0 * 2 + gapPx);
+      const d0 = bend(c0 / half);
+      const base = (hw0 * 2) / (frameWidth || 1); // full-frame plane → card size
+      const s0 = sideScaleAt(c0);
+      const hingedSlot = c0 < 0;
+      gsap.set(hero, {
+        [AX]: hingedSlot ? c0 + hw0 - half : c0,
+        z: cfg.trackDepth + curveZ(d0),
+        scale: base * s0,
+        [ROT]: turn(curveDeg(d0)),
+        transformOrigin: hingedSlot ? (vertical ? "50% 100%" : "100% 50%") : "50% 50%",
+        borderRadius: radius / (base || 1),
+      });
+      bendOutline(hero, Math.abs(curveShape(d0)), Math.sign(c0), frame.clientWidth, frame.clientHeight, radius / (base || 1));
+    } else {
+      const pose = heroPose(heroX);
+      const hinged = heroHinged(pose.dh);
+      gsap.set(hero, {
+        // Scaling about the inner edge instead of the middle shifts the plane;
+        // move it back by the same amount so nothing jumps.
+        [AX]: heroX - (hinged ? half * (1 - pose.s) : 0),
+        z: pose.z,
+        scale: pose.s,
+        [ROT]: turn(pose.deg),
+        transformOrigin: hinged ? (vertical ? "50% 100%" : "100% 50%") : "50% 50%",
+        borderRadius: cornerRadius,
+      });
+      bendOutline(hero, 0, 0, 0, 0, 0);
+    }
     // The fog on the video's sides and the background objects fade in as the
     // video turns into a card.
     if (fog) gsap.set(fog, { opacity: shrink });
     // Its hairline border only shows once it's a card, not at the screen edge.
     if (border) gsap.set(border, { opacity: shrink });
-    if (heroShade) {
-      const hc = heroX * heroFactor;
-      const hw = half * heroState.scale * heroFactor;
-      gsap.set(heroShade, shadeSides(pose.dh, heroLean / (config.paperLean || 1), zoneDepth(hc - hw, hc + hw)));
-    }
 
     // Background objects: the layer drifts with the row (deeper objects move
     // slower on screen thanks to perspective) and some objects slowly turn.
@@ -491,6 +542,10 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
         // Scale and turn about the inner edge, so the gap to the centred card stays put.
         transformOrigin: ci === 0 ? "50% 50%" : vertical ? (ci > 0 ? "50% 0%" : "50% 100%") : ci > 0 ? "0% 50%" : "100% 50%",
       });
+      // Bent-page outline on the case-study cards (not the footer's text).
+      if (el.classList.contains("project-card")) {
+        bendOutline(el, Math.abs(curveShape(d)), Math.sign(ci), boxes[i]?.[0] ?? 0, boxes[i]?.[1] ?? 0, radius);
+      }
       const shade = shades[i];
       if (shade) {
         const c = (centers[i] + x - half) * trackFactor;
