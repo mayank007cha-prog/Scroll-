@@ -508,41 +508,6 @@ a:focus-visible {
   text-decoration: none;
 }
 
-/* Sliced cards: the card is drawn as --n thin slices, each showing its own
-   strip of a full card face, so ScrollStage can lay them along a curve. */
-.project-card--sliced {
-  position: relative;
-  height: var(--card-h);
-  transform-style: preserve-3d;
-}
-
-.card-strips {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-}
-
-.card-strip {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(var(--card-w) * var(--i) / var(--n));
-  /* 2px overlap so no slice edge (or its anti-aliasing) shows between slices. */
-  width: calc(var(--card-w) / var(--n) + 2px);
-  overflow: hidden;
-  /* ScrollStage pins each slice at its left edge on the curve. */
-  transform-origin: 0 50%;
-  backface-visibility: hidden;
-}
-
-.card-strip__face {
-  position: absolute;
-  top: 0;
-  left: calc(var(--card-w) * var(--i) / var(--n) * -1);
-  width: var(--card-w);
-  height: 100%;
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -851,20 +816,6 @@ a:focus-visible {
     min-height: 240px;
   }
 
-  .project-card--sliced {
-    height: auto;
-  }
-
-  .card-strips,
-  .card-strip,
-  .card-strip__face {
-    position: static;
-    width: auto;
-  }
-
-  .card-strip:not(:first-child) {
-    display: none;
-  }
 }
 
 /* Portrait desktop/tablet screens: the face sits mid-frame, so the intro

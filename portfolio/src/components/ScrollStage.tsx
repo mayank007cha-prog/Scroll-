@@ -121,11 +121,6 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     toneShown[i] = v;
     tones[i].style.opacity = String(v);
   };
-  // Sliced cards (see ProjectCard): their slices and each slice's offset from
-  // the card's middle (measured below).
-  const strips = items.map((el) => gsap.utils.toArray<HTMLElement>("[data-strip]", el));
-  let stripOffsets: number[][] = [];
-  const stripCache = new Map<HTMLElement, string>();
   const warp = stage.querySelector<HTMLElement>("[data-warp]");
   const warpMap = warp?.querySelector<SVGElement>("[data-warp-map]");
   const warpDisp = warp?.querySelector<SVGElement>("[data-warp-disp]");
@@ -194,11 +189,6 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     radius = parseFloat(getComputedStyle(frame).getPropertyValue("--radius")) || 0; // the cards' corner radius
     centers = items.map((el) => (vertical ? el.offsetTop + el.offsetHeight / 2 : el.offsetLeft + el.offsetWidth / 2));
     halfWidths = items.map((el) => (vertical ? el.offsetHeight : el.offsetWidth) / 2);
-    stripOffsets = strips.map((list, i) => {
-      const w = (halfWidths[i] * 2) / (list.length || 1);
-      return list.map((_, j) => (j + 0.5) * w - halfWidths[i]);
-    });
-    stripCache.clear();
     drawWarpMap();
   };
 
@@ -307,33 +297,6 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const Z = cz - (lx - h) * Math.sin(deg * toRad);
     return (X * cfg.perspective) / (cfg.perspective - Z);
   };
-  // ---- Paper curl for sliced cards ----------------------------------------
-  // The row's path (in track px from the frame centre): straight across the
-  // middle, then a circular arc that bends towards the viewer, so a card
-  // laid along it curls like paper as it enters and leaves. The straight
-  // part covers the centred card plus half the gap, so that card stays flat.
-  const curlOn = config.curl && !vertical && strips.some((s) => s.length > 0);
-  const curlPoint = (u: number) => {
-    const start = (halfWidths[0] ?? 0) + gapPx / 2;
-    const s = Math.abs(u) - start;
-    // Only the entering side curls (like turning onto a curved page); the
-    // leaving side stays flat and simply slides out of the frame.
-    if (!curlOn || s <= 0 || (config.curlSides === "end" && u < 0)) return { X: u, Z: 0, phi: 0 };
-    const R = Math.max(1, config.curlRadius * frameWidth);
-    const pm = (config.curlMaxAngle * Math.PI) / 180;
-    const sign = Math.sign(u);
-    // A circular arc up to the max angle, then a straight line on at that
-    // angle (smooth where they meet), so cards keep receding to the edge.
-    const arc = Math.min(s, R * pm);
-    const phi = arc / R;
-    const rest = s - arc;
-    return {
-      X: sign * (start + R * Math.sin(phi) + rest * Math.cos(phi)),
-      Z: (inward ? 1 : -1) * (R * (1 - Math.cos(phi)) + rest * Math.sin(phi)),
-      phi: sign * phi,
-    };
-  };
-
   // Side cards are smaller: full size centred, easing (smoothstep) down to
   // `sideScale` one card away. `c` is the card's centre offset in track px.
   const sideScaleAt = (c: number) => {
@@ -341,11 +304,6 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const k = gsap.utils.clamp(0, 1, Math.abs(c) / spacing);
     return 1 - (1 - config.sideScale) * k * k * (3 - 2 * k);
   };
-  // Where a point at `off` from a card's middle sits along the row once the
-  // card is scaled by `s` about its inner edge (the one nearer the centre),
-  // so the gap to the centred card stays the same.
-  const scaledU = (c: number, off: number, s: number, hw: number) =>
-    c >= 0 ? c - hw + s * (off + hw) : c + hw + s * (off - hw);
 
 
   // ---- Paper feel --------------------------------------------------------
@@ -423,15 +381,12 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const gap = gapPx * trackFactor;
     const cardLeft = (x: number) => {
       const c = (centers[0] ?? 0) + x - half;
-      if (curlOn && strips[0]?.length) {
-        const hw0 = halfWidths[0] ?? 0;
-        const p = curlPoint(scaledU(c, -hw0, sideScaleAt(c), hw0));
-        return project(p.X, cfg.trackDepth + p.Z, 0, 0);
-      }
       const d = bend(c / half);
       const hw = halfWidths[0] ?? 0;
-      const h = config.curveHinge && d !== 0 ? (d > 0 ? -hw : hw) : 0;
-      return project(c, cfg.trackDepth + curveZ(d), -hw, curveDeg(d) + leanDeg, h);
+      // Turned and scaled about its inner edge (left when right of centre).
+      const h = c === 0 ? 0 : c > 0 ? -hw : hw;
+      const s = sideScaleAt(c);
+      return project(c, cfg.trackDepth + curveZ(d), h - (h - -hw) * s, curveDeg(d) + leanDeg, h);
     };
     let x = trackState.x;
     let heroX = heroRide;
@@ -528,38 +483,12 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     gsap.set(track, { [AX]: x, z: cfg.trackDepth });
     items.forEach((el, i) => {
       const d = bend((centers[i] + x - half) / half);
-      if (curlOn && strips[i].length) {
-        // Sliced card: it stays flat itself; each slice sits on the curve.
-        gsap.set(el, { [ROT]: 0, z: 0 });
-        const c = centers[i] + x - half;
-        const sc = sideScaleAt(c);
-        const hwi = halfWidths[i] ?? 0;
-        const sw = (hwi * 2) / (strips[i].length || 1); // slice width in the layout
-        strips[i].forEach((strip, j) => {
-          // Each slice spans exactly from one point on the curve to the next
-          // (pinned at its left edge, turned along the chord, stretched to its
-          // length), so neighbours meet with no gaps; they also overlap by 2px
-          // in CSS so no edge is left to show through.
-          const offL = stripOffsets[i][j] - sw / 2;
-          const a = curlPoint(scaledU(c, offL, sc, hwi));
-          const b = curlPoint(scaledU(c, offL + sw, sc, hwi));
-          const dx = b.X - a.X;
-          const dz = b.Z - a.Z;
-          const deg = (Math.atan2(-dz, dx) * 180) / Math.PI;
-          const sx = Math.hypot(dx, dz) / sw;
-          const t = `translate3d(${(a.X - (c + offL)).toFixed(2)}px,0,${a.Z.toFixed(2)}px) rotateY(${deg.toFixed(3)}deg) scale(${sx.toFixed(4)},${sc.toFixed(4)})`;
-          if (stripCache.get(strip) === t) return;
-          stripCache.set(strip, t);
-          strip.style.transform = t;
-        });
-        return;
-      }
       const ci = centers[i] + x - half;
       gsap.set(el, {
         [ROT]: turn(curveDeg(d) + leanDeg),
         z: curveZ(d),
         scale: sideScaleAt(ci),
-        // Scale and turn about the inner edge, like the sliced cards.
+        // Scale and turn about the inner edge, so the gap to the centred card stays put.
         transformOrigin: ci === 0 ? "50% 50%" : vertical ? (ci > 0 ? "50% 0%" : "50% 100%") : ci > 0 ? "0% 50%" : "100% 50%",
       });
       const shade = shades[i];

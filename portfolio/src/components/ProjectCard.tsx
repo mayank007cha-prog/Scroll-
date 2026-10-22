@@ -1,15 +1,10 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
 import type { Project } from "@/data/projects";
 
 type ProjectCardProps = {
   project: Project;
   index?: number;
 };
-
-/** Thin vertical slices each card is drawn as, so ScrollStage can bend it
- *  smoothly at the edges of the frame (each slice is a plain 3D transform). */
-const STRIPS = 36;
 
 /** First letters of the client name, for the logo tile. */
 export const initials = (name: string) =>
@@ -63,32 +58,12 @@ function CardFace({ project }: { project: Project }) {
   );
 }
 
-/** One floating case study. Drawn as thin slices (visual only; a hidden
- *  text copy keeps it readable for screen readers) so it can bend like paper
- *  at the frame edges. A card with a video keeps a single face, since every
- *  slice would otherwise play its own copy; it gets a gentle tilt instead. */
+/** One floating case study: a single solid card. ScrollStage turns it away
+ *  from the viewer and scales it down as it moves aside. */
 export function ProjectCard({ project }: ProjectCardProps) {
-  const sliced = project.media?.type !== "video";
   return (
-    <Link href={`/work/${project.slug}`} className={`work-item project-card${sliced ? " project-card--sliced" : ""}`} data-plane="project">
-      {sliced ? (
-        <>
-          <div className="card-strips" aria-hidden="true" style={{ "--n": STRIPS } as CSSProperties}>
-            {Array.from({ length: STRIPS }, (_, i) => (
-              <div key={i} className="card-strip" data-strip style={{ "--i": i } as CSSProperties}>
-                <div className="card-strip__face">
-                  <CardFace project={project} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <span className="sr-only">
-            {project.client}, {project.topic}. {project.title} {project.oneLiner} View case study.
-          </span>
-        </>
-      ) : (
-        <CardFace project={project} />
-      )}
+    <Link href={`/work/${project.slug}`} className="work-item project-card" data-plane="project">
+      <CardFace project={project} />
     </Link>
   );
 }
