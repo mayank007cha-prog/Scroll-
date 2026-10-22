@@ -95,15 +95,17 @@ export const sceneConfig: SceneConfig = {
   // gentle hinge: they turn about their inner edge, outer side towards the
   // viewer. (edgeBend, a screen-space warp filter, looks similar but costs
   // a full-screen filter every frame, so it's off.)
+  // Outward, like the outside of a drum: cards on both sides turn away from
+  // the viewer (outer edge further back). Case-study cards bend as slices;
+  // the video card and footer turn as whole planes.
   curl: true,
-  curlRadius: 0.22,
-  curlSides: "end",
-  // Everything else stays flat (video card, footer): simple and light.
-  curveRotate: 0,
-  curveDepth: 0,
+  curlRadius: 0.27,
+  curlSides: "both",
+  curveRotate: 38,
+  curveDepth: 160,
   curveHinge: true,
   curveFlat: 0.3,
-  curveInward: true,
+  curveInward: false,
   edgeBend: 0,
   edgeZone: 0.17,
   paperLean: 0,

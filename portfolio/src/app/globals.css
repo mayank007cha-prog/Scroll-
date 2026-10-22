@@ -163,6 +163,29 @@ a:focus-visible {
   height: 0;
 }
 
+/* Background colour layers (ScrollStage fades them by opacity). */
+.scene-tones,
+.scene-tone {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scene-tone {
+  opacity: 0;
+  will-change: opacity;
+}
+
+.scene-tone:first-child {
+  opacity: 1;
+}
+
+.scene-tone--video { background: #0e1824; }
+.scene-tone--orange { background: #3d1c0c; }
+.scene-tone--blue { background: #0d1d42; }
+.scene-tone--red { background: #3e1113; }
+.scene-tone--end { background: #121212; }
+
 .plane {
   position: absolute;
   inset: 0;
@@ -785,7 +808,8 @@ a:focus-visible {
   }
 
   .depth-field,
-  .hero-fog {
+  .hero-fog,
+  .scene-tones {
     display: none;
   }
 

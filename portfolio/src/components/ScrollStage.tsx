@@ -112,6 +112,15 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const track = stage.querySelector<HTMLElement>("[data-track]");
   const items = track ? gsap.utils.toArray<HTMLElement>(".work-item", track) : [];
   const shades = items.map((el) => el.querySelector<HTMLElement>(".paper-shade"));
+  // Background colour layers: [video, ...items] (see SceneTones).
+  const tones = gsap.utils.toArray<HTMLElement>("[data-tone]", stage);
+  const toneShown: number[] = tones.map(() => -1);
+  const setTone = (i: number, o: number) => {
+    const v = Math.round(o * 1000) / 1000;
+    if (!tones[i] || toneShown[i] === v) return;
+    toneShown[i] = v;
+    tones[i].style.opacity = String(v);
+  };
   // Sliced cards (see ProjectCard): their slices and each slice's offset from
   // the card's middle (measured below).
   const strips = items.map((el) => gsap.utils.toArray<HTMLElement>("[data-strip]", el));
@@ -371,9 +380,13 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       const dh = bend((hx * heroFactor) / half);
       return { z: heroState.z + curveZ(dh), deg: curveDeg(dh) + heroLean, dh };
     };
+    // Once it moves off to the start side it turns about its inner edge (like
+    // the cards), so that edge stays put and only the outer side curves.
+    const heroHinged = (dh: number) => !!config.curveHinge && dh < 0;
     const heroRight = (hx: number) => {
       const pose = heroPose(hx);
-      return project(hx, pose.z, half * heroState.scale, pose.deg);
+      const hw = half * heroState.scale;
+      return project(hx, pose.z, hw, pose.deg, heroHinged(pose.dh) ? hw : 0);
     };
     // Square while it fills the screen, then rounding to the cards' radius as
     // it moves back (counter-scaled so it matches the cards at trackDepth).
@@ -427,11 +440,15 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     }
 
     const pose = heroPose(heroX);
+    const hinged = heroHinged(pose.dh);
     gsap.set(hero, {
-      [AX]: heroX,
+      // Scaling about the inner edge instead of the middle shifts the plane;
+      // move it back by the same amount so nothing jumps.
+      [AX]: heroX - (hinged ? half * (1 - heroState.scale) : 0),
       z: pose.z,
       scale: heroState.scale,
       [ROT]: turn(pose.deg),
+      transformOrigin: hinged ? (vertical ? "50% 100%" : "100% 50%") : "50% 50%",
       borderRadius: cornerRadius,
     });
     // The fog on the video's sides and the background objects fade in as the
@@ -464,6 +481,25 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     }
 
     if (!track) return;
+
+    // Background takes the centred card's colour: the layer for the card
+    // we're leaving stays fully on, the next fades in over it.
+    if (tones.length) {
+      const anchors = [parkedX, ...items.map((_, i) => half - centers[i])];
+      let k = 0;
+      let t = 0;
+      if (x < anchors[0]) {
+        k = anchors.length - 1;
+        for (let i = 0; i + 1 < anchors.length; i++) {
+          if (x >= anchors[i + 1]) {
+            k = i;
+            t = (anchors[i] - x) / (anchors[i] - anchors[i + 1] || 1);
+            break;
+          }
+        }
+      }
+      tones.forEach((_, i) => setTone(i, i === k ? 1 : i === k + 1 ? t : 0));
+    }
 
     // The floor cubes come out once the footer is (nearly) centred.
     if (cubes && items.length) {
