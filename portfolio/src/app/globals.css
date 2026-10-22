@@ -527,9 +527,11 @@ a:focus-visible {
   top: 0;
   bottom: 0;
   left: calc(var(--card-w) * var(--i) / var(--n));
-  /* 1px overlap hides hairline seams between slices. */
-  width: calc(var(--card-w) / var(--n) + 1px);
+  /* 2px overlap so no slice edge (or its anti-aliasing) shows between slices. */
+  width: calc(var(--card-w) / var(--n) + 2px);
   overflow: hidden;
+  /* ScrollStage pins each slice at its left edge on the curve. */
+  transform-origin: 0 50%;
   backface-visibility: hidden;
 }
 

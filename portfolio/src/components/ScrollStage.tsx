@@ -534,11 +534,20 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
         const c = centers[i] + x - half;
         const sc = sideScaleAt(c);
         const hwi = halfWidths[i] ?? 0;
+        const sw = (hwi * 2) / (strips[i].length || 1); // slice width in the layout
         strips[i].forEach((strip, j) => {
-          const u = c + stripOffsets[i][j]; // where the slice sits in the layout
-          const p = curlPoint(scaledU(c, stripOffsets[i][j], sc, hwi));
-          const deg = ((inward ? -1 : 1) * p.phi * 180) / Math.PI;
-          const t = `translate3d(${(p.X - u).toFixed(2)}px,0,${p.Z.toFixed(2)}px) rotateY(${deg.toFixed(2)}deg) scale(${sc.toFixed(4)})`;
+          // Each slice spans exactly from one point on the curve to the next
+          // (pinned at its left edge, turned along the chord, stretched to its
+          // length), so neighbours meet with no gaps; they also overlap by 2px
+          // in CSS so no edge is left to show through.
+          const offL = stripOffsets[i][j] - sw / 2;
+          const a = curlPoint(scaledU(c, offL, sc, hwi));
+          const b = curlPoint(scaledU(c, offL + sw, sc, hwi));
+          const dx = b.X - a.X;
+          const dz = b.Z - a.Z;
+          const deg = (Math.atan2(-dz, dx) * 180) / Math.PI;
+          const sx = Math.hypot(dx, dz) / sw;
+          const t = `translate3d(${(a.X - (c + offL)).toFixed(2)}px,0,${a.Z.toFixed(2)}px) rotateY(${deg.toFixed(3)}deg) scale(${sx.toFixed(4)},${sc.toFixed(4)})`;
           if (stripCache.get(strip) === t) return;
           stripCache.set(strip, t);
           strip.style.transform = t;
