@@ -30,6 +30,12 @@ export type SceneConfig = {
   /** The curl turns no further than this (deg); beyond it the card keeps
    *  receding in a straight line, so it stays visible up to the frame edge. */
   curlMaxAngle: number;
+  /** Drum: cards sit on one cylinder curving away from the viewer, so their
+   *  top and bottom edges follow one smooth path out from the centred card. */
+  drum: boolean;
+  /** Radius of that cylinder, as a multiple of the frame width (smaller = a
+   *  tighter, stronger curve). */
+  drumRadius: number;
   /** Curve style: as a card turns aside, its top and bottom edges arc away
    *  towards the outer edge by up to this share of its height, so it reads as
    *  a bent page (an outline change on one solid plane: no seams). */
@@ -113,8 +119,10 @@ export const sceneConfig: SceneConfig = {
   curl: false,
   curlRadius: 0.16,
   curlMaxAngle: 38,
-  sideScale: 0.78,
-  bendDip: 0.13,
+  sideScale: 0.8,
+  drum: true,
+  drumRadius: 1.4,
+  bendDip: 0.06,
   curlSides: "both",
   curveRotate: 40,
   curveDepth: 120,
@@ -135,7 +143,7 @@ export const sceneConfig: SceneConfig = {
   holdDistance: 0.1,
   settle: true,
   snap: true,
-  snapDuration: 1,
+  snapDuration: 1.15,
   smoothness: 0.075,
   scrollPerUnit: 1,
   autoplayOnLoad: true,
@@ -154,6 +162,7 @@ export const mobileOverrides: Partial<SceneConfig> = {
   curveDepth: 0,
   curl: false,
   sideScale: 0.86,
+  drum: false,
   bendDip: 0,
   curveHinge: false,
   curveInward: true,

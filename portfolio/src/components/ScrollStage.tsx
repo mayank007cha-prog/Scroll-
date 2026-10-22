@@ -114,12 +114,14 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const shades = items.map((el) => el.querySelector<HTMLElement>(".paper-shade"));
   // Background colour layers: [video, ...items] (see SceneTones).
   const tones = gsap.utils.toArray<HTMLElement>("[data-tone]", stage);
+  const edges = gsap.utils.toArray<HTMLElement>("[data-edge]", stage);
   const toneShown: number[] = tones.map(() => -1);
   const setTone = (i: number, o: number) => {
     const v = Math.round(o * 1000) / 1000;
     if (!tones[i] || toneShown[i] === v) return;
     toneShown[i] = v;
     tones[i].style.opacity = String(v);
+    if (edges[i]) edges[i].style.opacity = String(v);
   };
   const warp = stage.querySelector<HTMLElement>("[data-warp]");
   const warpMap = warp?.querySelector<SVGElement>("[data-warp-map]");
@@ -322,6 +324,32 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const Z = cz - (lx - h) * Math.sin(deg * toRad);
     return (X * cfg.perspective) / (cfg.perspective - Z);
   };
+  // ---- Drum ------------------------------------------------------------------
+  // A card whose middle is `c` track px from the centre (along the row) sits
+  // on a cylinder of radius R curving away from the viewer: it moves round
+  // the drum (X), back (Z) and turns to face outwards (deg). The centred card
+  // is flat; neighbours' edges continue the same smooth path.
+  const drumOn = config.drum && !vertical;
+  const drumPose = (c: number) => {
+    const R = Math.max(1, config.drumRadius * frameWidth);
+    const a = c / R;
+    // Past the near neighbours a card would only sit hidden behind them, so
+    // it fades out as it turns round the side (and in as it comes back).
+    const sp = (halfWidths[0] ?? 0) * 2 + gapPx || 1; // one card spacing
+    const o = gsap.utils.clamp(0, 1, (1.7 * sp - Math.abs(c)) / (0.4 * sp)); // full up to 1.3 spacings
+    return { X: R * Math.sin(a), Z: -R * (1 - Math.cos(a)), deg: (a * 180) / Math.PI, a, o };
+  };
+  // A card of half-width `hw` on the drum, shrunk by `s` about its inner edge
+  // (the one nearer the centre): that edge stays where the full-size card's
+  // would be, so the gaps stay equal. Returns the inner edge point and which
+  // side it's on (0 when centred: no hinge, scale about the middle).
+  const drumInner = (c: number, hw: number) => {
+    const p = drumPose(c);
+    const side = c > 0.5 ? 1 : c < -0.5 ? -1 : 0;
+    return { ...p, side, iX: p.X - side * hw * Math.cos(p.a), iZ: p.Z + side * hw * Math.sin(p.a) };
+  };
+  const screenX = (x: number, z: number) => (x * cfg.perspective) / (cfg.perspective - z);
+
   // Side cards are smaller: full size centred, easing (smoothstep) down to
   // `sideScale` one card away. `c` is the card's centre offset in track px.
   const sideScaleAt = (c: number) => {
@@ -406,6 +434,16 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     const gap = gapPx * trackFactor;
     const cardLeft = (x: number) => {
       const c = (centers[0] ?? 0) + x - half;
+      if (drumOn) {
+        const hw = halfWidths[0] ?? 0;
+        const q = drumInner(c, hw);
+        // Right of centre the left edge is the inner one (the hinge).
+        if (q.side > 0) return screenX(q.iX, cfg.trackDepth + q.iZ);
+        if (q.side === 0) return screenX(q.X - hw, cfg.trackDepth + q.Z);
+        // Left of centre the left edge is the outer one, 2·hw·s from the hinge.
+        const w = 2 * hw * sideScaleAt(c);
+        return screenX(q.iX - w * Math.cos(q.a), cfg.trackDepth + q.iZ - w * Math.sin(q.a));
+      }
       const d = bend(c / half);
       const hw = halfWidths[0] ?? 0;
       // Turned and scaled about its inner edge (left when right of centre).
@@ -454,9 +492,23 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
       const c0 = (centers[0] ?? 0) + x - half - (hw0 * 2 + gapPx);
       const d0 = bend(c0 / half);
       const base = (hw0 * 2) / (frameWidth || 1); // full-frame plane → card size
+      if (drumOn) {
+        const p = drumInner(c0, hw0);
+        // The full-frame plane's own edges sit at ±half; hinge on the inner one.
+        gsap.set(hero, {
+          [AX]: p.side === 0 ? p.X : p.iX + p.side * half,
+          z: cfg.trackDepth + (p.side === 0 ? p.Z : p.iZ),
+          opacity: p.o,
+          scale: base * sideScaleAt(c0),
+          [ROT]: turn(p.deg),
+          transformOrigin: p.side > 0 ? "0% 50%" : p.side < 0 ? "100% 50%" : "50% 50%",
+          borderRadius: radius / (base || 1),
+        });
+        bendOutline(hero, Math.min(1, Math.abs(p.a) / 0.8), Math.sign(c0), frame.clientWidth, frame.clientHeight, radius / (base || 1));
+      }
       const s0 = sideScaleAt(c0);
       const hingedSlot = c0 < 0;
-      gsap.set(hero, {
+      if (!drumOn) gsap.set(hero, {
         [AX]: hingedSlot ? c0 + hw0 - half : c0,
         z: cfg.trackDepth + curveZ(d0),
         scale: base * s0,
@@ -464,7 +516,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
         transformOrigin: hingedSlot ? (vertical ? "50% 100%" : "100% 50%") : "50% 50%",
         borderRadius: radius / (base || 1),
       });
-      bendOutline(hero, Math.abs(curveShape(d0)), Math.sign(c0), frame.clientWidth, frame.clientHeight, radius / (base || 1));
+      if (!drumOn) bendOutline(hero, Math.abs(curveShape(d0)), Math.sign(c0), frame.clientWidth, frame.clientHeight, radius / (base || 1));
     } else {
       const pose = heroPose(heroX);
       const hinged = heroHinged(pose.dh);
@@ -477,6 +529,7 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
         [ROT]: turn(pose.deg),
         transformOrigin: hinged ? (vertical ? "50% 100%" : "100% 50%") : "50% 50%",
         borderRadius: cornerRadius,
+        opacity: 1,
       });
       bendOutline(hero, 0, 0, 0, 0, 0);
     }
@@ -535,6 +588,24 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
     items.forEach((el, i) => {
       const d = bend((centers[i] + x - half) / half);
       const ci = centers[i] + x - half;
+      if (drumOn) {
+        const hwi = halfWidths[i] ?? 0;
+        const p = drumInner(ci, hwi);
+        // Layout edges are at ci ± hwi: move the inner one onto the drum, then
+        // turn and shrink about it.
+        gsap.set(el, {
+          [AX]: p.side === 0 ? p.X - ci : p.iX - (ci - p.side * hwi),
+          z: p.side === 0 ? p.Z : p.iZ,
+          [ROT]: turn(p.deg),
+          scale: sideScaleAt(ci),
+          opacity: p.o,
+          transformOrigin: p.side > 0 ? "0% 50%" : p.side < 0 ? "100% 50%" : "50% 50%",
+        });
+        if (el.classList.contains("project-card")) {
+          bendOutline(el, Math.min(1, Math.abs(p.a) / 0.8), Math.sign(ci), boxes[i]?.[0] ?? 0, boxes[i]?.[1] ?? 0, radius);
+        }
+        return;
+      }
       gsap.set(el, {
         [ROT]: turn(curveDeg(d) + leanDeg),
         z: curveZ(d),

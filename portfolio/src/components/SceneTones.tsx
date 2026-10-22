@@ -12,3 +12,18 @@ export function SceneTones({ tones }: { tones: string[] }) {
     </div>
   );
 }
+
+/**
+ * Soft fades at the left and right edges, above the cards, in the same
+ * background colour (cross-faded with the tones), so cards fade out where
+ * they leave the frame instead of being cut off.
+ */
+export function SceneEdges({ tones }: { tones: string[] }) {
+  return (
+    <div className="scene-edges" aria-hidden="true">
+      {tones.map((tone, i) => (
+        <div key={i} className={`scene-edge scene-tone--${tone}`} data-edge />
+      ))}
+    </div>
+  );
+}

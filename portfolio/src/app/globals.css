@@ -47,7 +47,7 @@
      card's on-screen size exactly. */
   --card-w: 76vw;
   --card-h: 76vh;
-  --track-gap: 9vw;
+  --track-gap: 6vw;
   --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
@@ -177,6 +177,27 @@ a:focus-visible {
 }
 
 .scene-tone:first-child {
+  opacity: 1;
+}
+
+/* Edge fades: each tone layer's colour, masked to the left and right edges. */
+.scene-edges {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.scene-edge {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  will-change: opacity;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, transparent 7%, transparent 93%, #000 100%);
+  mask-image: linear-gradient(90deg, #000 0%, transparent 7%, transparent 93%, #000 100%);
+}
+
+.scene-edge:first-child {
   opacity: 1;
 }
 
@@ -491,6 +512,8 @@ a:focus-visible {
 
 .work-item {
   flex: 0 0 auto;
+  /* Cards turned past the side of the drum face away: hide their backs. */
+  backface-visibility: hidden;
   width: var(--card-w);
   will-change: transform;
   pointer-events: auto;
@@ -776,7 +799,8 @@ a:focus-visible {
 
   .depth-field,
   .hero-fog,
-  .scene-tones {
+  .scene-tones,
+  .scene-edges {
     display: none;
   }
 
@@ -897,7 +921,8 @@ a:focus-visible {
 
   /* Phones have no empty band above or below the cards, so keep only the
      grid, guides and light in the background. */
-  .depth-cubes {
+  .depth-cubes,
+  .scene-edges {
     display: none;
   }
 
