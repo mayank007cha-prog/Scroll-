@@ -27,6 +27,9 @@ export type SceneConfig = {
   /** Radius of that arc, as a fraction of the frame width (smaller = a
    *  tighter, stronger curl). */
   curlRadius: number;
+  /** Where cards curl: only as they enter (the end side: right, or bottom)
+   *  or on both sides. */
+  curlSides: "end" | "both";
   /** Turn each card about its inner edge (the one nearer the centre), like
    *  a page curling, instead of about its middle. */
   curveHinge: boolean;
@@ -93,9 +96,11 @@ export const sceneConfig: SceneConfig = {
   // viewer. (edgeBend, a screen-space warp filter, looks similar but costs
   // a full-screen filter every frame, so it's off.)
   curl: true,
-  curlRadius: 0.32,
-  curveRotate: 11,
-  curveDepth: 30,
+  curlRadius: 0.22,
+  curlSides: "end",
+  // Everything else stays flat (video card, footer): simple and light.
+  curveRotate: 0,
+  curveDepth: 0,
   curveHinge: true,
   curveFlat: 0.3,
   curveInward: true,
@@ -105,7 +110,7 @@ export const sceneConfig: SceneConfig = {
   paperShade: 0.25,
   depthParallax: 0.7,
   depthSpin: -0.012,
-  scrub: 0.35,
+  scrub: 0.25,
   entryDistance: 110,
   videoDistance: 2.2,
   heroDistance: 0.8,
@@ -127,9 +132,10 @@ export const mobileOverrides: Partial<SceneConfig> = {
   heroDepth: -200,
   heroScale: 0.9,
   trackDepth: -40,
-  curveRotate: 10,
-  curveDepth: 50,
-  curl: false, // phones keep the gentle tilt
+  // Phones: flat cards travelling vertically (lightest).
+  curveRotate: 0,
+  curveDepth: 0,
+  curl: false,
   curveHinge: false,
   curveInward: true,
   // Phones keep the gentle ring; the screen-space bend is desktop-only

@@ -307,7 +307,9 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   const curlPoint = (u: number) => {
     const start = (halfWidths[0] ?? 0) + gapPx / 2;
     const s = Math.abs(u) - start;
-    if (!curlOn || s <= 0) return { X: u, Z: 0, phi: 0 };
+    // Only the entering side curls (like turning onto a curved page); the
+    // leaving side stays flat and simply slides out of the frame.
+    if (!curlOn || s <= 0 || (config.curlSides === "end" && u < 0)) return { X: u, Z: 0, phi: 0 };
     const R = Math.max(1, config.curlRadius * frameWidth);
     const phi = Math.min(Math.PI / 2, s / R);
     const sign = Math.sign(u);
@@ -484,8 +486,6 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
           if (stripCache.get(strip) === t) return;
           stripCache.set(strip, t);
           strip.style.transform = t;
-          // The curling part darkens a little, like light falling off paper.
-          strip.style.setProperty("--sh", ((1 - Math.cos(p.phi)) * 0.9 * config.paperShade * 2).toFixed(3));
         });
         return;
       }
@@ -526,33 +526,17 @@ function buildScene(stage: HTMLElement, video: HTMLVideoElement | null, config: 
   });
 
   // 1b. The intro text changes while the video plays: part one melts away
-  //     (liquid ripple + blur, lines lifting off one after another), then the
+  //     (lines fading and lifting off one after another), then the
   //     "about me" label and paragraph rise in. Scrubbed, so it reverses.
   const V = config.videoDistance;
   const introOne = hero.querySelector<HTMLElement>("[data-intro-one]");
   const introOneParts = introOne ? Array.from(introOne.children) : [];
   const introPoints = gsap.utils.toArray<HTMLElement>("[data-intro-point]", hero);
-  const disp = hero.querySelector<SVGElement>("[data-liquid-disp]");
-  const blur = hero.querySelector<SVGElement>("[data-liquid-blur]");
-  const liquid = { amount: 0 };
-  tl.to(
-    liquid,
-    {
-      amount: 1,
-      duration: V * 0.34,
-      ease: "power1.in",
-      onUpdate: () => {
-        disp?.setAttribute("scale", (liquid.amount * 90).toFixed(1));
-        blur?.setAttribute("stdDeviation", (liquid.amount * 5).toFixed(2));
-      },
-    },
-    `video+=${V * 0.1}`,
-  );
   tl.to(introOneParts, { opacity: 0, y: -18, duration: V * 0.28, stagger: V * 0.04, ease: "power1.in" }, `video+=${V * 0.14}`);
   tl.fromTo(
     introPoints,
-    { opacity: 0, y: 26, filter: "blur(10px)" },
-    { opacity: 1, y: 0, filter: "blur(0px)", duration: V * 0.2, stagger: V * 0.12, ease: "power2.out" },
+    { opacity: 0, y: 26 },
+    { opacity: 1, y: 0, duration: V * 0.2, stagger: V * 0.12, ease: "power2.out" },
     `video+=${V * 0.5}`,
   );
 

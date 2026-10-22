@@ -20,13 +20,13 @@ export const initials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
-/** The card itself: a gradient-glass panel in the project's colour. Left:
+/** The card itself: a plain, solid panel in the project's colour. Left:
  *  client, title, one-liner and a glass button; right: a slot for a video
  *  or GIF of the work. */
 function CardFace({ project }: { project: Project }) {
   const { media } = project;
   return (
-    <article className={`project-card__body glass tone-${project.tone}`}>
+    <article className={`project-card__body tone-${project.tone}`}>
       <div className="project-card__main">
         <div className="project-card__text">
           <header className="project-card__client">
@@ -59,8 +59,6 @@ function CardFace({ project }: { project: Project }) {
           )}
         </div>
       </div>
-      {/* Light and shadow that roll across the card as it turns (ScrollStage). */}
-      <span className="paper-shade" aria-hidden="true" />
     </article>
   );
 }

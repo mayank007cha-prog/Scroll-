@@ -1,15 +1,11 @@
 /**
- * The room behind the cards (CSS 3D, no WebGL): a back wall and a floor
- * built on one solid grid, so every wall line runs straight into a floor
- * line. ScrollStage shifts the room within one grid cell, so it looks
- * endless, and drives the interactive floor cubes at the end of the row.
+ * The plain, dark space behind the cards. It only holds an invisible floor
+ * plane for the interactive cubes at the end of the row (ScrollStage).
  */
 export function DepthField() {
   return (
     <div className="depth-field" data-depth-field aria-hidden="true">
       <div className="depth-room" data-room>
-        <div className="depth-wall" />
-        <div className="depth-floor" />
         {/* Interactive cubes that rise out of the floor's cells at the end of
             the row (driven by ScrollStage). Same plane as the floor, but
             without its mask, so the cubes keep their 3D. */}

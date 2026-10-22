@@ -32,15 +32,13 @@ export function HeroVideo({ src, webmSrc, poster, label = "Intro video" }: HeroV
       </video>
       <div className="hero-fog" aria-hidden="true" />
       <div className="hero-shade" aria-hidden="true" />
-      <div className="hero-grain" aria-hidden="true" />
-      <div className="paper-shade" aria-hidden="true" />
       <div className="hero-border" aria-hidden="true" />
       {/* Name, top left of the video card. */}
       <div className="hero-mark">
         <span className="hero-mark__name">{owner.name}</span>
       </div>
       <div className="hero-intro">
-        {/* Part one: on load. ScrollStage melts it away with the liquid filter. */}
+        {/* Part one: on load. ScrollStage fades it away as you scroll. */}
         <div className="hero-intro__stage" data-intro-one>
           <h1 className="hero-intro__title">{intro.title}</h1>
           <span className="hero-intro__hint">{intro.hint} ↓</span>
@@ -54,15 +52,6 @@ export function HeroVideo({ src, webmSrc, poster, label = "Intro video" }: HeroV
           ))}
         </div>
       </div>
-      {/* Liquid dissolve: turbulence-driven displacement plus blur. ScrollStage
-          scrubs the displacement and blur amounts. */}
-      <svg className="hero-liquid-defs" aria-hidden="true" focusable="false">
-        <filter id="hero-liquid" x="-20%" y="-20%" width="140%" height="140%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.045" numOctaves="2" seed="7" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" data-liquid-disp />
-          <feGaussianBlur stdDeviation="0" data-liquid-blur />
-        </filter>
-      </svg>
     </div>
   );
 }

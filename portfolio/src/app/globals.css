@@ -1,9 +1,9 @@
 /* Theme tokens (dark only). */
 :root {
-  --bg-rgb: 9 9 11;
+  --bg-rgb: 18 18 18;
   --fg: 255 255 255;
   --bg: rgb(var(--bg-rgb));
-  --frame-bg: #0a0a0c;
+  --frame-bg: #121212;
   --hero-bg: #121c28;
   --ink: #f5f5f6;
   --ink-2: rgb(245 245 246 / 0.72);
@@ -210,8 +210,7 @@ a:focus-visible {
 }
 
 .hero-fog,
-.hero-shade,
-.hero-grain {
+.hero-shade {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -238,16 +237,6 @@ a:focus-visible {
   );
 }
 
-/* Film grain over the whole video card: a coarse and a fine layer give it
-   the same matte, printed feel as the rest of the scene. */
-.hero-grain {
-  z-index: 1;
-  background-image: var(--noise), var(--noise);
-  background-size: 180px, 90px;
-  background-position: 0 0, 37px 61px;
-  /* Plain (unblended) grain: blend modes on a moving 3D layer cost frames. */
-  opacity: 0.1;
-}
 
 
 /* Name, top left of the video card. */
@@ -292,9 +281,7 @@ a:focus-visible {
 }
 
 /* Part one wears the liquid filter (at zero strength until you scroll). */
-[data-intro-one] {
-  filter: url(#hero-liquid);
-}
+
 
 .hero-liquid-defs {
   position: absolute;
@@ -356,10 +343,6 @@ a:focus-visible {
   will-change: transform;
 }
 
-.depth-floor,
-.depth-wall {
-  opacity: 0;
-}
 
 /* The room: a dashed back wall and a floor built on one grid.
    Both planes span the same x range; the wall stands at z -1100 with its
@@ -371,32 +354,6 @@ a:focus-visible {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-}
-
-.depth-wall,
-.depth-floor {
-  position: absolute;
-  left: -150%;
-  width: 400%;
-  height: calc(1440px * var(--zs, 1)); /* 6 grid cells at 1440 wide */
-  background-size: 240px 240px;
-}
-
-.depth-wall {
-  bottom: 0;
-  transform: translateZ(calc(-1100px * var(--zs, 1)));
-  background-image: var(--wall-img);
-  background-position: 0 100%; /* anchor the grid on the floor line */
-  mask-image: linear-gradient(0deg, #000 0%, #000 35%, transparent 95%);
-}
-
-.depth-floor {
-  top: 100%;
-  transform: translateZ(calc(-1100px * var(--zs, 1))) rotateX(90deg);
-  transform-origin: 50% 0;
-  background-image: var(--floor-img);
-  background-position: 0 0;
-  mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 100%);
 }
 
 /* Floor cubes: a plane laid exactly over the floor (same box and
@@ -561,17 +518,6 @@ a:focus-visible {
   height: 100%;
 }
 
-/* Light falling off as the paper curls (--sh set per slice). */
-.card-strip__face::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  border-radius: var(--radius);
-  background: rgb(0 0 0 / var(--sh, 0));
-  pointer-events: none;
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -586,24 +532,13 @@ a:focus-visible {
   height: var(--card-h);
   padding: clamp(22px, min(3vw, 4.6vh), 52px);
   border-radius: var(--radius);
-  border-color: rgb(255 255 255 / 0.16);
-  background:
-    radial-gradient(110% 90% at 0% 0%, rgb(255 255 255 / 0.16), transparent 55%),
-    linear-gradient(140deg, var(--tone-a), var(--tone-b));
-  transition:
-    transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1),
-    border-color 0.4s;
+  /* Plain solid colour: no gradients, grain or shadows, so it's cheap to draw. */
+  background: var(--tone);
 }
 
-.project-card__body.tone-orange { --tone-a: #f7742d; --tone-b: #6e1f08; }
-.project-card__body.tone-blue { --tone-a: #3b7bf0; --tone-b: #0a1a45; }
-.project-card__body.tone-red { --tone-a: #ec3f3a; --tone-b: #520a0e; }
-
-.project-card:hover .project-card__body,
-.project-card:focus-visible .project-card__body {
-  transform: translateY(-6px);
-  border-color: rgb(255 255 255 / 0.32);
-}
+.project-card__body.tone-orange { --tone: #e2652b; }
+.project-card__body.tone-blue { --tone: #2f62d4; }
+.project-card__body.tone-red { --tone: #cf3a3a; }
 
 .project-card__main {
   display: grid;
@@ -678,10 +613,9 @@ a:focus-visible {
   align-items: center;
   gap: 8px;
   padding: 12px 22px;
-  border: 1px solid rgb(255 255 255 / 0.3);
+  border: 1px solid rgb(255 255 255 / 0.35);
   border-radius: 999px;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.08));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+  background: rgb(255 255 255 / 0.16);
   color: #fff;
   font-size: clamp(14px, 1.05vw, 16px);
   font-weight: 600;
@@ -692,8 +626,8 @@ a:focus-visible {
 
 .btn-glass:hover,
 .project-card:hover .btn-glass {
-  border-color: rgb(255 255 255 / 0.5);
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.12));
+  border-color: rgb(255 255 255 / 0.6);
+  background: rgb(255 255 255 / 0.26);
 }
 
 /* Media slot: a video or GIF fills it; until then a quiet placeholder. */
@@ -701,9 +635,8 @@ a:focus-visible {
   position: relative;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 0.16);
   border-radius: 16px;
-  background: rgb(0 0 0 / 0.22);
+  background: rgb(0 0 0 / 0.16);
 }
 
 .project-card__media video,
