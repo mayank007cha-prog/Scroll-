@@ -27,6 +27,12 @@ export type SceneConfig = {
   /** Radius of that arc, as a fraction of the frame width (smaller = a
    *  tighter, stronger curl). */
   curlRadius: number;
+  /** The curl turns no further than this (deg); beyond it the card keeps
+   *  receding in a straight line, so it stays visible up to the frame edge. */
+  curlMaxAngle: number;
+  /** Cards shrink to this scale as they move one card away from the centre,
+   *  and scale back up as they arrive (1 = no change). */
+  sideScale: number;
   /** Where cards curl: only as they enter (the end side: right, or bottom)
    *  or on both sides. */
   curlSides: "end" | "both";
@@ -99,7 +105,9 @@ export const sceneConfig: SceneConfig = {
   // the viewer (outer edge further back). Case-study cards bend as slices;
   // the video card and footer turn as whole planes.
   curl: true,
-  curlRadius: 0.27,
+  curlRadius: 0.16,
+  curlMaxAngle: 38,
+  sideScale: 0.78,
   curlSides: "both",
   curveRotate: 38,
   curveDepth: 160,
@@ -138,6 +146,7 @@ export const mobileOverrides: Partial<SceneConfig> = {
   curveRotate: 0,
   curveDepth: 0,
   curl: false,
+  sideScale: 0.86,
   curveHinge: false,
   curveInward: true,
   // Phones keep the gentle ring; the screen-space bend is desktop-only

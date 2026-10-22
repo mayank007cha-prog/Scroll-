@@ -9,7 +9,7 @@ type ProjectCardProps = {
 
 /** Thin vertical slices each card is drawn as, so ScrollStage can bend it
  *  smoothly at the edges of the frame (each slice is a plain 3D transform). */
-const STRIPS = 24;
+const STRIPS = 36;
 
 /** First letters of the client name, for the logo tile. */
 export const initials = (name: string) =>
