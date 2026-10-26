@@ -23,6 +23,7 @@
   --red: #e50914;
   --tag-red: #d91f29;
   --panel-bg: #101012;
+  --caption-bg: #18181a;
   --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --title-size: 17px;
   color-scheme: dark;
@@ -163,30 +164,45 @@ button, input { font: inherit; color: inherit; }
 }
 #lensLabel {
   position: absolute; left: 0; top: 0;
+  width: 100%; height: 0;
   pointer-events: none;
   z-index: 4;
-  overflow: hidden;
   opacity: 0;
   will-change: transform, opacity;
 }
+.pill {
+  position: absolute; left: 0; top: 0;
+  border-radius: 12px;
+  background: var(--caption-bg);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+  overflow: hidden;
+  transform-origin: 50% 100%;
+}
+.caret {
+  position: absolute; left: 0; top: 0;
+  width: 12px; height: 12px;
+  background: var(--caption-bg);
+  border-right: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom-right-radius: 2px;
+}
 .lt {
-  position: absolute; left: 12%; right: 12%; bottom: 21px;
+  position: absolute; left: 50%; top: 8px;
+  white-space: nowrap;
   text-align: center;
+  will-change: transform, opacity;
 }
 .lt-name {
   font-size: var(--title-size);
   font-weight: 800;
-  line-height: 1.08;
+  line-height: 1.18;
   letter-spacing: -0.01em;
-  text-wrap: balance;
-  text-shadow: 0 1px 14px rgba(0,0,0,0.65);
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .lt-meta {
-  margin-top: 5px;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
-  color: rgba(255,255,255,0.74);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 3px;
+  font-size: 11px; line-height: 13px; font-weight: 600; letter-spacing: 0.02em;
+  color: rgba(255,255,255,0.7);
 }
 .ghost {
   position: absolute; left: 0; top: 0;
@@ -306,7 +322,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         </div>
 
         <canvas id="lensCanvas" aria-hidden="true"></canvas>
-        <div id="lensLabel" aria-live="polite"></div>
+        <div id="lensLabel" aria-live="polite"><div class="pill" id="pill"></div><div class="caret" id="caret"></div></div>
         <div class="ghost" id="ghost" aria-hidden="true"></div>
 
         <div class="hint" id="hint"><span class="hint-dot" aria-hidden="true"></span>Hold a poster and slide sideways</div>
@@ -336,11 +352,12 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <div class="eyebrow">Interaction prototype</div>
       <h2>Focus Lens</h2>
     </div>
-    <p>Titles baked into poster art are hard to read. Every poster has its own typeface, size and contrast. Hold a poster and slide sideways: a glass lens bulges under your thumb, magnifies the artwork and sets the title in one clear style. Let go and the row looks exactly as designed.</p>
+    <p>Titles baked into poster art are hard to read. Every poster has its own typeface, size and contrast. Hold a poster and slide sideways: a glass lens opens where you first touched and stays there while the posters flow through it. The title of whatever sits in the lens floats just above it in one clear style, out from under your thumb.</p>
     <ul class="howto">
       <li><b>Mouse</b><span>Press on any poster and drag left or right.</span></li>
       <li><b>Touch</b><span>Put your thumb on a poster and slide sideways.</span></li>
-      <li><b>Release</b><span>The lens melts away and the row keeps gliding.</span></li>
+      <li><b>Release</b><span>The row glides on and the nearest poster settles in the lens.</span></li>
+      <li><b>Pause</b><span>Two seconds without scrolling and the lens melts away.</span></li>
     </ul>
     <div class="controls">
       <div class="switch-row">
@@ -360,15 +377,15 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         <input type="range" id="optTitle" min="14" max="22" step="1" value="17">
       </div>
       <div class="ctl">
-        <div class="ctl-head"><label for="optGain">Browse speed</label><output id="outGain" for="optGain">2.0×</output></div>
-        <input type="range" id="optGain" min="1.2" max="3" step="0.1" value="2">
+        <div class="ctl-head"><label for="optHold">Lens stays for</label><output id="outHold" for="optHold">2.0 s</output></div>
+        <input type="range" id="optHold" min="1" max="4" step="0.5" value="2">
       </div>
       <button class="demo-btn" type="button" id="demoBtn">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="#000"><path d="M2 1.2v11.6L12.5 7z"/></svg>
         Play demo
       </button>
     </div>
-    <p class="footnote">While the lens is up, the row moves faster than your thumb (browse speed). Posters stream through the lens so a new title lands about every poster-width of travel. Turn the lens off to compare with a plain drag.</p>
+    <p class="footnote">The lens opens where your thumb lands, so as you swipe your thumb moves away from it and never covers the poster you are reading. The row follows your thumb one to one and always comes to rest with a poster centred in the lens.</p>
   </aside>
 </div>
 
@@ -408,14 +425,18 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const PW = 118, PH = 166, GAP = 8, PADX = 16, STEP = PW + GAP;
   const PAD = 14;          // canvas bleed above/below the strip (lens pops out 8px)
   const POP = 8;
+  const DECAY = 4.5;       // fling friction (1/s): a fling travels about v / DECAY px
+  const TITLE_SLIDE = 26;  // px a title drifts while it hands over to the next one
 
-  const CFG = { lens: true, mag: 1.45, radius: 90, gain: 2.0 };
+  const CFG = { lens: true, mag: 1.45, radius: 90, hold: 2000, titleSize: 17 };
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const K_SNAP = reduceMotion ? 220 : 50;
 
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
-  const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot");
-  const rowsEl = $("rows"), canvas = $("lensCanvas"), label = $("lensLabel"), ghost = $("ghost"), hint = $("hint");
+  const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot"), scroller = $("scroller");
+  const rowsEl = $("rows"), canvas = $("lensCanvas"), label = $("lensLabel"), pill = $("pill"), caret = $("caret");
+  const ghost = $("ghost"), hint = $("hint");
   const POSTERS = window.POSTERS || {};
 
   const images = {};
@@ -460,7 +481,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     strip.appendChild(track);
     sec.append(h, strip);
     rowsEl.appendChild(sec);
-    const row = { i: ri, sec, strip, track, items, x: 0, raw: 0, v: 0, anim: false, max: 0, trackW: PADX * 2 + items.length * STEP - GAP, tex: null, samples: [] };
+    const row = { i: ri, sec, h, strip, track, items, x: 0, raw: 0, v: 0, anim: false, snap: null, max: 0, trackW: PADX * 2 + items.length * STEP - GAP, tex: null, samples: [] };
     attachGestures(row);
     return row;
   });
@@ -489,6 +510,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   }
   const localX = (clientX) => (clientX - screenEl.getBoundingClientRect().left) / scale;
   const localY = (clientY) => (clientY - screenEl.getBoundingClientRect().top) / scale;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
   function applyRow(r) { r.track.style.transform = `translate3d(${-r.x}px,0,0)`; }
 
@@ -539,9 +562,9 @@ void main() {
   col.g = strip(uC + q).g;
   col.b = strip(uC + q * (1.0 - ca)).b;
 
-  col *= 0.9;                                   // 10% glass tint
-  float g = smoothstep(-0.12, 0.98, d.y / uHH); // the black floor for the title
-  col = mix(col, vec3(0.0), g * 0.93);
+  col *= 0.94;                                  // faint glass tint
+  float g = smoothstep(0.2, 1.0, d.y / uHH);    // light floor shading for depth
+  col = mix(col, vec3(0.0), g * 0.35);
   col *= mix(0.55, 1.0, smoothstep(0.0, 9.0, -sd));   // edge thickness
 
   vec2 n = normalize(d + vec2(1e-4));
@@ -591,7 +614,6 @@ void main() {
     canvas.style.height = h + "px";
     canvas.width = Math.round(W * pxr);
     canvas.height = Math.round(h * pxr);
-    label.style.width = label.style.height = "0px";
     for (const r of rows) r.tex = null;    // rebuild at the new density
   }
 
@@ -656,89 +678,105 @@ void main() {
   }
 
   // ---------- lens state ----------
+  // The lens opens where the thumb first lands and then stays put; the row flows through it.
   const lens = {
-    row: null, touching: false, targetX: 0,
-    lx: { x: 0, v: 0 }, p: { x: 0, v: 0 },
-    focus: -1, cur: null,
+    row: null, touching: false,
+    lx: { x: 0, v: 0 }, targetX: 0,
+    p: { x: 0, v: 0 },
+    lastMove: 0, tick: -1,
   };
+  let titles = [];
 
-  function focusIndex(r, lx) {
-    const i = Math.round((lx + r.x - PADX - PW / 2) / STEP);
-    return Math.max(0, Math.min(r.items.length - 1, i));
+  const posUnder = (r, lx) => (lx + r.x - PADX - PW / 2) / STEP;   // continuous poster index under the lens
+  const posterCenter = (i) => PADX + i * STEP + PW / 2;            // in track coordinates
+  const clampLX = (x) => clamp(x, 70, W - 70);
+
+  function buildTitles(r) {
+    pill.replaceChildren();
+    titles = r.items.map((it) => {
+      const info = INFO[it.key];
+      const el = document.createElement("div");
+      el.className = "lt";
+      const nm = document.createElement("div");
+      nm.className = "lt-name";
+      nm.textContent = info.title;
+      const mt = document.createElement("div");
+      mt.className = "lt-meta";
+      mt.textContent = info.meta;
+      el.append(nm, mt);
+      el.style.opacity = "0";
+      pill.appendChild(el);
+      return { el, w: 0, op: 0 };
+    });
   }
+  function measureTitles() { for (const t of titles) t.w = t.el.offsetWidth; }
 
-  function setTitle(r, idx, dir) {
-    const info = INFO[r.items[idx].key];
-    const el = document.createElement("div");
-    el.className = "lt";
-    const nm = document.createElement("div");
-    nm.className = "lt-name";
-    nm.textContent = info.title;
-    const mt = document.createElement("div");
-    mt.className = "lt-meta";
-    mt.textContent = info.meta;
-    el.append(nm, mt);
-    label.appendChild(el);
-    const old = lens.cur;
-    lens.cur = el;
-    if (old) {
-      if (reduceMotion || !dir) old.remove();
-      else {
-        old.animate([{ transform: "translateX(0)", opacity: 1, filter: "blur(0)" },
-                     { transform: `translateX(${-dir * 18}px)`, opacity: 0, filter: "blur(3px)" }],
-                    { duration: 170, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }).onfinish = () => old.remove();
-      }
-    }
-    if (dir && !reduceMotion) {
-      el.animate([{ transform: `translateX(${dir * 22}px)`, opacity: 0, filter: "blur(3px)" },
-                  { transform: "translateX(0)", opacity: 1, filter: "blur(0)" }],
-                 { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
-    }
+  function releaseLensRow() {
+    if (lens.row) lens.row.h.style.opacity = "";
+    lens.row = null;
+    pill.replaceChildren();
+    titles = [];
   }
 
   function beginScrub(r, x) {
     if (!demo) hideHint();
     r.strip.classList.add("dragging");
-    r.anim = false; r.v = 0; r.raw = r.x; r.samples = [];
-    if (!CFG.lens) { lens.row = null; return; }
-    if (lens.row !== r) { lens.p.x = 0; lens.p.v = 0; }
-    lens.row = r;
+    r.anim = false; r.snap = null; r.v = 0; r.raw = r.x; r.samples = [];
+    if (!CFG.lens) return;
+    const keep = lens.row === r && lens.p.x > 0.05;
+    if (!keep) {
+      if (lens.row) releaseLensRow();
+      lens.row = r;
+      lens.p.x = 0; lens.p.v = 0;
+      lens.lx.x = lens.targetX = clampLX(x);
+      lens.lx.v = 0;
+      lens.tick = Math.round(posUnder(r, lens.lx.x));
+      rowTexture(r);
+      buildTitles(r);
+    }
     lens.touching = true;
-    lens.targetX = lens.lx.x = clampLX(x);
-    lens.lx.v = 0;
-    rowTexture(r);
-    const idx = focusIndex(r, lens.lx.x);
-    label.replaceChildren();
-    lens.cur = null;
-    lens.focus = idx;
-    setTitle(r, idx, 0);
+    lens.lastMove = performance.now();
     kick();
   }
-  function moveScrub(r, ddx, x) {
-    const gain = CFG.lens ? CFG.gain : 1;
-    r.raw -= ddx * gain;
+  function moveScrub(r, ddx) {
+    r.raw -= ddx;
     r.x = rubber(r.raw, r.max);
     applyRow(r);
     const now = performance.now();
     r.samples.push([now, r.x]);
     while (r.samples.length > 2 && now - r.samples[0][0] > 90) r.samples.shift();
-    if (CFG.lens && lens.row === r) lens.targetX = clampLX(x);
+    if (lens.row === r) lens.lastMove = now;
     kick();
   }
   function endScrub(r) {
     r.strip.classList.remove("dragging");
     const s = r.samples;
-    r.v = 0;
+    let v = 0;
     if (s.length > 1) {
       const [t0, x0] = s[0], [t1, x1] = s[s.length - 1];
-      if (performance.now() - t1 < 80 && t1 > t0) r.v = ((x1 - x0) / (t1 - t0)) * 1000;
+      if (performance.now() - t1 < 80 && t1 > t0) v = ((x1 - x0) / (t1 - t0)) * 1000;
     }
-    r.v = Math.max(-5000, Math.min(5000, r.v));
-    r.anim = true;
     if (lens.row === r) lens.touching = false;
+    release(r, clamp(v, -5000, 5000));
+  }
+  // Let go: with the lens up, glide and land the nearest poster dead centre in the lens.
+  function release(r, v) {
+    r.v = v;
+    r.anim = true;
+    r.snap = null;
+    if (CFG.lens && lens.row === r) {
+      const lx = lens.targetX;
+      const i = clamp(Math.round((r.x + v / DECAY + lx - PADX - PW / 2) / STEP), 0, r.items.length - 1);
+      let target = posterCenter(i) - lx;
+      if (target < 0 || target > r.max) {
+        // Row can't travel that far: keep it at its end and ease the lens over the poster instead.
+        target = clamp(target, 0, r.max);
+        lens.targetX = clampLX(posterCenter(i) - target);
+      }
+      r.snap = target;
+    }
     kick();
   }
-  const clampLX = (x) => Math.max(18, Math.min(W - 18, x));
   const rb = (d, dim) => (1 - 1 / ((d * 0.55) / dim + 1)) * dim;
   const rubber = (raw, max) => raw < 0 ? -rb(-raw, W) : raw > max ? max + rb(raw - max, W) : raw;
 
@@ -747,42 +785,40 @@ void main() {
   function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
   function frame(now) {
     raf = 0;
-    let dt = Math.min((now - last) / 1000, 1 / 30);
+    const dt = Math.min((now - last) / 1000, 1 / 30);
     last = now;
     let busy = false;
 
     for (const r of rows) {
       if (!r.anim) continue;
-      const steps = 2, h = dt / steps;
+      const steps = 3, h = dt / steps;
       for (let k = 0; k < steps; k++) {
-        if (r.x < 0 || r.x > r.max) {
-          const b = r.x < 0 ? 0 : r.max;
-          const s = { x: r.x, v: r.v };
-          spring(s, b, 180, 1, h);
-          r.x = s.x; r.v = s.v;
-        } else {
-          r.x += r.v * h;
-          r.v *= Math.exp(-2.4 * h);
-        }
+        const s = { x: r.x, v: r.v };
+        if (r.snap != null) spring(s, r.snap, K_SNAP, 1, h);
+        else if (r.x < 0 || r.x > r.max) spring(s, r.x < 0 ? 0 : r.max, 180, 1, h);
+        else { s.x += s.v * h; s.v *= Math.exp(-DECAY * h); }
+        r.x = s.x; r.v = s.v;
       }
-      if (Math.abs(r.v) < 6 && r.x >= -0.5 && r.x <= r.max + 0.5) {
-        r.x = Math.max(0, Math.min(r.max, r.x));
-        r.v = 0;
-        r.anim = false;
+      if (r.snap != null) {
+        if (Math.abs(r.x - r.snap) < 0.15 && Math.abs(r.v) < 3) { r.x = r.snap; r.v = 0; r.snap = null; r.anim = false; }
+      } else if (Math.abs(r.v) < 6 && r.x >= -0.5 && r.x <= r.max + 0.5) {
+        r.x = clamp(r.x, 0, r.max); r.v = 0; r.anim = false;
       }
       r.raw = r.x;
       applyRow(r);
+      if (lens.row === r) lens.lastMove = now;
       busy = busy || r.anim;
     }
 
     if (lens.row) {
-      const target = lens.touching ? 1 : 0;
+      const show = now - lens.lastMove < CFG.hold;
+      const target = show ? 1 : 0;
       if (reduceMotion) { lens.p.x = target; lens.p.v = 0; }
-      else spring(lens.p, target, lens.touching ? 230 : 420, lens.touching ? 0.7 : 1, dt);
-      spring(lens.lx, lens.targetX, 1400, 1, dt);
-      if (!lens.touching && lens.p.x < 0.003) {
+      else spring(lens.p, target, show ? 230 : 140, show ? 0.7 : 1, dt);
+      spring(lens.lx, lens.targetX, reduceMotion ? 900 : 120, 1, dt);
+      if (!show && lens.p.x < 0.003) {
         lens.p.x = 0; lens.p.v = 0;
-        lens.row = null;
+        releaseLensRow();
       } else busy = true;
     }
     render();
@@ -804,19 +840,10 @@ void main() {
     canvas.style.transform = `translate3d(0,${top}px,0)`;
     canvas.style.opacity = "1";
 
+    const lx = lens.lx.x;
     const R = CFG.radius * (0.55 + 0.45 * pc);
     const HH = (PH / 2 + POP) * (0.55 + 0.45 * pc);
     const cy = PAD + PH / 2;
-    const fade = Math.min(1, p * 1.6);
-
-    // focus + title
-    const idx = focusIndex(r, lens.lx.x);
-    if (idx !== lens.focus && lens.touching) {
-      const dir = Math.sign(idx - lens.focus);
-      lens.focus = idx;
-      setTitle(r, idx, dir);
-      try { navigator.vibrate && navigator.vibrate(4); } catch (e) {}
-    }
 
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -827,7 +854,7 @@ void main() {
       gl.uniform1i(U.uTex, 0);
       gl.uniform2f(U.uRes, canvas.width / pxr, canvas.height / pxr);
       gl.uniform1f(U.uPxr, pxr);
-      gl.uniform2f(U.uC, lens.lx.x, cy);
+      gl.uniform2f(U.uC, lx, cy);
       gl.uniform1f(U.uR, R);
       gl.uniform1f(U.uHH, HH);
       gl.uniform1f(U.uMag, 1 + (CFG.mag - 1) * Math.min(p, 1));
@@ -835,40 +862,75 @@ void main() {
       gl.uniform1f(U.uTrackW, r.trackW);
       gl.uniform1f(U.uPH, PH);
       gl.uniform1f(U.uPad, PAD);
-      gl.uniform1f(U.uFade, fade);
+      gl.uniform1f(U.uFade, Math.min(1, p * 1.6));
       gl.uniform1f(U.uDim, 0.38 * Math.min(p, 1));
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
-    // title label rides with the lens, clipped to the same shape
-    const full = CFG.radius, fullHH = PH / 2 + POP;
-    const ls = R / full;
-    label.style.width = full * 2 + "px";
-    label.style.height = fullHH * 2 + "px";
-    label.style.clipPath = `circle(${full - 1}px at 50% 50%)`;
-    label.style.transform = `translate3d(${lens.lx.x - full}px,${top + cy - fullHH}px,0) scale(${ls})`;
-    label.style.opacity = String(Math.max(0, Math.min(1, (p - 0.3) / 0.6)));
+    // Titles are driven by the continuous poster position, so they hand over in step with the motion.
+    const n = r.items.length;
+    const f = clamp(posUnder(r, lx), 0, n - 1);
+    const i0 = Math.floor(f), i1 = Math.min(n - 1, i0 + 1), fr = f - i0;
+    const blend = i0 === i1 ? 0 : smooth(0.25, 0.75, fr);
+    if (titles.some((t) => !t.w)) measureTitles();
+    titles.forEach((t, i) => {
+      let op = 0, off = 0;
+      if (i === i0) { op = 1 - blend; off = -fr * TITLE_SLIDE; }
+      else if (i === i1) { op = blend; off = (1 - fr) * TITLE_SLIDE; }
+      if (op === 0 && t.op === 0) return;
+      t.op = op;
+      t.el.style.opacity = op.toFixed(3);
+      t.el.style.transform = `translate3d(${(off - t.w / 2).toFixed(2)}px,0,0)`;
+    });
+    const tickNow = Math.round(f);
+    if (tickNow !== lens.tick) {
+      lens.tick = tickNow;
+      try { navigator.vibrate && navigator.vibrate(3); } catch (e) {}
+    }
+
+    // Caption floats just above the lens, clear of the thumb.
+    const lo = clamp((p - 0.25) / 0.6, 0, 1);
+    const w0 = titles[i0] ? titles[i0].w : 0, w1 = titles[i1] ? titles[i1].w : w0;
+    const pillW = Math.min(W - 20, w0 + (w1 - w0) * blend + 30);
+    const pillH = Math.round(33 + CFG.titleSize * 1.18);
+    const lensTop = top + cy - HH;
+    const pillTop = lensTop - 10 - pillH;
+    const cx = clamp(lx, pillW / 2 + 10, W - pillW / 2 - 10);
+    label.style.opacity = lo.toFixed(3);
+    label.style.transform = `translate3d(0,${(pillTop + (1 - lo) * 8).toFixed(2)}px,0)`;
+    pill.style.width = pillW.toFixed(2) + "px";
+    pill.style.height = pillH + "px";
+    pill.style.transform = `translate3d(${(cx - pillW / 2).toFixed(2)}px,0,0) scale(${(0.94 + 0.06 * lo).toFixed(3)})`;
+    caret.style.transform = `translate3d(${(clamp(lx, cx - pillW / 2 + 16, cx + pillW / 2 - 16) - 6).toFixed(2)}px,${pillH - 6}px,0) rotate(45deg)`;
+    r.h.style.opacity = (1 - 0.8 * lo).toFixed(3);
   }
 
   // ---------- gestures ----------
   let gesture = null;
   function attachGestures(r) {
     const s = r.strip;
+    let wheelT = 0;
     s.addEventListener("contextmenu", (e) => e.preventDefault());
     s.addEventListener("pointerdown", (e) => {
       if (gesture || (e.pointerType === "mouse" && e.button !== 0)) return;
       stopDemo();
-      gesture = { r, id: e.pointerId, x0: e.clientX, y0: e.clientY, lastX: e.clientX, state: "pending" };
-      if (r.anim) { r.anim = false; r.v = 0; r.raw = r.x; }   // catch a gliding row
+      gesture = { r, id: e.pointerId, x0: e.clientX, y0: e.clientY, lastX: e.clientX, state: "pending", caught: false };
+      if (r.anim) {                       // catch a gliding row
+        r.anim = false; r.snap = null; r.v = 0; r.raw = r.x;
+        gesture.caught = true;
+      }
       if (e.pointerType === "mouse") e.preventDefault();
     });
     s.addEventListener("wheel", (e) => {
       const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0);
       if (!dx) return;
       e.preventDefault();
-      r.anim = false;
-      r.x = r.raw = Math.max(0, Math.min(r.max, r.x + dx));
+      r.anim = false; r.snap = null;
+      r.x = r.raw = clamp(r.x + dx, 0, r.max);
       applyRow(r);
+      if (lens.row === r) { lens.lastMove = performance.now(); kick(); }
+      clearTimeout(wheelT);
+      wheelT = setTimeout(() => { if (lens.row === r) release(r, 0); }, 140);
     }, { passive: false });
   }
   addEventListener("pointermove", (e) => {
@@ -879,9 +941,11 @@ void main() {
       if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy) * 1.1) {
         g.state = "scrub";
         try { g.r.strip.setPointerCapture(e.pointerId); } catch (err) {}
+        beginScrub(g.r, localX(g.x0));
+        moveScrub(g.r, dx / scale);       // include the slop so the row tracks the thumb exactly
         g.lastX = e.clientX;
-        beginScrub(g.r, localX(e.clientX));
       } else if (Math.abs(dy) > 9) {
+        if (g.caught) release(g.r, 0);
         gesture = null;
       }
       return;
@@ -889,70 +953,85 @@ void main() {
     if (e.cancelable) e.preventDefault();
     const ddx = (e.clientX - g.lastX) / scale;
     g.lastX = e.clientX;
-    moveScrub(g.r, ddx, localX(e.clientX));
+    moveScrub(g.r, ddx);
   }, { passive: false });
   const finish = (e) => {
     const g = gesture;
     if (!g || e.pointerId !== g.id) return;
     gesture = null;
     if (g.state === "scrub") endScrub(g.r);
+    else if (g.caught) release(g.r, 0);
   };
   addEventListener("pointerup", finish);
   addEventListener("pointercancel", finish);
+  scroller.addEventListener("scroll", () => {
+    if (lens.row && !lens.touching) { lens.lastMove = -1e9; kick(); }   // scrolling the page puts the lens away
+  }, { passive: true });
 
   // ---------- hint + demo ----------
   let interacted = false;
   function hideHint() { interacted = true; hint.classList.add("gone"); }
 
   let demo = null;
+  const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+  const easeInOut = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const easeIn = (t) => t * t;
   function stopDemo() {
     if (!demo) return;
-    cancelAnimationFrame(demo.raf);
-    const r = demo.r;
+    const d = demo;
     demo = null;
+    d.cancelled = true;
+    cancelAnimationFrame(d.raf);
     ghost.style.opacity = "0";
-    endScrub(r);
+    if (d.stroking) endScrub(d.r);
   }
-  function runDemo() {
+  async function runDemo() {
     if (demo || gesture) return;
     const r = rows[1];
-    const sc = $("scroller");
-    sc.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
-    r.anim = false; r.x = r.raw = 0; r.v = 0; applyRow(r);
-    // finger path in screen x over time (ms)
-    const keys = [[0, 214], [380, 214], [1500, 104], [1900, 104], [3300, 300], [3700, 300], [4500, 190], [4900, 190]];
-    const ease = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    const at = (ms) => {
-      for (let k = 1; k < keys.length; k++) {
-        if (ms <= keys[k][0]) {
-          const [t0, x0] = keys[k - 1], [t1, x1] = keys[k];
-          return x0 + (x1 - x0) * ease((ms - t0) / (t1 - t0 || 1));
-        }
-      }
-      return keys[keys.length - 1][1];
-    };
-    setTimeout(() => {
-      if (gesture) return;
-      const tRect = r.strip.getBoundingClientRect();
-      const y = localY(tRect.top + tRect.height * 0.62);
-      const t0 = performance.now();
-      let lastX = keys[0][1];
-      demo = { r, raf: 0 };
-      ghost.style.transform = `translate3d(${lastX}px,${y}px,0)`;
+    const d = (demo = { r, raf: 0, cancelled: false, stroking: false });
+    if (scroller.scrollTop > 0) {
+      scroller.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+      await wait(450);
+    }
+    r.anim = false; r.snap = null; r.x = r.raw = 0; r.v = 0; applyRow(r);
+    const tRect = r.strip.getBoundingClientRect();
+    const y = localY(tRect.top + tRect.height * 0.7);
+    // A slow drag, a flick, then a drag back: the lens holds still while the thumb travels away from it.
+    const strokes = [
+      { x0: 206, x1: 70, dur: 1100, ease: easeInOut, pause: 900 },
+      { x0: 300, x1: 120, dur: 300, ease: easeIn, pause: 1200 },
+      { x0: 110, x1: 340, dur: 1200, ease: easeInOut, pause: 0 },
+    ];
+    for (const s of strokes) {
+      if (d.cancelled) return;
+      ghost.style.transform = `translate3d(${s.x0}px,${y}px,0)`;
       ghost.style.opacity = "1";
-      beginScrub(r, lastX);
-      const step = () => {
-        if (!demo) return;
-        const ms = performance.now() - t0;
-        const x = at(ms);
-        moveScrub(r, x - lastX, x);
-        lastX = x;
-        ghost.style.transform = `translate3d(${x}px,${y}px,0)`;
-        if (ms < keys[keys.length - 1][0]) demo.raf = requestAnimationFrame(step);
-        else { r.samples = []; stopDemo(); }
-      };
-      demo.raf = requestAnimationFrame(step);
-    }, sc.scrollTop > 0 ? 450 : 0);
+      await wait(160);
+      if (d.cancelled) return;
+      beginScrub(r, s.x0);
+      d.stroking = true;
+      let lastX = s.x0;
+      const t0 = performance.now();
+      await new Promise((res) => {
+        const step = () => {
+          if (d.cancelled) return res();
+          const t = Math.min(1, (performance.now() - t0) / s.dur);
+          const x = s.x0 + (s.x1 - s.x0) * s.ease(t);
+          moveScrub(r, x - lastX);
+          lastX = x;
+          ghost.style.transform = `translate3d(${x}px,${y}px,0)`;
+          if (t < 1) d.raf = requestAnimationFrame(step);
+          else res();
+        };
+        d.raf = requestAnimationFrame(step);
+      });
+      if (d.cancelled) return;
+      d.stroking = false;
+      endScrub(r);
+      ghost.style.opacity = "0";
+      await wait(s.pause);
+    }
+    if (demo === d) demo = null;
   }
   $("demoBtn").addEventListener("click", () => { hideHint(); runDemo(); });
 
@@ -963,14 +1042,23 @@ void main() {
     el.addEventListener("input", upd);
     upd();
   };
-  bind("optMag", "outMag", (v) => v.toFixed(2) + "×", (v) => { CFG.mag = v; rows.forEach((r) => (r.tex = null)); });
-  bind("optSize", "outSize", (v) => Math.round(v) + " px", (v) => { CFG.radius = v / 2; });
-  bind("optTitle", "outTitle", (v) => v + " px", (v) => document.documentElement.style.setProperty("--title-size", v + "px"));
-  bind("optGain", "outGain", (v) => v.toFixed(1) + "×", (v) => { CFG.gain = v; });
-  $("optLens").addEventListener("change", (e) => { CFG.lens = e.target.checked; });
+  bind("optMag", "outMag", (v) => v.toFixed(2) + "×", (v) => { CFG.mag = v; rows.forEach((r) => (r.tex = null)); kick(); });
+  bind("optSize", "outSize", (v) => Math.round(v) + " px", (v) => { CFG.radius = v / 2; kick(); });
+  bind("optTitle", "outTitle", (v) => v + " px", (v) => {
+    CFG.titleSize = v;
+    document.documentElement.style.setProperty("--title-size", v + "px");
+    measureTitles();
+    kick();
+  });
+  bind("optHold", "outHold", (v) => v.toFixed(1) + " s", (v) => { CFG.hold = v * 1000; });
+  $("optLens").addEventListener("change", (e) => {
+    CFG.lens = e.target.checked;
+    if (!CFG.lens && lens.row) { lens.lastMove = -1e9; kick(); }
+  });
 
   addEventListener("resize", layout);
   layout();
+  if (document.fonts) document.fonts.ready.then(() => { measureTitles(); kick(); });
   ready.then(() => {
     rows.forEach((r) => (r.tex = null));
     if (!reduceMotion && glOK) setTimeout(() => { if (!interacted) runDemo(); }, 1100);
