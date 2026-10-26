@@ -1,0 +1,982 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Focus Lens</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: a 412×892 phone (the Figma frame) centred on a dark stage, with a notes/controls rail beside it on wide screens.
+   On a phone the frame drops away and the app fills the screen. Single dark look, matching the streaming UI. */
+:root {
+  --stage: #070708;
+  --stage-glow: #1a0d0f;
+  --app-bg: #000000;
+  --ink: #ffffff;
+  --ink-2: #b8b8b8;
+  --ink-3: #7c7c80;
+  --line: rgba(255, 255, 255, 0.08);
+  --nav-bg: rgba(41, 41, 43, 0.88);
+  --red: #e50914;
+  --tag-red: #d91f29;
+  --panel-bg: #101012;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --title-size: 17px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(1200px 700px at 30% 40%, var(--stage-glow), var(--stage) 60%) fixed, var(--stage);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+button, input { font: inherit; color: inherit; }
+
+/* ---------- stage ---------- */
+.stage {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.phone-slot { flex: none; position: relative; }
+.phone {
+  position: absolute;
+  left: 0; top: 0;
+  width: 436px; height: 916px;
+  padding: 12px;
+  border-radius: 56px;
+  background: linear-gradient(145deg, #2a2a2e, #0d0d0f 40%, #1b1b1e);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06) inset, 0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px #000;
+  transform-origin: 0 0;
+}
+.screen {
+  position: relative;
+  width: 412px; height: 892px;
+  border-radius: 44px;
+  overflow: hidden;
+  background: var(--app-bg);
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ---------- app chrome ---------- */
+.statusbar {
+  position: absolute; inset: 0 0 auto 0;
+  height: 40px; padding: 11px 24px 0;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  font-size: 14px; font-weight: 600; letter-spacing: 0.01em;
+  background: linear-gradient(#000 70%, rgba(0,0,0,0));
+  z-index: 6;
+}
+.statusbar .ind { display: flex; gap: 6px; align-items: center; padding-top: 2px; }
+.scroller {
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+  padding: 40px 0 150px;
+  scrollbar-width: none;
+  z-index: 1;
+}
+.scroller::-webkit-scrollbar { display: none; }
+.appbar {
+  height: 52px; margin: 4px 0 12px;
+  display: flex; align-items: center; gap: 24px;
+  padding: 0 16px;
+}
+.appbar h1 { margin: 0; font-size: 26px; font-weight: 700; flex: 1; letter-spacing: -0.01em; }
+.icon-btn { width: 24px; height: 24px; display: grid; place-items: center; background: none; border: 0; padding: 0; cursor: pointer; }
+.row { margin-bottom: 22px; }
+.row h2 { margin: 0 0 10px; padding: 0 16px; font-size: 19px; font-weight: 700; line-height: 23px; letter-spacing: -0.005em; }
+.strip {
+  position: relative;
+  height: 166px;
+  overflow: hidden;
+  touch-action: pan-y;
+  cursor: grab;
+}
+.strip.dragging { cursor: grabbing; }
+.track {
+  display: flex; gap: 8px;
+  padding: 0 16px;
+  width: max-content;
+  will-change: transform;
+}
+.poster {
+  position: relative;
+  flex: none;
+  width: 118px; height: 166px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #141414;
+}
+.poster img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+.tag {
+  position: absolute; left: 15px; right: 15px; top: 6px;
+  height: 18px; border-radius: 3px;
+  background: var(--tag-red);
+  font-size: 10px; font-weight: 600; line-height: 18px; text-align: center;
+}
+.navfade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 150px;
+  background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.85) 60%, #000);
+  pointer-events: none; z-index: 5;
+}
+.bottomnav {
+  position: absolute; left: 20px; right: 20px; bottom: 26px;
+  height: 72px; padding: 9px;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-radius: 40px;
+  background: var(--nav-bg);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  z-index: 6;
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  border-radius: 32px; border: 0; background: none;
+  font-size: 12px; font-weight: 500; color: var(--ink-2);
+  cursor: pointer;
+}
+.tab.on { background: rgba(255,255,255,0.1); color: var(--ink); }
+.avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #ff8a3d, #e8418a 55%, #7b4dff); }
+.home-ind { position: absolute; left: 50%; bottom: 6px; width: 120px; height: 4px; margin-left: -60px; border-radius: 4px; background: #fff; z-index: 7; }
+
+/* ---------- lens ---------- */
+#lensCanvas {
+  position: absolute; left: 0; top: 0;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+}
+#lensLabel {
+  position: absolute; left: 0; top: 0;
+  pointer-events: none;
+  z-index: 4;
+  overflow: hidden;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.lt {
+  position: absolute; left: 12%; right: 12%; bottom: 21px;
+  text-align: center;
+}
+.lt-name {
+  font-size: var(--title-size);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  text-shadow: 0 1px 14px rgba(0,0,0,0.65);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.lt-meta {
+  margin-top: 5px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  color: rgba(255,255,255,0.74);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ghost {
+  position: absolute; left: 0; top: 0;
+  width: 44px; height: 44px; margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.55), rgba(255,255,255,0.18) 60%, rgba(255,255,255,0) 70%);
+  box-shadow: 0 0 0 1.5px rgba(255,255,255,0.5);
+  pointer-events: none; z-index: 8;
+  opacity: 0; transition: opacity 0.25s;
+}
+.hint {
+  position: absolute; left: 50%; bottom: 112px;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px 9px 12px;
+  border-radius: 999px;
+  background: rgba(30,30,32,0.92);
+  border: 1px solid var(--line);
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+  z-index: 7;
+  transition: opacity 0.4s, transform 0.4s;
+}
+.hint.gone { opacity: 0; transform: translate(-50%, 8px); pointer-events: none; }
+.hint-dot { position: relative; width: 22px; height: 14px; }
+.hint-dot::before {
+  content: ""; position: absolute; top: 2px; left: 0; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--ink); animation: slide 1.6s ease-in-out infinite;
+}
+@keyframes slide { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(12px); } }
+
+/* ---------- side rail ---------- */
+.rail {
+  width: 340px; flex: none;
+  display: flex; flex-direction: column; gap: 22px;
+  max-height: 100%; overflow-y: auto;
+  scrollbar-width: thin;
+}
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); }
+.rail h2 { margin: 6px 0 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.rail p { margin: 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.55; }
+.howto { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.howto li { display: grid; grid-template-columns: 64px 1fr; gap: 10px; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
+.howto b { color: var(--ink); font-weight: 600; }
+.controls {
+  display: grid; gap: 16px;
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--line);
+}
+.ctl { display: grid; gap: 8px; }
+.ctl-head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; }
+.ctl-head output { color: var(--ink-2); font-variant-numeric: tabular-nums; font-weight: 500; }
+input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
+.switch-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; }
+.switch { position: relative; width: 42px; height: 24px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.switch span { position: absolute; inset: 0; border-radius: 24px; background: #3a3a3e; transition: background 0.2s; pointer-events: none; }
+.switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+.switch input:checked + span { background: var(--red); }
+.switch input:checked + span::after { transform: translateX(18px); }
+.switch input:focus-visible + span { outline: 2px solid #fff; outline-offset: 2px; }
+.demo-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; border-radius: 6px; border: 0;
+  background: var(--ink); color: #000; font-weight: 700; font-size: 15px;
+  cursor: pointer;
+}
+.demo-btn:hover { background: #e6e6e6; }
+.demo-btn:focus-visible, .tab:focus-visible, .icon-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.footnote { font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+
+@media (max-width: 860px) {
+  .rail { display: none; }
+}
+/* On a real phone the app is the page. */
+@media (max-width: 520px) {
+  .stage { padding: 0; }
+  .phone-slot { width: 100%; height: 100%; }
+  .phone { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border-radius: 0; background: none; box-shadow: none; transform: none !important; }
+  .screen { width: 100%; height: 100%; border-radius: 0; }
+  .statusbar { display: none; }
+  .scroller { padding-top: env(safe-area-inset-top, 0px); }
+  .bottomnav { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+  .home-ind { display: none; }
+  .hint { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hint-dot::before { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone-slot" id="phoneSlot">
+    <div class="phone" id="phone">
+      <div class="screen" id="screen">
+        <div class="statusbar" aria-hidden="true">
+          <span>3:59</span>
+          <span class="ind">
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="#fff"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" y="0" width="3" height="14" rx="1"/></svg>
+            <svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#fff" opacity="0.5"/><rect x="2" y="2" width="17" height="9" rx="2" fill="#fff"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#fff" opacity="0.5"/></svg>
+          </span>
+        </div>
+
+        <div class="scroller" id="scroller">
+          <div class="appbar">
+            <button class="icon-btn" type="button" aria-label="Back">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5M11 5l-7 7 7 7"/></svg>
+            </button>
+            <h1>Movies</h1>
+            <button class="icon-btn" type="button" aria-label="Cast to device">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3 8V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><path d="M3 12a8 8 0 0 1 8 8M3 16a4 4 0 0 1 4 4"/><circle cx="3.5" cy="19.5" r="0.6" fill="#fff"/></svg>
+            </button>
+          </div>
+          <div id="rows"></div>
+        </div>
+
+        <canvas id="lensCanvas" aria-hidden="true"></canvas>
+        <div id="lensLabel" aria-live="polite"></div>
+        <div class="ghost" id="ghost" aria-hidden="true"></div>
+
+        <div class="hint" id="hint"><span class="hint-dot" aria-hidden="true"></span>Hold a poster and slide sideways</div>
+        <div class="navfade"></div>
+        <nav class="bottomnav" aria-label="Main">
+          <button class="tab on" type="button">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M9.5 14.5h5" stroke-linecap="round"/></svg>
+            Home
+          </button>
+          <button class="tab" type="button">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b8b8b8" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M10.5 9.5v5l4-2.5z" fill="#b8b8b8"/></svg>
+            Clips
+          </button>
+          <button class="tab" type="button">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b8b8b8" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+            Search
+          </button>
+          <button class="tab" type="button"><span class="avatar" aria-hidden="true"></span>Profile</button>
+        </nav>
+        <div class="home-ind" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="rail" aria-label="About this prototype">
+    <div>
+      <div class="eyebrow">Interaction prototype</div>
+      <h2>Focus Lens</h2>
+    </div>
+    <p>Titles baked into poster art are hard to read. Every poster has its own typeface, size and contrast. Hold a poster and slide sideways: a glass lens bulges under your thumb, magnifies the artwork and sets the title in one clear style. Let go and the row looks exactly as designed.</p>
+    <ul class="howto">
+      <li><b>Mouse</b><span>Press on any poster and drag left or right.</span></li>
+      <li><b>Touch</b><span>Put your thumb on a poster and slide sideways.</span></li>
+      <li><b>Release</b><span>The lens melts away and the row keeps gliding.</span></li>
+    </ul>
+    <div class="controls">
+      <div class="switch-row">
+        <label for="optLens">Lens on</label>
+        <span class="switch"><input type="checkbox" id="optLens" checked><span></span></span>
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="optMag">Magnification</label><output id="outMag" for="optMag">1.45×</output></div>
+        <input type="range" id="optMag" min="1.1" max="1.9" step="0.05" value="1.45">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="optSize">Lens size</label><output id="outSize" for="optSize">180 px</output></div>
+        <input type="range" id="optSize" min="150" max="224" step="2" value="180">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="optTitle">Title size</label><output id="outTitle" for="optTitle">17 px</output></div>
+        <input type="range" id="optTitle" min="14" max="22" step="1" value="17">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="optGain">Browse speed</label><output id="outGain" for="optGain">2.0×</output></div>
+        <input type="range" id="optGain" min="1.2" max="3" step="0.1" value="2">
+      </div>
+      <button class="demo-btn" type="button" id="demoBtn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="#000"><path d="M2 1.2v11.6L12.5 7z"/></svg>
+        Play demo
+      </button>
+    </div>
+    <p class="footnote">While the lens is up, the row moves faster than your thumb (browse speed). Posters stream through the lens so a new title lands about every poster-width of travel. Turn the lens off to compare with a plain drag.</p>
+  </aside>
+</div>
+
+<script src="posters.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  // ---------- content ----------
+  const INFO = {
+    dark:           { title: "Dark",                       meta: "Series · Sci-fi thriller" },
+    moneyheist:     { title: "Money Heist",                meta: "Part 5 · Heist thriller" },
+    hillhouse:      { title: "The Haunting of Hill House", meta: "Series · Horror" },
+    strangerthings: { title: "Stranger Things",            meta: "Season 4 · Sci-fi horror" },
+    maharaja:       { title: "Maharaja",                   meta: "2024 · Tamil thriller" },
+    luckybaskhar:   { title: "Lucky Baskhar",              meta: "2024 · Crime drama" },
+    jagame:         { title: "Jagame Thandhiram",          meta: "2021 · Gangster drama" },
+    meiyazhagan:    { title: "Meiyazhagan",                meta: "2024 · Family drama" },
+    thunivu:        { title: "Thunivu",                    meta: "2023 · Heist action" },
+    leo:            { title: "Leo",                        meta: "2023 · Action thriller" },
+    kantara:        { title: "Kantara",                    meta: "2022 · Action drama" },
+    gunturkaaram:   { title: "Guntur Kaaram",              meta: "2024 · Action drama" },
+    grayman:        { title: "The Gray Man",               meta: "2022 · Action thriller" },
+    adamproject:    { title: "The Adam Project",           meta: "2022 · Sci-fi adventure" },
+    purplehearts:   { title: "Purple Hearts",              meta: "2022 · Romance" },
+    scoop:          { title: "Scoop",                      meta: "2024 · Drama" },
+  };
+  const ROWS = [
+    { title: "Movies Based on Books", items: ["dark", "moneyheist", "hillhouse", "strangerthings", "grayman", "adamproject", "scoop", "purplehearts", "leo"] },
+    { title: "Today's Top Picks for You", items: [["maharaja", "Recently added"], "luckybaskhar", "jagame", "meiyazhagan", "kantara", "grayman", "strangerthings", "thunivu", "dark"] },
+    { title: "Feel All the Feels", items: ["thunivu", "leo", "kantara", "gunturkaaram", "purplehearts", "meiyazhagan", "moneyheist", "luckybaskhar", "adamproject"] },
+    { title: "Emotional Movies Based on Books", items: ["purplehearts", "scoop", "meiyazhagan", "hillhouse", "maharaja", "gunturkaaram", "jagame", "grayman", "dark"] },
+    { title: "Trending Now", items: ["grayman", "adamproject", "strangerthings", "leo", "luckybaskhar", "moneyheist", "scoop", "kantara", "thunivu"] },
+  ];
+
+  // Geometry straight from the Figma frame.
+  const PW = 118, PH = 166, GAP = 8, PADX = 16, STEP = PW + GAP;
+  const PAD = 14;          // canvas bleed above/below the strip (lens pops out 8px)
+  const POP = 8;
+
+  const CFG = { lens: true, mag: 1.45, radius: 90, gain: 2.0 };
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- DOM ----------
+  const $ = (id) => document.getElementById(id);
+  const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot");
+  const rowsEl = $("rows"), canvas = $("lensCanvas"), label = $("lensLabel"), ghost = $("ghost"), hint = $("hint");
+  const POSTERS = window.POSTERS || {};
+
+  const images = {};
+  const ready = Promise.all(Object.keys(POSTERS).map((k) => {
+    const img = new Image();
+    img.src = POSTERS[k];
+    images[k] = img;
+    return img.decode().catch(() => {});
+  }));
+
+  const rows = ROWS.map((def, ri) => {
+    const sec = document.createElement("section");
+    sec.className = "row";
+    const h = document.createElement("h2");
+    h.textContent = def.title;
+    const strip = document.createElement("div");
+    strip.className = "strip";
+    strip.setAttribute("role", "list");
+    strip.setAttribute("aria-label", def.title);
+    const track = document.createElement("div");
+    track.className = "track";
+    const items = def.items.map((it) => {
+      const [key, tag] = Array.isArray(it) ? it : [it, null];
+      const p = document.createElement("div");
+      p.className = "poster";
+      p.setAttribute("role", "listitem");
+      p.setAttribute("aria-label", INFO[key].title);
+      const img = document.createElement("img");
+      img.alt = "";
+      img.draggable = false;
+      img.src = POSTERS[key] || "";
+      p.appendChild(img);
+      if (tag) {
+        const t = document.createElement("div");
+        t.className = "tag";
+        t.textContent = tag;
+        p.appendChild(t);
+      }
+      track.appendChild(p);
+      return { key, tag };
+    });
+    strip.appendChild(track);
+    sec.append(h, strip);
+    rowsEl.appendChild(sec);
+    const row = { i: ri, sec, strip, track, items, x: 0, raw: 0, v: 0, anim: false, max: 0, trackW: PADX * 2 + items.length * STEP - GAP, tex: null, samples: [] };
+    attachGestures(row);
+    return row;
+  });
+
+  // ---------- sizing ----------
+  let W = 412, scale = 1;
+  function layout() {
+    const narrow = innerWidth <= 520;
+    if (narrow) {
+      scale = 1;
+      slot.style.width = slot.style.height = "";
+    } else {
+      const availH = innerHeight - 48;
+      scale = Math.min(1, availH / 916);
+      phone.style.transform = `scale(${scale})`;
+      slot.style.width = 436 * scale + "px";
+      slot.style.height = 916 * scale + "px";
+    }
+    W = screenEl.clientWidth;
+    for (const r of rows) {
+      r.max = Math.max(0, r.trackW - W);
+      r.x = r.raw = Math.min(Math.max(r.x, 0), r.max);
+      applyRow(r);
+    }
+    sizeCanvas();
+  }
+  const localX = (clientX) => (clientX - screenEl.getBoundingClientRect().left) / scale;
+  const localY = (clientY) => (clientY - screenEl.getBoundingClientRect().top) / scale;
+
+  function applyRow(r) { r.track.style.transform = `translate3d(${-r.x}px,0,0)`; }
+
+  // ---------- WebGL lens ----------
+  const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false });
+  let prog, U = {}, maxTex = 4096, pxr = 1;
+
+  const VS = `attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }`;
+  const FS = `
+precision highp float;
+uniform sampler2D uTex;
+uniform vec2 uRes;      // canvas size in css px
+uniform float uPxr;     // device px per css px
+uniform vec2 uC;        // lens centre, css px (y down)
+uniform float uR, uHH, uMag, uScroll, uTrackW, uPH, uPad, uFade, uDim;
+
+vec3 strip(vec2 p) {
+  vec2 uv = vec2((p.x + uScroll) / uTrackW, (p.y - uPad) / uPH);
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return vec3(0.0);
+  return texture2D(uTex, uv).rgb;              // premultiplied over black = app background
+}
+float smax(float a, float b, float k) {
+  float h = clamp(0.5 + 0.5 * (a - b) / k, 0.0, 1.0);
+  return mix(b, a, h) + k * h * (1.0 - h);
+}
+void main() {
+  vec2 p = vec2(gl_FragCoord.x, uRes.y * uPxr - gl_FragCoord.y) / uPxr;
+  vec2 d = p - uC;
+  // lens = circle softly intersected with a band slightly taller than the row
+  float sd = smax(length(d) - uR, abs(d.y) - uHH, 12.0);
+  float aa = 0.75 / uPxr;
+  float inside = 1.0 - smoothstep(-aa, aa, sd);
+
+  // outside: soft contact shadow + gentle dimming of neighbours, only over the posters
+  float inStrip = smoothstep(uPad - 1.0, uPad + 1.0, p.y) * (1.0 - smoothstep(uPad + uPH - 1.0, uPad + uPH + 1.0, p.y));
+  float shadow = exp(-max(sd, 0.0) / 10.0) * 0.6;
+  float dim = uDim * smoothstep(4.0, 70.0, sd);
+  float outA = max(shadow, dim) * inStrip;
+
+  // inside: bulge. Full magnification in the core, a compressed refracting rim that meets 1x at the edge.
+  float t = clamp(-sd / uR, 0.0, 1.0);
+  float ramp = smoothstep(0.0, 0.42, t);
+  float s = mix(1.0, 1.0 / uMag, ramp);
+  vec2 q = d * s;
+  float ca = (1.0 - ramp) * 0.022;             // slight chromatic fringe in the rim
+  vec3 col;
+  col.r = strip(uC + q * (1.0 + ca)).r;
+  col.g = strip(uC + q).g;
+  col.b = strip(uC + q * (1.0 - ca)).b;
+
+  col *= 0.9;                                   // 10% glass tint
+  float g = smoothstep(-0.12, 0.98, d.y / uHH); // the black floor for the title
+  col = mix(col, vec3(0.0), g * 0.93);
+  col *= mix(0.55, 1.0, smoothstep(0.0, 9.0, -sd));   // edge thickness
+
+  vec2 n = normalize(d + vec2(1e-4));
+  float rim = 1.0 - smoothstep(0.0, 1.4, abs(sd + 1.0));
+  float light = 0.2 + 0.8 * max(0.0, dot(n, normalize(vec2(-0.55, -0.83))));
+  col += rim * light * 0.6;
+  vec2 gq = (d - vec2(-0.26 * uR, -0.55 * uR)) / vec2(0.5 * uR, 0.17 * uR);
+  col += exp(-dot(gq, gq)) * 0.08;              // soft specular glare
+
+  float a = mix(outA, 1.0, inside);
+  gl_FragColor = vec4(col * inside, a) * uFade;
+}`;
+
+  function initGL() {
+    if (!gl) return false;
+    const sh = (type, src) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    };
+    prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "a");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    for (const n of ["uTex", "uRes", "uPxr", "uC", "uR", "uHH", "uMag", "uScroll", "uTrackW", "uPH", "uPad", "uFade", "uDim"]) U[n] = gl.getUniformLocation(prog, n);
+    maxTex = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), 8192);
+    gl.clearColor(0, 0, 0, 0);
+    return true;
+  }
+  let glOK = false;
+  try { glOK = initGL(); } catch (e) { glOK = false; }
+
+  function sizeCanvas() {
+    pxr = Math.min((window.devicePixelRatio || 1) * scale, 3);
+    const h = PH + PAD * 2;
+    canvas.style.width = W + "px";
+    canvas.style.height = h + "px";
+    canvas.width = Math.round(W * pxr);
+    canvas.height = Math.round(h * pxr);
+    label.style.width = label.style.height = "0px";
+    for (const r of rows) r.tex = null;    // rebuild at the new density
+  }
+
+  // The whole row rendered once into a texture; the shader pans across it with the scroll offset.
+  function rowTexture(r) {
+    if (r.tex || !glOK) return r.tex;
+    const s = Math.min(pxr * CFG.mag, maxTex / r.trackW, 4);
+    const c = document.createElement("canvas");
+    c.width = Math.ceil(r.trackW * s);
+    c.height = Math.ceil(PH * s);
+    const g = c.getContext("2d");
+    g.scale(s, s);
+    r.items.forEach((it, i) => {
+      const x = PADX + i * STEP;
+      g.save();
+      g.beginPath();
+      roundRect(g, x, 0, PW, PH, 4);
+      g.clip();
+      g.fillStyle = "#141414";
+      g.fillRect(x, 0, PW, PH);
+      const img = images[it.key];
+      if (img && img.complete && img.naturalWidth) g.drawImage(img, x, 0, PW, PH);
+      if (it.tag) {
+        g.fillStyle = "#d91f29";
+        g.beginPath();
+        roundRect(g, x + 15, 6, PW - 30, 18, 3);
+        g.fill();
+        g.fillStyle = "#fff";
+        g.font = "600 10px Inter, system-ui, sans-serif";
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillText(it.tag, x + PW / 2, 15.5);
+      }
+      g.restore();
+    });
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    r.tex = tex;
+    return tex;
+  }
+  function roundRect(g, x, y, w, h, rad) {
+    g.moveTo(x + rad, y);
+    g.arcTo(x + w, y, x + w, y + h, rad);
+    g.arcTo(x + w, y + h, x, y + h, rad);
+    g.arcTo(x, y + h, x, y, rad);
+    g.arcTo(x, y, x + w, y, rad);
+    g.closePath();
+  }
+
+  // ---------- springs ----------
+  function spring(s, target, k, zeta, dt) {
+    const c = 2 * zeta * Math.sqrt(k);
+    const a = -k * (s.x - target) - c * s.v;
+    s.v += a * dt;
+    s.x += s.v * dt;
+  }
+
+  // ---------- lens state ----------
+  const lens = {
+    row: null, touching: false, targetX: 0,
+    lx: { x: 0, v: 0 }, p: { x: 0, v: 0 },
+    focus: -1, cur: null,
+  };
+
+  function focusIndex(r, lx) {
+    const i = Math.round((lx + r.x - PADX - PW / 2) / STEP);
+    return Math.max(0, Math.min(r.items.length - 1, i));
+  }
+
+  function setTitle(r, idx, dir) {
+    const info = INFO[r.items[idx].key];
+    const el = document.createElement("div");
+    el.className = "lt";
+    const nm = document.createElement("div");
+    nm.className = "lt-name";
+    nm.textContent = info.title;
+    const mt = document.createElement("div");
+    mt.className = "lt-meta";
+    mt.textContent = info.meta;
+    el.append(nm, mt);
+    label.appendChild(el);
+    const old = lens.cur;
+    lens.cur = el;
+    if (old) {
+      if (reduceMotion || !dir) old.remove();
+      else {
+        old.animate([{ transform: "translateX(0)", opacity: 1, filter: "blur(0)" },
+                     { transform: `translateX(${-dir * 18}px)`, opacity: 0, filter: "blur(3px)" }],
+                    { duration: 170, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }).onfinish = () => old.remove();
+      }
+    }
+    if (dir && !reduceMotion) {
+      el.animate([{ transform: `translateX(${dir * 22}px)`, opacity: 0, filter: "blur(3px)" },
+                  { transform: "translateX(0)", opacity: 1, filter: "blur(0)" }],
+                 { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
+    }
+  }
+
+  function beginScrub(r, x) {
+    if (!demo) hideHint();
+    r.strip.classList.add("dragging");
+    r.anim = false; r.v = 0; r.raw = r.x; r.samples = [];
+    if (!CFG.lens) { lens.row = null; return; }
+    if (lens.row !== r) { lens.p.x = 0; lens.p.v = 0; }
+    lens.row = r;
+    lens.touching = true;
+    lens.targetX = lens.lx.x = clampLX(x);
+    lens.lx.v = 0;
+    rowTexture(r);
+    const idx = focusIndex(r, lens.lx.x);
+    label.replaceChildren();
+    lens.cur = null;
+    lens.focus = idx;
+    setTitle(r, idx, 0);
+    kick();
+  }
+  function moveScrub(r, ddx, x) {
+    const gain = CFG.lens ? CFG.gain : 1;
+    r.raw -= ddx * gain;
+    r.x = rubber(r.raw, r.max);
+    applyRow(r);
+    const now = performance.now();
+    r.samples.push([now, r.x]);
+    while (r.samples.length > 2 && now - r.samples[0][0] > 90) r.samples.shift();
+    if (CFG.lens && lens.row === r) lens.targetX = clampLX(x);
+    kick();
+  }
+  function endScrub(r) {
+    r.strip.classList.remove("dragging");
+    const s = r.samples;
+    r.v = 0;
+    if (s.length > 1) {
+      const [t0, x0] = s[0], [t1, x1] = s[s.length - 1];
+      if (performance.now() - t1 < 80 && t1 > t0) r.v = ((x1 - x0) / (t1 - t0)) * 1000;
+    }
+    r.v = Math.max(-5000, Math.min(5000, r.v));
+    r.anim = true;
+    if (lens.row === r) lens.touching = false;
+    kick();
+  }
+  const clampLX = (x) => Math.max(18, Math.min(W - 18, x));
+  const rb = (d, dim) => (1 - 1 / ((d * 0.55) / dim + 1)) * dim;
+  const rubber = (raw, max) => raw < 0 ? -rb(-raw, W) : raw > max ? max + rb(raw - max, W) : raw;
+
+  // ---------- frame loop ----------
+  let raf = 0, last = 0;
+  function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+  function frame(now) {
+    raf = 0;
+    let dt = Math.min((now - last) / 1000, 1 / 30);
+    last = now;
+    let busy = false;
+
+    for (const r of rows) {
+      if (!r.anim) continue;
+      const steps = 2, h = dt / steps;
+      for (let k = 0; k < steps; k++) {
+        if (r.x < 0 || r.x > r.max) {
+          const b = r.x < 0 ? 0 : r.max;
+          const s = { x: r.x, v: r.v };
+          spring(s, b, 180, 1, h);
+          r.x = s.x; r.v = s.v;
+        } else {
+          r.x += r.v * h;
+          r.v *= Math.exp(-2.4 * h);
+        }
+      }
+      if (Math.abs(r.v) < 6 && r.x >= -0.5 && r.x <= r.max + 0.5) {
+        r.x = Math.max(0, Math.min(r.max, r.x));
+        r.v = 0;
+        r.anim = false;
+      }
+      r.raw = r.x;
+      applyRow(r);
+      busy = busy || r.anim;
+    }
+
+    if (lens.row) {
+      const target = lens.touching ? 1 : 0;
+      if (reduceMotion) { lens.p.x = target; lens.p.v = 0; }
+      else spring(lens.p, target, lens.touching ? 230 : 420, lens.touching ? 0.7 : 1, dt);
+      spring(lens.lx, lens.targetX, 1400, 1, dt);
+      if (!lens.touching && lens.p.x < 0.003) {
+        lens.p.x = 0; lens.p.v = 0;
+        lens.row = null;
+      } else busy = true;
+    }
+    render();
+    if (busy) kick();
+  }
+
+  function render() {
+    const r = lens.row;
+    if (!r || !glOK) {
+      canvas.style.opacity = "0";
+      label.style.opacity = "0";
+      return;
+    }
+    const p = Math.max(0, lens.p.x);
+    const pc = Math.min(p, 1.08);
+    const sRect = screenEl.getBoundingClientRect();
+    const tRect = r.strip.getBoundingClientRect();
+    const top = (tRect.top - sRect.top) / scale - PAD;
+    canvas.style.transform = `translate3d(0,${top}px,0)`;
+    canvas.style.opacity = "1";
+
+    const R = CFG.radius * (0.55 + 0.45 * pc);
+    const HH = (PH / 2 + POP) * (0.55 + 0.45 * pc);
+    const cy = PAD + PH / 2;
+    const fade = Math.min(1, p * 1.6);
+
+    // focus + title
+    const idx = focusIndex(r, lens.lx.x);
+    if (idx !== lens.focus && lens.touching) {
+      const dir = Math.sign(idx - lens.focus);
+      lens.focus = idx;
+      setTitle(r, idx, dir);
+      try { navigator.vibrate && navigator.vibrate(4); } catch (e) {}
+    }
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    const tex = rowTexture(r);
+    if (tex) {
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.uniform1i(U.uTex, 0);
+      gl.uniform2f(U.uRes, canvas.width / pxr, canvas.height / pxr);
+      gl.uniform1f(U.uPxr, pxr);
+      gl.uniform2f(U.uC, lens.lx.x, cy);
+      gl.uniform1f(U.uR, R);
+      gl.uniform1f(U.uHH, HH);
+      gl.uniform1f(U.uMag, 1 + (CFG.mag - 1) * Math.min(p, 1));
+      gl.uniform1f(U.uScroll, r.x);
+      gl.uniform1f(U.uTrackW, r.trackW);
+      gl.uniform1f(U.uPH, PH);
+      gl.uniform1f(U.uPad, PAD);
+      gl.uniform1f(U.uFade, fade);
+      gl.uniform1f(U.uDim, 0.38 * Math.min(p, 1));
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    // title label rides with the lens, clipped to the same shape
+    const full = CFG.radius, fullHH = PH / 2 + POP;
+    const ls = R / full;
+    label.style.width = full * 2 + "px";
+    label.style.height = fullHH * 2 + "px";
+    label.style.clipPath = `circle(${full - 1}px at 50% 50%)`;
+    label.style.transform = `translate3d(${lens.lx.x - full}px,${top + cy - fullHH}px,0) scale(${ls})`;
+    label.style.opacity = String(Math.max(0, Math.min(1, (p - 0.3) / 0.6)));
+  }
+
+  // ---------- gestures ----------
+  let gesture = null;
+  function attachGestures(r) {
+    const s = r.strip;
+    s.addEventListener("contextmenu", (e) => e.preventDefault());
+    s.addEventListener("pointerdown", (e) => {
+      if (gesture || (e.pointerType === "mouse" && e.button !== 0)) return;
+      stopDemo();
+      gesture = { r, id: e.pointerId, x0: e.clientX, y0: e.clientY, lastX: e.clientX, state: "pending" };
+      if (r.anim) { r.anim = false; r.v = 0; r.raw = r.x; }   // catch a gliding row
+      if (e.pointerType === "mouse") e.preventDefault();
+    });
+    s.addEventListener("wheel", (e) => {
+      const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0);
+      if (!dx) return;
+      e.preventDefault();
+      r.anim = false;
+      r.x = r.raw = Math.max(0, Math.min(r.max, r.x + dx));
+      applyRow(r);
+    }, { passive: false });
+  }
+  addEventListener("pointermove", (e) => {
+    const g = gesture;
+    if (!g || e.pointerId !== g.id) return;
+    const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
+    if (g.state === "pending") {
+      if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+        g.state = "scrub";
+        try { g.r.strip.setPointerCapture(e.pointerId); } catch (err) {}
+        g.lastX = e.clientX;
+        beginScrub(g.r, localX(e.clientX));
+      } else if (Math.abs(dy) > 9) {
+        gesture = null;
+      }
+      return;
+    }
+    if (e.cancelable) e.preventDefault();
+    const ddx = (e.clientX - g.lastX) / scale;
+    g.lastX = e.clientX;
+    moveScrub(g.r, ddx, localX(e.clientX));
+  }, { passive: false });
+  const finish = (e) => {
+    const g = gesture;
+    if (!g || e.pointerId !== g.id) return;
+    gesture = null;
+    if (g.state === "scrub") endScrub(g.r);
+  };
+  addEventListener("pointerup", finish);
+  addEventListener("pointercancel", finish);
+
+  // ---------- hint + demo ----------
+  let interacted = false;
+  function hideHint() { interacted = true; hint.classList.add("gone"); }
+
+  let demo = null;
+  function stopDemo() {
+    if (!demo) return;
+    cancelAnimationFrame(demo.raf);
+    const r = demo.r;
+    demo = null;
+    ghost.style.opacity = "0";
+    endScrub(r);
+  }
+  function runDemo() {
+    if (demo || gesture) return;
+    const r = rows[1];
+    const sc = $("scroller");
+    sc.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+    r.anim = false; r.x = r.raw = 0; r.v = 0; applyRow(r);
+    // finger path in screen x over time (ms)
+    const keys = [[0, 214], [380, 214], [1500, 104], [1900, 104], [3300, 300], [3700, 300], [4500, 190], [4900, 190]];
+    const ease = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const at = (ms) => {
+      for (let k = 1; k < keys.length; k++) {
+        if (ms <= keys[k][0]) {
+          const [t0, x0] = keys[k - 1], [t1, x1] = keys[k];
+          return x0 + (x1 - x0) * ease((ms - t0) / (t1 - t0 || 1));
+        }
+      }
+      return keys[keys.length - 1][1];
+    };
+    setTimeout(() => {
+      if (gesture) return;
+      const tRect = r.strip.getBoundingClientRect();
+      const y = localY(tRect.top + tRect.height * 0.62);
+      const t0 = performance.now();
+      let lastX = keys[0][1];
+      demo = { r, raf: 0 };
+      ghost.style.transform = `translate3d(${lastX}px,${y}px,0)`;
+      ghost.style.opacity = "1";
+      beginScrub(r, lastX);
+      const step = () => {
+        if (!demo) return;
+        const ms = performance.now() - t0;
+        const x = at(ms);
+        moveScrub(r, x - lastX, x);
+        lastX = x;
+        ghost.style.transform = `translate3d(${x}px,${y}px,0)`;
+        if (ms < keys[keys.length - 1][0]) demo.raf = requestAnimationFrame(step);
+        else { r.samples = []; stopDemo(); }
+      };
+      demo.raf = requestAnimationFrame(step);
+    }, sc.scrollTop > 0 ? 450 : 0);
+  }
+  $("demoBtn").addEventListener("click", () => { hideHint(); runDemo(); });
+
+  // ---------- controls ----------
+  const bind = (id, out, fmt, apply) => {
+    const el = $(id), o = $(out);
+    const upd = () => { const v = parseFloat(el.value); o.textContent = fmt(v); apply(v); };
+    el.addEventListener("input", upd);
+    upd();
+  };
+  bind("optMag", "outMag", (v) => v.toFixed(2) + "×", (v) => { CFG.mag = v; rows.forEach((r) => (r.tex = null)); });
+  bind("optSize", "outSize", (v) => Math.round(v) + " px", (v) => { CFG.radius = v / 2; });
+  bind("optTitle", "outTitle", (v) => v + " px", (v) => document.documentElement.style.setProperty("--title-size", v + "px"));
+  bind("optGain", "outGain", (v) => v.toFixed(1) + "×", (v) => { CFG.gain = v; });
+  $("optLens").addEventListener("change", (e) => { CFG.lens = e.target.checked; });
+
+  addEventListener("resize", layout);
+  layout();
+  ready.then(() => {
+    rows.forEach((r) => (r.tex = null));
+    if (!reduceMotion && glOK) setTimeout(() => { if (!interacted) runDemo(); }, 1100);
+  });
+  if (!glOK) hint.textContent = "WebGL is off in this browser, so the lens can't render";
+})();
+</script>
+</body>
+</html>
