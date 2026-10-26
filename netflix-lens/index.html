@@ -316,7 +316,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         <div id="lensLabel" aria-live="polite"></div>
         <div class="ghost" id="ghost" aria-hidden="true"></div>
 
-        <div class="hint" id="hint"><span class="hint-dot" aria-hidden="true"></span>Long-press a poster or slide the row</div>
+        <div class="hint" id="hint"><span class="hint-dot" aria-hidden="true"></span>Long-press a poster to open the lens</div>
         <div class="navfade"></div>
         <nav class="bottomnav" aria-label="Main">
           <button class="tab on" type="button">
@@ -343,12 +343,12 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <div class="eyebrow">Interaction prototype</div>
       <h2>Focus Lens</h2>
     </div>
-    <p>Titles baked into poster art are hard to read. Every poster has its own typeface, size and contrast. Long-press any poster, or slide a row: a glass lens opens in the centre of the carousel and the posters pass through it. Whatever sits in the lens gets its title set in one clear style on the lens floor.</p>
+    <p>Titles baked into poster art are hard to read. Every poster has its own typeface, size and contrast. Rows scroll normally. Long-press any poster and a glass lens opens in the centre of the carousel: that poster glides into it and its title appears in one clear style on the lens floor. Scroll the row and the posters pass through the lens.</p>
     <ul class="howto">
+      <li><b>Scroll</b><span>Drag a row as usual. No lens, just a normal carousel.</span></li>
       <li><b>Hold</b><span>Long-press a poster. The lens opens and that poster glides into it.</span></li>
-      <li><b>Slide</b><span>Drag a row left or right. Posters pass through the lens at the speed of your thumb.</span></li>
-      <li><b>Release</b><span>The row glides on and the nearest poster settles in the lens.</span></li>
-      <li><b>Pause</b><span>Three seconds without scrolling and the lens melts away.</span></li>
+      <li><b>Slide</b><span>With the lens open, drag the row. Posters pass through and settle in the centre.</span></li>
+      <li><b>Close</b><span>Tap anywhere outside that row and the lens goes away.</span></li>
     </ul>
     <div class="controls">
       <div class="switch-row">
@@ -366,10 +366,6 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <div class="ctl">
         <div class="ctl-head"><label for="optTitle">Title size</label><output id="outTitle" for="optTitle">17 px</output></div>
         <input type="range" id="optTitle" min="14" max="22" step="1" value="17">
-      </div>
-      <div class="ctl">
-        <div class="ctl-head"><label for="optHold">Lens stays for</label><output id="outHold" for="optHold">3.0 s</output></div>
-        <input type="range" id="optHold" min="1" max="6" step="0.5" value="3">
       </div>
       <button class="demo-btn" type="button" id="demoBtn">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="#000"><path d="M2 1.2v11.6L12.5 7z"/></svg>
@@ -420,7 +416,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const TITLE_SLIDE = 26;  // px a title drifts while it hands over to the next one
   const LONG_PRESS = 450;  // ms
 
-  const CFG = { lens: true, mag: 1.45, radius: 90, hold: 3000 };
+  const CFG = { lens: true, mag: 1.45, radius: 90 };
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const K_SNAP = reduceMotion ? 220 : 50;
 
@@ -670,13 +666,9 @@ void main() {
   }
 
   // ---------- lens state ----------
-  // The lens sits in the centre of the carousel. Dragging the row or long-pressing a poster opens it,
-  // and the posters pass through it. It closes CFG.hold ms after the last scroll or touch.
-  const lens = {
-    row: null, show: false, touching: false,
-    p: { x: 0, v: 0 },
-    lastMove: 0, tick: -1,
-  };
+  // Long-pressing a poster opens a lens in the centre of the carousel and the posters pass through it.
+  // A tap anywhere outside that row closes it. Without the lens a row scrolls like any carousel.
+  const lens = { row: null, show: false, p: { x: 0, v: 0 }, tick: -1 };
   let titles = [];
 
   const lensX = () => W / 2;
@@ -729,9 +721,15 @@ void main() {
       buildTitles(r);
     }
     lens.show = true;
-    lens.lastMove = performance.now();
     kick();
     return true;
+  }
+  function closeLens() {
+    if (!lens.row || !lens.show) return;
+    lens.show = false;
+    const r = lens.row;
+    r.snap = null; r.anim = true;               // ease back inside the normal bounds while the lens fades
+    kick();
   }
   function centrePoster(r, i) {
     r.v = 0;
@@ -744,7 +742,6 @@ void main() {
     if (!demo) hideHint();
     r.strip.classList.add("dragging");
     r.anim = false; r.snap = null; r.v = 0; r.raw = r.x; r.samples = [];
-    if (showLens(r)) lens.touching = true;
   }
   function moveScrub(r, ddx) {
     const [lo, hi] = bounds(r);
@@ -754,7 +751,6 @@ void main() {
     const now = performance.now();
     r.samples.push([now, r.x]);
     while (r.samples.length > 2 && now - r.samples[0][0] > 90) r.samples.shift();
-    if (lens.row === r && lens.show) lens.lastMove = now;
     kick();
   }
   function endScrub(r) {
@@ -765,7 +761,6 @@ void main() {
       const [t0, x0] = s[0], [t1, x1] = s[s.length - 1];
       if (performance.now() - t1 < 80 && t1 > t0) v = ((x1 - x0) / (t1 - t0)) * 1000;
     }
-    if (lens.row === r) { lens.touching = false; lens.lastMove = performance.now(); }
     release(r, clamp(v, -5000, 5000));
   }
   // Let go: with the lens up, glide and land the nearest poster dead centre in the lens.
@@ -791,13 +786,6 @@ void main() {
     last = now;
     let busy = false;
 
-    // Close the lens after the hold time without scrolling; the row eases back inside its normal bounds.
-    if (lens.row && lens.show && !lens.touching && now - lens.lastMove > CFG.hold) {
-      lens.show = false;
-      const r = lens.row;
-      if (r.snap != null || r.x < 0 || r.x > r.max) { r.snap = null; r.anim = true; }
-    }
-
     for (const r of rows) {
       if (!r.anim) continue;
       const [lo, hi] = bounds(r);
@@ -816,7 +804,6 @@ void main() {
       }
       r.raw = r.x;
       applyRow(r);
-      if (lens.row === r && lens.show) lens.lastMove = now;
       busy = busy || r.anim;
     }
 
@@ -919,7 +906,6 @@ void main() {
         r.anim = false; r.snap = null; r.v = 0; r.raw = r.x;
         g.caught = true;
       }
-      if (lens.row === r && lens.show) { lens.touching = true; lens.lastMove = performance.now(); }
       g.timer = setTimeout(() => longPress(g), LONG_PRESS);
       if (e.pointerType === "mouse") e.preventDefault();
     });
@@ -927,12 +913,11 @@ void main() {
       const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0);
       if (!dx) return;
       e.preventDefault();
-      showLens(r);
       const [lo, hi] = bounds(r);
       r.anim = false; r.snap = null;
       r.x = r.raw = clamp(r.x + dx, lo, hi);
       applyRow(r);
-      if (lens.row === r) { lens.lastMove = performance.now(); kick(); }
+      if (lens.row === r) kick();
       clearTimeout(wheelT);
       wheelT = setTimeout(() => { if (lens.row === r) release(r, 0); }, 140);
     }, { passive: false });
@@ -944,7 +929,6 @@ void main() {
     if (!showLens(r)) return;
     g.state = "held";
     hideHint();
-    lens.touching = true;
     centrePoster(r, Math.floor((localX(g.x0) + r.x - PADX + GAP / 2) / STEP));
     try { navigator.vibrate && navigator.vibrate(12); } catch (e) {}
   }
@@ -963,7 +947,6 @@ void main() {
       } else if (Math.abs(dy) > 9 && g.state === "pending") {
         clearTimeout(g.timer);
         if (g.caught) release(g.r, 0);
-        if (lens.row === g.r) lens.touching = false;
         gesture = null;
       }
       return;
@@ -979,14 +962,18 @@ void main() {
     gesture = null;
     clearTimeout(g.timer);
     if (g.state === "scrub") return endScrub(g.r);
-    if (lens.row === g.r) { lens.touching = false; lens.lastMove = performance.now(); kick(); }
     if (g.state === "pending" && g.caught) release(g.r, 0);
   };
   addEventListener("pointerup", finish);
   addEventListener("pointercancel", finish);
-  scroller.addEventListener("scroll", () => {
-    if (lens.row && lens.show && !lens.touching) { lens.lastMove = -1e9; kick(); }   // scrolling the page puts the lens away
-  }, { passive: true });
+  scroller.addEventListener("scroll", () => { if (lens.row) kick(); }, { passive: true });   // keep the lens on its row
+  // A tap anywhere outside the lens row closes the lens (the notes panel beside the phone doesn't count).
+  document.addEventListener("pointerdown", (e) => {
+    if (!lens.row || !lens.show) return;
+    if (lens.row.strip.contains(e.target) || e.target.closest(".rail")) return;
+    stopDemo();
+    closeLens();
+  }, true);
 
   // ---------- hint + demo ----------
   let interacted = false;
@@ -1005,12 +992,12 @@ void main() {
     ghost.classList.remove("press");
     ghost.style.opacity = "0";
     if (d.stroking) endScrub(d.r);
-    else if (lens.row === d.r) { lens.touching = false; lens.lastMove = performance.now(); }
   }
   async function runDemo() {
     if (demo || gesture) return;
     const r = rows[1];
     const d = (demo = { r, raf: 0, cancelled: false, stroking: false });
+    closeLens();
     if (scroller.scrollTop > 0) {
       scroller.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
       await wait(450);
@@ -1018,46 +1005,21 @@ void main() {
     r.anim = false; r.snap = null; r.x = r.raw = 0; r.v = 0; applyRow(r);
     const tRect = r.strip.getBoundingClientRect();
     const y = localY(tRect.top + tRect.height * 0.7);
-    const at = (x) => (ghost.style.transform = `translate3d(${x}px,${y}px,0)`);
-
-    // 1. Long-press the third poster: the lens opens in the centre and the poster glides into it.
-    const pressX = posterCenter(2) - r.x;
-    at(pressX);
-    ghost.style.opacity = "1";
-    ghost.classList.add("press");
-    await wait(LONG_PRESS);
-    if (d.cancelled) return;
-    showLens(r);
-    lens.touching = true;
-    centrePoster(r, 2);
-    await wait(700);
-    if (d.cancelled) return;
-    ghost.classList.remove("press");
-    ghost.style.opacity = "0";
-    lens.touching = false;
-    lens.lastMove = performance.now();
-    await wait(700);
-
-    // 2. A slow drag and then a flick: the posters pass through the lens.
-    const strokes = [
-      { x0: 300, x1: 110, dur: 1300, ease: easeInOut, pause: 1000 },
-      { x0: 320, x1: 120, dur: 300, ease: easeIn, pause: 0 },
-    ];
-    for (const s of strokes) {
-      if (d.cancelled) return;
-      at(s.x0);
+    const at = (x, yy = y) => (ghost.style.transform = `translate3d(${x}px,${yy}px,0)`);
+    const stroke = async (x0, x1, dur, ease) => {
+      at(x0);
       ghost.style.opacity = "1";
       await wait(160);
       if (d.cancelled) return;
       beginScrub(r);
       d.stroking = true;
-      let lastX = s.x0;
+      let lastX = x0;
       const t0 = performance.now();
       await new Promise((res) => {
         const step = () => {
           if (d.cancelled) return res();
-          const t = Math.min(1, (performance.now() - t0) / s.dur);
-          const x = s.x0 + (s.x1 - s.x0) * s.ease(t);
+          const t = Math.min(1, (performance.now() - t0) / dur);
+          const x = x0 + (x1 - x0) * ease(t);
           moveScrub(r, x - lastX);
           lastX = x;
           at(x);
@@ -1070,8 +1032,49 @@ void main() {
       d.stroking = false;
       endScrub(r);
       ghost.style.opacity = "0";
-      await wait(s.pause);
-    }
+    };
+
+    // 1. A plain drag: the row scrolls like any carousel.
+    await stroke(300, 180, 700, easeInOut);
+    if (d.cancelled) return;
+    await wait(700);
+    if (d.cancelled) return;
+
+    // 2. Long-press a poster: the lens opens in the centre and that poster glides into it.
+    const target = clamp(Math.floor((300 + r.x - PADX) / STEP), 0, r.items.length - 1);
+    at(posterCenter(target) - r.x);
+    ghost.style.opacity = "1";
+    ghost.classList.add("press");
+    await wait(LONG_PRESS);
+    if (d.cancelled) return;
+    showLens(r);
+    centrePoster(r, target);
+    await wait(700);
+    if (d.cancelled) return;
+    ghost.classList.remove("press");
+    ghost.style.opacity = "0";
+    await wait(600);
+    if (d.cancelled) return;
+
+    // 3. With the lens open, the posters pass through it and settle in the centre.
+    await stroke(300, 120, 1300, easeInOut);
+    if (d.cancelled) return;
+    await wait(900);
+    if (d.cancelled) return;
+    await stroke(320, 130, 300, easeIn);
+    if (d.cancelled) return;
+    await wait(1500);
+    if (d.cancelled) return;
+
+    // 4. Tap outside the row to put the lens away.
+    const outY = localY(tRect.bottom) + 70;
+    at(206, outY);
+    ghost.style.opacity = "1";
+    await wait(250);
+    if (d.cancelled) return;
+    closeLens();
+    await wait(200);
+    ghost.style.opacity = "0";
     if (demo === d) demo = null;
   }
   $("demoBtn").addEventListener("click", () => { hideHint(); runDemo(); });
@@ -1086,10 +1089,9 @@ void main() {
   bind("optMag", "outMag", (v) => v.toFixed(2) + "×", (v) => { CFG.mag = v; rows.forEach((r) => (r.tex = null)); kick(); });
   bind("optSize", "outSize", (v) => Math.round(v) + " px", (v) => { CFG.radius = v / 2; kick(); });
   bind("optTitle", "outTitle", (v) => v + " px", (v) => document.documentElement.style.setProperty("--title-size", v + "px"));
-  bind("optHold", "outHold", (v) => v.toFixed(1) + " s", (v) => { CFG.hold = v * 1000; });
   $("optLens").addEventListener("change", (e) => {
     CFG.lens = e.target.checked;
-    if (!CFG.lens && lens.row) { lens.lastMove = -1e9; kick(); }
+    if (!CFG.lens) closeLens();
   });
 
   addEventListener("resize", layout);
