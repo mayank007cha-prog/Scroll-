@@ -102,7 +102,9 @@ button, input { font: inherit; color: inherit; }
 .row h2 { margin: 0 0 10px; padding: 0 16px; font-size: 19px; font-weight: 700; line-height: 23px; letter-spacing: -0.005em; }
 .strip {
   position: relative;
-  height: 166px;
+  height: 182px;
+  padding: 8px 0;
+  margin: -8px 0;
   overflow: hidden;
   touch-action: pan-y;
   cursor: grab;
@@ -121,6 +123,7 @@ button, input { font: inherit; color: inherit; }
   border-radius: 4px;
   overflow: hidden;
   background: #141414;
+  backface-visibility: hidden;
 }
 .poster img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
 .tag {
@@ -155,36 +158,45 @@ button, input { font: inherit; color: inherit; }
 .home-ind { position: absolute; left: 50%; bottom: 6px; width: 120px; height: 4px; margin-left: -60px; border-radius: 4px; background: #fff; z-index: 7; }
 
 /* ---------- lens ---------- */
-#lensCanvas {
-  position: absolute; left: 0; top: 0;
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0;
-}
-#lensLabel {
+#lens {
   position: absolute; left: 0; top: 0;
   pointer-events: none;
   z-index: 4;
-  overflow: hidden;
   opacity: 0;
   will-change: transform, opacity;
 }
+.glass {
+  position: absolute; left: 0; bottom: auto; top: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(24,24,26,0.34), rgba(0,0,0,0.74));
+  backdrop-filter: blur(12px) saturate(160%) brightness(0.85);
+  -webkit-backdrop-filter: blur(12px) saturate(160%) brightness(0.85);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -12px 24px rgba(0,0,0,0.25);
+  transform-origin: 50% 100%;
+}
+.glass::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(115deg, rgba(255,255,255,0.13), rgba(255,255,255,0) 40%);
+  pointer-events: none;
+}
 .lt {
-  position: absolute; left: 12%; right: 12%; bottom: 21px;
+  position: absolute; left: 12px; right: 12px; bottom: 11px;
   text-align: center;
   will-change: transform, opacity;
 }
 .lt-name {
   font-size: var(--title-size);
   font-weight: 800;
-  line-height: 1.08;
+  line-height: 1.1;
   letter-spacing: -0.01em;
   text-wrap: balance;
-  text-shadow: 0 1px 14px rgba(0,0,0,0.65);
+  text-shadow: 0 1px 10px rgba(0,0,0,0.5);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .lt-meta {
-  margin-top: 5px;
+  margin-top: 4px;
   font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
   color: rgba(255,255,255,0.74);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -312,8 +324,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
           <div id="rows"></div>
         </div>
 
-        <canvas id="lensCanvas" aria-hidden="true"></canvas>
-        <div id="lensLabel" aria-live="polite"></div>
+        <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
         <div class="ghost" id="ghost" aria-hidden="true"></div>
 
         <div class="hint" id="hint"><span class="hint-dot" aria-hidden="true"></span>Long-press a poster to open the lens</div>
@@ -343,11 +354,11 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <div class="eyebrow">Interaction prototype</div>
       <h2>Focus Lens</h2>
     </div>
-    <p>Titles baked into poster art are hard to read. Every poster has its own typeface, size and contrast. Rows scroll normally. Long-press any poster and a glass lens opens in the centre of the carousel: that poster glides into it and its title appears in one clear style on the lens floor. Scroll the row and the posters pass through the lens.</p>
+    <p>Titles baked into poster art are hard to read. Every poster has its own typeface, size and contrast. Rows scroll normally. Long-press any poster and it glides to the centre, zooms in a touch and gets a small glass panel over its lower edge with the title in one clear style. The artwork stays exactly as designed.</p>
     <ul class="howto">
       <li><b>Scroll</b><span>Drag a row as usual. No lens, just a normal carousel.</span></li>
-      <li><b>Hold</b><span>Long-press a poster. The lens opens and that poster glides into it.</span></li>
-      <li><b>Slide</b><span>With the lens open, drag the row. Posters pass through and settle in the centre.</span></li>
+      <li><b>Hold</b><span>Long-press a poster. It glides to the centre and its title appears on the glass.</span></li>
+      <li><b>Slide</b><span>With the lens open, drag the row. Each poster takes its turn in the centre.</span></li>
       <li><b>Close</b><span>Tap anywhere outside that row and the lens goes away.</span></li>
     </ul>
     <div class="controls">
@@ -356,12 +367,12 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         <span class="switch"><input type="checkbox" id="optLens" checked><span></span></span>
       </div>
       <div class="ctl">
-        <div class="ctl-head"><label for="optMag">Magnification</label><output id="outMag" for="optMag">1.45×</output></div>
-        <input type="range" id="optMag" min="1.1" max="1.9" step="0.05" value="1.45">
+        <div class="ctl-head"><label for="optZoom">Poster zoom</label><output id="outZoom" for="optZoom">1.06×</output></div>
+        <input type="range" id="optZoom" min="1" max="1.15" step="0.01" value="1.06">
       </div>
       <div class="ctl">
-        <div class="ctl-head"><label for="optSize">Lens size</label><output id="outSize" for="optSize">180 px</output></div>
-        <input type="range" id="optSize" min="150" max="224" step="2" value="180">
+        <div class="ctl-head"><label for="optSize">Glass width</label><output id="outSize" for="optSize">168 px</output></div>
+        <input type="range" id="optSize" min="136" max="220" step="2" value="168">
       </div>
       <div class="ctl">
         <div class="ctl-head"><label for="optTitle">Title size</label><output id="outTitle" for="optTitle">17 px</output></div>
@@ -410,30 +421,22 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
 
   // Geometry straight from the Figma frame.
   const PW = 118, PH = 166, GAP = 8, PADX = 16, STEP = PW + GAP;
-  const PAD = 14;          // canvas bleed above/below the strip (lens pops out 8px)
-  const POP = 8;
+  const BLEED = 8;         // strip padding above/below so a zoomed poster isn't clipped
   const DECAY = 4.5;       // fling friction (1/s): a fling travels about v / DECAY px
-  const TITLE_SLIDE = 26;  // px a title drifts while it hands over to the next one
+  const TITLE_SLIDE = 22;  // px a title drifts while it hands over to the next one
   const LONG_PRESS = 450;  // ms
+  const DIM = 0.25;        // how much the neighbours darken while the lens is open
 
-  const CFG = { lens: true, mag: 1.45, radius: 90 };
+  const CFG = { lens: true, zoom: 1.06, glassW: 168 };
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const K_SNAP = reduceMotion ? 220 : 50;
 
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
   const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot"), scroller = $("scroller");
-  const rowsEl = $("rows"), canvas = $("lensCanvas"), label = $("lensLabel");
+  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass");
   const ghost = $("ghost"), hint = $("hint");
   const POSTERS = window.POSTERS || {};
-
-  const images = {};
-  const ready = Promise.all(Object.keys(POSTERS).map((k) => {
-    const img = new Image();
-    img.src = POSTERS[k];
-    images[k] = img;
-    return img.decode().catch(() => {});
-  }));
 
   const rows = ROWS.map((def, ri) => {
     const sec = document.createElement("section");
@@ -446,6 +449,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     strip.setAttribute("aria-label", def.title);
     const track = document.createElement("div");
     track.className = "track";
+    const els = [];
     const items = def.items.map((it) => {
       const [key, tag] = Array.isArray(it) ? it : [it, null];
       const p = document.createElement("div");
@@ -464,12 +468,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         p.appendChild(t);
       }
       track.appendChild(p);
+      els.push(p);
       return { key, tag };
     });
     strip.appendChild(track);
     sec.append(h, strip);
     rowsEl.appendChild(sec);
-    const row = { i: ri, sec, h, strip, track, items, x: 0, raw: 0, v: 0, anim: false, snap: null, max: 0, trackW: PADX * 2 + items.length * STEP - GAP, tex: null, samples: [] };
+    const row = { i: ri, sec, h, strip, track, els, items, x: 0, raw: 0, v: 0, anim: false, snap: null, max: 0, trackW: PADX * 2 + items.length * STEP - GAP, samples: [], styled: false };
     attachGestures(row);
     return row;
   });
@@ -494,7 +499,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       r.x = r.raw = Math.min(Math.max(r.x, 0), r.max);
       applyRow(r);
     }
-    sizeCanvas();
+    kick();
   }
   const localX = (clientX) => (clientX - screenEl.getBoundingClientRect().left) / scale;
   const localY = (clientY) => (clientY - screenEl.getBoundingClientRect().top) / scale;
@@ -502,160 +507,6 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
   function applyRow(r) { r.track.style.transform = `translate3d(${-r.x}px,0,0)`; }
-
-  // ---------- WebGL lens ----------
-  const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false });
-  let prog, U = {}, maxTex = 4096, pxr = 1;
-
-  const VS = `attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }`;
-  const FS = `
-precision highp float;
-uniform sampler2D uTex;
-uniform vec2 uRes;      // canvas size in css px
-uniform float uPxr;     // device px per css px
-uniform vec2 uC;        // lens centre, css px (y down)
-uniform float uR, uHH, uMag, uScroll, uTrackW, uPH, uPad, uFade, uDim;
-
-vec3 strip(vec2 p) {
-  vec2 uv = vec2((p.x + uScroll) / uTrackW, (p.y - uPad) / uPH);
-  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return vec3(0.0);
-  return texture2D(uTex, uv).rgb;              // premultiplied over black = app background
-}
-float smax(float a, float b, float k) {
-  float h = clamp(0.5 + 0.5 * (a - b) / k, 0.0, 1.0);
-  return mix(b, a, h) + k * h * (1.0 - h);
-}
-void main() {
-  vec2 p = vec2(gl_FragCoord.x, uRes.y * uPxr - gl_FragCoord.y) / uPxr;
-  vec2 d = p - uC;
-  // lens = circle softly intersected with a band slightly taller than the row
-  float sd = smax(length(d) - uR, abs(d.y) - uHH, 12.0);
-  float aa = 0.75 / uPxr;
-  float inside = 1.0 - smoothstep(-aa, aa, sd);
-
-  // outside: soft contact shadow + gentle dimming of neighbours, only over the posters
-  float inStrip = smoothstep(uPad - 1.0, uPad + 1.0, p.y) * (1.0 - smoothstep(uPad + uPH - 1.0, uPad + uPH + 1.0, p.y));
-  float shadow = exp(-max(sd, 0.0) / 10.0) * 0.6;
-  float dim = uDim * smoothstep(4.0, 70.0, sd);
-  float outA = max(shadow, dim) * inStrip;
-
-  // inside: bulge. Full magnification in the core, a compressed refracting rim that meets 1x at the edge.
-  float t = clamp(-sd / uR, 0.0, 1.0);
-  float ramp = smoothstep(0.0, 0.42, t);
-  float s = mix(1.0, 1.0 / uMag, ramp);
-  vec2 q = d * s;
-  float ca = (1.0 - ramp) * 0.022;             // slight chromatic fringe in the rim
-  vec3 col;
-  col.r = strip(uC + q * (1.0 + ca)).r;
-  col.g = strip(uC + q).g;
-  col.b = strip(uC + q * (1.0 - ca)).b;
-
-  col *= 0.9;                                   // 10% glass tint
-  float g = smoothstep(-0.12, 0.98, d.y / uHH); // the black floor for the title
-  col = mix(col, vec3(0.0), g * 0.93);
-  col *= mix(0.55, 1.0, smoothstep(0.0, 9.0, -sd));   // edge thickness
-
-  vec2 n = normalize(d + vec2(1e-4));
-  float rim = 1.0 - smoothstep(0.0, 1.4, abs(sd + 1.0));
-  float light = 0.2 + 0.8 * max(0.0, dot(n, normalize(vec2(-0.55, -0.83))));
-  col += rim * light * 0.6;
-  vec2 gq = (d - vec2(-0.26 * uR, -0.55 * uR)) / vec2(0.5 * uR, 0.17 * uR);
-  col += exp(-dot(gq, gq)) * 0.08;              // soft specular glare
-
-  float a = mix(outA, 1.0, inside);
-  gl_FragColor = vec4(col * inside, a) * uFade;
-}`;
-
-  function initGL() {
-    if (!gl) return false;
-    const sh = (type, src) => {
-      const s = gl.createShader(type);
-      gl.shaderSource(s, src);
-      gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
-      return s;
-    };
-    prog = gl.createProgram();
-    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
-    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
-    gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-    gl.useProgram(prog);
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    const loc = gl.getAttribLocation(prog, "a");
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    for (const n of ["uTex", "uRes", "uPxr", "uC", "uR", "uHH", "uMag", "uScroll", "uTrackW", "uPH", "uPad", "uFade", "uDim"]) U[n] = gl.getUniformLocation(prog, n);
-    maxTex = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), 8192);
-    gl.clearColor(0, 0, 0, 0);
-    return true;
-  }
-  let glOK = false;
-  try { glOK = initGL(); } catch (e) { glOK = false; }
-
-  function sizeCanvas() {
-    pxr = Math.min((window.devicePixelRatio || 1) * scale, 3);
-    const h = PH + PAD * 2;
-    canvas.style.width = W + "px";
-    canvas.style.height = h + "px";
-    canvas.width = Math.round(W * pxr);
-    canvas.height = Math.round(h * pxr);
-    for (const r of rows) r.tex = null;    // rebuild at the new density
-  }
-
-  // The whole row rendered once into a texture; the shader pans across it with the scroll offset.
-  function rowTexture(r) {
-    if (r.tex || !glOK) return r.tex;
-    const s = Math.min(pxr * CFG.mag, maxTex / r.trackW, 4);
-    const c = document.createElement("canvas");
-    c.width = Math.ceil(r.trackW * s);
-    c.height = Math.ceil(PH * s);
-    const g = c.getContext("2d");
-    g.scale(s, s);
-    r.items.forEach((it, i) => {
-      const x = PADX + i * STEP;
-      g.save();
-      g.beginPath();
-      roundRect(g, x, 0, PW, PH, 4);
-      g.clip();
-      g.fillStyle = "#141414";
-      g.fillRect(x, 0, PW, PH);
-      const img = images[it.key];
-      if (img && img.complete && img.naturalWidth) g.drawImage(img, x, 0, PW, PH);
-      if (it.tag) {
-        g.fillStyle = "#d91f29";
-        g.beginPath();
-        roundRect(g, x + 15, 6, PW - 30, 18, 3);
-        g.fill();
-        g.fillStyle = "#fff";
-        g.font = "600 10px Inter, system-ui, sans-serif";
-        g.textAlign = "center";
-        g.textBaseline = "middle";
-        g.fillText(it.tag, x + PW / 2, 15.5);
-      }
-      g.restore();
-    });
-    const tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    r.tex = tex;
-    return tex;
-  }
-  function roundRect(g, x, y, w, h, rad) {
-    g.moveTo(x + rad, y);
-    g.arcTo(x + w, y, x + w, y + h, rad);
-    g.arcTo(x + w, y + h, x, y + h, rad);
-    g.arcTo(x, y + h, x, y, rad);
-    g.arcTo(x, y, x + w, y, rad);
-    g.closePath();
-  }
 
   // ---------- springs ----------
   function spring(s, target, k, zeta, dt) {
@@ -666,15 +517,16 @@ void main() {
   }
 
   // ---------- lens state ----------
-  // Long-pressing a poster opens a lens in the centre of the carousel and the posters pass through it.
-  // A tap anywhere outside that row closes it. Without the lens a row scrolls like any carousel.
+  // Long-pressing a poster opens the lens in the centre of the carousel. The poster in the centre zooms
+  // in slightly (no distortion) and a glass panel over its lower edge carries the title. Posters pass
+  // through as the row scrolls. A tap anywhere outside the row closes it.
   const lens = { row: null, show: false, p: { x: 0, v: 0 }, tick: -1 };
   let titles = [];
 
   const lensX = () => W / 2;
-  const posUnder = (r) => (lensX() + r.x - PADX - PW / 2) / STEP;   // continuous poster index under the lens
+  const posUnder = (r) => (lensX() + r.x - PADX - PW / 2) / STEP;   // continuous poster index in the centre
   const posterCenter = (i) => PADX + i * STEP + PW / 2;            // in track coordinates
-  const centredX = (i) => posterCenter(i) - lensX();               // row offset that puts poster i in the lens
+  const centredX = (i) => posterCenter(i) - lensX();               // row offset that puts poster i in the centre
 
   // While the lens is up the row may travel far enough for the first and last posters to reach the centre.
   function bounds(r) {
@@ -683,7 +535,7 @@ void main() {
   }
 
   function buildTitles(r) {
-    label.replaceChildren();
+    glass.replaceChildren();
     titles = r.items.map((it) => {
       const info = INFO[it.key];
       const el = document.createElement("div");
@@ -696,18 +548,29 @@ void main() {
       mt.textContent = info.meta;
       el.append(nm, mt);
       el.style.opacity = "0";
-      label.appendChild(el);
-      return { el, op: 0 };
+      glass.appendChild(el);
+      return { el, h: 0, op: 0 };
     });
+    measureTitles();
+  }
+  function measureTitles() {
+    glass.style.width = CFG.glassW + "px";
+    for (const t of titles) t.h = t.el.offsetHeight;
+  }
+  function resetPosters(r) {
+    if (!r.styled) return;
+    for (const el of r.els) { el.style.transform = ""; el.style.filter = ""; el.style.zIndex = ""; }
+    r.styled = false;
   }
   function releaseLensRow() {
+    if (lens.row) resetPosters(lens.row);
     lens.row = null;
     lens.show = false;
-    label.replaceChildren();
+    glass.replaceChildren();
     titles = [];
   }
   function showLens(r) {
-    if (!CFG.lens || !glOK) return false;
+    if (!CFG.lens) return false;
     if (lens.row !== r) {
       if (lens.row) {
         const old = lens.row;
@@ -717,7 +580,6 @@ void main() {
       lens.row = r;
       lens.p.x = 0; lens.p.v = 0;
       lens.tick = Math.round(posUnder(r));
-      rowTexture(r);
       buildTitles(r);
     }
     lens.show = true;
@@ -763,7 +625,7 @@ void main() {
     }
     release(r, clamp(v, -5000, 5000));
   }
-  // Let go: with the lens up, glide and land the nearest poster dead centre in the lens.
+  // Let go: with the lens up, glide and land the nearest poster dead centre.
   function release(r, v) {
     r.v = v;
     r.anim = true;
@@ -810,7 +672,7 @@ void main() {
     if (lens.row) {
       const target = lens.show ? 1 : 0;
       if (reduceMotion) { lens.p.x = target; lens.p.v = 0; }
-      else spring(lens.p, target, lens.show ? 230 : 140, lens.show ? 0.7 : 1, dt);
+      else spring(lens.p, target, lens.show ? 260 : 160, lens.show ? 0.8 : 1, dt);
       if (!lens.show && lens.p.x < 0.003) {
         lens.p.x = 0; lens.p.v = 0;
         releaseLensRow();
@@ -822,47 +684,22 @@ void main() {
 
   function render() {
     const r = lens.row;
-    if (!r || !glOK) {
-      canvas.style.opacity = "0";
-      label.style.opacity = "0";
-      return;
-    }
-    const p = Math.max(0, lens.p.x);
-    const pc = Math.min(p, 1.08);
-    const sRect = screenEl.getBoundingClientRect();
-    const tRect = r.strip.getBoundingClientRect();
-    const top = (tRect.top - sRect.top) / scale - PAD;
-    canvas.style.transform = `translate3d(0,${top}px,0)`;
-    canvas.style.opacity = "1";
+    if (!r) { lensEl.style.opacity = "0"; return; }
+    const p = clamp(lens.p.x, 0, 1.1);
+    const pa = Math.min(p, 1);
 
-    const lx = lensX();
-    const R = CFG.radius * (0.55 + 0.45 * pc);
-    const HH = (PH / 2 + POP) * (0.55 + 0.45 * pc);
-    const cy = PAD + PH / 2;
+    // The poster nearest the centre zooms in a touch; its neighbours dim slightly. No distortion.
+    const cx = lensX();
+    r.els.forEach((el, i) => {
+      const d = Math.abs(posterCenter(i) - r.x - cx);
+      const t = 1 - smooth(0, STEP, d);
+      el.style.transform = `scale(${(1 + (CFG.zoom - 1) * t * p).toFixed(4)})`;
+      el.style.filter = `brightness(${(1 - DIM * (1 - t) * pa).toFixed(3)})`;
+      el.style.zIndex = t > 0.5 ? "2" : "";
+    });
+    r.styled = true;
 
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    const tex = rowTexture(r);
-    if (tex) {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.uniform1i(U.uTex, 0);
-      gl.uniform2f(U.uRes, canvas.width / pxr, canvas.height / pxr);
-      gl.uniform1f(U.uPxr, pxr);
-      gl.uniform2f(U.uC, lx, cy);
-      gl.uniform1f(U.uR, R);
-      gl.uniform1f(U.uHH, HH);
-      gl.uniform1f(U.uMag, 1 + (CFG.mag - 1) * Math.min(p, 1));
-      gl.uniform1f(U.uScroll, r.x);
-      gl.uniform1f(U.uTrackW, r.trackW);
-      gl.uniform1f(U.uPH, PH);
-      gl.uniform1f(U.uPad, PAD);
-      gl.uniform1f(U.uFade, Math.min(1, p * 1.6));
-      gl.uniform1f(U.uDim, 0.38 * Math.min(p, 1));
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-    }
-
-    // Titles are driven by the continuous poster position, so they hand over in step with the motion.
+    // Titles follow the continuous scroll position, so they hand over in step with the motion.
     const n = r.items.length;
     const f = clamp(posUnder(r), 0, n - 1);
     const i0 = Math.floor(f), i1 = Math.min(n - 1, i0 + 1), fr = f - i0;
@@ -882,13 +719,17 @@ void main() {
       try { navigator.vibrate && navigator.vibrate(3); } catch (e) {}
     }
 
-    // The title box rides with the lens, clipped to the same shape, on the lens's black floor.
-    const full = CFG.radius, fullHH = PH / 2 + POP;
-    label.style.width = full * 2 + "px";
-    label.style.height = fullHH * 2 + "px";
-    label.style.clipPath = `circle(${full - 1}px at 50% 50%)`;
-    label.style.transform = `translate3d(${lx - full}px,${top + cy - fullHH}px,0) scale(${(R / full).toFixed(4)})`;
-    label.style.opacity = clamp((p - 0.3) / 0.6, 0, 1).toFixed(3);
+    // The glass panel sits over the lower edge of the centred poster.
+    const sRect = screenEl.getBoundingClientRect();
+    const tRect = r.strip.getBoundingClientRect();
+    const posterTop = (tRect.top - sRect.top) / scale + BLEED;
+    const zoomedBottom = posterTop + PH / 2 + (PH / 2) * (1 + (CFG.zoom - 1) * pa);
+    const h0 = titles[i0] ? titles[i0].h : 0, h1 = titles[i1] ? titles[i1].h : h0;
+    const gh = Math.round(h0 + (h1 - h0) * blend) + 22;
+    lensEl.style.transform = `translate3d(${(cx - CFG.glassW / 2).toFixed(2)}px,${(zoomedBottom - 8 - gh + (1 - pa) * 10).toFixed(2)}px,0)`;
+    lensEl.style.opacity = clamp((p - 0.15) / 0.7, 0, 1).toFixed(3);
+    glass.style.height = gh + "px";
+    glass.style.transform = `scale(${(0.92 + 0.08 * pa).toFixed(4)})`;
   }
 
   // ---------- gestures ----------
@@ -922,7 +763,7 @@ void main() {
       wheelT = setTimeout(() => { if (lens.row === r) release(r, 0); }, 140);
     }, { passive: false });
   }
-  // Long press on a poster: open the lens and glide that poster into it.
+  // Long press on a poster: open the lens and glide that poster into the centre.
   function longPress(g) {
     if (gesture !== g || g.state !== "pending") return;
     const r = g.r;
@@ -966,7 +807,7 @@ void main() {
   };
   addEventListener("pointerup", finish);
   addEventListener("pointercancel", finish);
-  scroller.addEventListener("scroll", () => { if (lens.row) kick(); }, { passive: true });   // keep the lens on its row
+  scroller.addEventListener("scroll", () => { if (lens.row) kick(); }, { passive: true });   // keep the glass on its row
   // A tap anywhere outside the lens row closes the lens (the notes panel beside the phone doesn't count).
   document.addEventListener("pointerdown", (e) => {
     if (!lens.row || !lens.show) return;
@@ -1004,7 +845,7 @@ void main() {
     }
     r.anim = false; r.snap = null; r.x = r.raw = 0; r.v = 0; applyRow(r);
     const tRect = r.strip.getBoundingClientRect();
-    const y = localY(tRect.top + tRect.height * 0.7);
+    const y = localY(tRect.top + tRect.height * 0.55);
     const at = (x, yy = y) => (ghost.style.transform = `translate3d(${x}px,${yy}px,0)`);
     const stroke = async (x0, x1, dur, ease) => {
       at(x0);
@@ -1040,7 +881,7 @@ void main() {
     await wait(700);
     if (d.cancelled) return;
 
-    // 2. Long-press a poster: the lens opens in the centre and that poster glides into it.
+    // 2. Long-press a poster: the lens opens and that poster glides into the centre.
     const target = clamp(Math.floor((300 + r.x - PADX) / STEP), 0, r.items.length - 1);
     at(posterCenter(target) - r.x);
     ghost.style.opacity = "1";
@@ -1056,7 +897,7 @@ void main() {
     await wait(600);
     if (d.cancelled) return;
 
-    // 3. With the lens open, the posters pass through it and settle in the centre.
+    // 3. With the lens open, the posters pass through the centre and settle there.
     await stroke(300, 120, 1300, easeInOut);
     if (d.cancelled) return;
     await wait(900);
@@ -1086,9 +927,13 @@ void main() {
     el.addEventListener("input", upd);
     upd();
   };
-  bind("optMag", "outMag", (v) => v.toFixed(2) + "×", (v) => { CFG.mag = v; rows.forEach((r) => (r.tex = null)); kick(); });
-  bind("optSize", "outSize", (v) => Math.round(v) + " px", (v) => { CFG.radius = v / 2; kick(); });
-  bind("optTitle", "outTitle", (v) => v + " px", (v) => document.documentElement.style.setProperty("--title-size", v + "px"));
+  bind("optZoom", "outZoom", (v) => v.toFixed(2) + "×", (v) => { CFG.zoom = v; kick(); });
+  bind("optSize", "outSize", (v) => Math.round(v) + " px", (v) => { CFG.glassW = v; measureTitles(); kick(); });
+  bind("optTitle", "outTitle", (v) => v + " px", (v) => {
+    document.documentElement.style.setProperty("--title-size", v + "px");
+    measureTitles();
+    kick();
+  });
   $("optLens").addEventListener("change", (e) => {
     CFG.lens = e.target.checked;
     if (!CFG.lens) closeLens();
@@ -1096,11 +941,10 @@ void main() {
 
   addEventListener("resize", layout);
   layout();
-  ready.then(() => {
-    rows.forEach((r) => (r.tex = null));
-    if (!reduceMotion && glOK) setTimeout(() => { if (!interacted) runDemo(); }, 1100);
+  if (document.fonts) document.fonts.ready.then(() => { measureTitles(); kick(); });
+  addEventListener("load", () => {
+    if (!reduceMotion) setTimeout(() => { if (!interacted) runDemo(); }, 1100);
   });
-  if (!glOK) hint.textContent = "WebGL is off in this browser, so the lens can't render";
 })();
 </script>
 </body>
