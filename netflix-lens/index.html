@@ -571,6 +571,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     if (!r.styled) return;
     for (const el of r.els) { el.style.transform = ""; el.style.filter = ""; el.style.zIndex = ""; }
     for (const sh of r.shades) sh.style.opacity = "";
+    r.h.style.marginBottom = r.sec.style.marginBottom = "";
     r.styled = false;
   }
   function releaseLensRow() {
@@ -699,13 +700,27 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const p = clamp(lens.p.x, 0, 1.1);
     const pa = Math.min(p, 1);
 
+    const n = r.items.length;
+    const f = clamp(posUnder(r), 0, n - 1);
+    const i0 = Math.floor(f), i1 = Math.min(n - 1, i0 + 1), fr = f - i0;
+
+    // Make room in the page for the zoomed poster: a little more space under the row title and before
+    // the next row, easing back to normal as the lens closes.
+    const growUp = PH * ORIGIN_Y * (CFG.zoom - 1), growDown = PH * (1 - ORIGIN_Y) * (CFG.zoom - 1);
+    r.h.style.marginBottom = (10 + (growUp + 4) * pa).toFixed(2) + "px";
+    r.sec.style.marginBottom = (22 + growDown * pa).toFixed(2) + "px";
+
     // The poster nearest the centre zooms in and its lower part darkens under the glass; neighbours dim
-    // slightly. No distortion.
+    // slightly and step aside so the 8px gaps stay. No distortion.
     const cx = lensX();
+    const ts = r.els.map((_, i) => 1 - smooth(0, STEP, Math.abs(posterCenter(i) - r.x - cx)));
+    const grow = ts.map((t) => (PW * (CFG.zoom - 1) * t * p) / 2);        // extra half-width per poster
+    let acc = 0;
+    const shift = grow.map((g) => { const v = acc + g; acc += 2 * g; return v; });
+    const anchor = shift[i0] + (shift[i1] - shift[i0]) * fr;               // keep the centre poster centred
     r.els.forEach((el, i) => {
-      const d = Math.abs(posterCenter(i) - r.x - cx);
-      const t = 1 - smooth(0, STEP, d);
-      el.style.transform = `scale(${(1 + (CFG.zoom - 1) * t * p).toFixed(4)})`;
+      const t = ts[i];
+      el.style.transform = `translate3d(${(shift[i] - anchor).toFixed(2)}px,0,0) scale(${(1 + (CFG.zoom - 1) * t * p).toFixed(4)})`;
       el.style.filter = `brightness(${(1 - DIM * (1 - t) * pa).toFixed(3)})`;
       el.style.zIndex = t > 0.5 ? "2" : "";
       r.shades[i].style.opacity = (t * pa).toFixed(3);
@@ -713,9 +728,6 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     r.styled = true;
 
     // Titles follow the continuous scroll position, so they hand over in step with the motion.
-    const n = r.items.length;
-    const f = clamp(posUnder(r), 0, n - 1);
-    const i0 = Math.floor(f), i1 = Math.min(n - 1, i0 + 1), fr = f - i0;
     // The outgoing title clears before the incoming one arrives, so the two never overlap.
     const blend = i0 === i1 ? 0 : smooth(0.4, 0.6, fr);
     titles.forEach((t, i) => {
