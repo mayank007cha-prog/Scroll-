@@ -23,7 +23,14 @@
   --red: #e50914;
   --tag-red: #d91f29;
   --panel-bg: #101012;
-  --sheet-bg: #1b1b1d;
+  --sheet-bg: #232323;
+  --card-bg: #0e0e0e;
+  --card-line: #2e2e2e;
+  --card2-bg: #2b2b2b;
+  --card3-bg: #1c1c1c;
+  --pill-bg: #3a3a3a;
+  --field-bg: #2b2b2b;
+  --safe-top: 40px;
   --toast-bg: #f2f2f2;
   --toast-ink: #111111;
   --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -85,7 +92,7 @@ button, input { font: inherit; color: inherit; }
   display: flex; justify-content: space-between; align-items: flex-start;
   font-size: 14px; font-weight: 600; letter-spacing: 0.01em;
   background: linear-gradient(#000 70%, rgba(0,0,0,0));
-  z-index: 6;
+  z-index: 20;
 }
 .statusbar .ind { display: flex; gap: 6px; align-items: center; padding-top: 2px; }
 .scroller {
@@ -276,62 +283,176 @@ button, input { font: inherit; color: inherit; }
 }
 .hint.gone { opacity: 0; transform: translate(-50%, 8px); }
 
-/* ---------- display language sheet ---------- */
+/* ---------- My Netflix, profile sheet, edit profile, display language ---------- */
+.tabpage {
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+  padding: var(--safe-top) 0 150px;
+  background: var(--app-bg);
+  scrollbar-width: none;
+  z-index: 1;
+  visibility: hidden;
+}
+.tabpage::-webkit-scrollbar, .hscroll::-webkit-scrollbar, .stack-scroll::-webkit-scrollbar { display: none; }
+.screen.tab-my .tabpage { visibility: visible; }
+.screen.tab-my #scroller, .screen.tab-my .hint { visibility: hidden; }
+.my-head { display: flex; align-items: center; gap: 22px; height: 64px; padding: 0 16px; margin-bottom: 8px; }
+.who {
+  display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+  background: none; border: 0; padding: 0; color: var(--ink); cursor: pointer; text-align: left;
+}
+.who .av-img { width: 36px; height: 36px; border-radius: 8px; flex: none; }
+.who-name { font-size: 28px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who svg.caret { flex: none; }
+.bell { position: relative; }
+.bell b {
+  position: absolute; top: -9px; right: -9px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
+}
+.my-card {
+  margin: 0 16px 14px; padding: 18px 16px;
+  border: 1.5px solid var(--card-line); border-radius: 12px;
+  background: var(--card-bg);
+}
+.my-card .mc-head { display: flex; align-items: center; gap: 18px; width: 100%; padding: 0; border: 0; background: none; color: var(--ink); cursor: pointer; text-align: left; }
+.mc-head h3 { margin: 0; flex: 1; font-size: 19px; font-weight: 600; line-height: 1.3; }
+.my-card p { margin: 10px 0 0 42px; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+.mylist { display: flex; gap: 16px; align-items: flex-start; }
+.mylist h3 { margin: 0 0 4px; font-size: 19px; font-weight: 600; line-height: 1.3; }
+.mylist p { margin: 0 0 14px; }
+.chest { width: 66px; height: 66px; flex: none; margin-top: 4px; }
+.pill-btn {
+  display: block; width: 100%; padding: 12px 18px;
+  border: 0; border-radius: 999px; background: var(--pill-bg);
+  color: var(--ink); font-size: 15px; font-weight: 600; line-height: 1.4; cursor: pointer;
+}
+.my-row { margin: 26px 0 0; }
+.my-row h2 { margin: 0 0 10px; padding: 0 16px; font-size: 19px; font-weight: 600; line-height: 30px; }
+.hscroll { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
+.hscroll .poster { width: 118px; height: 166px; }
+.wide { flex: none; width: 236px; }
+.wide-img { position: relative; height: 134px; border-radius: 4px; overflow: hidden; background: #141414; }
+.wide-img img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
+.wide-img i { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--red); }
+.wide-img::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,0.25); }
+.wide-img i { z-index: 1; }
+.wide span { display: block; margin-top: 6px; font-size: 13px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.av-img { display: block; }
+.tab .av-img { width: 26px; height: 26px; border-radius: 6px; }
+
 .sheet-backdrop {
   position: absolute; inset: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.6);
   opacity: 0; pointer-events: none;
-  transition: opacity 0.25s;
-  z-index: 9;
-}
-.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
-.sheet {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  padding: 8px 16px calc(30px + env(safe-area-inset-bottom, 0px));
-  border-radius: 22px 22px 0 0;
-  background: var(--sheet-bg);
-  box-shadow: 0 -12px 40px rgba(0,0,0,0.5);
-  transform: translateY(105%);
-  transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
+  transition: opacity 0.3s;
   z-index: 10;
 }
-.sheet.open { transform: none; }
-.sheet-grab { width: 36px; height: 4px; margin: 0 auto 14px; border-radius: 4px; background: rgba(255,255,255,0.25); }
-.sheet-page { animation: page-in 0.25s ease-out; }
-@keyframes page-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
-.sheet-profile { display: flex; align-items: center; gap: 12px; padding: 4px 4px 14px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
-.avatar.lg { width: 44px; height: 44px; border-radius: 10px; }
-.sp-name { font-size: 17px; font-weight: 700; }
-.sp-sub { font-size: 13px; color: var(--ink-2); }
-.sheet-row {
-  display: flex; align-items: center; gap: 14px;
-  width: 100%; padding: 13px 6px;
-  border: 0; border-radius: 10px; background: none;
-  color: var(--ink); font-size: 15px; font-weight: 500; text-align: left;
-  cursor: pointer;
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+.psheet {
+  position: absolute; left: 0; right: 0; bottom: 0; top: calc(var(--safe-top) + 6px);
+  display: flex; flex-direction: column;
+  border-radius: 24px 24px 0 0;
+  background: var(--sheet-bg);
+  transform: translateY(102%);
+  transition: transform 0.38s cubic-bezier(.2,.8,.2,1);
+  z-index: 11;
 }
-button.sheet-row:hover { background: rgba(255,255,255,0.05); }
-.sheet-row:focus-visible, .lang-opt:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-.sheet-row .sr-val { margin-left: auto; color: var(--ink-2); font-size: 14px; }
-.sheet-row.muted { color: var(--ink-3); cursor: default; }
-.sheet-head { display: flex; align-items: center; gap: 12px; margin-bottom: 2px; }
-.sheet-head h3 { margin: 0; font-size: 18px; font-weight: 700; }
-.sheet-note { margin: 6px 4px 14px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
-.lang-opt {
-  display: flex; align-items: center; justify-content: space-between;
-  width: 100%; margin-bottom: 8px; padding: 13px 14px;
-  border: 1px solid var(--line); border-radius: 12px;
-  background: rgba(255,255,255,0.04);
-  color: var(--ink); text-align: left;
-  cursor: pointer;
+.psheet.open { transform: none; }
+.ps-top { position: relative; flex: none; padding: 10px 16px 0; text-align: center; }
+.grab { width: 40px; height: 5px; margin: 0 auto 18px; border-radius: 4px; background: rgba(255,255,255,0.3); }
+.ps-top h3 { margin: 0; font-size: 24px; font-weight: 700; line-height: 1.4; }
+.round-x {
+  position: absolute; right: 16px; top: 32px;
+  width: 40px; height: 40px; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: var(--pill-bg); cursor: pointer;
 }
-.lang-opt[aria-checked="true"] { border-color: rgba(255,255,255,0.55); background: rgba(255,255,255,0.08); }
-.lo-name { display: block; font-size: 16px; font-weight: 700; }
-.lo-sub { display: block; font-size: 12.5px; color: var(--ink-2); }
-.lo-check { opacity: 0; }
-.lang-opt[aria-checked="true"] .lo-check { opacity: 1; }
+.stack-scroll { flex: 1; overflow-y: auto; padding: 18px 16px calc(24px + env(safe-area-inset-bottom, 0px)); scrollbar-width: none; }
+.me-card {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 22px 16px 28px; border-radius: 30px; background: var(--card2-bg);
+}
+.me-card .av-img { width: 128px; height: 128px; border-radius: 14px; }
+.me-name { font-size: 20px; font-weight: 700; }
+.pencil {
+  position: absolute; right: 34px; top: 66px;
+  width: 44px; height: 44px; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: none; cursor: pointer;
+}
+.others { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 28px 0 0; }
+.other {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  border: 0; background: none; padding: 0; color: var(--ink); cursor: pointer;
+  font-size: 15px; font-weight: 600;
+}
+.other .av-wrap { position: relative; width: 100%; max-width: 82px; aspect-ratio: 1; }
+.other .av-img { width: 100%; height: 100%; border-radius: 12px; }
+.other .lock { position: absolute; left: 12px; bottom: 12px; }
+.other.add .av-wrap { display: grid; place-items: center; border-radius: 12px; background: var(--pill-bg); }
+.other.add { color: var(--ink-2); font-weight: 500; }
+.manage { display: block; margin: 40px auto 48px; padding: 11px 22px; border: 0; border-radius: 999px; background: var(--pill-bg); color: var(--ink); font-size: 15px; font-weight: 500; cursor: pointer; }
+.set-list { display: grid; gap: 14px; }
+.set-row {
+  display: flex; align-items: center; gap: 18px;
+  width: 100%; padding: 18px 16px;
+  border: 0; border-radius: 12px; background: var(--card2-bg);
+  color: var(--ink); font-size: 17px; font-weight: 500; text-align: left; cursor: pointer;
+}
+.set-row > span { flex: 1; }
+
+.stack-page {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding-top: var(--safe-top);
+  background: var(--app-bg);
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(.2,.8,.2,1), visibility 0s linear 0.32s;
+  visibility: hidden;
+  z-index: 13;
+}
+.stack-page.open { transform: none; visibility: visible; transition: transform 0.32s cubic-bezier(.2,.8,.2,1); }
+#pgDisplay { z-index: 14; }
+.pg-head { flex: none; display: flex; align-items: center; gap: 22px; height: 64px; padding: 0 16px; }
+.pg-head h3 { margin: 0; font-size: 24px; font-weight: 700; line-height: 1.3; }
+.edit-av { position: relative; width: 136px; height: 136px; margin: 4px auto 22px; }
+.edit-av .av-img { width: 100%; height: 100%; border-radius: 6px; }
+.edit-av button {
+  position: absolute; right: -10px; bottom: -10px; width: 34px; height: 34px;
+  display: grid; place-items: center; border: 0; border-radius: 6px; background: #e8e8e8; cursor: pointer;
+}
+.name-field {
+  display: block; width: 76%; margin: 0 auto 24px; padding: 14px 16px;
+  border: 0; border-radius: 4px; background: var(--field-bg);
+  color: var(--ink); font-size: 18px;
+}
+.name-field:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.edit-list { display: grid; gap: 10px; }
+.edit-row {
+  display: flex; align-items: center; gap: 18px;
+  width: 100%; padding: 16px 18px;
+  border: 0; border-radius: 12px; background: var(--card3-bg);
+  color: var(--ink); text-align: left; cursor: pointer;
+}
+.edit-row .er-text { flex: 1; min-width: 0; }
+.edit-row b { display: block; font-size: 18px; font-weight: 700; line-height: 1.4; }
+.edit-row small { display: block; margin-top: 2px; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+.delete { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 26px auto 8px; border: 0; background: none; color: var(--ink); font-size: 18px; font-weight: 600; cursor: pointer; }
+.disp-note { margin: 0 16px 10px 70px; font-size: 15px; line-height: 1.7; color: var(--ink-2); }
+.radio-list { padding: 0 16px 30px; }
+.lang-radio {
+  display: flex; align-items: center; gap: 22px;
+  width: 100%; padding: 14px 6px;
+  border: 0; background: none; color: var(--ink);
+  font-size: 19px; text-align: left; cursor: pointer;
+}
+.lang-radio .dot { width: 26px; height: 26px; flex: none; border-radius: 50%; border: 2.5px solid #9a9a9a; display: grid; place-items: center; }
+.lang-radio[aria-checked="true"] .dot { border-color: #fff; }
+.lang-radio[aria-checked="true"] .dot::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
+.lang-radio.off { color: var(--ink-2); }
+.set-row:focus-visible, .edit-row:focus-visible, .lang-radio:focus-visible, .who:focus-visible, .other:focus-visible,
+.pill-btn:focus-visible, .manage:focus-visible, .round-x:focus-visible, .pencil:focus-visible, .mc-head:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .toast {
-  position: absolute; left: 50%; bottom: 112px;
+  position: absolute; left: 50%; bottom: 112px; z-index: 30;
   transform: translate(-50%, 8px);
   padding: 10px 16px;
   border-radius: 999px;
@@ -339,7 +460,6 @@ button.sheet-row:hover { background: rgba(255,255,255,0.05); }
   font-size: 13px; font-weight: 600; white-space: nowrap;
   opacity: 0; pointer-events: none;
   transition: opacity 0.25s, transform 0.25s;
-  z-index: 11;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 #rows { transition: opacity 0.2s; }
@@ -417,6 +537,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   .scroller { padding-top: env(safe-area-inset-top, 0px); }
   .bottomnav { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
   .home-ind { display: none; }
+  .screen { --safe-top: env(safe-area-inset-top, 0px); }
   .close-focus { right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
   .hint, .toast { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
 }
@@ -450,6 +571,45 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
           <div id="rows"></div>
         </div>
 
+        <div class="tabpage" id="pgMy">
+          <div class="my-head">
+            <button class="who" id="whoBtn" type="button" aria-haspopup="dialog">
+              <span class="av-slot" data-av="me"></span>
+              <span class="who-name" data-name="me"></span>
+              <svg class="caret" width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M5 9h14l-7 7.5z"/></svg>
+            </button>
+            <button class="icon-btn" type="button" data-i18n-label="cast" data-todo><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 8V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><path d="M3 12a8 8 0 0 1 8 8M3 16a4 4 0 0 1 4 4"/><circle cx="3.5" cy="19.5" r="0.6" fill="#fff"/></svg></button>
+            <button class="icon-btn" type="button" data-i18n-label="downloads" data-todo><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v12M6.5 10.5 12 16l5.5-5.5M4 20.5h16"/></svg></button>
+            <button class="icon-btn bell" type="button" data-i18n-label="notifications" data-todo><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.8 2.2H4.2z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg><b>2</b></button>
+          </div>
+          <div class="my-card">
+            <button class="mc-head" type="button" data-todo>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v12M6.5 10.5 12 16l5.5-5.5M3 20.5h18"/></svg>
+              <h3 data-i18n="downloads"></h3>
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg>
+            </button>
+            <p data-i18n="downloadsText"></p>
+          </div>
+          <div class="my-card mylist">
+            <svg class="chest" viewBox="0 0 64 64" aria-hidden="true">
+              <defs><linearGradient id="chestG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5fa2"/><stop offset=".55" stop-color="#a64bff"/><stop offset="1" stop-color="#4b5bff"/></linearGradient></defs>
+              <path d="M8 22c0-7 5-12 12-12h24c7 0 12 5 12 12v4H8z" fill="url(#chestG)"/>
+              <rect x="6" y="28" width="52" height="28" rx="6" fill="url(#chestG)"/>
+              <rect x="6" y="26" width="52" height="5" rx="2.5" fill="#ff8bd0"/>
+              <rect x="27" y="31" width="10" height="13" rx="3" fill="#2a1a52"/>
+              <circle cx="32" cy="36" r="2" fill="#ffd36b"/>
+              <path d="M44 15l1.6 3.4L49 20l-3.4 1.6L44 25l-1.6-3.4L39 20l3.4-1.6z" fill="#fff"/>
+            </svg>
+            <div>
+              <h3 data-i18n="addList"></h3>
+              <p data-i18n="addListText"></p>
+              <button class="pill-btn" type="button" id="browseBtn" data-i18n="browse"></button>
+            </div>
+          </div>
+          <section class="my-row"><h2 data-i18n="trailers"></h2><div class="hscroll" id="myTrailers"></div></section>
+          <section class="my-row"><h2 data-i18n="recentlyWatched"></h2><div class="hscroll" id="myRecent"></div></section>
+        </div>
+
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
         <div id="gist"></div>
         <button class="close-focus" id="closeFocus" type="button" tabindex="-1" aria-label="क्विक व्यू बंद करें" title="क्विक व्यू बंद करें">
@@ -464,63 +624,71 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M9.5 14.5h5" stroke-linecap="round"/></svg>
             <span data-i18n="home">होम</span>
           </button>
-          <button class="tab" type="button">
+          <button class="tab" type="button" data-todo>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b8b8b8" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M10.5 9.5v5l4-2.5z" fill="#b8b8b8"/></svg>
             <span data-i18n="clips">क्लिप्स</span>
           </button>
-          <button class="tab" type="button">
+          <button class="tab" type="button" data-todo>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b8b8b8" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
             <span data-i18n="search">खोजें</span>
           </button>
-          <button class="tab" id="tabProfile" type="button" aria-haspopup="dialog"><span class="avatar" aria-hidden="true"></span><span data-i18n="profile">प्रोफ़ाइल</span></button>
+          <button class="tab" id="tabMy" type="button"><span class="av-slot" data-av="me"></span><span data-i18n="myNetflix"></span></button>
         </nav>
         <div class="home-ind" aria-hidden="true"></div>
 
         <div class="sheet-backdrop" id="sheetBackdrop"></div>
-        <section class="sheet" id="sheet" role="dialog" aria-modal="true" data-i18n-label="dialog" inert>
-          <div class="sheet-grab" aria-hidden="true"></div>
-          <div class="sheet-page" id="sheetMain">
-            <div class="sheet-profile">
-              <span class="avatar lg" aria-hidden="true"></span>
-              <div><div class="sp-name" data-i18n="sheetTitle"></div><div class="sp-sub" data-i18n="sheetSub"></div></div>
+        <section class="psheet" id="psheet" role="dialog" aria-modal="true" data-i18n-label="profiles" inert>
+          <div class="ps-top">
+            <div class="grab" aria-hidden="true"></div>
+            <h3 data-i18n="profiles"></h3>
+            <button class="round-x" id="sheetClose" type="button" data-i18n-label="closeLabel"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button>
+          </div>
+          <div class="stack-scroll">
+            <div class="me-card">
+              <span class="av-slot" data-av="me"></span>
+              <div class="me-name" data-name="me"></div>
+              <button class="pencil" id="editBtn" type="button" data-i18n-label="editProfile"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 3.8a2.3 2.3 0 0 1 3.3 3.3L8 18.9 3.5 20.5 5.1 16z"/><path d="M14.5 5.8l3.7 3.7"/></svg></button>
             </div>
-            <button class="sheet-row" id="rowLang" type="button">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
-              <span data-i18n="displayLang"></span>
-              <span class="sr-val" id="langVal"></span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5"/></svg>
-            </button>
-            <div class="sheet-row muted">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>
-              <span data-i18n="notifications"></span>
-            </div>
-            <div class="sheet-row muted">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>
-              <span data-i18n="account"></span>
-            </div>
-            <div class="sheet-row muted">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.6M12 17h.01"/></svg>
-              <span data-i18n="help"></span>
+            <div class="others" id="others"></div>
+            <button class="manage" type="button" data-i18n="manage" data-todo></button>
+            <div class="set-list">
+              <button class="set-row" type="button" data-todo><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-i18n="appSettings"></span><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg></button>
+              <button class="set-row" type="button" data-todo><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.2 4.1-6.2 8-6.2s7 2 8 6.2z"/></svg><span data-i18n="account"></span><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg></button>
+              <button class="set-row" type="button" data-todo><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M9.5 9.3a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.5M12 17.2h.01" stroke-width="2"/></svg><span data-i18n="help"></span><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg></button>
             </div>
           </div>
-          <div class="sheet-page" id="sheetLang" hidden>
-            <div class="sheet-head">
-              <button class="icon-btn" id="langBack" type="button" data-i18n-label="backToMenu">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H5M11 5l-7 7 7 7"/></svg>
-              </button>
-              <h3 data-i18n="displayLang"></h3>
+        </section>
+
+        <section class="stack-page" id="pgEdit" aria-labelledby="pgEditTitle" inert>
+          <div class="pg-head">
+            <button class="icon-btn" type="button" data-pop data-i18n-label="back"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H5M11 5l-7 7 7 7"/></svg></button>
+            <h3 id="pgEditTitle" data-i18n="editProfile"></h3>
+          </div>
+          <div class="stack-scroll">
+            <div class="edit-av">
+              <span class="av-slot" data-av="me"></span>
+              <button type="button" data-todo data-i18n-label="changeAvatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 3.8a2.3 2.3 0 0 1 3.3 3.3L8 18.9 3.5 20.5 5.1 16z"/><path d="M14.5 5.8l3.7 3.7"/></svg></button>
             </div>
-            <p class="sheet-note" data-i18n="langNote"></p>
-            <div role="radiogroup" data-i18n-label="displayLang">
-              <button class="lang-opt" type="button" role="radio" data-lang="en" lang="en">
-                <span><span class="lo-name">English</span><span class="lo-sub">English</span></span>
-                <svg class="lo-check" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>
-              </button>
-              <button class="lang-opt" type="button" role="radio" data-lang="hi" lang="hi">
-                <span><span class="lo-name">हिन्दी</span><span class="lo-sub">Hindi</span></span>
-                <svg class="lo-check" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>
-              </button>
+            <input class="name-field" id="nameField" type="text" maxlength="20" autocomplete="off" data-i18n-label="nameLabel">
+            <div class="edit-list">
+              <button class="edit-row" type="button" data-todo><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10a4.5 4.5 0 0 1 4.4 5.4l-.9 4.3a2.4 2.4 0 0 1-4.1 1.1L14.6 16H9.4l-1.8 1.8a2.4 2.4 0 0 1-4.1-1.1l-.9-4.3A4.5 4.5 0 0 1 7 7z"/><path d="M7.5 10v3M6 11.5h3"/><circle cx="15.5" cy="10.6" r=".6" fill="currentColor"/><circle cx="17.2" cy="12.4" r=".6" fill="currentColor"/></svg><span class="er-text"><b data-i18n="gameHandle"></b><small data-i18n="gameHandleSub"></small></span><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg></button>
+              <button class="edit-row" type="button" data-todo><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.2 3.5h7.6l5.4 5.4v6.2l-5.4 5.4H8.2l-5.4-5.4V8.9z"/><path d="M12 7.8v5" stroke-width="2.2"/><circle cx="12" cy="16" r=".7" fill="currentColor"/></svg><span class="er-text"><b data-i18n="restrictions"></b><small data-i18n="restrictionsSub"></small></span><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg></button>
+              <button class="edit-row" type="button" data-todo><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><path d="M12 14.6v2.4" stroke-width="2.2"/></svg><span class="er-text"><b data-i18n="lock"></b><small data-i18n="lockSub"></small></span><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg></button>
+              <button class="edit-row" type="button" id="displayRow"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5h9M7 3v2M9.5 5c-.6 3.6-2.8 6.6-6.5 8.5M5 8c.9 2.2 2.6 4 5 5"/><path d="M12.5 21l4.2-10 4.3 10M14 17.5h5.5"/></svg><span class="er-text"><b data-i18n="displayLang"></b><small data-i18n="displayLangSub"></small></span><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg></button>
+              <button class="edit-row" type="button" data-todo><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4.5h17a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H12l-4 3v-3H3.5a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z"/><path d="M6.5 9.5h4M13 9.5h4.5M6.5 13h7M15.8 13h1.7"/></svg><span class="er-text"><b data-i18n="audioSubs"></b><small data-i18n="audioSubsSub"></small></span><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg></button>
             </div>
+            <button class="delete" type="button" data-todo><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5h16M9 6.5V4h6v2.5M6 6.5l1 14h10l1-14M10 10v7.5M14 10v7.5"/></svg><span data-i18n="deleteProfile"></span></button>
+          </div>
+        </section>
+
+        <section class="stack-page" id="pgDisplay" aria-labelledby="pgDisplayTitle" inert>
+          <div class="pg-head">
+            <button class="icon-btn" type="button" data-pop data-i18n-label="back"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H5M11 5l-7 7 7 7"/></svg></button>
+            <h3 id="pgDisplayTitle" data-i18n="displayTitle"></h3>
+          </div>
+          <div class="stack-scroll" style="padding-left:0;padding-right:0">
+            <p class="disp-note" data-i18n="displayNote"></p>
+            <div class="radio-list" id="langList" role="radiogroup" data-i18n-label="displayTitle"></div>
           </div>
         </section>
         <div class="toast" id="toast" role="status"></div>
@@ -540,7 +708,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <li><b>Scan</b><span>Scroll the page. Whichever row reaches the focus line pops on its own.</span></li>
       <li><b>Tap</b><span>In quick view, tap any poster to bring it into focus.</span></li>
       <li><b>Close</b><span>Tap the round × at the bottom right, or press Esc.</span></li>
-      <li><b>Language</b><span>Profile → Display language switches between English and हिन्दी, with posters in that language where we have them.</span></li>
+      <li><b>Language</b><span>My Netflix → tap your profile name → pencil → Display language → English or हिन्दी. The home rows switch to posters in that language where we have them.</span></li>
     </ul>
     <div class="controls">
       <div class="switch-row">
@@ -721,28 +889,78 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const STR = {
     en: {
       langName: "English", page: "Movies", back: "Back", cast: "Cast to device", nav: "Main",
-      home: "Home", clips: "Clips", search: "Search", profile: "Profile", recent: "Recently added",
+      home: "Home", clips: "Clips", search: "Search", myNetflix: "My Netflix", recent: "Recently added",
       movie: "Movie", series: "Series",
       audioYes: "Audio available in English", audioNo: "No English audio",
       subsYes: "Subtitles available in English", subsNo: "No English subtitles",
       close: "Close quick view", hint: "Long-press a poster for quick view",
-      sheetTitle: "My Netflix", sheetSub: "Manage profiles", displayLang: "Display language",
-      notifications: "Notifications", account: "Account", help: "Help", backToMenu: "Back",
-      langNote: "Changes the app text and the posters you see, where we have them in this language.",
-      toast: "Display language: English", dialog: "Profile and settings",
+      downloads: "Downloads", downloadsText: "Movies and shows that you download appear here.",
+      notifications: "Notifications",
+      addList: "Add to My List", addListText: "Keep track of shows and movies you want to watch.",
+      browse: "Browse to add to My List", trailers: "Trailers You've Watched", recentlyWatched: "Recently Watched",
+      profiles: "Profiles", closeLabel: "Close", add: "Add", manage: "Manage Profiles",
+      appSettings: "App Settings", account: "Account", help: "Help", locked: "Profile is locked",
+      editProfile: "Edit Profile", changeAvatar: "Change profile icon", nameLabel: "Profile name",
+      gameHandle: "Game Handle", gameHandleSub: "Create your game handle",
+      restrictions: "Viewing Restrictions", restrictionsSub: "No restrictions",
+      lock: "Profile Lock", lockSub: "On",
+      displayLang: "Display Language", displayLangSub: "Change the language of text you see when using Netflix on all devices.",
+      audioSubs: "Audio & Subtitle Languages", audioSubsSub: "Choose the languages you prefer to watch shows and movies in.",
+      deleteProfile: "Delete Profile",
+      displayTitle: "Display Language",
+      displayNote: "Change the language of text you see when using Netflix. Any change will also update the default audio and subtitle language.",
+      toast: "Display language: English", todo: "Not part of this prototype", onlyTwo: "This prototype has English and हिन्दी only",
+      switched: (n) => `Switched to ${n}`,
     },
     hi: {
       langName: "हिन्दी", page: "फ़िल्में", back: "वापस", cast: "डिवाइस पर कास्ट करें", nav: "मुख्य",
-      home: "होम", clips: "क्लिप्स", search: "खोजें", profile: "प्रोफ़ाइल", recent: "हाल ही में जोड़ा गया",
+      home: "होम", clips: "क्लिप्स", search: "खोज", myNetflix: "मेरा Netflix", recent: "हाल ही में जोड़ा गया",
       movie: "फ़िल्म", series: "सीरीज़",
       audioYes: "हिन्दी ऑडियो उपलब्ध है", audioNo: "हिन्दी ऑडियो उपलब्ध नहीं",
       subsYes: "हिन्दी सबटाइटल उपलब्ध हैं", subsNo: "हिन्दी सबटाइटल उपलब्ध नहीं",
       close: "क्विक व्यू बंद करें", hint: "क्विक व्यू के लिए पोस्टर को दबाकर रखें",
-      sheetTitle: "मेरा नेटफ़्लिक्स", sheetSub: "प्रोफ़ाइल मैनेज करें", displayLang: "डिस्प्ले भाषा",
-      notifications: "सूचनाएँ", account: "खाता", help: "मदद", backToMenu: "वापस",
-      langNote: "इससे ऐप का टेक्स्ट और पोस्टर बदल जाते हैं, जहाँ वे इस भाषा में उपलब्ध हैं।",
-      toast: "डिस्प्ले भाषा: हिन्दी", dialog: "प्रोफ़ाइल और सेटिंग्स",
+      downloads: "डाउनलोड्स", downloadsText: "डाउनलोड की गई फ़िल्में और शो यहां नज़र आते हैं.",
+      notifications: "सूचनाएं",
+      addList: "मेरी लिस्ट में जोड़ें", addListText: "आप जो भी अगले टीवी शो और फ़िल्में देखना चाहते हैं, उन पर नज़र रखें.",
+      browse: "मेरी लिस्ट में जोड़ने के लिए ब्राउज़ करें", trailers: "देखे गए ट्रेलर", recentlyWatched: "हाल ही में देखा गया",
+      profiles: "प्रोफ़ाइल", closeLabel: "बंद करें", add: "जोड़ें", manage: "प्रोफ़ाइल मैनेज करें",
+      appSettings: "ऐप सेटिंग", account: "अकाउंट", help: "सहायता", locked: "प्रोफ़ाइल लॉक है",
+      editProfile: "प्रोफ़ाइल एडिट करें", changeAvatar: "प्रोफ़ाइल आइकॉन बदलें", nameLabel: "प्रोफ़ाइल का नाम",
+      gameHandle: "गेम हैंडल", gameHandleSub: "अपना गेम हैंडल बनाएं",
+      restrictions: "देखने से जुड़े प्रतिबंध", restrictionsSub: "कोई पाबंदी नहीं",
+      lock: "प्रोफ़ाइल लॉक", lockSub: "चालू है",
+      displayLang: "डिस्प्ले भाषा", displayLangSub: "सभी डिवाइस पर Netflix का उपयोग करने के दौरान दिखने वाले टेक्स्ट की भाषा को बदलें.",
+      audioSubs: "ऑडियो और सबटाइटल भाषाएं", audioSubsSub: "आपको जिन भाषाओं में शो और फ़िल्में देखना पसंद है, उन्हें चुनें.",
+      deleteProfile: "प्रोफ़ाइल हटाएं",
+      displayTitle: "डिस्प्ले भाषा",
+      displayNote: "Netflix उपयोग करने के दौरान दिखने वाले टेक्स्ट की भाषा को बदलें. कोई भी बदलाव करने से ऑडियो और सबटाइटल की डिफ़ॉल्ट भाषा भी बदल जाएगी.",
+      toast: "डिस्प्ले भाषा: हिन्दी", todo: "यह इस प्रोटोटाइप का हिस्सा नहीं है", onlyTwo: "इस प्रोटोटाइप में सिर्फ़ English और हिन्दी हैं",
+      switched: (n) => `${n} प्रोफ़ाइल पर स्विच किया गया`,
     },
+  };
+
+  // Profiles shown in My Netflix and the profile sheet. Avatars are drawn, not images.
+  const PROFILES = [
+    { name: "Chotu", bg: "#2f6fe4", face: "#ffffff" },
+    { name: "Papa", bg: "#f2b705", face: "#3a2a00" },
+    { name: "Mane", bg: "#8b3dff", face: "#ffffff" },
+    { name: "Gunda", bg: "#14a874", face: "#ffffff", locked: true },
+  ];
+  let me = 0;
+  try { const n = localStorage.getItem("focuslens-name"); if (n) PROFILES[0].name = n; } catch (e) {}
+
+  // Display languages Netflix lists; only English and Hindi are wired up in this prototype.
+  const LANGS = [["da", "Dansk"], ["de", "Deutsch"], ["en", "English"], ["es", "Español"], ["fil", "Filipino"],
+    ["fr", "Français"], ["hr", "Hrvatski"], ["id", "Indonesia"], ["it", "Italiano"], ["hu", "Magyar"],
+    ["ms", "Melayu"], ["nl", "Nederlands"], ["nb", "Norsk bokmål"], ["pl", "Polski"], ["pt", "Português"],
+    ["ro", "Română"], ["fi", "Suomi"], ["sv", "Svenska"], ["vi", "Tiếng Việt"], ["tr", "Türkçe"],
+    ["cs", "Čeština"], ["el", "Ελληνικά"], ["ru", "Русский"], ["uk", "Українська"], ["he", "עברית"],
+    ["ar", "العربية"], ["hi", "हिन्दी"], ["ta", "தமிழ்"], ["te", "తెలుగు"], ["th", "ไทย"],
+    ["ko", "한국어"], ["zh", "中文"], ["ja", "日本語"]];
+
+  const MY_ROWS = {
+    en: { trailers: ["enolaholmes", "hitman", "topgun", "blackbag", "dragon"], recent: [["moneyheist", 0.62], ["squidgame", 0.3], ["dark", 0.85]] },
+    hi: { trailers: ["akka", "gajabraat", "paradise", "dorothy", "irumudi"], recent: [["moneyheist", 0.62], ["mandaadi", 0.3], ["dark", 0.85]] },
   };
 
   // Display language, remembered per viewer.
@@ -773,9 +991,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot"), scroller = $("scroller");
   const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), closeBtn = $("closeFocus");
   const ghost = $("ghost"), hint = $("hint"), toast = $("toast");
-  const sheet = $("sheet"), backdrop = $("sheetBackdrop"), sheetMain = $("sheetMain"), sheetLang = $("sheetLang");
-  const tabHome = $("tabHome"), tabProfile = $("tabProfile"), langVal = $("langVal");
-  const langOpts = [...document.querySelectorAll(".lang-opt")];
+  const psheet = $("psheet"), backdrop = $("sheetBackdrop"), pgEdit = $("pgEdit"), pgDisplay = $("pgDisplay");
+  const tabHome = $("tabHome"), tabMy = $("tabMy"), nameField = $("nameField"), langList = $("langList");
   const POSTERS = window.POSTERS || {};
 
   let rows = [];
@@ -1328,44 +1545,126 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   closeBtn.addEventListener("click", () => { stopDemo(); exitFocus(); });
   addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    if (sheet.classList.contains("open")) closeSheet(); else exitFocus();
+    window.focusLensBack();
   });
 
-  // ---------- display language ----------
-  // Profile tab -> sheet -> Display language -> English / हिन्दी. Switching swaps the app text and rows,
-  // using artwork in the chosen language wherever we have it.
+  // ---------- My Netflix, profiles and display language ----------
+  // Bottom nav "My Netflix" -> tap the profile name -> profile sheet -> pencil -> Edit profile ->
+  // Display language -> English / हिन्दी. Switching swaps the app text and the home rows.
+  function avatarSVG(p) {
+    return `<svg class="av-img" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="${p.bg}"/>` +
+      `<rect x="19" y="21" width="6" height="10" rx="3" fill="${p.face}"/><rect x="39" y="21" width="6" height="10" rx="3" fill="${p.face}"/>` +
+      `<path d="M17 38c4.5 7.5 25.5 7.5 30 0" fill="none" stroke="${p.face}" stroke-width="4.5" stroke-linecap="round"/></svg>`;
+  }
+  function renderProfiles() {
+    const p = PROFILES[me];
+    screenEl.querySelectorAll('[data-av="me"]').forEach((el) => { el.innerHTML = avatarSVG(p); });
+    screenEl.querySelectorAll('[data-name="me"]').forEach((el) => { el.textContent = p.name; });
+    if (document.activeElement !== nameField) nameField.value = p.name;
+    const others = $("others");
+    others.replaceChildren();
+    PROFILES.forEach((q, i) => {
+      if (i === me) return;
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "other";
+      b.innerHTML = `<span class="av-wrap">${avatarSVG(q)}${q.locked ? '<svg class="lock" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></svg>' : ""}</span>`;
+      const n = document.createElement("span");
+      n.textContent = q.name;
+      b.appendChild(n);
+      b.addEventListener("click", () => {
+        if (q.locked) return showToast(S().locked);
+        me = i;
+        renderProfiles();
+        showToast(S().switched(q.name));
+      });
+      others.appendChild(b);
+    });
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "other add";
+    add.dataset.todo = "";
+    add.innerHTML = '<span class="av-wrap"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg></span>';
+    const n = document.createElement("span");
+    n.textContent = S().add;
+    add.appendChild(n);
+    others.appendChild(add);
+  }
+  function renderMy() {
+    const t = $("myTrailers"), rc = $("myRecent");
+    t.replaceChildren(); rc.replaceChildren();
+    for (const key of MY_ROWS[lang].trailers) {
+      const p = document.createElement("div");
+      p.className = "poster";
+      p.innerHTML = `<img alt="" draggable="false" src="${POSTERS[key] || ""}">`;
+      p.setAttribute("aria-label", tx(key).title);
+      t.appendChild(p);
+    }
+    for (const [key, prog] of MY_ROWS[lang].recent) {
+      const w = document.createElement("div");
+      w.className = "wide";
+      w.innerHTML = `<div class="wide-img"><img alt="" draggable="false" src="${POSTERS[key] || ""}"><i style="width:${prog * 100}%"></i></div><span></span>`;
+      w.querySelector("span").textContent = tx(key).title;
+      rc.appendChild(w);
+    }
+  }
+  function renderLangList() {
+    langList.replaceChildren();
+    for (const [code, name] of LANGS) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "lang-radio";
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(code === lang));
+      b.lang = code;
+      b.innerHTML = '<span class="dot" aria-hidden="true"></span>';
+      const n = document.createElement("span");
+      n.textContent = name;
+      n.dir = "auto";
+      b.appendChild(n);
+      b.addEventListener("click", () => {
+        if (code === "en" || code === "hi") setLang(code);
+        else showToast(S().onlyTwo);
+      });
+      langList.appendChild(b);
+    }
+  }
   function applyStrings() {
     const s = S();
     screenEl.lang = lang;
     screenEl.classList.toggle("lang-en", lang === "en");
     screenEl.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = s[el.dataset.i18n]; });
     screenEl.querySelectorAll("[data-i18n-label]").forEach((el) => el.setAttribute("aria-label", s[el.dataset.i18nLabel]));
-    langVal.textContent = s.langName;
-    langOpts.forEach((b) => b.setAttribute("aria-checked", String(b.dataset.lang === lang)));
+    langList.querySelectorAll(".lang-radio").forEach((b) => b.setAttribute("aria-checked", String(b.lang === lang)));
     setCloseButton(focus.on);
+    renderProfiles();
+    renderMy();
   }
-  function showSheetPage(page) {
-    sheetMain.hidden = page !== "main";
-    sheetLang.hidden = page !== "lang";
-    const first = (page === "main" ? sheetMain : sheetLang).querySelector("button");
-    if (first) first.focus({ preventScroll: true });
+
+  function showTab(which) {
+    const my = which === "my";
+    if (my) { stopDemo(); exitFocus(); }
+    screenEl.classList.toggle("tab-my", my);
+    tabMy.classList.toggle("on", my);
+    tabHome.classList.toggle("on", !my);
+    if (my) $("pgMy").scrollTop = 0;
   }
-  function openSheet() {
-    stopDemo();
-    sheet.classList.add("open");
-    backdrop.classList.add("open");
-    sheet.inert = false;
-    tabProfile.classList.add("on");
-    tabHome.classList.remove("on");
-    showSheetPage("main");
+  const setOpen = (el, on) => { el.classList.toggle("open", on); el.inert = !on; };
+  function openSheet() { setOpen(psheet, true); backdrop.classList.add("open"); $("sheetClose").focus({ preventScroll: true }); }
+  function closeSheet() { setOpen(psheet, false); backdrop.classList.remove("open"); }
+  const stack = [];
+  function push(pg) {
+    pg.querySelector(".stack-scroll").scrollTop = 0;
+    setOpen(pg, true);
+    stack.push(pg);
+    pg.querySelector("[data-pop]").focus({ preventScroll: true });
   }
-  function closeSheet() {
-    sheet.classList.remove("open");
-    backdrop.classList.remove("open");
-    sheet.inert = true;
-    tabProfile.classList.remove("on");
-    tabHome.classList.add("on");
+  function pop() {
+    const pg = stack.pop();
+    if (pg) setOpen(pg, false);
+    return !!pg;
   }
+
   let toastT = 0;
   function showToast(text) {
     toast.textContent = text;
@@ -1374,7 +1673,6 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     toastT = setTimeout(() => toast.classList.remove("show"), 2200);
   }
   function setLang(next) {
-    closeSheet();
     if (next === lang) return;
     lang = next;
     try { localStorage.setItem("focuslens-lang", lang); } catch (e) {}
@@ -1382,30 +1680,38 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     focus.on = false; focus.row = null;
     clearOverlay();
     screenEl.classList.remove("focus");
-    rowsEl.classList.add("swap");
-    setTimeout(() => {
-      applyStrings();
-      buildRows();
-      scroller.scrollTop = 0;
-      layout();
-      rowsEl.classList.remove("swap");
-      showToast(S().toast);
-    }, reduceMotion ? 0 : 200);
+    applyStrings();
+    buildRows();
+    scroller.scrollTop = 0;
+    layout();
+    showToast(S().toast);
   }
-  // Android back button (called by the APK wrapper): step back through the sheet and quick view first.
+  // Android back button (called by the APK wrapper): step back through screens and quick view first.
   window.focusLensBack = () => {
-    if (sheet.classList.contains("open")) {
-      if (!sheetLang.hidden) showSheetPage("main"); else closeSheet();
-      return true;
-    }
+    if (pop()) return true;
+    if (psheet.classList.contains("open")) { closeSheet(); return true; }
     if (focus.on) { stopDemo(); exitFocus(); return true; }
+    if (screenEl.classList.contains("tab-my")) { showTab("home"); return true; }
     return false;
   };
-  tabProfile.addEventListener("click", openSheet);
+  tabHome.addEventListener("click", () => showTab("home"));
+  tabMy.addEventListener("click", () => showTab("my"));
+  $("whoBtn").addEventListener("click", openSheet);
+  $("sheetClose").addEventListener("click", closeSheet);
   backdrop.addEventListener("click", closeSheet);
-  $("rowLang").addEventListener("click", () => showSheetPage("lang"));
-  $("langBack").addEventListener("click", () => showSheetPage("main"));
-  langOpts.forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
+  $("editBtn").addEventListener("click", () => push(pgEdit));
+  $("displayRow").addEventListener("click", () => push(pgDisplay));
+  $("browseBtn").addEventListener("click", () => showTab("home"));
+  screenEl.querySelectorAll("[data-pop]").forEach((b) => b.addEventListener("click", pop));
+  // Controls that exist for realism but lead nowhere in this prototype.
+  screenEl.addEventListener("click", (e) => { if (e.target.closest("[data-todo]")) showToast(S().todo); });
+  nameField.addEventListener("input", () => {
+    const v = nameField.value.trim();
+    if (!v) return;
+    PROFILES[me].name = v;
+    if (me === 0) { try { localStorage.setItem("focuslens-name", v); } catch (e) {} }
+    renderProfiles();
+  });
 
   // ---------- demo ----------
   let interacted = false;
@@ -1547,9 +1853,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   });
 
   addEventListener("resize", layout);
+  renderLangList();
   applyStrings();
   buildRows();
-  closeSheet();
   layout();
   if (document.fonts) document.fonts.ready.then(() => { measureOverlay(); kick(); });
   addEventListener("load", () => {
