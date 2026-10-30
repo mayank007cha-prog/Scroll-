@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: a 412×892 phone (the Figma frame) centred on a dark stage, with a notes/controls rail beside it on wide screens.
    On a phone the frame drops away and the app fills the screen. Single dark look, matching the streaming UI. */
@@ -24,7 +24,8 @@
   --tag-red: #d91f29;
   --panel-bg: #101012;
   --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --title-size: 15px;
+  --font-hi: "Noto Sans Devanagari", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --title-size: 16px;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -68,6 +69,7 @@ button, input { font: inherit; color: inherit; }
   overflow: hidden;
   background: var(--app-bg);
   isolation: isolate;
+  font-family: var(--font-hi);
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -98,10 +100,10 @@ button, input { font: inherit; color: inherit; }
   display: flex; align-items: center; gap: 24px;
   padding: 0 16px;
 }
-.appbar h1 { margin: 0; font-size: 26px; font-weight: 700; flex: 1; letter-spacing: -0.01em; }
+.appbar h1 { margin: 0; font-size: 26px; font-weight: 700; flex: 1; line-height: 1.3; }
 .icon-btn { width: 24px; height: 24px; display: grid; place-items: center; background: none; border: 0; padding: 0; cursor: pointer; }
 .row { margin-bottom: 22px; }
-.row h2 { margin: 0 0 10px; padding: 0 16px; font-size: 19px; font-weight: 700; line-height: 23px; letter-spacing: -0.005em; }
+.row h2 { margin: 0 0 10px; padding: 0 16px; font-size: 19px; font-weight: 700; line-height: 30px; }
 .strip {
   position: relative;
   height: 206px;
@@ -130,10 +132,11 @@ button, input { font: inherit; color: inherit; }
 }
 .poster img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
 .tag {
-  position: absolute; left: 15px; right: 15px; top: 6px;
-  height: 18px; border-radius: 3px;
+  position: absolute; left: 50%; top: 6px;
+  transform: translateX(-50%);
+  height: 18px; padding: 0 6px; border-radius: 3px;
   background: var(--tag-red);
-  font-size: 10px; font-weight: 600; line-height: 18px; text-align: center;
+  font-size: 10px; font-weight: 600; line-height: 18px; text-align: center; white-space: nowrap;
 }
 .shade {
   position: absolute; inset: 0;
@@ -198,8 +201,7 @@ button, input { font: inherit; color: inherit; }
 .lt-name {
   font-size: var(--title-size);
   font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
+  line-height: 1.32;
   text-wrap: balance;
   text-shadow: 0 1px 10px rgba(0,0,0,0.5);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
@@ -221,7 +223,7 @@ button, input { font: inherit; color: inherit; }
   position: absolute; left: 0; right: 0; top: 0;
   margin: 0;
   text-align: center;
-  font-size: 13px; line-height: 1.45; font-weight: 500;
+  font-size: 13px; line-height: 1.6; font-weight: 500;
   color: rgba(255,255,255,0.8);
   text-wrap: pretty;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
@@ -330,7 +332,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
 <div class="stage">
   <div class="phone-slot" id="phoneSlot">
     <div class="phone" id="phone">
-      <div class="screen" id="screen">
+      <div class="screen" id="screen" lang="hi">
         <div class="statusbar" aria-hidden="true">
           <span>3:59</span>
           <span class="ind">
@@ -341,11 +343,11 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
 
         <div class="scroller" id="scroller">
           <div class="appbar">
-            <button class="icon-btn" type="button" aria-label="Back">
+            <button class="icon-btn" type="button" aria-label="वापस">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5M11 5l-7 7 7 7"/></svg>
             </button>
-            <h1>Movies</h1>
-            <button class="icon-btn" type="button" aria-label="Cast to device">
+            <h1>फ़िल्में</h1>
+            <button class="icon-btn" type="button" aria-label="डिवाइस पर कास्ट करें">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3 8V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><path d="M3 12a8 8 0 0 1 8 8M3 16a4 4 0 0 1 4 4"/><circle cx="3.5" cy="19.5" r="0.6" fill="#fff"/></svg>
             </button>
           </div>
@@ -354,7 +356,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
 
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
         <div id="gist"></div>
-        <button class="quick-view" id="quickView" type="button" aria-pressed="false" aria-label="Quick view: scan titles and stories" title="Quick view">
+        <button class="quick-view" id="quickView" type="button" aria-pressed="false" aria-label="क्विक व्यू: नाम और कहानी देखें" title="क्विक व्यू">
           <span class="qv-icon" aria-hidden="true">
             <svg class="qv-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></svg>
             <svg class="qv-x" width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
@@ -363,20 +365,20 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         <div class="ghost" id="ghost" aria-hidden="true"></div>
 
         <div class="navfade"></div>
-        <nav class="bottomnav" aria-label="Main">
+        <nav class="bottomnav" aria-label="मुख्य">
           <button class="tab on" type="button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M9.5 14.5h5" stroke-linecap="round"/></svg>
-            Home
+            होम
           </button>
           <button class="tab" type="button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b8b8b8" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M10.5 9.5v5l4-2.5z" fill="#b8b8b8"/></svg>
-            Clips
+            क्लिप्स
           </button>
           <button class="tab" type="button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b8b8b8" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-            Search
+            खोजें
           </button>
-          <button class="tab" type="button"><span class="avatar" aria-hidden="true"></span>Profile</button>
+          <button class="tab" type="button"><span class="avatar" aria-hidden="true"></span>प्रोफ़ाइल</button>
         </nav>
         <div class="home-ind" aria-hidden="true"></div>
       </div>
@@ -407,15 +409,15 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         <input type="range" id="optZoom" min="1.08" max="1.24" step="0.01" value="1.18">
       </div>
       <div class="ctl">
-        <div class="ctl-head"><label for="optTitle">Title size</label><output id="outTitle" for="optTitle">15 px</output></div>
-        <input type="range" id="optTitle" min="13" max="19" step="1" value="15">
+        <div class="ctl-head"><label for="optTitle">Title size</label><output id="outTitle" for="optTitle">16 px</output></div>
+        <input type="range" id="optTitle" min="13" max="20" step="1" value="16">
       </div>
       <button class="demo-btn" type="button" id="demoBtn">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="#000"><path d="M2 1.2v11.6L12.5 7z"/></svg>
         Play demo
       </button>
     </div>
-    <p class="footnote">The gists are sample copy for testing, apart from Money Heist, which uses the text you supplied.</p>
+    <p class="footnote">The app is in Hindi. The first row uses Hindi posters from netflix.com/in-hi; other rows mix in English posters with Hindi titles. Genres and gists are sample copy for testing, apart from Money Heist, which uses the text you supplied.</p>
   </aside>
 </div>
 
@@ -426,45 +428,67 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
 
   // ---------- content ----------
   const INFO = {
-    dark:           { title: "Dark",                       meta: "Series · Sci-fi thriller",
-                    gist: "A missing child sets four families on a frantic hunt for answers in a small German town, unearthing a time-travel mystery that spans three generations." },
-    moneyheist:     { title: "Money Heist",                meta: "Part 5 · Heist thriller",
-                    gist: "Hailed as \"the most addictive show on TV\" by Film Daily, this thrilling heist series won Best Drama at the International Emmys and the Premios Fénix." },
-    hillhouse:      { title: "The Haunting of Hill House", meta: "Series · Horror",
-                    gist: "Flashing between past and present, a fractured family confronts haunting memories of their old home and the terrifying events that drove them from it." },
-    strangerthings: { title: "Stranger Things",            meta: "Season 4 · Sci-fi horror",
-                    gist: "Months after the battle at Starcourt, the friends are scattered across the country as a new horror rises in Hawkins, with a gruesome curse at its heart." },
-    maharaja:       { title: "Maharaja",                   meta: "2024 · Tamil thriller",
-                    gist: "A soft-spoken barber walks into a police station to report a stolen dustbin, but his oddly insistent complaint hides a far darker story of revenge." },
-    luckybaskhar:   { title: "Lucky Baskhar",              meta: "2024 · Crime drama",
-                    gist: "A cash-strapped bank cashier in 1980s Bombay stumbles into a risky money-making scheme that spirals into a high-stakes game of greed and survival." },
-    jagame:         { title: "Jagame Thandhiram",          meta: "2021 · Gangster drama",
-                    gist: "A hot-headed gangster from Madurai is hired by a London crime boss to take down a rival, and soon finds his loyalties tested far from home." },
-    meiyazhagan:    { title: "Meiyazhagan",                meta: "2024 · Family drama",
-                    gist: "Back in his ancestral town for a wedding after decades away, a man is warmly adopted for the night by a cheerful relative whose name he can't recall." },
-    thunivu:        { title: "Thunivu",                    meta: "2023 · Heist action",
-                    gist: "A daring bank heist in Chennai takes a sharp turn when a mysterious mastermind among the robbers reveals that he has a much bigger plan." },
-    leo:            { title: "Leo",                        meta: "2023 · Action thriller",
-                    gist: "A mild café owner in the hills becomes a local hero after fending off armed robbers, drawing a ruthless gang convinced he is someone else." },
-    kantara:        { title: "Kantara",                    meta: "2022 · Action drama",
-                    gist: "In a coastal Karnataka village, a defiant young man clashes with a forest officer while an ancient spirit and its rituals guard the land's fragile peace." },
-    gunturkaaram:   { title: "Guntur Kaaram",              meta: "2024 · Action drama",
-                    gist: "Years after his mother left to remarry, a fiery Guntur man is pressed to sign away his claim to her family, reopening old wounds and rivalries." },
-    grayman:        { title: "The Gray Man",               meta: "2022 · Action thriller",
-                    gist: "When a CIA operative uncovers dark agency secrets, a former colleague turned freelance killer puts a bounty on his head, setting off a global manhunt." },
-    adamproject:    { title: "The Adam Project",           meta: "2022 · Sci-fi adventure",
-                    gist: "A time-travelling pilot crash-lands in 2022 and teams up with his 12-year-old self on a mission to save the future and face their past." },
-    purplehearts:   { title: "Purple Hearts",              meta: "2022 · Romance",
-                    gist: "A struggling singer-songwriter and a troubled Marine agree to a marriage of convenience for the benefits, until real feelings complicate the deal." },
-    scoop:          { title: "Scoop",                      meta: "2024 · Drama",
-                    gist: "The inside story of how a determined Newsnight producer and her team landed the BBC's explosive interview with Prince Andrew." },
+    // Hindi posters (netflix.com/in-hi). Genres and gists here are placeholder copy for testing.
+    akka:           { title: "अक्का", meta: "सीरीज़ · पीरियड ड्रामा",
+                      gist: "एक छोटे से कस्बे में एक ताक़तवर औरत अपने परिवार और विरासत को बचाने के लिए हर नियम तोड़ने को तैयार है। पर उसका सबसे बड़ा दुश्मन अपनों के बीच ही छिपा है।" },
+    baththa:        { title: "बत्था", meta: "फ़िल्म · एक्शन ड्रामा",
+                      gist: "पुराने इलाक़े का एक बेख़ौफ़ आदमी अपने लोगों के लिए एक ताक़तवर गिरोह से भिड़ जाता है, और एक ही रात में पूरे शहर की तस्वीर बदल जाती है।" },
+    vishwanath:     { title: "विश्वनाथ एंड संस", meta: "फ़िल्म · फ़ैमिली ड्रामा",
+                      gist: "एक व्यस्त पिता को अचानक अपने नन्हे बेटे की पूरी ज़िम्मेदारी संभालनी पड़ती है। काम, परिवार और गड़बड़ियों के बीच वह पिता होने का असली मतलब सीखता है।" },
+    paradise:       { title: "पैराडाइज़", meta: "फ़िल्म · एक्शन",
+                      gist: "हथियारों और हिंसा से घिरी बस्ती में एक बाग़ी नौजवान उठ खड़ा होता है, जो अपने लोगों को उनका खोया हुआ स्वर्ग लौटाने की क़सम खाता है।" },
+    gajabraat:      { title: "गज़ब रात", meta: "फ़िल्म · कॉमेडी थ्रिलर",
+                      gist: "एक फ़ोन कॉल से शुरू हुई एक अजीब रात, जिसमें एक आम आदमी अनचाहे हादसों, ग़लतफ़हमियों और ख़तरनाक लोगों के जाल में फँसता चला जाता है।" },
+    dorothy:        { title: "डोरोथी", meta: "फ़िल्म · कॉमेडी ड्रामा",
+                      gist: "रंगों से भरे एक कस्बे में डोरोथी की ज़िंदगी तब उलट-पुलट हो जाती है, जब दो बिल्कुल अलग लोग एक ही वक़्त में उसकी कहानी का हिस्सा बन जाते हैं।" },
+    irumudi:        { title: "इरुमुडी", meta: "फ़िल्म · फ़ैमिली ड्रामा",
+                      gist: "एक पिता अपनी बेटी से किया वादा निभाने के लिए एक लंबे सफ़र पर निकलता है, जहाँ हर मोड़ पर उसके धीरज और प्यार की परीक्षा होती है।" },
+    mandaadi:       { title: "मंदाडी – नाविकों का सरदार", meta: "फ़िल्म · स्पोर्ट्स ड्रामा",
+                      gist: "समंदर किनारे के एक गाँव में नाव दौड़ सिर्फ़ खेल नहीं, इज़्ज़त की लड़ाई है। एक नाविक अपने लोगों के सम्मान के लिए तूफ़ानी लहरों से टकराता है।" },
+    donttrouble:    { title: "डोंट ट्रबल द ट्रबल", meta: "फ़िल्म · फ़ैंटेसी कॉमेडी",
+                      gist: "एक ज़िंदादिल लड़की और बड़े बच्चे जैसा एक आदमी मिलकर जादुई मुसीबतों में फँसते हैं, और साबित करते हैं कि मुसीबत को छेड़ना ठीक नहीं।" },
+    sigma:          { title: "सिग्मा", meta: "फ़िल्म · एक्शन थ्रिलर",
+                      gist: "एक बंद पड़ी फ़ैक्टरी में छिपे राज़ की तलाश एक नौजवान को अपराध की ऐसी दुनिया में ले जाती है, जहाँ से लौटना आसान नहीं।" },
+    // English posters, with titles and copy in Hindi
+    dark:           { title: "डार्क", meta: "सीरीज़ · साइंस-फ़िक्शन थ्रिलर",
+                      gist: "एक जर्मन कस्बे में एक बच्चे के ग़ायब होने से चार परिवार जवाबों की तलाश में जुट जाते हैं, और तीन पीढ़ियों तक फैला टाइम-ट्रैवल का रहस्य खुलने लगता है।" },
+    moneyheist:     { title: "मनी हाइस्ट", meta: "भाग 5 · हाइस्ट थ्रिलर",
+                      gist: "फ़िल्म डेली ने इसे \"टीवी का सबसे लत लगाने वाला शो\" कहा। इस रोमांचक हाइस्ट सीरीज़ ने इंटरनेशनल एमी और प्रेमियोस फ़ेनिक्स में बेस्ट ड्रामा का अवॉर्ड जीता।" },
+    hillhouse:      { title: "द हॉन्टिंग ऑफ़ हिल हाउस", meta: "सीरीज़ · हॉरर",
+                      gist: "अतीत और वर्तमान के बीच झूलता एक बिखरा परिवार अपने पुराने घर की डरावनी यादों और उन घटनाओं का सामना करता है, जिनकी वजह से वे वहाँ से भागे थे।" },
+    strangerthings: { title: "स्ट्रेंजर थिंग्स", meta: "सीज़न 4 · साइंस-फ़िक्शन हॉरर",
+                      gist: "स्टारकोर्ट की लड़ाई के महीनों बाद दोस्त अलग-अलग शहरों में बिखर गए हैं, और हॉकिन्स में एक भयानक श्राप के साथ नया आतंक उठ खड़ा होता है।" },
+    maharaja:       { title: "महाराजा", meta: "2024 · तमिल थ्रिलर",
+                      gist: "एक शांत स्वभाव का नाई अपने चोरी हुए कूड़ेदान की शिकायत लेकर पुलिस थाने पहुँचता है, पर उसकी ज़िद के पीछे बदले की एक गहरी कहानी छिपी है।" },
+    luckybaskhar:   { title: "लकी भास्कर", meta: "2024 · क्राइम ड्रामा",
+                      gist: "1980 के दशक की बंबई में पैसों की तंगी से जूझता एक बैंक कैशियर एक जोखिम भरी स्कीम में फँस जाता है, जो लालच और बचाव का ख़तरनाक खेल बन जाती है।" },
+    jagame:         { title: "जगमे तंदिरम", meta: "2021 · गैंगस्टर ड्रामा",
+                      gist: "मदुरै के एक ग़ुस्सैल गैंगस्टर को लंदन का एक क्राइम बॉस अपने दुश्मन को ख़त्म करने के लिए बुलाता है, और घर से दूर उसकी वफ़ादारी की परीक्षा होती है।" },
+    meiyazhagan:    { title: "मेय्यळगन", meta: "2024 · फ़ैमिली ड्रामा",
+                      gist: "दशकों बाद एक शादी के लिए अपने पुश्तैनी कस्बे लौटे आदमी को एक हँसमुख रिश्तेदार अपना लेता है, जिसका नाम उसे याद ही नहीं आता।" },
+    thunivu:        { title: "तुनिवु", meta: "2023 · हाइस्ट एक्शन",
+                      gist: "चेन्नई में एक बैंक डकैती तब नया मोड़ ले लेती है, जब लुटेरों के बीच छिपा एक रहस्यमयी मास्टरमाइंड अपनी कहीं बड़ी योजना का खुलासा करता है।" },
+    leo:            { title: "लियो", meta: "2023 · एक्शन थ्रिलर",
+                      gist: "पहाड़ों में कैफ़े चलाने वाला एक सीधा-सादा आदमी हथियारबंद लुटेरों से भिड़कर हीरो बन जाता है, और एक बेरहम गैंग उसे कोई और समझने लगता है।" },
+    kantara:        { title: "कांतारा", meta: "2022 · एक्शन ड्रामा",
+                      gist: "कर्नाटक के तटीय गाँव में एक ज़िद्दी नौजवान वन अधिकारी से टकराता है, जबकि एक प्राचीन देवता और उसकी परंपराएँ ज़मीन की नाज़ुक शांति की रक्षा करती हैं।" },
+    gunturkaaram:   { title: "गुंटूर कारम", meta: "2024 · एक्शन ड्रामा",
+                      gist: "माँ के दूसरी शादी करके चले जाने के सालों बाद, गुंटूर के एक तेज़-तर्रार आदमी पर उसके परिवार से रिश्ता तोड़ने का दबाव डाला जाता है।" },
+    grayman:        { title: "द ग्रे मैन", meta: "2022 · एक्शन थ्रिलर",
+                      gist: "जब एक CIA एजेंट एजेंसी के काले राज़ खोज लेता है, तो उसका पूर्व साथी उसके सिर पर इनाम रख देता है, और दुनिया भर में उसकी तलाश शुरू हो जाती है।" },
+    adamproject:    { title: "द ऐडम प्रोजेक्ट", meta: "2022 · साइंस-फ़िक्शन एडवेंचर",
+                      gist: "समय में सफ़र करने वाला एक पायलट 2022 में आ गिरता है और भविष्य बचाने के मिशन पर अपने 12 साल के रूप के साथ टीम बनाता है।" },
+    purplehearts:   { title: "पर्पल हार्ट्स", meta: "2022 · रोमांस",
+                      gist: "संघर्ष कर रही एक गायिका और एक परेशान मरीन फ़ायदों के लिए कागज़ी शादी करते हैं, पर सच्ची भावनाएँ इस सौदे को उलझा देती हैं।" },
+    scoop:          { title: "स्कूप", meta: "2024 · ड्रामा",
+                      gist: "न्यूज़नाइट की एक जुझारू प्रोड्यूसर और उसकी टीम ने प्रिंस एंड्रयू के साथ BBC का धमाकेदार इंटरव्यू कैसे हासिल किया, उसकी अंदरूनी कहानी।" },
   };
   const ROWS = [
-    { title: "Movies Based on Books", items: ["dark", "moneyheist", "hillhouse", "strangerthings", "grayman", "adamproject", "scoop", "purplehearts", "leo"] },
-    { title: "Today's Top Picks for You", items: [["maharaja", "Recently added"], "luckybaskhar", "jagame", "meiyazhagan", "kantara", "grayman", "strangerthings", "thunivu", "dark"] },
-    { title: "Feel All the Feels", items: ["thunivu", "leo", "kantara", "gunturkaaram", "purplehearts", "meiyazhagan", "moneyheist", "luckybaskhar", "adamproject"] },
-    { title: "Emotional Movies Based on Books", items: ["purplehearts", "scoop", "meiyazhagan", "hillhouse", "maharaja", "gunturkaaram", "jagame", "grayman", "dark"] },
-    { title: "Trending Now", items: ["grayman", "adamproject", "strangerthings", "leo", "luckybaskhar", "moneyheist", "scoop", "kantara", "thunivu"] },
+    { title: "ट्रेंडिंग नाउ", items: ["akka", "baththa", "vishwanath", "paradise", "gajabraat", "dorothy", "irumudi", "mandaadi", "donttrouble", "sigma"] },
+    { title: "आज आपके लिए टॉप पिक्स", items: [["maharaja", "हाल ही में जोड़ा गया"], "luckybaskhar", "akka", "jagame", "paradise", "meiyazhagan", "kantara", "irumudi", "grayman"] },
+    { title: "किताबों पर आधारित फ़िल्में", items: ["dark", "moneyheist", "hillhouse", "strangerthings", "vishwanath", "adamproject", "scoop", "purplehearts", "leo"] },
+    { title: "दिल को छू लेने वाली", items: ["thunivu", "dorothy", "leo", "gajabraat", "gunturkaaram", "purplehearts", "mandaadi", "meiyazhagan", "donttrouble"] },
+    { title: "भावुक कर देने वाली कहानियाँ", items: ["baththa", "scoop", "hillhouse", "maharaja", "sigma", "jagame", "adamproject", "dark", "moneyheist"] },
   ];
 
   // Geometry straight from the Figma frame.
@@ -673,8 +697,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   function setQuickViewButton(on) {
     qvBtn.classList.toggle("on", on);
     qvBtn.setAttribute("aria-pressed", String(on));
-    qvBtn.setAttribute("aria-label", on ? "Close quick view" : "Quick view: scan titles and stories");
-    qvBtn.title = on ? "Close quick view" : "Quick view";
+    qvBtn.setAttribute("aria-label", on ? "क्विक व्यू बंद करें" : "क्विक व्यू: नाम और कहानी देखें");
+    qvBtn.title = on ? "क्विक व्यू बंद करें" : "क्विक व्यू";
   }
   function exitFocus() {
     if (!focus.on) return;
