@@ -91,6 +91,8 @@ button, input { font: inherit; color: inherit; }
   z-index: 1;
 }
 .scroller::-webkit-scrollbar { display: none; }
+.scroller { overflow-anchor: none; transition: padding-bottom 0.3s; }
+.screen.focus .scroller { padding-bottom: 420px; }   /* lets the last rows reach the focus line */
 .appbar {
   height: 52px; margin: 4px 0 12px;
   display: flex; align-items: center; gap: 24px;
@@ -208,6 +210,40 @@ button, input { font: inherit; color: inherit; }
   color: rgba(255,255,255,0.74);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+#gist {
+  position: absolute; left: 0; top: 0;
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.gt {
+  position: absolute; left: 0; right: 0; top: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 13px; line-height: 1.45; font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  text-wrap: pretty;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  will-change: transform, opacity;
+}
+.exit-focus {
+  position: absolute; right: 18px; bottom: 112px;
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(36,36,38,0.78);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  cursor: pointer;
+  z-index: 7;
+  opacity: 0; transform: scale(0.6); pointer-events: none;
+  transition: opacity 0.25s, transform 0.3s cubic-bezier(.2,.9,.3,1.3);
+}
+.exit-focus.on { opacity: 1; transform: scale(1); pointer-events: auto; }
+.exit-focus:hover { background: rgba(56,56,60,0.85); }
+.exit-focus:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .ghost {
   position: absolute; left: 0; top: 0;
   width: 44px; height: 44px; margin: -22px 0 0 -22px;
@@ -299,6 +335,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   .bottomnav { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
   .home-ind { display: none; }
   .hint { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+  .exit-focus { right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .hint-dot::before { animation: none; }
@@ -332,9 +369,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         </div>
 
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
+        <div id="gist"></div>
+        <button class="exit-focus" id="exitFocus" type="button" aria-label="Exit focus mode" title="Exit focus mode">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
+        </button>
         <div class="ghost" id="ghost" aria-hidden="true"></div>
 
-        <div class="hint" id="hint"><span class="hint-dot" aria-hidden="true"></span>Long-press a poster to open the lens</div>
+        <div class="hint" id="hint"><span class="hint-dot" aria-hidden="true"></span>Long-press a poster to start focus mode</div>
         <div class="navfade"></div>
         <nav class="bottomnav" aria-label="Main">
           <button class="tab on" type="button">
@@ -361,12 +402,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <div class="eyebrow">Interaction prototype</div>
       <h2>Focus Lens</h2>
     </div>
-    <p>Titles baked into poster art are hard to read. Every poster has its own typeface, size and contrast. Rows scroll normally. Long-press any poster and it glides to the centre, zooms in and gets a glass panel over its darkened lower edge with the title in one clear style. The artwork stays exactly as designed.</p>
+    <p>Poster art makes titles hard to read, and checking what a film is about usually means opening it and coming back. Long-press any poster to start focus mode. The poster in the centre zooms in, its title sits on a glass panel and a three-line gist appears below it. Scroll down and each row pops in turn, so you can scan and compare without opening anything.</p>
     <ul class="howto">
-      <li><b>Scroll</b><span>Drag a row as usual. No lens, just a normal carousel.</span></li>
-      <li><b>Hold</b><span>Long-press a poster. It glides to the centre and its title appears on the glass.</span></li>
-      <li><b>Slide</b><span>With the lens open, drag the row. Each poster takes its turn in the centre.</span></li>
-      <li><b>Close</b><span>Tap anywhere outside that row and the lens goes away.</span></li>
+      <li><b>Scroll</b><span>Rows scroll normally until you start focus mode.</span></li>
+      <li><b>Hold</b><span>Long-press a poster. It glides to the centre with its title and gist.</span></li>
+      <li><b>Slide</b><span>Drag the row. Each poster takes its turn, and the gist changes with it.</span></li>
+      <li><b>Scan</b><span>Scroll the page. Whichever row reaches the middle of the screen pops on its own.</span></li>
+      <li><b>Exit</b><span>Tap the round × button at the bottom right, or press Esc.</span></li>
     </ul>
     <div class="controls">
       <div class="switch-row">
@@ -386,7 +428,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         Play demo
       </button>
     </div>
-    <p class="footnote">While the lens is open the row can travel a little past its ends, so the first and last posters can also reach the centre. When the lens closes, the row eases back.</p>
+    <p class="footnote">The gists are sample copy for testing, apart from Money Heist, which uses the text you supplied.</p>
   </aside>
 </div>
 
@@ -397,22 +439,38 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
 
   // ---------- content ----------
   const INFO = {
-    dark:           { title: "Dark",                       meta: "Series · Sci-fi thriller" },
-    moneyheist:     { title: "Money Heist",                meta: "Part 5 · Heist thriller" },
-    hillhouse:      { title: "The Haunting of Hill House", meta: "Series · Horror" },
-    strangerthings: { title: "Stranger Things",            meta: "Season 4 · Sci-fi horror" },
-    maharaja:       { title: "Maharaja",                   meta: "2024 · Tamil thriller" },
-    luckybaskhar:   { title: "Lucky Baskhar",              meta: "2024 · Crime drama" },
-    jagame:         { title: "Jagame Thandhiram",          meta: "2021 · Gangster drama" },
-    meiyazhagan:    { title: "Meiyazhagan",                meta: "2024 · Family drama" },
-    thunivu:        { title: "Thunivu",                    meta: "2023 · Heist action" },
-    leo:            { title: "Leo",                        meta: "2023 · Action thriller" },
-    kantara:        { title: "Kantara",                    meta: "2022 · Action drama" },
-    gunturkaaram:   { title: "Guntur Kaaram",              meta: "2024 · Action drama" },
-    grayman:        { title: "The Gray Man",               meta: "2022 · Action thriller" },
-    adamproject:    { title: "The Adam Project",           meta: "2022 · Sci-fi adventure" },
-    purplehearts:   { title: "Purple Hearts",              meta: "2022 · Romance" },
-    scoop:          { title: "Scoop",                      meta: "2024 · Drama" },
+    dark:           { title: "Dark",                       meta: "Series · Sci-fi thriller",
+                    gist: "A missing child sets four families on a frantic hunt for answers in a small German town, unearthing a time-travel mystery that spans three generations." },
+    moneyheist:     { title: "Money Heist",                meta: "Part 5 · Heist thriller",
+                    gist: "Hailed as \"the most addictive show on TV\" by Film Daily, this thrilling heist series won Best Drama at the International Emmys and the Premios Fénix." },
+    hillhouse:      { title: "The Haunting of Hill House", meta: "Series · Horror",
+                    gist: "Flashing between past and present, a fractured family confronts haunting memories of their old home and the terrifying events that drove them from it." },
+    strangerthings: { title: "Stranger Things",            meta: "Season 4 · Sci-fi horror",
+                    gist: "Months after the battle at Starcourt, the friends are scattered across the country as a new horror rises in Hawkins, with a gruesome curse at its heart." },
+    maharaja:       { title: "Maharaja",                   meta: "2024 · Tamil thriller",
+                    gist: "A soft-spoken barber walks into a police station to report a stolen dustbin, but his oddly insistent complaint hides a far darker story of revenge." },
+    luckybaskhar:   { title: "Lucky Baskhar",              meta: "2024 · Crime drama",
+                    gist: "A cash-strapped bank cashier in 1980s Bombay stumbles into a risky money-making scheme that spirals into a high-stakes game of greed and survival." },
+    jagame:         { title: "Jagame Thandhiram",          meta: "2021 · Gangster drama",
+                    gist: "A hot-headed gangster from Madurai is hired by a London crime boss to take down a rival, and soon finds his loyalties tested far from home." },
+    meiyazhagan:    { title: "Meiyazhagan",                meta: "2024 · Family drama",
+                    gist: "Back in his ancestral town for a wedding after decades away, a man is warmly adopted for the night by a cheerful relative whose name he can't recall." },
+    thunivu:        { title: "Thunivu",                    meta: "2023 · Heist action",
+                    gist: "A daring bank heist in Chennai takes a sharp turn when a mysterious mastermind among the robbers reveals that he has a much bigger plan." },
+    leo:            { title: "Leo",                        meta: "2023 · Action thriller",
+                    gist: "A mild café owner in the hills becomes a local hero after fending off armed robbers, drawing a ruthless gang convinced he is someone else." },
+    kantara:        { title: "Kantara",                    meta: "2022 · Action drama",
+                    gist: "In a coastal Karnataka village, a defiant young man clashes with a forest officer while an ancient spirit and its rituals guard the land's fragile peace." },
+    gunturkaaram:   { title: "Guntur Kaaram",              meta: "2024 · Action drama",
+                    gist: "Years after his mother left to remarry, a fiery Guntur man is pressed to sign away his claim to her family, reopening old wounds and rivalries." },
+    grayman:        { title: "The Gray Man",               meta: "2022 · Action thriller",
+                    gist: "When a CIA operative uncovers dark agency secrets, a former colleague turned freelance killer puts a bounty on his head, setting off a global manhunt." },
+    adamproject:    { title: "The Adam Project",           meta: "2022 · Sci-fi adventure",
+                    gist: "A time-travelling pilot crash-lands in 2022 and teams up with his 12-year-old self on a mission to save the future and face their past." },
+    purplehearts:   { title: "Purple Hearts",              meta: "2022 · Romance",
+                    gist: "A struggling singer-songwriter and a troubled Marine agree to a marriage of convenience for the benefits, until real feelings complicate the deal." },
+    scoop:          { title: "Scoop",                      meta: "2024 · Drama",
+                    gist: "The inside story of how a determined Newsnight producer and her team landed the BBC's explosive interview with Prince Andrew." },
   };
   const ROWS = [
     { title: "Movies Based on Books", items: ["dark", "moneyheist", "hillhouse", "strangerthings", "grayman", "adamproject", "scoop", "purplehearts", "leo"] },
@@ -430,7 +488,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const DECAY = 4.5;       // fling friction (1/s): a fling travels about v / DECAY px
   const TITLE_SLIDE = 22;  // px a title drifts while it hands over to the next one
   const LONG_PRESS = 450;  // ms
-  const DIM = 0.25;        // how much the neighbours darken while the lens is open
+  const DIM = 0.25;        // how much the neighbours darken in the focused row
+  const GIST_GAP = 12;     // px between the zoomed poster and its gist
+  const FOCUS_LINE = 0.36; // where on screen (fraction of height) a row takes focus while you scroll
 
   const CFG = { lens: true, zoom: 1.18 };
   const glassW = () => Math.round(PW * CFG.zoom - GLASS_INSET * 2);
@@ -440,7 +500,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
   const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot"), scroller = $("scroller");
-  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass");
+  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), exitBtn = $("exitFocus");
   const ghost = $("ghost"), hint = $("hint");
   const POSTERS = window.POSTERS || {};
 
@@ -484,7 +544,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     strip.appendChild(track);
     sec.append(h, strip);
     rowsEl.appendChild(sec);
-    const row = { i: ri, sec, h, strip, track, els, shades, items, x: 0, raw: 0, v: 0, anim: false, snap: null, max: 0, trackW: PADX * 2 + items.length * STEP - GAP, samples: [], styled: false };
+    const row = { i: ri, sec, h, strip, track, els, shades, items, x: 0, raw: 0, v: 0, anim: false, snap: null, max: 0, trackW: PADX * 2 + items.length * STEP - GAP, samples: [], styled: false, lp: { x: 0, v: 0 } };
     attachGestures(row);
     return row;
   });
@@ -526,26 +586,29 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     s.x += s.v * dt;
   }
 
-  // ---------- lens state ----------
-  // Long-pressing a poster opens the lens in the centre of the carousel. The poster in the centre zooms
-  // in slightly (no distortion) and a glass panel over its lower edge carries the title. Posters pass
-  // through as the row scrolls. A tap anywhere outside the row closes it.
-  const lens = { row: null, show: false, p: { x: 0, v: 0 }, tick: -1 };
-  let titles = [];
+  // ---------- focus mode ----------
+  // Long-pressing a poster starts focus mode. One row at a time holds the lens: its centre poster zooms
+  // in (no distortion), a glass panel carries the title and the gist sits underneath. Scrolling the page
+  // hands the lens to the row that reaches the focus line. The floating button ends focus mode.
+  const focus = { on: false, row: null, ovRow: null, tick: -1, scrollRef: 0, lockUntil: 0 };
+  let titles = [], gists = [], gistH = 0;
 
   const lensX = () => W / 2;
+  const gistW = () => Math.min(W - 40, 340);
   const posUnder = (r) => (lensX() + r.x - PADX - PW / 2) / STEP;   // continuous poster index in the centre
   const posterCenter = (i) => PADX + i * STEP + PW / 2;            // in track coordinates
   const centredX = (i) => posterCenter(i) - lensX();               // row offset that puts poster i in the centre
+  const nearestIndex = (r) => clamp(Math.round(posUnder(r)), 0, r.items.length - 1);
 
-  // While the lens is up the row may travel far enough for the first and last posters to reach the centre.
+  // The focused row may travel far enough for the first and last posters to reach the centre.
   function bounds(r) {
-    if (lens.row === r && lens.show) return [centredX(0), centredX(r.items.length - 1)];
+    if (focus.row === r) return [centredX(0), centredX(r.items.length - 1)];
     return [0, r.max];
   }
 
-  function buildTitles(r) {
+  function buildOverlay(r) {
     glass.replaceChildren();
+    gistEl.replaceChildren();
     titles = r.items.map((it) => {
       const info = INFO[it.key];
       const el = document.createElement("div");
@@ -561,48 +624,66 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       glass.appendChild(el);
       return { el, h: 0, op: 0 };
     });
-    measureTitles();
+    gists = r.items.map((it) => {
+      const el = document.createElement("p");
+      el.className = "gt";
+      el.textContent = INFO[it.key].gist;
+      el.style.opacity = "0";
+      gistEl.appendChild(el);
+      return { el, op: 0 };
+    });
+    focus.ovRow = r;
+    measureOverlay();
   }
-  function measureTitles() {
+  function clearOverlay() {
+    glass.replaceChildren();
+    gistEl.replaceChildren();
+    titles = []; gists = [];
+    focus.ovRow = null;
+  }
+  function measureOverlay() {
     glass.style.width = glassW() + "px";
+    gistEl.style.width = gistW() + "px";
     for (const t of titles) t.h = t.el.offsetHeight;
+    gistH = gists.reduce((m, g) => Math.max(m, g.el.offsetHeight), 0);
   }
   function resetPosters(r) {
-    if (!r.styled) return;
     for (const el of r.els) { el.style.transform = ""; el.style.filter = ""; el.style.zIndex = ""; }
     for (const sh of r.shades) sh.style.opacity = "";
     r.h.style.marginBottom = r.sec.style.marginBottom = "";
     r.styled = false;
   }
-  function releaseLensRow() {
-    if (lens.row) resetPosters(lens.row);
-    lens.row = null;
-    lens.show = false;
-    glass.replaceChildren();
-    titles = [];
-  }
-  function showLens(r) {
-    if (!CFG.lens) return false;
-    if (lens.row !== r) {
-      if (lens.row) {
-        const old = lens.row;
-        releaseLensRow();
-        old.snap = null; old.anim = true;        // let the old row ease back inside its normal bounds
-      }
-      lens.row = r;
-      lens.p.x = 0; lens.p.v = 0;
-      lens.tick = Math.round(posUnder(r));
-      buildTitles(r);
+
+  function setActive(r, i) {
+    if (focus.row !== r) {
+      const old = focus.row;
+      if (old) { old.snap = null; old.anim = true; }   // ease back inside its normal bounds
+      focus.row = r;
+      if (i == null) i = nearestIndex(r);
+      focus.tick = i;
+      buildOverlay(r);
     }
-    lens.show = true;
-    kick();
+    centrePoster(r, i == null ? nearestIndex(r) : i);
+  }
+  function enterFocus(r, i) {
+    if (!CFG.lens) return false;
+    focus.on = true;
+    focus.scrollRef = scroller.scrollTop;
+    screenEl.classList.add("focus");
+    exitBtn.classList.add("on");
+    hint.classList.add("gone");
+    setActive(r, i);
     return true;
   }
-  function closeLens() {
-    if (!lens.row || !lens.show) return;
-    lens.show = false;
-    const r = lens.row;
-    r.snap = null; r.anim = true;               // ease back inside the normal bounds while the lens fades
+  function exitFocus() {
+    if (!focus.on) return;
+    focus.on = false;
+    const r = focus.row;
+    focus.row = null;
+    if (r) { r.snap = null; r.anim = true; }
+    screenEl.classList.remove("focus");
+    exitBtn.classList.remove("on");
+    if (!interacted) hint.classList.remove("gone");
     kick();
   }
   function centrePoster(r, i) {
@@ -610,6 +691,50 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     r.snap = centredX(clamp(i, 0, r.items.length - 1));
     r.anim = true;
     kick();
+  }
+
+  // The row nearest a line a third of the way down the screen holds focus while you scroll.
+  function focusLine() {
+    const sRect = screenEl.getBoundingClientRect();
+    const st = scroller.scrollTop;
+    // Compare rows at their normal positions, ignoring the room a focused row adds, so the hand-over
+    // happens at a steady rhythm whichever row currently holds focus.
+    const above = new Map();
+    let acc = 0;
+    for (const r of rows) {
+      const top = (parseFloat(r.h.style.marginBottom) || 10) - 10;
+      const bottom = (parseFloat(r.sec.style.marginBottom) || 22) - 22;
+      above.set(r, acc + top);
+      acc += top + bottom;
+    }
+    const centre = (r) => { const t = r.strip.getBoundingClientRect(); return ((t.top + t.bottom) / 2 - sRect.top) / scale + st - above.get(r); };
+    return { line: st + screenEl.clientHeight * FOCUS_LINE, centre };
+  }
+  function followScroll() {
+    if (!focus.on || !focus.row) return;
+    if (gesture && gesture.state === "scrub") return;
+    if (performance.now() < focus.lockUntil) return;
+    if (focus.scrollRef != null) {                                     // don't jump rows on the first tiny nudge
+      if (Math.abs(scroller.scrollTop - focus.scrollRef) < 24) return;
+      focus.scrollRef = null;
+    }
+    const { line, centre } = focusLine();
+    let best = focus.row, bd = Math.abs(centre(focus.row) - line) - 20;  // 20px of stickiness
+    for (const r of rows) {
+      const d = Math.abs(centre(r) - line);
+      if (d < bd) { best = r; bd = d; }
+    }
+    if (best !== focus.row) {
+      setActive(best);
+      try { navigator.vibrate && navigator.vibrate(6); } catch (e) {}
+    }
+  }
+  function bringToLine(r) {
+    const { line, centre } = focusLine();
+    const delta = centre(r) - line;
+    if (Math.abs(delta) < 60) return;
+    focus.lockUntil = performance.now() + 900;
+    scroller.scrollBy({ top: delta, behavior: reduceMotion ? "auto" : "smooth" });
   }
 
   function beginScrub(r) {
@@ -637,12 +762,12 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     }
     release(r, clamp(v, -5000, 5000));
   }
-  // Let go: with the lens up, glide and land the nearest poster dead centre.
+  // Let go: on the focused row, glide and land the nearest poster dead centre.
   function release(r, v) {
     r.v = v;
     r.anim = true;
     r.snap = null;
-    if (lens.row === r && lens.show) {
+    if (focus.row === r) {
       const i = Math.round((r.x + v / DECAY + lensX() - PADX - PW / 2) / STEP);
       r.snap = centredX(clamp(i, 0, r.items.length - 1));
     }
@@ -661,13 +786,22 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     let busy = false;
 
     for (const r of rows) {
+      // how far this row is into its focused state
+      const target = focus.row === r ? 1 : 0;
+      if (r.lp.x !== target || r.lp.v !== 0) {
+        if (reduceMotion) { r.lp.x = target; r.lp.v = 0; }
+        else spring(r.lp, target, target ? 260 : 170, target ? 0.8 : 1, dt);
+        if (Math.abs(r.lp.x - target) < 0.002 && Math.abs(r.lp.v) < 0.01) { r.lp.x = target; r.lp.v = 0; }
+        else busy = true;
+      }
+
       if (!r.anim) continue;
       const [lo, hi] = bounds(r);
       const steps = 3, h = dt / steps;
       for (let k = 0; k < steps; k++) {
         const s = { x: r.x, v: r.v };
         if (r.snap != null) spring(s, r.snap, K_SNAP, 1, h);
-        else if (r.x < lo || r.x > hi) spring(s, r.x < lo ? lo : hi, lens.row === r && lens.show ? 180 : 90, 1, h);
+        else if (r.x < lo || r.x > hi) spring(s, r.x < lo ? lo : hi, focus.row === r ? 180 : 90, 1, h);
         else { s.x += s.v * h; s.v *= Math.exp(-DECAY * h); }
         r.x = s.x; r.v = s.v;
       }
@@ -680,35 +814,34 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       applyRow(r);
       busy = busy || r.anim;
     }
-
-    if (lens.row) {
-      const target = lens.show ? 1 : 0;
-      if (reduceMotion) { lens.p.x = target; lens.p.v = 0; }
-      else spring(lens.p, target, lens.show ? 260 : 160, lens.show ? 0.8 : 1, dt);
-      if (!lens.show && lens.p.x < 0.003) {
-        lens.p.x = 0; lens.p.v = 0;
-        releaseLensRow();
-      } else busy = true;
-    }
+    if (focus.ovRow && focus.ovRow !== focus.row && focus.ovRow.lp.x === 0) clearOverlay();
     render();
     if (busy) kick();
   }
 
   function render() {
-    const r = lens.row;
-    if (!r) { lensEl.style.opacity = "0"; return; }
-    const p = clamp(lens.p.x, 0, 1.1);
-    const pa = Math.min(p, 1);
+    for (const r of rows) {
+      if (r.lp.x > 0.0005) styleRow(r);
+      else if (r.styled) resetPosters(r);
+    }
+    renderOverlay();
+  }
 
+  function rowPos(r) {
     const n = r.items.length;
     const f = clamp(posUnder(r), 0, n - 1);
-    const i0 = Math.floor(f), i1 = Math.min(n - 1, i0 + 1), fr = f - i0;
+    const i0 = Math.floor(f), i1 = Math.min(n - 1, i0 + 1);
+    return { f, i0, i1, fr: f - i0 };
+  }
 
-    // Make room in the page for the zoomed poster: a little more space under the row title and before
-    // the next row, easing back to normal as the lens closes.
+  function styleRow(r) {
+    const p = clamp(r.lp.x, 0, 1.1), pa = Math.min(p, 1);
+    const { i0, i1, fr } = rowPos(r);
+
+    // Make room in the page for the zoomed poster and its gist, easing back to normal as focus leaves.
     const growUp = PH * ORIGIN_Y * (CFG.zoom - 1), growDown = PH * (1 - ORIGIN_Y) * (CFG.zoom - 1);
     r.h.style.marginBottom = (10 + (growUp + 4) * pa).toFixed(2) + "px";
-    r.sec.style.marginBottom = (22 + growDown * pa).toFixed(2) + "px";
+    r.sec.style.marginBottom = (22 + (growDown + GIST_GAP + gistH + 6) * pa).toFixed(2) + "px";
 
     // The poster nearest the centre zooms in and its lower part darkens under the glass; neighbours dim
     // slightly and step aside so the 8px gaps stay. No distortion.
@@ -726,36 +859,51 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       r.shades[i].style.opacity = (t * pa).toFixed(3);
     });
     r.styled = true;
+  }
 
-    // Titles follow the continuous scroll position, so they hand over in step with the motion.
-    // The outgoing title clears before the incoming one arrives, so the two never overlap.
-    const blend = i0 === i1 ? 0 : smooth(0.4, 0.6, fr);
-    titles.forEach((t, i) => {
+  // Hand over between items i0 and i1: the outgoing one clears before the incoming one arrives.
+  function handover(list, i0, i1, fr, slide) {
+    list.forEach((t, i) => {
       let op = 0, off = 0;
-      if (i === i0) { op = i0 === i1 ? 1 : 1 - smooth(0.1, 0.42, fr); off = -fr * TITLE_SLIDE; }
-      else if (i === i1) { op = smooth(0.58, 0.9, fr); off = (1 - fr) * TITLE_SLIDE; }
+      if (i === i0) { op = i0 === i1 ? 1 : 1 - smooth(0.1, 0.42, fr); off = -fr * slide; }
+      else if (i === i1) { op = smooth(0.58, 0.9, fr); off = (1 - fr) * slide; }
       if (op === 0 && t.op === 0) return;
       t.op = op;
       t.el.style.opacity = op.toFixed(3);
       t.el.style.transform = `translate3d(${off.toFixed(2)}px,0,0)`;
     });
+  }
+
+  function renderOverlay() {
+    const r = focus.ovRow;
+    if (!r) { lensEl.style.opacity = gistEl.style.opacity = "0"; return; }
+    const p = clamp(r.lp.x, 0, 1.1), pa = Math.min(p, 1);
+    const { f, i0, i1, fr } = rowPos(r);
+    const blend = i0 === i1 ? 0 : smooth(0.4, 0.6, fr);
+    handover(titles, i0, i1, fr, TITLE_SLIDE);
+    handover(gists, i0, i1, fr, TITLE_SLIDE * 0.6);
     const tickNow = Math.round(f);
-    if (tickNow !== lens.tick) {
-      lens.tick = tickNow;
+    if (tickNow !== focus.tick && r === focus.row) {
+      focus.tick = tickNow;
       try { navigator.vibrate && navigator.vibrate(3); } catch (e) {}
     }
 
-    // The glass panel sits over the lower edge of the centred poster.
+    // The glass panel sits over the lower edge of the centred poster; the gist sits just below it.
+    const cx = lensX();
     const sRect = screenEl.getBoundingClientRect();
     const tRect = r.strip.getBoundingClientRect();
     const posterTop = (tRect.top - sRect.top) / scale + BLEED;
     const zoomedBottom = posterTop + PH * ORIGIN_Y + PH * (1 - ORIGIN_Y) * (1 + (CFG.zoom - 1) * pa);
     const h0 = titles[i0] ? titles[i0].h : 0, h1 = titles[i1] ? titles[i1].h : h0;
     const gh = Math.round(h0 + (h1 - h0) * blend) + 18;
+    const vis = clamp((p - 0.15) / 0.7, 0, 1).toFixed(3);
     lensEl.style.transform = `translate3d(${(cx - glassW() / 2).toFixed(2)}px,${(zoomedBottom - GLASS_INSET - gh + (1 - pa) * 10).toFixed(2)}px,0)`;
-    lensEl.style.opacity = clamp((p - 0.15) / 0.7, 0, 1).toFixed(3);
+    lensEl.style.opacity = vis;
     glass.style.height = gh + "px";
     glass.style.transform = `scale(${(0.92 + 0.08 * pa).toFixed(4)})`;
+    gistEl.style.height = gistH + "px";
+    gistEl.style.transform = `translate3d(${(cx - gistW() / 2).toFixed(2)}px,${(zoomedBottom + GIST_GAP - (1 - pa) * 6).toFixed(2)}px,0)`;
+    gistEl.style.opacity = vis;
   }
 
   // ---------- gestures ----------
@@ -784,19 +932,25 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       r.anim = false; r.snap = null;
       r.x = r.raw = clamp(r.x + dx, lo, hi);
       applyRow(r);
-      if (lens.row === r) kick();
+      kick();
       clearTimeout(wheelT);
-      wheelT = setTimeout(() => { if (lens.row === r) release(r, 0); }, 140);
+      wheelT = setTimeout(() => { if (focus.row === r) release(r, 0); }, 140);
     }, { passive: false });
   }
-  // Long press on a poster: open the lens and glide that poster into the centre.
+  // Long press on a poster: start focus mode (or move focus to this row) and glide that poster to the centre.
   function longPress(g) {
     if (gesture !== g || g.state !== "pending") return;
     const r = g.r;
-    if (!showLens(r)) return;
+    const i = Math.floor((localX(g.x0) + r.x - PADX + GAP / 2) / STEP);
+    if (!focus.on) {
+      if (!enterFocus(r, i)) return;
+    } else {
+      const moved = focus.row !== r;
+      setActive(r, i);
+      if (moved) bringToLine(r);
+    }
     g.state = "held";
     hideHint();
-    centrePoster(r, Math.floor((localX(g.x0) + r.x - PADX + GAP / 2) / STEP));
     try { navigator.vibrate && navigator.vibrate(12); } catch (e) {}
   }
   addEventListener("pointermove", (e) => {
@@ -833,14 +987,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   };
   addEventListener("pointerup", finish);
   addEventListener("pointercancel", finish);
-  scroller.addEventListener("scroll", () => { if (lens.row) kick(); }, { passive: true });   // keep the glass on its row
-  // A tap anywhere outside the lens row closes the lens (the notes panel beside the phone doesn't count).
-  document.addEventListener("pointerdown", (e) => {
-    if (!lens.row || !lens.show) return;
-    if (lens.row.strip.contains(e.target) || e.target.closest(".rail")) return;
-    stopDemo();
-    closeLens();
-  }, true);
+  scroller.addEventListener("scroll", () => { followScroll(); kick(); }, { passive: true });
+  exitBtn.addEventListener("click", () => { stopDemo(); exitFocus(); });
+  addEventListener("keydown", (e) => { if (e.key === "Escape") exitFocus(); });
 
   // ---------- hint + demo ----------
   let interacted = false;
@@ -864,10 +1013,10 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     if (demo || gesture) return;
     const r = rows[1];
     const d = (demo = { r, raf: 0, cancelled: false, stroking: false });
-    closeLens();
+    exitFocus();
     if (scroller.scrollTop > 0) {
       scroller.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
-      await wait(450);
+      await wait(500);
     }
     r.anim = false; r.snap = null; r.x = r.raw = 0; r.v = 0; applyRow(r);
     const tRect = r.strip.getBoundingClientRect();
@@ -900,47 +1049,45 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       endScrub(r);
       ghost.style.opacity = "0";
     };
+    const step = async (ms) => { await wait(ms); return d.cancelled; };
 
     // 1. A plain drag: the row scrolls like any carousel.
     await stroke(300, 180, 700, easeInOut);
-    if (d.cancelled) return;
-    await wait(700);
-    if (d.cancelled) return;
+    if (d.cancelled || await step(700)) return;
 
-    // 2. Long-press a poster: the lens opens and that poster glides into the centre.
+    // 2. Long-press a poster: focus mode starts and that poster glides to the centre.
     const target = clamp(Math.floor((300 + r.x - PADX) / STEP), 0, r.items.length - 1);
     at(posterCenter(target) - r.x);
     ghost.style.opacity = "1";
     ghost.classList.add("press");
-    await wait(LONG_PRESS);
-    if (d.cancelled) return;
-    showLens(r);
-    centrePoster(r, target);
-    await wait(700);
-    if (d.cancelled) return;
+    if (await step(LONG_PRESS)) return;
+    enterFocus(r, target);
+    if (await step(700)) return;
     ghost.classList.remove("press");
     ghost.style.opacity = "0";
-    await wait(600);
-    if (d.cancelled) return;
+    if (await step(900)) return;
 
-    // 3. With the lens open, the posters pass through the centre and settle there.
-    await stroke(300, 120, 1300, easeInOut);
-    if (d.cancelled) return;
-    await wait(900);
-    if (d.cancelled) return;
-    await stroke(320, 130, 300, easeIn);
-    if (d.cancelled) return;
-    await wait(1500);
-    if (d.cancelled) return;
+    // 3. Slide the row: each poster takes its turn in the centre.
+    await stroke(300, 150, 1100, easeInOut);
+    if (d.cancelled || await step(1400)) return;
 
-    // 4. Tap outside the row to put the lens away.
-    const outY = localY(tRect.bottom) + 70;
-    at(206, outY);
+    // 4. Scroll the page: the next rows pop on their own.
+    for (let k = 0; k < 2; k++) {
+      at(300, y + 120);
+      ghost.style.opacity = "1";
+      scroller.scrollBy({ top: 250, behavior: reduceMotion ? "auto" : "smooth" });
+      if (await step(400)) return;
+      ghost.style.opacity = "0";
+      if (await step(1500)) return;
+    }
+
+    // 5. The floating button ends focus mode.
+    const b = exitBtn.getBoundingClientRect();
+    at(localX(b.left + b.width / 2), localY(b.top + b.height / 2));
     ghost.style.opacity = "1";
-    await wait(250);
-    if (d.cancelled) return;
-    closeLens();
-    await wait(200);
+    if (await step(450)) return;
+    exitFocus();
+    if (await step(250)) return;
     ghost.style.opacity = "0";
     if (demo === d) demo = null;
   }
@@ -953,20 +1100,20 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     el.addEventListener("input", upd);
     upd();
   };
-  bind("optZoom", "outZoom", (v) => v.toFixed(2) + "×", (v) => { CFG.zoom = v; measureTitles(); kick(); });
+  bind("optZoom", "outZoom", (v) => v.toFixed(2) + "×", (v) => { CFG.zoom = v; measureOverlay(); kick(); });
   bind("optTitle", "outTitle", (v) => v + " px", (v) => {
     document.documentElement.style.setProperty("--title-size", v + "px");
-    measureTitles();
+    measureOverlay();
     kick();
   });
   $("optLens").addEventListener("change", (e) => {
     CFG.lens = e.target.checked;
-    if (!CFG.lens) closeLens();
+    if (!CFG.lens) exitFocus();
   });
 
   addEventListener("resize", layout);
   layout();
-  if (document.fonts) document.fonts.ready.then(() => { measureTitles(); kick(); });
+  if (document.fonts) document.fonts.ready.then(() => { measureOverlay(); kick(); });
   addEventListener("load", () => {
     if (!reduceMotion) setTimeout(() => { if (!interacted) runDemo(); }, 1100);
   });
