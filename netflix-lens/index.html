@@ -39,6 +39,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
   margin: 0;
@@ -451,6 +452,42 @@ button, input { font: inherit; color: inherit; }
 .lang-radio.off { color: var(--ink-2); }
 .set-row:focus-visible, .edit-row:focus-visible, .lang-radio:focus-visible, .who:focus-visible, .other:focus-visible,
 .pill-btn:focus-visible, .manage:focus-visible, .round-x:focus-visible, .pencil:focus-visible, .mc-head:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.dlg-back {
+  position: absolute; inset: 0; z-index: 40;
+  display: grid; place-items: center; padding: 0 28px;
+  background: rgba(0,0,0,0.6);
+  opacity: 0; transition: opacity 0.2s;
+}
+.dlg-back.open { opacity: 1; }
+.dlg {
+  width: 100%; max-width: 330px; padding: 22px 22px 16px;
+  border-radius: 14px; background: var(--card2-bg);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  transform: scale(0.94); transition: transform 0.2s cubic-bezier(.2,.8,.2,1.2);
+}
+.dlg-back.open .dlg { transform: none; }
+.dlg h3 { margin: 0 0 8px; font-size: 19px; font-weight: 700; line-height: 1.35; }
+.dlg p { margin: 0 0 20px; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.dlg-btns { display: flex; justify-content: flex-end; gap: 8px; }
+.dlg-btns button {
+  padding: 10px 16px; border: 0; border-radius: 6px; background: none;
+  color: var(--ink); font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.dlg-btns .primary { background: var(--ink); color: #000; }
+.dlg-btns button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.splash {
+  position: absolute; inset: 0; z-index: 50;
+  display: grid; place-items: center;
+  background: #000;
+  opacity: 0; transition: opacity 0.3s;
+}
+.splash.show { opacity: 1; }
+.spin {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.12); border-top-color: var(--red);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 .toast {
   position: absolute; left: 50%; bottom: 112px; z-index: 30;
   transform: translate(-50%, 8px);
@@ -691,6 +728,14 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
             <div class="radio-list" id="langList" role="radiogroup" data-i18n-label="displayTitle"></div>
           </div>
         </section>
+        <div class="dlg-back" id="dlgBack" hidden>
+          <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgTitle" aria-describedby="dlgText">
+            <h3 id="dlgTitle"></h3>
+            <p id="dlgText"></p>
+            <div class="dlg-btns"><button type="button" id="dlgCancel"></button><button type="button" id="dlgOk" class="primary"></button></div>
+          </div>
+        </div>
+        <div class="splash" id="splash" hidden aria-hidden="true"><span class="spin"></span></div>
         <div class="toast" id="toast" role="status"></div>
       </div>
     </div>
@@ -708,7 +753,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <li><b>Scan</b><span>Scroll the page. Whichever row reaches the focus line pops on its own.</span></li>
       <li><b>Tap</b><span>In quick view, tap any poster to bring it into focus.</span></li>
       <li><b>Close</b><span>Tap the round × at the bottom right, or press Esc.</span></li>
-      <li><b>Language</b><span>My Netflix → tap your profile name → pencil → Display language → English or हिन्दी. The home rows switch to posters in that language where we have them.</span></li>
+      <li><b>Language</b><span>My Netflix → tap your profile name → pencil → Display language → English or हिन्दी → Restart. The app reopens on Home in that language, with posters in it where we have them, and shows the quick view demo once.</span></li>
     </ul>
     <div class="controls">
       <div class="switch-row">
@@ -911,6 +956,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       displayNote: "Change the language of text you see when using Netflix. Any change will also update the default audio and subtitle language.",
       toast: "Display language: English", todo: "Not part of this prototype", onlyTwo: "This prototype has English and हिन्दी only",
       switched: (n) => `Switched to ${n}`,
+      restartTitle: "Restart the app?", restartText: (n) => `The app will close and open again in ${n}.`,
+      cancel: "Cancel", restart: "Restart",
     },
     hi: {
       langName: "हिन्दी", page: "फ़िल्में", back: "वापस", cast: "डिवाइस पर कास्ट करें", nav: "मुख्य",
@@ -936,6 +983,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       displayNote: "Netflix उपयोग करने के दौरान दिखने वाले टेक्स्ट की भाषा को बदलें. कोई भी बदलाव करने से ऑडियो और सबटाइटल की डिफ़ॉल्ट भाषा भी बदल जाएगी.",
       toast: "डिस्प्ले भाषा: हिन्दी", todo: "यह इस प्रोटोटाइप का हिस्सा नहीं है", onlyTwo: "इस प्रोटोटाइप में सिर्फ़ English और हिन्दी हैं",
       switched: (n) => `${n} प्रोफ़ाइल पर स्विच किया गया`,
+      restartTitle: "ऐप रीस्टार्ट करें?", restartText: (n) => `ऐप बंद होकर ${n} में दोबारा खुलेगा.`,
+      cancel: "रद्द करें", restart: "रीस्टार्ट करें",
     },
   };
 
@@ -1623,7 +1672,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       n.dir = "auto";
       b.appendChild(n);
       b.addEventListener("click", () => {
-        if (code === "en" || code === "hi") setLang(code);
+        if (code === "en" || code === "hi") askRestart(code, name);
         else showToast(S().onlyTwo);
       });
       langList.appendChild(b);
@@ -1672,22 +1721,68 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     clearTimeout(toastT);
     toastT = setTimeout(() => toast.classList.remove("show"), 2200);
   }
-  function setLang(next) {
-    if (next === lang) return;
-    lang = next;
-    try { localStorage.setItem("focuslens-lang", lang); } catch (e) {}
-    // leave quick view at once; its rows are about to be replaced
-    focus.on = false; focus.row = null;
-    clearOverlay();
-    screenEl.classList.remove("focus");
-    applyStrings();
-    buildRows();
-    scroller.scrollTop = 0;
-    layout();
-    showToast(S().toast);
+  // Picking a display language asks to restart; the app then reopens on Home in that language.
+  const dlgBack = $("dlgBack"), splash = $("splash");
+  let pendingLang = null;
+  const markRadios = (code) => langList.querySelectorAll(".lang-radio").forEach((b) => b.setAttribute("aria-checked", String(b.lang === code)));
+  function askRestart(code, name) {
+    if (code === lang) return;
+    const s = S();
+    pendingLang = code;
+    markRadios(code);
+    $("dlgTitle").textContent = s.restartTitle;
+    $("dlgText").textContent = s.restartText(name);
+    $("dlgCancel").textContent = s.cancel;
+    $("dlgOk").textContent = s.restart;
+    dlgBack.hidden = false;
+    requestAnimationFrame(() => dlgBack.classList.add("open"));
+    $("dlgOk").focus({ preventScroll: true });
   }
+  function closeDialog() {
+    dlgBack.classList.remove("open");
+    setTimeout(() => { dlgBack.hidden = true; }, reduceMotion ? 0 : 200);
+  }
+  function cancelRestart() {
+    pendingLang = null;
+    markRadios(lang);
+    closeDialog();
+  }
+  function restartInto(code) {
+    closeDialog();
+    splash.hidden = false;
+    requestAnimationFrame(() => splash.classList.add("show"));
+    setTimeout(() => {
+      // "relaunch": back to Home with nothing open, in the new language
+      stopDemo();
+      while (pop());
+      closeSheet();
+      showTab("home");
+      exitFocus();
+      lang = code;
+      try { localStorage.setItem("focuslens-lang", lang); } catch (e) {}
+      focus.on = false; focus.row = null;
+      clearOverlay();
+      screenEl.classList.remove("focus");
+      applyStrings();
+      buildRows();
+      scroller.scrollTop = 0;
+      layout();
+      interacted = false;
+      hint.classList.remove("gone");
+    }, reduceMotion ? 50 : 500);
+    setTimeout(() => {
+      splash.classList.remove("show");
+      setTimeout(() => { splash.hidden = true; }, 300);
+      maybeDemo(900);
+    }, reduceMotion ? 300 : 1700);
+  }
+  $("dlgCancel").addEventListener("click", cancelRestart);
+  $("dlgOk").addEventListener("click", () => { const c = pendingLang; pendingLang = null; if (c) restartInto(c); });
+  dlgBack.addEventListener("click", (e) => { if (e.target === dlgBack) cancelRestart(); });
   // Android back button (called by the APK wrapper): step back through screens and quick view first.
   window.focusLensBack = () => {
+    if (!dlgBack.hidden) { cancelRestart(); return true; }
+    if (!splash.hidden) return true;
     if (pop()) return true;
     if (psheet.classList.contains("open")) { closeSheet(); return true; }
     if (focus.on) { stopDemo(); exitFocus(); return true; }
@@ -1725,7 +1820,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const d = demo;
     demo = null;
     d.cancelled = true;
-    try { localStorage.setItem("focuslens-demo-seen", "1"); } catch (e) {}
+    try { localStorage.setItem("focuslens-demo-seen-" + lang, "1"); } catch (e) {}
     cancelAnimationFrame(d.raf);
     ghost.classList.remove("press");
     ghost.style.opacity = "0";
@@ -1830,7 +1925,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     if (await step(250)) return;
     ghost.style.opacity = "0";
     if (demo === d) demo = null;
-    try { localStorage.setItem("focuslens-demo-seen", "1"); } catch (e) {}
+    try { localStorage.setItem("focuslens-demo-seen-" + lang, "1"); } catch (e) {}
   }
   $("demoBtn").addEventListener("click", () => { interacted = true; runDemo(); });
 
@@ -1858,12 +1953,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   buildRows();
   layout();
   if (document.fonts) document.fonts.ready.then(() => { measureOverlay(); kick(); });
-  addEventListener("load", () => {
-    // The demo plays by itself once; after that it waits for the Play demo button.
+  // The demo plays by itself once per display language; after that it waits for the Play demo button.
+  function maybeDemo(delay) {
     let seen = false;
-    try { seen = localStorage.getItem("focuslens-demo-seen") === "1"; } catch (e) {}
-    if (!reduceMotion && !seen) setTimeout(() => { if (!interacted) runDemo(); }, 1100);
-  });
+    try { seen = localStorage.getItem("focuslens-demo-seen-" + lang) === "1"; } catch (e) {}
+    if (!reduceMotion && !seen) setTimeout(() => { if (!interacted && !demo) runDemo(); }, delay);
+  }
+  addEventListener("load", () => maybeDemo(1100));
 })();
 </script>
 </body>
