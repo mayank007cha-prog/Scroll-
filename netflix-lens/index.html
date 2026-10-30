@@ -1392,6 +1392,15 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       showToast(S().toast);
     }, reduceMotion ? 0 : 200);
   }
+  // Android back button (called by the APK wrapper): step back through the sheet and quick view first.
+  window.focusLensBack = () => {
+    if (sheet.classList.contains("open")) {
+      if (!sheetLang.hidden) showSheetPage("main"); else closeSheet();
+      return true;
+    }
+    if (focus.on) { stopDemo(); exitFocus(); return true; }
+    return false;
+  };
   tabProfile.addEventListener("click", openSheet);
   backdrop.addEventListener("click", closeSheet);
   $("rowLang").addEventListener("click", () => showSheetPage("lang"));
@@ -1410,6 +1419,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const d = demo;
     demo = null;
     d.cancelled = true;
+    try { localStorage.setItem("focuslens-demo-seen", "1"); } catch (e) {}
     cancelAnimationFrame(d.raf);
     ghost.classList.remove("press");
     ghost.style.opacity = "0";
@@ -1514,6 +1524,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     if (await step(250)) return;
     ghost.style.opacity = "0";
     if (demo === d) demo = null;
+    try { localStorage.setItem("focuslens-demo-seen", "1"); } catch (e) {}
   }
   $("demoBtn").addEventListener("click", () => { interacted = true; runDemo(); });
 
@@ -1542,7 +1553,10 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   layout();
   if (document.fonts) document.fonts.ready.then(() => { measureOverlay(); kick(); });
   addEventListener("load", () => {
-    if (!reduceMotion) setTimeout(() => { if (!interacted) runDemo(); }, 1100);
+    // The demo plays by itself once; after that it waits for the Play demo button.
+    let seen = false;
+    try { seen = localStorage.getItem("focuslens-demo-seen") === "1"; } catch (e) {}
+    if (!reduceMotion && !seen) setTimeout(() => { if (!interacted) runDemo(); }, 1100);
   });
 })();
 </script>
