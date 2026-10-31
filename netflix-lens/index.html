@@ -122,6 +122,7 @@ button, input { font: inherit; color: inherit; }
   padding: 20px 0;
   margin: -20px 0;
   overflow: hidden;
+  overflow-x: clip; overflow-y: visible;   /* the trailer frame may grow past the bottom */
   touch-action: pan-y;
   cursor: grab;
 }
@@ -474,6 +475,8 @@ button, input { font: inherit; color: inherit; }
   cursor: pointer; pointer-events: auto;
 }
 .gist-actions .act.play { background: var(--ink); color: #000; }
+#tzBtn .ic-poster, #tzBtn.on .ic-trailer { display: none; }
+#tzBtn.on .ic-poster { display: inline; }
 .gist-actions .act:hover { filter: brightness(0.9); }
 .gist-actions .act:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .screen:not(.focus) .gist-actions { visibility: hidden; }
@@ -497,7 +500,9 @@ button, input { font: inherit; color: inherit; }
 .mute-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .screen.focus #lens .glass { pointer-events: auto; cursor: pointer; }
 .dt-head { position: absolute; left: 0; right: 0; top: var(--safe-top); z-index: 2; }
-.dt-head .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.55); }
+.dt-head .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(12,12,13,0.85); box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.dt-head { pointer-events: none; }
+.dt-head .icon-btn { pointer-events: auto; }
 .dt-scroll { padding: 0 0 30px; }
 .dt-hero { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #111; overflow: hidden; }
 .dt-hero img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; display: block; }
@@ -518,6 +523,11 @@ button, input { font: inherit; color: inherit; }
 }
 .dt-play:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .dt-body p { margin: 0; font-size: 14px; line-height: 1.55; color: rgba(255,255,255,0.86); }
+.dt-more { margin: 26px 0 10px; font-size: 16px; font-weight: 700; }
+.dt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.dt-tile { padding: 0; border: 0; border-radius: 4px; overflow: hidden; background: #141414; aspect-ratio: 2 / 3; cursor: pointer; }
+.dt-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dt-tile:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .player {
   position: absolute; inset: 0; z-index: 45;
   display: flex; flex-direction: column; justify-content: center;
@@ -736,7 +746,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         </div>
 
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
-        <div id="gist"><div class="gist-actions" id="gistActions"><button class="act play" id="playBtn" type="button"><svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="play"></span></button></div></div>
+        <div id="gist"><div class="gist-actions" id="gistActions"><button class="act play" id="playBtn" type="button"><svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="play"></span></button><button class="act" id="tzBtn" type="button" aria-pressed="false"><svg class="ic-trailer" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor"/></svg><svg class="ic-poster" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 15l4-4 4 4 2-2 4 4"/></svg><span id="tzLabel"></span></button></div></div>
         <button class="close-focus" id="closeFocus" type="button" tabindex="-1" aria-label="क्विक व्यू बंद करें" title="क्विक व्यू बंद करें">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
         </button>
@@ -832,6 +842,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
               <div id="dtAvail"></div>
               <button class="dt-play" id="dtPlay" type="button"><svg width="16" height="16" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="play"></span></button>
               <p id="dtGist"></p>
+              <h3 class="dt-more" data-i18n="moreLike"></h3>
+              <div class="dt-grid" id="dtGrid"></div>
             </div>
           </div>
         </section>
@@ -866,8 +878,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <li><b>Slide</b><span>Drag the row. Each poster takes its turn, and the labels and gist change with it.</span></li>
       <li><b>Scan</b><span>Scroll the page. Whichever row reaches the focus line pops on its own.</span></li>
       <li><b>Tap</b><span>In quick view, tap any poster to bring it into focus.</span></li>
-      <li><b>Teaser</b><span>Let a poster rest in the centre for 3 seconds and, if it has a teaser, it opens wider and plays muted. The speaker button turns the sound on. Try जगमे तंदिरम / Jagame Thandhiram in the second row.</span></li>
-      <li><b>Details</b><span>Tap the title on the glass to open the movie page. Play opens the full-screen player.</span></li>
+      <li><b>Trailer</b><span>Tap Trailer next to Play: the poster opens into a wide frame and the trailer plays in it, with a speaker button for sound. Tap Poster, or move to another title, to switch back. Jagame Thandhiram (second row) has its real teaser.</span></li>
+      <li><b>Details</b><span>Tap the title on the glass for the movie page, with similar titles below. Play opens the full-screen player.</span></li>
       <li><b>Close</b><span>Tap the round × at the bottom right, or press Esc.</span></li>
       <li><b>Language</b><span>My Netflix → tap your profile name → pencil → Display language → English or हिन्दी → Restart. The app reopens on Home in that language, with posters in it where we have them, and shows the quick view demo once.</span></li>
     </ul>
@@ -1075,7 +1087,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `Switched to ${n}`,
       restartTitle: "Restart the app?", restartText: (n) => `The app will close and open again in ${n}.`,
       cancel: "Cancel", restart: "Restart",
-      play: "Play", closeTrailer: "Close video", mute: "Mute", unmute: "Turn sound on", details: (t) => `${t}: details`,
+      play: "Play", trailer: "Trailer", poster: "Poster", moreLike: "More Like This", closeTrailer: "Close video", mute: "Mute", unmute: "Turn sound on", details: (t) => `${t}: details`,
     },
     hi: {
       langName: "हिन्दी", page: "फ़िल्में", back: "वापस", cast: "डिवाइस पर कास्ट करें", nav: "मुख्य",
@@ -1104,7 +1116,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `${n} प्रोफ़ाइल पर स्विच किया गया`,
       restartTitle: "ऐप रीस्टार्ट करें?", restartText: (n) => `ऐप बंद होकर ${n} में दोबारा खुलेगा.`,
       cancel: "रद्द करें", restart: "रीस्टार्ट करें",
-      play: "चलाएं", closeTrailer: "वीडियो बंद करें", mute: "आवाज़ बंद करें", unmute: "आवाज़ चालू करें", details: (t) => `${t}: जानकारी`,
+      play: "चलाएं", trailer: "ट्रेलर", poster: "पोस्टर", moreLike: "इससे मिलते-जुलते", closeTrailer: "वीडियो बंद करें", mute: "आवाज़ बंद करें", unmute: "आवाज़ चालू करें", details: (t) => `${t}: जानकारी`,
     },
   };
 
@@ -1148,9 +1160,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const DIM = 0.25;        // how much the neighbours darken in the focused row
   const GIST_GAP = 12;     // px between the zoomed poster and its gist
   const TRAILER_H = 38;    // the Play button under the gist, with its gap
-  const TEASER_W = 232;    // width the centred poster opens to while its teaser plays
-  const TEASER_DELAY = 3000; // ms a poster must rest in the centre before its teaser starts
-  // Teasers we have. Titles without one stay as posters; Play falls back to the stand-in clip.
+  const TRAILER_PEEK = 22;  // px of each neighbouring poster left showing while a trailer plays
+  const TRAILER_GROW = 24;  // extra frame height while a trailer plays
+  // Trailers we have; other titles play the stand-in clip.
   const TEASERS = { jagame: "teaser-jagame.mp4" };
   const FOCUS_LINE = 0.36; // where on screen (fraction of height) a row takes focus while you scroll
   const LONG_PRESS = 450;  // ms
@@ -1163,7 +1175,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
   const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot"), scroller = $("scroller");
-  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), closeBtn = $("closeFocus"), playBtn = $("playBtn"), gistActions = $("gistActions");
+  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), closeBtn = $("closeFocus"), playBtn = $("playBtn"), gistActions = $("gistActions"), tzBtn = $("tzBtn");
   const ghost = $("ghost"), hint = $("hint"), toast = $("toast");
   const psheet = $("psheet"), backdrop = $("sheetBackdrop"), pgEdit = $("pgEdit"), pgDisplay = $("pgDisplay");
   const pgDetail = $("pgDetail"), dtVideo = $("dtVideo"), dtMute = $("dtMute");
@@ -1374,7 +1386,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   function resetPosters(r) {
     for (const el of r.els) { el.style.transform = ""; el.style.filter = ""; el.style.zIndex = ""; }
     for (const sh of r.shades) sh.style.opacity = "";
-    r.h.style.marginBottom = r.sec.style.marginBottom = r.hit.style.height = "";
+    r.h.style.marginBottom = r.sec.style.marginBottom = r.hit.style.height = r.hit.style.top = "";
     r.styled = false;
   }
 
@@ -1566,13 +1578,15 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   }
 
   // ---------- teaser in the poster frame ----------
-  // After the centred poster rests for TEASER_DELAY, it opens into a wider frame and plays its teaser,
-  // muted until the viewer turns the sound on. Moving the row closes it again.
+  // Tapping Trailer opens the centred poster into a wide frame and plays the trailer in it; the button
+  // turns into Poster to switch back. Moving to another poster also switches back.
   const tzFrame = document.createElement("div");
   tzFrame.className = "teaser";
   tzFrame.innerHTML = `<img alt=""><video muted playsinline loop preload="none"></video><div class="tz-shade"></div><button class="mute-btn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button>`;
   const tzImg = tzFrame.querySelector("img"), tzVideo = tzFrame.querySelector("video"), tzMute = tzFrame.querySelector(".mute-btn");
-  const tz = { row: null, idx: -1, key: null, since: 0, v: { x: 0, v: 0 }, muted: true, timer: 0, on: false, openIdx: -1 };
+  const tz = { req: null, key: null, v: { x: 0, v: 0 }, muted: false, on: false, openIdx: -1 };
+  const trailerSrc = (key) => TEASERS[key] || "trailer.mp4";
+  const frameW = () => W - 2 * (GAP + TRAILER_PEEK);
   function setMuteIcon(btn, muted) {
     btn.innerHTML = muted ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6M18.6 6.5a8 8 0 0 1 0 11"/></svg>`;
     btn.setAttribute("aria-label", muted ? S().unmute : S().mute);
@@ -1585,38 +1599,39 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   }
   tzMute.addEventListener("pointerdown", (e) => e.stopPropagation());
   tzMute.addEventListener("click", () => { tz.muted = !tz.muted; applyMute(); });
-  function teaserWanted(now) {
+  function teaserWanted() {
     const r = focus.on ? focus.row : null;
-    const quiet = player.hidden && !stack.length && !demo;
-    if (!r || !quiet || r.lp.x < 0.95) { tz.idx = -1; return null; }
-    const i = nearestIndex(r), key = r.items[i].key;
-    const scrubbing = gesture && gesture.r === r && gesture.state === "scrub";
-    const settled = !r.anim && !scrubbing && Math.abs(r.x - centredX(i)) < 1.5;
-    if (!settled || !TEASERS[key]) { tz.idx = -1; return null; }
-    if (tz.row !== r || tz.idx !== i) {
-      tz.row = r; tz.idx = i; tz.since = now;
-      clearTimeout(tz.timer);
-      tz.timer = setTimeout(kick, TEASER_DELAY + 30);
-    }
-    return now - tz.since >= TEASER_DELAY ? { r, i, key } : null;
+    const quiet = player.hidden && !stack.length;
+    if (!tz.req || !r || !quiet || tz.req.row !== r || nearestIndex(r) !== tz.req.idx) { tz.req = null; return null; }
+    return { r, i: tz.req.idx, key: r.items[tz.req.idx].key };
+  }
+  function openFrame(want) {
+    tz.on = true; tz.key = want.key; tz.openIdx = want.i;
+    want.r.strip.appendChild(tzFrame);
+    tzImg.src = POSTERS[want.key] || "";
+    tzVideo.classList.remove("ready");
+    tzVideo.src = trailerSrc(want.key);
+    tzVideo.currentTime = 0;
+    applyMute();
+    const p = tzVideo.play();
+    if (p && p.catch) p.catch(() => {});
+  }
+  function syncTzBtn() {
+    const on = !!tz.req;
+    if (tzBtn.classList.contains("on") === on && tzBtn.dataset.lang === lang) return;
+    tzBtn.classList.toggle("on", on);
+    tzBtn.dataset.lang = lang;
+    tzBtn.setAttribute("aria-pressed", String(on));
+    $("tzLabel").textContent = on ? S().poster : S().trailer;
   }
   function updateTeaser(now, dt) {
-    const want = teaserWanted(now);
-    if (want && (!tz.on || tz.key !== want.key || tzFrame.parentNode !== want.r.strip)) {
-      tz.on = true; tz.key = want.key; tz.openIdx = want.i;
-      want.r.strip.appendChild(tzFrame);
-      tzImg.src = POSTERS[want.key] || "";
-      tzVideo.classList.remove("ready");
-      tzVideo.src = TEASERS[want.key];
-      tzVideo.currentTime = 0;
-      applyMute();
-      const p = tzVideo.play();
-      if (p && p.catch) p.catch(() => {});
-    }
-    // close when the row moves, the title changes or quick view ends
+    const want = teaserWanted();
+    syncTzBtn();
+    if (want && (!tz.on || tz.key !== want.key || tzFrame.parentNode !== want.r.strip)) openFrame(want);
+    // close when the viewer taps Poster, moves to another title or quick view ends
     const open = !!want && tz.key === want.key;
     if (reduceMotion) { tz.v.x = open ? 1 : 0; tz.v.v = 0; }
-    else spring(tz.v, open ? 1 : 0, open ? 90 : 260, 1, dt);
+    else spring(tz.v, open ? 1 : 0, open ? 110 : 260, 1, dt);
     if (!open && tz.v.x < 0.01) {
       tz.v.x = 0; tz.v.v = 0;
       if (tz.on) { tz.on = false; tz.key = null; tzVideo.pause(); tzVideo.removeAttribute("src"); tzVideo.load(); tzFrame.remove(); }
@@ -1624,15 +1639,30 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     }
     return true;
   }
+  tzBtn.addEventListener("click", () => {
+    const r = focus.row;
+    if (!r) return;
+    stopDemo();
+    if (tz.req) tz.req = null;
+    else {
+      tz.req = { row: r, idx: nearestIndex(r) };
+      centrePoster(r, tz.req.idx);
+      openFrame({ r, i: tz.req.idx, key: r.items[tz.req.idx].key });   // start inside the tap so sound is allowed
+    }
+    syncTzBtn();
+    kick();
+  });
   tzVideo.addEventListener("playing", () => tzVideo.classList.add("ready"));
-  function teaserExtra(r) { return tz.on && tzFrame.parentNode === r.strip ? (TEASER_W - PW * CFG.zoom) / 2 * clamp(tz.v.x, 0, 1) : 0; }
+  const frameOn = (r) => tz.on && tzFrame.parentNode === r.strip;
+  function teaserExtra(r) { return frameOn(r) ? (frameW() - PW * CFG.zoom) / 2 * clamp(tz.v.x, 0, 1) : 0; }
+  function teaserDH(r) { return frameOn(r) ? TRAILER_GROW * clamp(tz.v.x, 0, 1) : 0; }
   function placeTeaser(r) {
     if (!tz.on || tzFrame.parentNode !== r.strip) return;
     const v = clamp(tz.v.x, 0, 1);
     const zw = PW * CFG.zoom, zh = PH * CFG.zoom;
-    const w = zw + (TEASER_W - zw) * v;
+    const w = zw + (frameW() - zw) * v;
     tzFrame.style.width = w.toFixed(2) + "px";
-    tzFrame.style.height = zh.toFixed(2) + "px";
+    tzFrame.style.height = (zh + TRAILER_GROW * v).toFixed(2) + "px";
     tzFrame.style.transform = `translate3d(${(lensX() - w / 2).toFixed(2)}px,${(BLEED + PH * ORIGIN_Y * (1 - CFG.zoom)).toFixed(2)}px,0)`;
     tzFrame.style.opacity = Math.min(1, v * 6).toFixed(3);
     tzVideo.style.opacity = tzVideo.classList.contains("ready") ? smooth(0.55, 1, v).toFixed(3) : "0";
@@ -1645,8 +1675,10 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     // Make room in the page for the zoomed poster and its gist, easing back to normal as focus leaves.
     const growUp = PH * ORIGIN_Y * (CFG.zoom - 1), growDown = PH * (1 - ORIGIN_Y) * (CFG.zoom - 1);
     r.h.style.marginBottom = (10 + (growUp + 4) * pa).toFixed(2) + "px";
-    r.sec.style.marginBottom = (22 + (growDown + GIST_GAP + gistH + TRAILER_H + 6) * pa).toFixed(2) + "px";
-    r.hit.style.height = ((growDown + GIST_GAP + gistH + TRAILER_H + 6) * pa).toFixed(2) + "px";
+    const dh = teaserDH(r);
+    r.sec.style.marginBottom = (22 + (growDown + GIST_GAP + gistH + TRAILER_H + 6) * pa + dh).toFixed(2) + "px";
+    r.hit.style.height = ((growDown + GIST_GAP + gistH + TRAILER_H + 6) * pa + dh).toFixed(2) + "px";
+    r.hit.style.top = `calc(100% + ${dh.toFixed(2)}px)`;
 
     // The poster nearest the centre zooms in and its lower part darkens under the glass; neighbours dim
     // slightly and step aside so the 8px gaps stay. No distortion.
@@ -1701,7 +1733,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const sRect = screenEl.getBoundingClientRect();
     const tRect = r.strip.getBoundingClientRect();
     const posterTop = (tRect.top - sRect.top) / scale + BLEED;
-    const zoomedBottom = posterTop + PH * ORIGIN_Y + PH * (1 - ORIGIN_Y) * (1 + (CFG.zoom - 1) * pa);
+    const zoomedBottom = posterTop + PH * ORIGIN_Y + PH * (1 - ORIGIN_Y) * (1 + (CFG.zoom - 1) * pa) + teaserDH(r);
     const h0 = titles[i0] ? titles[i0].h : 0, h1 = titles[i1] ? titles[i1].h : h0;
     const gh = Math.round(h0 + (h1 - h0) * blend) + 18;
     const vis = clamp((p - 0.15) / 0.7, 0, 1).toFixed(3);
@@ -2012,7 +2044,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     opener = from;
     dtVideo.pause();
     $("playerTitle").textContent = tx(key).title;
-    const src = TEASERS[key] || "trailer.mp4";
+    const src = trailerSrc(key);
     if (!video.src.endsWith(src)) video.src = src;
     player.hidden = false;
     video.currentTime = 0;
@@ -2032,8 +2064,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
 
   // Movie detail page, opened by tapping the title on the glass.
   let detailKey = null;
-  function openDetail() {
-    const key = focusedKey();
+  function openDetail(key = focusedKey()) {
     if (!key) return;
     stopDemo();
     detailKey = key;
@@ -2053,7 +2084,23 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       const p = dtVideo.play();
       if (p && p.catch) p.catch(() => {});
     } else { dtVideo.pause(); dtVideo.removeAttribute("src"); }
-    push(pgDetail);
+    // More like this: other titles from today's rows, same genre first
+    const pool = [...new Set(ROWS[lang].flatMap((row) => row.items.map((it) => (Array.isArray(it) ? it[0] : it))))].filter((k) => k !== key);
+    const g = info.genre.split(" ").pop();
+    pool.sort((a, b) => (tx(b).genre.includes(g) ? 1 : 0) - (tx(a).genre.includes(g) ? 1 : 0));
+    const grid = $("dtGrid");
+    grid.replaceChildren();
+    for (const k of pool.slice(0, 9)) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "dt-tile";
+      b.setAttribute("aria-label", tx(k).title);
+      b.innerHTML = `<img alt="" draggable="false" src="${POSTERS[k] || ""}">`;
+      b.addEventListener("click", () => openDetail(k));
+      grid.appendChild(b);
+    }
+    if (stack[stack.length - 1] === pgDetail) pgDetail.querySelector(".stack-scroll").scrollTop = 0;
+    else push(pgDetail);
   }
   dtVideo.addEventListener("playing", () => dtVideo.classList.add("ready"));
   dtMute.addEventListener("click", () => { tz.muted = !tz.muted; applyMute(); });
