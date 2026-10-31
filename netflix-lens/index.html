@@ -878,7 +878,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <li><b>Slide</b><span>Drag the row. Each poster takes its turn, and the labels and gist change with it.</span></li>
       <li><b>Scan</b><span>Scroll the page. Whichever row reaches the focus line pops on its own.</span></li>
       <li><b>Tap</b><span>In quick view, tap any poster to bring it into focus.</span></li>
-      <li><b>Trailer</b><span>Tap Trailer next to Play: the poster opens into a wide frame and the trailer plays in it, with a speaker button for sound. Tap Poster, or move to another title, to switch back. Jagame Thandhiram (second row) has its real teaser.</span></li>
+      <li><b>Trailer</b><span>Tap Trailer next to Play: the poster opens into a wide frame and the trailer plays in it, with a speaker button for sound. Tap Poster to switch back; swiping first shrinks the trailer back to the poster, then moves to the next title. Every title uses one of three 20-second cuts of the Jagame Thandhiram teaser.</span></li>
       <li><b>Details</b><span>Tap the title on the glass for the movie page, with similar titles below. Play opens the full-screen player.</span></li>
       <li><b>Close</b><span>Tap the round × at the bottom right, or press Esc.</span></li>
       <li><b>Language</b><span>My Netflix → tap your profile name → pencil → Display language → English or हिन्दी → Restart. The app reopens on Home in that language, with posters in it where we have them, and shows the quick view demo once.</span></li>
@@ -1162,8 +1162,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const TRAILER_H = 38;    // the Play button under the gist, with its gap
   const TRAILER_PEEK = 22;  // px of each neighbouring poster left showing while a trailer plays
   const TRAILER_GROW = 24;  // extra frame height while a trailer plays
-  // Trailers we have; other titles play the stand-in clip.
-  const TEASERS = { jagame: "teaser-jagame.mp4" };
+  const TRAILERS = ["trailer-a.mp4", "trailer-b.mp4", "trailer-c.mp4"];
   const FOCUS_LINE = 0.36; // where on screen (fraction of height) a row takes focus while you scroll
   const LONG_PRESS = 450;  // ms
 
@@ -1584,8 +1583,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   tzFrame.className = "teaser";
   tzFrame.innerHTML = `<img alt=""><video muted playsinline loop preload="none"></video><div class="tz-shade"></div><button class="mute-btn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button>`;
   const tzImg = tzFrame.querySelector("img"), tzVideo = tzFrame.querySelector("video"), tzMute = tzFrame.querySelector(".mute-btn");
-  const tz = { req: null, key: null, v: { x: 0, v: 0 }, muted: false, on: false, openIdx: -1 };
-  const trailerSrc = (key) => TEASERS[key] || "trailer.mp4";
+  const tz = { req: null, key: null, v: { x: 0, v: 0 }, muted: false, on: false, openIdx: -1, step: null };
+  // Three 20-second cuts of the Jagame Thandhiram teaser stand in for every title's trailer.
+  const trailerSrc = (key) => TRAILERS[[...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % TRAILERS.length];
   const frameW = () => W - 2 * (GAP + TRAILER_PEEK);
   function setMuteIcon(btn, muted) {
     btn.innerHTML = muted ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6M18.6 6.5a8 8 0 0 1 0 11"/></svg>`;
@@ -1632,6 +1632,12 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const open = !!want && tz.key === want.key;
     if (reduceMotion) { tz.v.x = open ? 1 : 0; tz.v.v = 0; }
     else spring(tz.v, open ? 1 : 0, open ? 110 : 260, 1, dt);
+    // a swipe during the trailer: once the frame is nearly back to a poster, glide to the next title
+    if (tz.step && tz.v.x < 0.08) {
+      const st = tz.step;
+      tz.step = null;
+      if (focus.row === st.row) centrePoster(st.row, nearestIndex(st.row) + st.dir);
+    }
     if (!open && tz.v.x < 0.01) {
       tz.v.x = 0; tz.v.v = 0;
       if (tz.on) { tz.on = false; tz.key = null; tzVideo.pause(); tzVideo.removeAttribute("src"); tzVideo.load(); tzFrame.remove(); }
@@ -1814,7 +1820,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     if (!g || e.pointerId !== g.id) return;
     const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
     if (g.state === "pending" || g.state === "held") {
-      if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+      if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy) * 1.1 && tz.req && tz.req.row === g.r) {
+        clearTimeout(g.timer);
+        g.state = "trailer";
+        tz.req = null;
+        tz.step = { row: g.r, dir: dx < 0 ? 1 : -1 };
+        kick();
+      } else if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy) * 1.1) {
         clearTimeout(g.timer);
         g.state = "scrub";
         try { g.r.strip.setPointerCapture(e.pointerId); } catch (err) {}
@@ -1829,6 +1841,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       return;
     }
     if (e.cancelable) e.preventDefault();
+    if (g.state === "trailer") return;   // the trailer closes first; the row then glides on its own
     const ddx = (e.clientX - g.lastX) / scale;
     g.lastX = e.clientX;
     moveScrub(g.r, ddx);
@@ -1839,7 +1852,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     gesture = null;
     clearTimeout(g.timer);
     if (g.state === "scrub") return endScrub(g.r);
-    if (g.state === "held") return;
+    if (g.state === "held" || g.state === "trailer") return;
     if (g.title && !g.caught && e.type === "pointerup") return openDetail();
     if (g.caught) release(g.r, 0);
     else if (focus.on && e.type === "pointerup") tapPoster(g);
@@ -2056,7 +2069,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     video.pause();
     player.hidden = true;
     if (opener) opener.focus({ preventScroll: true });
-    if (stack[stack.length - 1] === pgDetail && TEASERS[detailKey]) { const p = dtVideo.play(); if (p && p.catch) p.catch(() => {}); }
+    if (stack[stack.length - 1] === pgDetail) { const p = dtVideo.play(); if (p && p.catch) p.catch(() => {}); }
     kick();
   }
   const focusedKey = () => focus.row ? focus.row.items[nearestIndex(focus.row)].key : null;
@@ -2074,11 +2087,11 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     $("dtAvail").replaceChildren(availability(info));
     $("dtGist").textContent = info.gist;
     $("dtPoster").src = POSTERS[key] || "";
-    const has = !!TEASERS[key];
+    const has = true;
     pgDetail.classList.toggle("has-video", has);
     dtVideo.classList.remove("ready");
     if (has) {
-      dtVideo.src = TEASERS[key];
+      dtVideo.src = trailerSrc(key);
       dtVideo.currentTime = 0;
       applyMute();
       const p = dtVideo.play();
