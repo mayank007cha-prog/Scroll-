@@ -187,7 +187,8 @@ def web_assets():
                       '<link rel="stylesheet" href="fonts/fonts.css">', html)
     assert n == 1, "font link not found"
     files = {"assets/index.html": html.encode("utf-8"),
-             "assets/posters.js": open(os.path.join(SRC, "posters.js"), "rb").read()}
+             "assets/posters.js": open(os.path.join(SRC, "posters.js"), "rb").read(),
+             "assets/trailer.mp4": open(os.path.join(SRC, "trailer.mp4"), "rb").read()}
     fdir = os.path.join(HERE, "fonts")
     for f in sorted(os.listdir(fdir)):
         files["assets/fonts/" + f] = open(os.path.join(fdir, f), "rb").read()
@@ -238,7 +239,7 @@ def main():
                ("resources.arsc", build_arsc("res/drawable/ic_launcher.png"), True),
                ("res/drawable/ic_launcher.png", build_icon(), True)]
     for name, data in web_assets().items():
-        entries.append((name, data, name.endswith((".woff2", ".png"))))
+        entries.append((name, data, name.endswith((".woff2", ".png", ".mp4"))))
     unsigned = os.path.join(WORK, "unsigned.apk")
     write_zip(unsigned, entries)
     zipfile.ZipFile(unsigned).testzip()

@@ -459,6 +459,40 @@ button, input { font: inherit; color: inherit; }
 .lang-radio.off { color: var(--ink-2); }
 .set-row:focus-visible, .edit-row:focus-visible, .lang-radio:focus-visible, .who:focus-visible, .other:focus-visible,
 .pill-btn:focus-visible, .manage:focus-visible, .round-x:focus-visible, .pencil:focus-visible, .mc-head:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+#gist .trailer-btn {
+  position: absolute; left: 50%; top: 0;
+  transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 34px; padding: 0 16px;
+  border: 0; border-radius: 6px;
+  background: var(--ink); color: #000;
+  font-size: 13.5px; font-weight: 700; white-space: nowrap;
+  cursor: pointer; pointer-events: auto;
+}
+#gist .trailer-btn:hover { background: #e6e6e6; }
+.screen:not(.focus) #gist .trailer-btn { visibility: hidden; pointer-events: none; }
+#gist .trailer-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.player {
+  position: absolute; inset: 0; z-index: 45;
+  display: flex; flex-direction: column; justify-content: center;
+  background: #000;
+  animation: player-in 0.25s ease-out;
+}
+@keyframes player-in { from { opacity: 0; } to { opacity: 1; } }
+.player video { width: 100%; max-height: 100%; background: #000; }
+.player-top {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 1;
+  display: flex; align-items: center; gap: 12px;
+  padding: calc(var(--safe-top) + 10px) 16px 24px;
+  background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0));
+}
+.player-title { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-x {
+  width: 40px; height: 40px; flex: none; display: grid; place-items: center;
+  border: 1px solid rgba(255,255,255,0.22); border-radius: 50%;
+  background: rgba(20,20,22,0.85); cursor: pointer;
+}
+.player-x:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .dlg-back {
   position: absolute; inset: 0; z-index: 40;
   display: grid; place-items: center; padding: 0 28px;
@@ -656,7 +690,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         </div>
 
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
-        <div id="gist"></div>
+        <div id="gist"><button class="trailer-btn" id="trailerBtn" type="button"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="watchTrailer"></span></button></div>
         <button class="close-focus" id="closeFocus" type="button" tabindex="-1" aria-label="क्विक व्यू बंद करें" title="क्विक व्यू बंद करें">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
         </button>
@@ -736,6 +770,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
             <div class="radio-list" id="langList" role="radiogroup" data-i18n-label="displayTitle"></div>
           </div>
         </section>
+        <div class="player" id="player" hidden role="dialog" aria-modal="true" aria-labelledby="playerTitle">
+          <div class="player-top">
+            <div class="player-title" id="playerTitle"></div>
+            <button class="player-x" id="playerClose" type="button" data-i18n-label="closeTrailer"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button>
+          </div>
+          <video id="playerVideo" playsinline controls preload="metadata" src="trailer.mp4"></video>
+        </div>
         <div class="dlg-back" id="dlgBack" hidden>
           <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgTitle" aria-describedby="dlgText">
             <h3 id="dlgTitle"></h3>
@@ -967,6 +1008,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `Switched to ${n}`,
       restartTitle: "Restart the app?", restartText: (n) => `The app will close and open again in ${n}.`,
       cancel: "Cancel", restart: "Restart",
+      watchTrailer: "Watch trailer", closeTrailer: "Close trailer", trailerOf: (t) => `${t} · Trailer`,
     },
     hi: {
       langName: "हिन्दी", page: "फ़िल्में", back: "वापस", cast: "डिवाइस पर कास्ट करें", nav: "मुख्य",
@@ -995,6 +1037,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `${n} प्रोफ़ाइल पर स्विच किया गया`,
       restartTitle: "ऐप रीस्टार्ट करें?", restartText: (n) => `ऐप बंद होकर ${n} में दोबारा खुलेगा.`,
       cancel: "रद्द करें", restart: "रीस्टार्ट करें",
+      watchTrailer: "ट्रेलर देखें", closeTrailer: "ट्रेलर बंद करें", trailerOf: (t) => `${t} · ट्रेलर`,
     },
   };
 
@@ -1037,6 +1080,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const TITLE_SLIDE = 22;  // px a title drifts while it hands over to the next one
   const DIM = 0.25;        // how much the neighbours darken in the focused row
   const GIST_GAP = 12;     // px between the zoomed poster and its gist
+  const TRAILER_H = 46;    // the Watch trailer button under the gist, with its gap
   const FOCUS_LINE = 0.36; // where on screen (fraction of height) a row takes focus while you scroll
   const LONG_PRESS = 450;  // ms
 
@@ -1048,7 +1092,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
   const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot"), scroller = $("scroller");
-  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), closeBtn = $("closeFocus");
+  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), closeBtn = $("closeFocus"), trailerBtn = $("trailerBtn");
   const ghost = $("ghost"), hint = $("hint"), toast = $("toast");
   const psheet = $("psheet"), backdrop = $("sheetBackdrop"), pgEdit = $("pgEdit"), pgDisplay = $("pgDisplay");
   const tabHome = $("tabHome"), tabMy = $("tabMy"), nameField = $("nameField"), langList = $("langList");
@@ -1165,7 +1209,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
 
   function buildOverlay(r) {
     glass.replaceChildren();
-    gistEl.replaceChildren();
+    gistEl.querySelectorAll(".gt").forEach((el) => el.remove());
     titles = r.items.map((it) => {
       const info = tx(it.key);
       const el = document.createElement("div");
@@ -1189,7 +1233,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       p.textContent = info.gist;
       el.append(availability(info), p);
       el.style.opacity = "0";
-      gistEl.appendChild(el);
+      gistEl.insertBefore(el, trailerBtn);
       return { el, op: 0 };
     });
     focus.ovRow = r;
@@ -1236,7 +1280,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   }
   function clearOverlay() {
     glass.replaceChildren();
-    gistEl.replaceChildren();
+    gistEl.querySelectorAll(".gt").forEach((el) => el.remove());
     titles = []; gists = [];
     focus.ovRow = null;
   }
@@ -1455,8 +1499,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     // Make room in the page for the zoomed poster and its gist, easing back to normal as focus leaves.
     const growUp = PH * ORIGIN_Y * (CFG.zoom - 1), growDown = PH * (1 - ORIGIN_Y) * (CFG.zoom - 1);
     r.h.style.marginBottom = (10 + (growUp + 4) * pa).toFixed(2) + "px";
-    r.sec.style.marginBottom = (22 + (growDown + GIST_GAP + gistH + 6) * pa).toFixed(2) + "px";
-    r.hit.style.height = ((growDown + GIST_GAP + gistH + 6) * pa).toFixed(2) + "px";
+    r.sec.style.marginBottom = (22 + (growDown + GIST_GAP + gistH + TRAILER_H + 6) * pa).toFixed(2) + "px";
+    r.hit.style.height = ((growDown + GIST_GAP + gistH + TRAILER_H + 6) * pa).toFixed(2) + "px";
 
     // The poster nearest the centre zooms in and its lower part darkens under the glass; neighbours dim
     // slightly and step aside so the 8px gaps stay. No distortion.
@@ -1516,7 +1560,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     lensEl.style.opacity = vis;
     glass.style.height = gh + "px";
     glass.style.transform = `scale(${(0.92 + 0.08 * pa).toFixed(4)})`;
-    gistEl.style.height = gistH + "px";
+    gistEl.style.height = gistH + TRAILER_H + "px";
+    trailerBtn.style.top = gistH + 10 + "px";
     gistEl.style.transform = `translate3d(${(cx - gistW() / 2).toFixed(2)}px,${(zoomedBottom + GIST_GAP - (1 - pa) * 6).toFixed(2)}px,0)`;
     gistEl.style.opacity = vis;
   }
@@ -1804,11 +1849,33 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       maybeDemo(900);
     }, reduceMotion ? 300 : 1700);
   }
+  // Watch trailer: plays over the whole screen; × or back closes it. Every title uses the same stand-in clip.
+  const player = $("player"), video = $("playerVideo");
+  function openTrailer() {
+    const r = focus.row;
+    if (!r) return;
+    stopDemo();
+    $("playerTitle").textContent = S().trailerOf(tx(r.items[nearestIndex(r)].key).title);
+    player.hidden = false;
+    video.currentTime = 0;
+    const p = video.play();
+    if (p && p.catch) p.catch(() => {});
+    $("playerClose").focus({ preventScroll: true });
+  }
+  function closeTrailer() {
+    video.pause();
+    player.hidden = true;
+    trailerBtn.focus({ preventScroll: true });
+  }
+  trailerBtn.addEventListener("click", openTrailer);
+  trailerBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
+  $("playerClose").addEventListener("click", closeTrailer);
   $("dlgCancel").addEventListener("click", cancelRestart);
   $("dlgOk").addEventListener("click", () => { const c = pendingLang; pendingLang = null; if (c) restartInto(c); });
   dlgBack.addEventListener("click", (e) => { if (e.target === dlgBack) cancelRestart(); });
   // Android back button (called by the APK wrapper): step back through screens and quick view first.
   window.focusLensBack = () => {
+    if (!player.hidden) { closeTrailer(); return true; }
     if (!dlgBack.hidden) { cancelRestart(); return true; }
     if (!splash.hidden) return true;
     if (pop()) return true;
