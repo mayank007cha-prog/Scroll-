@@ -420,6 +420,7 @@ button, input { font: inherit; color: inherit; }
 }
 .stack-page.open { transform: none; visibility: visible; transition: transform 0.32s cubic-bezier(.2,.8,.2,1); }
 #pgDisplay { z-index: 14; }
+#pgDetail { z-index: 15; }
 .pg-head { flex: none; display: flex; align-items: center; gap: 20px; height: 56px; padding: 0 16px; }
 .pg-head h3 { margin: 0; font-size: 19px; font-weight: 700; line-height: 1.3; }
 .edit-av { position: relative; width: 108px; height: 108px; margin: 4px auto 22px; }
@@ -477,6 +478,46 @@ button, input { font: inherit; color: inherit; }
 .gist-actions .act:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .screen:not(.focus) .gist-actions { visibility: hidden; }
 .screen:not(.focus) .gist-actions .act { pointer-events: none; }
+.teaser {
+  position: absolute; left: 0; top: 0; z-index: 3;
+  overflow: hidden; border-radius: 5px;
+  background: #000;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+  pointer-events: none; opacity: 0;
+}
+.teaser img, .teaser video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.teaser video { opacity: 0; transition: opacity 0.5s; }
+.tz-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,0.72) 66%, rgba(0,0,0,0.95) 100%); }
+.mute-btn {
+  position: absolute; right: 8px; top: 8px;
+  width: 30px; height: 30px; display: grid; place-items: center;
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 50%;
+  background: rgba(0,0,0,0.6); cursor: pointer; pointer-events: auto;
+}
+.mute-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.screen.focus #lens .glass { pointer-events: auto; cursor: pointer; }
+.dt-head { position: absolute; left: 0; right: 0; top: var(--safe-top); z-index: 2; }
+.dt-head .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.55); }
+.dt-scroll { padding: 0 0 30px; }
+.dt-hero { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #111; overflow: hidden; }
+.dt-hero img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; display: block; }
+.dt-hero video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s; }
+.dt-hero video.ready { opacity: 1; }
+.dt-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: linear-gradient(rgba(0,0,0,0), #000); pointer-events: none; }
+.dt-hero .mute-btn { top: auto; bottom: 12px; right: 12px; z-index: 1; }
+#pgDetail:not(.has-video) .dt-hero .mute-btn { display: none; }
+.dt-body { padding: 4px 16px 0; }
+.dt-body h2 { margin: 0 0 4px; font-size: 22px; font-weight: 800; line-height: 1.3; }
+.dt-meta { margin-bottom: 10px; font-size: 13px; color: var(--ink-2); }
+.dt-body .avail { justify-content: flex-start; margin-bottom: 14px; }
+.dt-play {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 40px; margin-bottom: 14px;
+  border: 0; border-radius: 4px; background: var(--ink); color: #000;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.dt-play:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.dt-body p { margin: 0; font-size: 14px; line-height: 1.55; color: rgba(255,255,255,0.86); }
 .player {
   position: absolute; inset: 0; z-index: 45;
   display: flex; flex-direction: column; justify-content: center;
@@ -695,7 +736,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         </div>
 
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
-        <div id="gist"><div class="gist-actions" id="gistActions"><button class="act play" id="playBtn" type="button"><svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="play"></span></button><button class="act" id="trailerBtn" type="button"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor"/></svg><span data-i18n="trailer"></span></button></div></div>
+        <div id="gist"><div class="gist-actions" id="gistActions"><button class="act play" id="playBtn" type="button"><svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="play"></span></button></div></div>
         <button class="close-focus" id="closeFocus" type="button" tabindex="-1" aria-label="क्विक व्यू बंद करें" title="क्विक व्यू बंद करें">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
         </button>
@@ -775,12 +816,31 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
             <div class="radio-list" id="langList" role="radiogroup" data-i18n-label="displayTitle"></div>
           </div>
         </section>
+        <section class="stack-page" id="pgDetail" aria-labelledby="dtTitle" inert>
+          <div class="pg-head dt-head">
+            <button class="icon-btn" type="button" data-pop data-i18n-label="back"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H5M11 5l-7 7 7 7"/></svg></button>
+          </div>
+          <div class="stack-scroll dt-scroll">
+            <div class="dt-hero">
+              <img id="dtPoster" alt="">
+              <video id="dtVideo" muted playsinline loop preload="none"></video>
+              <button class="mute-btn" id="dtMute" type="button"></button>
+            </div>
+            <div class="dt-body">
+              <h2 id="dtTitle"></h2>
+              <div class="dt-meta" id="dtMeta"></div>
+              <div id="dtAvail"></div>
+              <button class="dt-play" id="dtPlay" type="button"><svg width="16" height="16" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="play"></span></button>
+              <p id="dtGist"></p>
+            </div>
+          </div>
+        </section>
         <div class="player" id="player" hidden role="dialog" aria-modal="true" aria-labelledby="playerTitle">
           <div class="player-top">
             <div class="player-title" id="playerTitle"></div>
             <button class="player-x" id="playerClose" type="button" data-i18n-label="closeTrailer"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button>
           </div>
-          <video id="playerVideo" playsinline controls preload="metadata" src="trailer.mp4"></video>
+          <video id="playerVideo" playsinline controls preload="none"></video>
         </div>
         <div class="dlg-back" id="dlgBack" hidden>
           <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgTitle" aria-describedby="dlgText">
@@ -806,6 +866,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <li><b>Slide</b><span>Drag the row. Each poster takes its turn, and the labels and gist change with it.</span></li>
       <li><b>Scan</b><span>Scroll the page. Whichever row reaches the focus line pops on its own.</span></li>
       <li><b>Tap</b><span>In quick view, tap any poster to bring it into focus.</span></li>
+      <li><b>Teaser</b><span>Let a poster rest in the centre for 3 seconds and, if it has a teaser, it opens wider and plays muted. The speaker button turns the sound on. Try जगमे तंदिरम / Jagame Thandhiram in the second row.</span></li>
+      <li><b>Details</b><span>Tap the title on the glass to open the movie page. Play opens the full-screen player.</span></li>
       <li><b>Close</b><span>Tap the round × at the bottom right, or press Esc.</span></li>
       <li><b>Language</b><span>My Netflix → tap your profile name → pencil → Display language → English or हिन्दी → Restart. The app reopens on Home in that language, with posters in it where we have them, and shows the quick view demo once.</span></li>
     </ul>
@@ -1013,7 +1075,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `Switched to ${n}`,
       restartTitle: "Restart the app?", restartText: (n) => `The app will close and open again in ${n}.`,
       cancel: "Cancel", restart: "Restart",
-      play: "Play", trailer: "Trailer", closeTrailer: "Close video", trailerOf: (t) => `${t} · Trailer`,
+      play: "Play", closeTrailer: "Close video", mute: "Mute", unmute: "Turn sound on", details: (t) => `${t}: details`,
     },
     hi: {
       langName: "हिन्दी", page: "फ़िल्में", back: "वापस", cast: "डिवाइस पर कास्ट करें", nav: "मुख्य",
@@ -1042,7 +1104,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `${n} प्रोफ़ाइल पर स्विच किया गया`,
       restartTitle: "ऐप रीस्टार्ट करें?", restartText: (n) => `ऐप बंद होकर ${n} में दोबारा खुलेगा.`,
       cancel: "रद्द करें", restart: "रीस्टार्ट करें",
-      play: "चलाएं", trailer: "ट्रेलर", closeTrailer: "वीडियो बंद करें", trailerOf: (t) => `${t} · ट्रेलर`,
+      play: "चलाएं", closeTrailer: "वीडियो बंद करें", mute: "आवाज़ बंद करें", unmute: "आवाज़ चालू करें", details: (t) => `${t}: जानकारी`,
     },
   };
 
@@ -1085,7 +1147,11 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const TITLE_SLIDE = 22;  // px a title drifts while it hands over to the next one
   const DIM = 0.25;        // how much the neighbours darken in the focused row
   const GIST_GAP = 12;     // px between the zoomed poster and its gist
-  const TRAILER_H = 38;    // the Play / Trailer buttons under the gist, with their gap
+  const TRAILER_H = 38;    // the Play button under the gist, with its gap
+  const TEASER_W = 232;    // width the centred poster opens to while its teaser plays
+  const TEASER_DELAY = 3000; // ms a poster must rest in the centre before its teaser starts
+  // Teasers we have. Titles without one stay as posters; Play falls back to the stand-in clip.
+  const TEASERS = { jagame: "teaser-jagame.mp4" };
   const FOCUS_LINE = 0.36; // where on screen (fraction of height) a row takes focus while you scroll
   const LONG_PRESS = 450;  // ms
 
@@ -1097,9 +1163,10 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
   const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot"), scroller = $("scroller");
-  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), closeBtn = $("closeFocus"), trailerBtn = $("trailerBtn"), playBtn = $("playBtn"), gistActions = $("gistActions");
+  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), closeBtn = $("closeFocus"), playBtn = $("playBtn"), gistActions = $("gistActions");
   const ghost = $("ghost"), hint = $("hint"), toast = $("toast");
   const psheet = $("psheet"), backdrop = $("sheetBackdrop"), pgEdit = $("pgEdit"), pgDisplay = $("pgDisplay");
+  const pgDetail = $("pgDetail"), dtVideo = $("dtVideo"), dtMute = $("dtMute");
   const tabHome = $("tabHome"), tabMy = $("tabMy"), nameField = $("nameField"), langList = $("langList");
   const POSTERS = window.POSTERS || {};
 
@@ -1478,6 +1545,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       busy = busy || r.anim;
     }
     if (focus.ovRow && focus.ovRow !== focus.row && focus.ovRow.lp.x === 0) clearOverlay();
+    if (updateTeaser(now, dt)) busy = true;
     render();
     if (busy) kick();
   }
@@ -1497,6 +1565,79 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     return { f, i0, i1, fr: f - i0 };
   }
 
+  // ---------- teaser in the poster frame ----------
+  // After the centred poster rests for TEASER_DELAY, it opens into a wider frame and plays its teaser,
+  // muted until the viewer turns the sound on. Moving the row closes it again.
+  const tzFrame = document.createElement("div");
+  tzFrame.className = "teaser";
+  tzFrame.innerHTML = `<img alt=""><video muted playsinline loop preload="none"></video><div class="tz-shade"></div><button class="mute-btn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button>`;
+  const tzImg = tzFrame.querySelector("img"), tzVideo = tzFrame.querySelector("video"), tzMute = tzFrame.querySelector(".mute-btn");
+  const tz = { row: null, idx: -1, key: null, since: 0, v: { x: 0, v: 0 }, muted: true, timer: 0, on: false, openIdx: -1 };
+  function setMuteIcon(btn, muted) {
+    btn.innerHTML = muted ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6M18.6 6.5a8 8 0 0 1 0 11"/></svg>`;
+    btn.setAttribute("aria-label", muted ? S().unmute : S().mute);
+  }
+  function applyMute() {
+    tzVideo.muted = tz.muted;
+    setMuteIcon(tzMute, tz.muted);
+    dtVideo.muted = tz.muted;
+    setMuteIcon(dtMute, tz.muted);
+  }
+  tzMute.addEventListener("pointerdown", (e) => e.stopPropagation());
+  tzMute.addEventListener("click", () => { tz.muted = !tz.muted; applyMute(); });
+  function teaserWanted(now) {
+    const r = focus.on ? focus.row : null;
+    const quiet = player.hidden && !stack.length && !demo;
+    if (!r || !quiet || r.lp.x < 0.95) { tz.idx = -1; return null; }
+    const i = nearestIndex(r), key = r.items[i].key;
+    const scrubbing = gesture && gesture.r === r && gesture.state === "scrub";
+    const settled = !r.anim && !scrubbing && Math.abs(r.x - centredX(i)) < 1.5;
+    if (!settled || !TEASERS[key]) { tz.idx = -1; return null; }
+    if (tz.row !== r || tz.idx !== i) {
+      tz.row = r; tz.idx = i; tz.since = now;
+      clearTimeout(tz.timer);
+      tz.timer = setTimeout(kick, TEASER_DELAY + 30);
+    }
+    return now - tz.since >= TEASER_DELAY ? { r, i, key } : null;
+  }
+  function updateTeaser(now, dt) {
+    const want = teaserWanted(now);
+    if (want && (!tz.on || tz.key !== want.key || tzFrame.parentNode !== want.r.strip)) {
+      tz.on = true; tz.key = want.key; tz.openIdx = want.i;
+      want.r.strip.appendChild(tzFrame);
+      tzImg.src = POSTERS[want.key] || "";
+      tzVideo.classList.remove("ready");
+      tzVideo.src = TEASERS[want.key];
+      tzVideo.currentTime = 0;
+      applyMute();
+      const p = tzVideo.play();
+      if (p && p.catch) p.catch(() => {});
+    }
+    // close when the row moves, the title changes or quick view ends
+    const open = !!want && tz.key === want.key;
+    if (reduceMotion) { tz.v.x = open ? 1 : 0; tz.v.v = 0; }
+    else spring(tz.v, open ? 1 : 0, open ? 90 : 260, 1, dt);
+    if (!open && tz.v.x < 0.01) {
+      tz.v.x = 0; tz.v.v = 0;
+      if (tz.on) { tz.on = false; tz.key = null; tzVideo.pause(); tzVideo.removeAttribute("src"); tzVideo.load(); tzFrame.remove(); }
+      return false;
+    }
+    return true;
+  }
+  tzVideo.addEventListener("playing", () => tzVideo.classList.add("ready"));
+  function teaserExtra(r) { return tz.on && tzFrame.parentNode === r.strip ? (TEASER_W - PW * CFG.zoom) / 2 * clamp(tz.v.x, 0, 1) : 0; }
+  function placeTeaser(r) {
+    if (!tz.on || tzFrame.parentNode !== r.strip) return;
+    const v = clamp(tz.v.x, 0, 1);
+    const zw = PW * CFG.zoom, zh = PH * CFG.zoom;
+    const w = zw + (TEASER_W - zw) * v;
+    tzFrame.style.width = w.toFixed(2) + "px";
+    tzFrame.style.height = zh.toFixed(2) + "px";
+    tzFrame.style.transform = `translate3d(${(lensX() - w / 2).toFixed(2)}px,${(BLEED + PH * ORIGIN_Y * (1 - CFG.zoom)).toFixed(2)}px,0)`;
+    tzFrame.style.opacity = Math.min(1, v * 6).toFixed(3);
+    tzVideo.style.opacity = tzVideo.classList.contains("ready") ? smooth(0.55, 1, v).toFixed(3) : "0";
+  }
+
   function styleRow(r) {
     const p = clamp(r.lp.x, 0, 1.1), pa = Math.min(p, 1);
     const { i0, i1, fr } = rowPos(r);
@@ -1512,6 +1653,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const cx = lensX();
     const ts = r.els.map((_, i) => 1 - smooth(0, STEP, Math.abs(posterCenter(i) - r.x - cx)));
     const grow = ts.map((t) => (PW * (CFG.zoom - 1) * t * p) / 2);        // extra half-width per poster
+    const extra = teaserExtra(r);
+    if (extra && tz.openIdx >= 0) grow[tz.openIdx] += extra;
     let acc = 0;
     const shift = grow.map((g) => { const v = acc + g; acc += 2 * g; return v; });
     const anchor = shift[i0] + (shift[i1] - shift[i0]) * fr;               // keep the centre poster centred
@@ -1523,6 +1666,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       r.shades[i].style.opacity = (t * pa).toFixed(3);
     });
     r.styled = true;
+    placeTeaser(r);
   }
 
   // Hand over between items i0 and i1: the outgoing one clears before the incoming one arrives.
@@ -1577,10 +1721,10 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const s = r.strip;
     let wheelT = 0;
     s.addEventListener("contextmenu", (e) => e.preventDefault());
-    const start = (e, poster) => {
+    const start = (e, poster, title) => {
       if (gesture || (e.pointerType === "mouse" && e.button !== 0)) return;
       stopDemo();
-      const g = { r, id: e.pointerId, x0: e.clientX, y0: e.clientY, lastX: e.clientX, state: "pending", caught: false, poster, timer: 0 };
+      const g = { r, id: e.pointerId, x0: e.clientX, y0: e.clientY, lastX: e.clientX, state: "pending", caught: false, poster, title: !!title, timer: 0 };
       gesture = g;
       if (r.anim) {                       // catch a gliding row
         r.anim = false; r.snap = null; r.v = 0; r.raw = r.x;
@@ -1590,6 +1734,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       if (e.pointerType === "mouse") e.preventDefault();
     };
     s.addEventListener("pointerdown", (e) => start(e, e.target.closest(".poster")));
+    r.start = start;
     // the title, labels and gist under the focused poster scrub the row too
     r.hit.addEventListener("pointerdown", (e) => { if (focus.row === r) start(e, null); });
     s.addEventListener("wheel", (e) => {
@@ -1663,12 +1808,15 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     clearTimeout(g.timer);
     if (g.state === "scrub") return endScrub(g.r);
     if (g.state === "held") return;
+    if (g.title && !g.caught && e.type === "pointerup") return openDetail();
     if (g.caught) release(g.r, 0);
     else if (focus.on && e.type === "pointerup") tapPoster(g);
   };
   addEventListener("pointerup", finish);
   addEventListener("pointercancel", finish);
   scroller.addEventListener("scroll", () => { followScroll(); kick(); }, { passive: true });
+  // the title on the glass opens the detail page; swiping on it still moves the row
+  glass.addEventListener("pointerdown", (e) => { if (focus.on && focus.row) focus.row.start(e, null, true); });
   closeBtn.addEventListener("click", () => { stopDemo(); exitFocus(); });
   addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
@@ -1789,6 +1937,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   function pop() {
     const pg = stack.pop();
     if (pg) setOpen(pg, false);
+    if (pg === pgDetail) { dtVideo.pause(); kick(); }
     return !!pg;
   }
 
@@ -1857,13 +2006,14 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   // Play and Trailer open a full-screen player; × or back closes it. Every title uses the same stand-in clip.
   const player = $("player"), video = $("playerVideo");
   let opener = null;
-  function openVideo(trailer) {
-    const r = focus.row;
-    if (!r) return;
+  function openVideo(key, from) {
+    if (!key) return;
     stopDemo();
-    opener = trailer ? trailerBtn : playBtn;
-    const t = tx(r.items[nearestIndex(r)].key).title;
-    $("playerTitle").textContent = trailer ? S().trailerOf(t) : t;
+    opener = from;
+    dtVideo.pause();
+    $("playerTitle").textContent = tx(key).title;
+    const src = TEASERS[key] || "trailer.mp4";
+    if (!video.src.endsWith(src)) video.src = src;
     player.hidden = false;
     video.currentTime = 0;
     const p = video.play();
@@ -1874,9 +2024,40 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     video.pause();
     player.hidden = true;
     if (opener) opener.focus({ preventScroll: true });
+    if (stack[stack.length - 1] === pgDetail && TEASERS[detailKey]) { const p = dtVideo.play(); if (p && p.catch) p.catch(() => {}); }
+    kick();
   }
-  trailerBtn.addEventListener("click", () => openVideo(true));
-  playBtn.addEventListener("click", () => openVideo(false));
+  const focusedKey = () => focus.row ? focus.row.items[nearestIndex(focus.row)].key : null;
+  playBtn.addEventListener("click", () => openVideo(focusedKey(), playBtn));
+
+  // Movie detail page, opened by tapping the title on the glass.
+  let detailKey = null;
+  function openDetail() {
+    const key = focusedKey();
+    if (!key) return;
+    stopDemo();
+    detailKey = key;
+    const info = tx(key);
+    $("dtTitle").textContent = info.title;
+    $("dtMeta").textContent = `${info.year} · ${info.genre}`;
+    $("dtAvail").replaceChildren(availability(info));
+    $("dtGist").textContent = info.gist;
+    $("dtPoster").src = POSTERS[key] || "";
+    const has = !!TEASERS[key];
+    pgDetail.classList.toggle("has-video", has);
+    dtVideo.classList.remove("ready");
+    if (has) {
+      dtVideo.src = TEASERS[key];
+      dtVideo.currentTime = 0;
+      applyMute();
+      const p = dtVideo.play();
+      if (p && p.catch) p.catch(() => {});
+    } else { dtVideo.pause(); dtVideo.removeAttribute("src"); }
+    push(pgDetail);
+  }
+  dtVideo.addEventListener("playing", () => dtVideo.classList.add("ready"));
+  dtMute.addEventListener("click", () => { tz.muted = !tz.muted; applyMute(); });
+  $("dtPlay").addEventListener("click", () => openVideo(detailKey, $("dtPlay")));
   $("playerClose").addEventListener("click", closeTrailer);
   $("dlgCancel").addEventListener("click", cancelRestart);
   $("dlgOk").addEventListener("click", () => { const c = pendingLang; pendingLang = null; if (c) restartInto(c); });

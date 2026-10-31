@@ -187,8 +187,10 @@ def web_assets():
                       '<link rel="stylesheet" href="fonts/fonts.css">', html)
     assert n == 1, "font link not found"
     files = {"assets/index.html": html.encode("utf-8"),
-             "assets/posters.js": open(os.path.join(SRC, "posters.js"), "rb").read(),
-             "assets/trailer.mp4": open(os.path.join(SRC, "trailer.mp4"), "rb").read()}
+             "assets/posters.js": open(os.path.join(SRC, "posters.js"), "rb").read()}
+    for f in sorted(os.listdir(SRC)):
+        if f.endswith(".mp4"):
+            files["assets/" + f] = open(os.path.join(SRC, f), "rb").read()
     fdir = os.path.join(HERE, "fonts")
     for f in sorted(os.listdir(fdir)):
         files["assets/fonts/" + f] = open(os.path.join(fdir, f), "rb").read()
