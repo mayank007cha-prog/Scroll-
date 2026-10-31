@@ -459,19 +459,24 @@ button, input { font: inherit; color: inherit; }
 .lang-radio.off { color: var(--ink-2); }
 .set-row:focus-visible, .edit-row:focus-visible, .lang-radio:focus-visible, .who:focus-visible, .other:focus-visible,
 .pill-btn:focus-visible, .manage:focus-visible, .round-x:focus-visible, .pencil:focus-visible, .mc-head:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-#gist .trailer-btn {
-  position: absolute; left: 50%; top: 0;
-  transform: translateX(-50%);
-  display: inline-flex; align-items: center; gap: 8px;
-  height: 34px; padding: 0 16px;
-  border: 0; border-radius: 6px;
-  background: var(--ink); color: #000;
-  font-size: 13.5px; font-weight: 700; white-space: nowrap;
+.gist-actions {
+  position: absolute; left: 0; right: 0; top: 0;
+  display: flex; justify-content: center; gap: 8px;
+  pointer-events: none;
+}
+.gist-actions .act {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 28px; padding: 0 12px;
+  border: 0; border-radius: 4px;
+  background: rgba(255,255,255,0.18); color: var(--ink);
+  font-size: 12.5px; font-weight: 700; white-space: nowrap;
   cursor: pointer; pointer-events: auto;
 }
-#gist .trailer-btn:hover { background: #e6e6e6; }
-.screen:not(.focus) #gist .trailer-btn { visibility: hidden; pointer-events: none; }
-#gist .trailer-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.gist-actions .act.play { background: var(--ink); color: #000; }
+.gist-actions .act:hover { filter: brightness(0.9); }
+.gist-actions .act:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.screen:not(.focus) .gist-actions { visibility: hidden; }
+.screen:not(.focus) .gist-actions .act { pointer-events: none; }
 .player {
   position: absolute; inset: 0; z-index: 45;
   display: flex; flex-direction: column; justify-content: center;
@@ -690,7 +695,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         </div>
 
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
-        <div id="gist"><button class="trailer-btn" id="trailerBtn" type="button"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="watchTrailer"></span></button></div>
+        <div id="gist"><div class="gist-actions" id="gistActions"><button class="act play" id="playBtn" type="button"><svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="play"></span></button><button class="act" id="trailerBtn" type="button"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor"/></svg><span data-i18n="trailer"></span></button></div></div>
         <button class="close-focus" id="closeFocus" type="button" tabindex="-1" aria-label="क्विक व्यू बंद करें" title="क्विक व्यू बंद करें">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
         </button>
@@ -1008,7 +1013,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `Switched to ${n}`,
       restartTitle: "Restart the app?", restartText: (n) => `The app will close and open again in ${n}.`,
       cancel: "Cancel", restart: "Restart",
-      watchTrailer: "Watch trailer", closeTrailer: "Close trailer", trailerOf: (t) => `${t} · Trailer`,
+      play: "Play", trailer: "Trailer", closeTrailer: "Close video", trailerOf: (t) => `${t} · Trailer`,
     },
     hi: {
       langName: "हिन्दी", page: "फ़िल्में", back: "वापस", cast: "डिवाइस पर कास्ट करें", nav: "मुख्य",
@@ -1037,7 +1042,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `${n} प्रोफ़ाइल पर स्विच किया गया`,
       restartTitle: "ऐप रीस्टार्ट करें?", restartText: (n) => `ऐप बंद होकर ${n} में दोबारा खुलेगा.`,
       cancel: "रद्द करें", restart: "रीस्टार्ट करें",
-      watchTrailer: "ट्रेलर देखें", closeTrailer: "ट्रेलर बंद करें", trailerOf: (t) => `${t} · ट्रेलर`,
+      play: "चलाएं", trailer: "ट्रेलर", closeTrailer: "वीडियो बंद करें", trailerOf: (t) => `${t} · ट्रेलर`,
     },
   };
 
@@ -1080,7 +1085,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const TITLE_SLIDE = 22;  // px a title drifts while it hands over to the next one
   const DIM = 0.25;        // how much the neighbours darken in the focused row
   const GIST_GAP = 12;     // px between the zoomed poster and its gist
-  const TRAILER_H = 46;    // the Watch trailer button under the gist, with its gap
+  const TRAILER_H = 38;    // the Play / Trailer buttons under the gist, with their gap
   const FOCUS_LINE = 0.36; // where on screen (fraction of height) a row takes focus while you scroll
   const LONG_PRESS = 450;  // ms
 
@@ -1092,7 +1097,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
   const screenEl = $("screen"), phone = $("phone"), slot = $("phoneSlot"), scroller = $("scroller");
-  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), closeBtn = $("closeFocus"), trailerBtn = $("trailerBtn");
+  const rowsEl = $("rows"), lensEl = $("lens"), glass = $("glass"), gistEl = $("gist"), closeBtn = $("closeFocus"), trailerBtn = $("trailerBtn"), playBtn = $("playBtn"), gistActions = $("gistActions");
   const ghost = $("ghost"), hint = $("hint"), toast = $("toast");
   const psheet = $("psheet"), backdrop = $("sheetBackdrop"), pgEdit = $("pgEdit"), pgDisplay = $("pgDisplay");
   const tabHome = $("tabHome"), tabMy = $("tabMy"), nameField = $("nameField"), langList = $("langList");
@@ -1233,7 +1238,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       p.textContent = info.gist;
       el.append(availability(info), p);
       el.style.opacity = "0";
-      gistEl.insertBefore(el, trailerBtn);
+      gistEl.insertBefore(el, gistActions);
       return { el, op: 0 };
     });
     focus.ovRow = r;
@@ -1561,7 +1566,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     glass.style.height = gh + "px";
     glass.style.transform = `scale(${(0.92 + 0.08 * pa).toFixed(4)})`;
     gistEl.style.height = gistH + TRAILER_H + "px";
-    trailerBtn.style.top = gistH + 10 + "px";
+    gistActions.style.top = gistH + 9 + "px";
     gistEl.style.transform = `translate3d(${(cx - gistW() / 2).toFixed(2)}px,${(zoomedBottom + GIST_GAP - (1 - pa) * 6).toFixed(2)}px,0)`;
     gistEl.style.opacity = vis;
   }
@@ -1849,13 +1854,16 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       maybeDemo(900);
     }, reduceMotion ? 300 : 1700);
   }
-  // Watch trailer: plays over the whole screen; × or back closes it. Every title uses the same stand-in clip.
+  // Play and Trailer open a full-screen player; × or back closes it. Every title uses the same stand-in clip.
   const player = $("player"), video = $("playerVideo");
-  function openTrailer() {
+  let opener = null;
+  function openVideo(trailer) {
     const r = focus.row;
     if (!r) return;
     stopDemo();
-    $("playerTitle").textContent = S().trailerOf(tx(r.items[nearestIndex(r)].key).title);
+    opener = trailer ? trailerBtn : playBtn;
+    const t = tx(r.items[nearestIndex(r)].key).title;
+    $("playerTitle").textContent = trailer ? S().trailerOf(t) : t;
     player.hidden = false;
     video.currentTime = 0;
     const p = video.play();
@@ -1865,10 +1873,10 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   function closeTrailer() {
     video.pause();
     player.hidden = true;
-    trailerBtn.focus({ preventScroll: true });
+    if (opener) opener.focus({ preventScroll: true });
   }
-  trailerBtn.addEventListener("click", openTrailer);
-  trailerBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
+  trailerBtn.addEventListener("click", () => openVideo(true));
+  playBtn.addEventListener("click", () => openVideo(false));
   $("playerClose").addEventListener("click", closeTrailer);
   $("dlgCancel").addEventListener("click", cancelRestart);
   $("dlgOk").addEventListener("click", () => { const c = pendingLang; pendingLang = null; if (c) restartInto(c); });
