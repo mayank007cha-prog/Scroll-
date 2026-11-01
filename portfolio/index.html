@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mayank Chauhan Portfolio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Mayank Chauhan, UI/UX Designer. Animator turned product designer: case studies and interaction concepts.">
+<script>
+  /* theme before first paint: saved choice > host choice > light */
+  (function () {
+    var d = document.documentElement, t = null;
+    d.classList.add("js");
+    try { t = localStorage.getItem("mc-theme"); } catch (e) {}
+    if (t === "light" || t === "dark") d.setAttribute("data-theme", t);
+    else if (!d.getAttribute("data-theme")) d.setAttribute("data-theme", "light");
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="intro-on">
+
+<!-- ================= INTRO ================= -->
+<div class="intro" id="intro" role="status" aria-label="Loading portfolio">
+  <div class="intro-stage">
+    <div class="intro-phone" aria-hidden="true">
+      <div class="phone-frame"><div class="phone-screen"></div><span class="island"></span></div>
+    </div>
+    <div class="intro-ball" aria-hidden="true"><span class="shadow"></span><span class="ball"></span></div>
+    <div class="intro-count" id="introCount" aria-hidden="true">000</div>
+    <p class="intro-line">
+      <span class="l1">From making things move</span>
+      <span class="l2">to making things <em class="serif">work.</em></span>
+    </p>
+  </div>
+  <button class="intro-skip" id="introSkip" type="button">Skip intro</button>
+</div>
+
+<!-- ================= NAV ================= -->
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top" aria-label="Mayank Chauhan, home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1v22M1 12h22M4.2 4.2l15.6 15.6M19.8 4.2 4.2 19.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Mayank Chauhan
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#work" data-nav="work">Work</a></li>
+      <li><a href="#concepts" data-nav="concepts">Concepts</a></li>
+      <li><a href="#about" data-nav="about">About</a></li>
+      <!-- TODO: point this at your resume PDF, e.g. assets/media/mayank-chauhan-resume.pdf -->
+      <li><a href="#contact" data-nav="contact">Resume</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode">
+        <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>
+        <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <a class="btn nav-talk" href="#contact">Let's talk
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px"><path d="M7 17 17 7M8 7h9v9"/></svg>
+      </a>
+      <button class="theme-toggle menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="position:static"><path d="M4 8h16M4 16h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- =====================================================================
+     HOME
+     ===================================================================== -->
+<div class="view" data-view="home">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="pill" data-in style="--d:0"><span class="dot"></span>UI/UX Designer</span>
+        <h1 data-in style="--d:1">From making things move to making things <span class="serif">work.</span></h1>
+        <p class="hero-lede" data-in style="--d:2">I'm Mayank, an animator turned UI/UX designer. I design product features that solve real problems, and interaction concepts for the apps I use every day.</p>
+        <a class="scroll-cue" href="#work" data-in style="--d:3">
+          <span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span>
+          Scroll to explore
+        </a>
+      </div>
+
+      <!-- Hero artwork: the "earlier" animation card and the "now" product card, joined by an orbit -->
+      <div class="hero-art" id="heroArt" data-in style="--d:2" role="img" aria-label="Illustration: a bouncing 3D ball on a dark card labelled Animator (earlier), connected by an orbit line to a light interface card labelled UI/UX Designer (now).">
+        <svg class="orbits" viewBox="0 0 600 560" aria-hidden="true">
+          <ellipse cx="300" cy="330" rx="250" ry="92" transform="rotate(-8 300 330)"/>
+          <path d="M470 -10 C 420 120, 560 210, 640 250"/>
+          <path id="orbitPath" d="M60 360 C 120 470, 380 500, 560 380"/>
+          <circle class="dot-fixed" cx="60" cy="360" r="3.5"/>
+          <circle class="travel" r="5">
+            <animateMotion dur="5s" repeatCount="indefinite" rotate="auto" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.2 1">
+              <mpath href="#orbitPath"/>
+            </animateMotion>
+          </circle>
+        </svg>
+        <div class="art-card art-anim">
+          <span class="floor"></span>
+          <span class="sphere"></span>
+          <span class="slab"></span>
+          <span class="keys"><i></i><i></i><i></i><i></i><i></i></span>
+        </div>
+        <span class="art-tag tag-earlier">Animator <small>(earlier)</small></span>
+        <div class="art-card art-ui">
+          <span class="chrome"><i></i><i></i><i></i></span>
+          <span class="lines"><i></i><i></i><i></i><i></i></span>
+          <span class="cta"></span>
+          <svg class="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6.5 1.5L9 19z"/></svg>
+        </div>
+        <span class="art-tag tag-now">UI/UX Designer <small>(now)</small></span>
+        <svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 0c.6 6.2 2.8 9.6 12 12-9.2 2.4-11.4 5.8-12 12-.6-6.2-2.8-9.6-12-12 9.2-2.4 11.4-5.8 12-12z"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- CASE STUDIES -->
+  <section class="band" id="work">
+    <div class="wrap split">
+      <div class="split-intro reveal">
+        <span class="eyebrow">Case Studies</span>
+        <h2>Solving real problems at scale.</h2>
+        <p>Thoughtful design. Measurable impact. Each one told as Who, What, Why and How.</p>
+      </div>
+      <div class="case-grid">
+        <a class="case-card reveal" href="#demedic">
+          <span class="client"><span class="client-logo">DE</span>DE Medic</span>
+          <h3>Making complex duty swaps simple for doctors.</h3>
+          <span class="meta-line"><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Healthcare · Mobile app</span>
+          <div class="case-art" aria-hidden="true">
+            <div class="mini-phone">
+              <span class="mp-title">Duty Swap</span>
+              <span class="mp-tabs"><i></i><i></i></span>
+              <span class="duty"><b></b><span><i></i><i></i></span><em></em></span>
+              <span class="duty offer"><b></b><span><i></i><i></i></span><em>Offered</em></span>
+              <span class="duty bid"><b></b><span><i></i><i></i></span><em>Bid</em></span>
+              <span class="duty ok"><b></b><span><i></i><i></i></span><em>Swapped</em></span>
+              <span class="duty"><b></b><span><i></i><i></i></span><em></em></span>
+            </div>
+          </div>
+        </a>
+        <a class="case-card reveal" href="#earthlink" style="transition-delay:80ms">
+          <span class="client"><span class="client-logo">EL</span>EarthLink</span>
+          <h3>Simplifying fiber checkout for a faster purchase.</h3>
+          <span class="meta-line"><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Telecom · Web checkout</span>
+          <div class="case-art" aria-hidden="true">
+            <div class="mini-pay">
+              <span class="mp-h">Review &amp; Pay</span>
+              <span class="row">Fiber plan<i></i></span>
+              <span class="row">Installation<i></i></span>
+              <span class="due">Due today</span>
+              <span class="amt">$59.99</span>
+              <span class="paybtn">G Pay</span>
+              <span class="paybtn">Apple Pay</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONCEPTS -->
+  <section class="band" id="concepts">
+    <div class="wrap">
+      <div class="concept-head">
+        <div class="split-intro reveal">
+          <span class="eyebrow">Concepts</span>
+          <h2>Exploring what's <span class="serif">possible.</span></h2>
+          <p>Interaction ideas inspired by everyday apps. Some are add-ons, some fix things that bugged me.</p>
+        </div>
+        <span class="hint reveal"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V5a2 2 0 1 1 4 0v5m0-1a2 2 0 1 1 4 0v2m0-1a2 2 0 1 1 4 0v4a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3.4L4.5 14a2 2 0 0 1 3.4-2.1L9 13.5"/></svg>Hover a phone to bring it forward</span>
+      </div>
+
+      <!--
+        Each phone plays a looping preview. To use your real screen recording,
+        put the file in assets/media/ and fill in data-video, e.g.
+        data-video="assets/media/spotify-mini-player.mp4"
+        The CSS preview stays as the fallback until the video loads.
+      -->
+      <div class="phone-stage" id="phoneStage">
+        <figure class="phone-card" data-video="" style="--i:0">
+          <div class="phone"><div class="phone-frame"><div class="phone-screen">
+            <div class="demo demo-music" aria-hidden="true">
+              <div class="status"><span>9:41</span><span>●●●</span></div>
+              <div class="hd">Good evening</div>
+              <div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="card"></div>
+              <div class="bar"><span class="art"></span><span class="t"><i></i><i></i></span></div>
+              <div class="disc"></div>
+              <div class="tabs"></div>
+            </div>
+          </div><span class="island"></span></div></div>
+          <span class="floor-shadow" aria-hidden="true"></span>
+          <figcaption><span class="c-app">Spotify</span><span class="c-name">Mini Player Disc</span><span class="c-desc">The mini player turns into a spinning record.</span></figcaption>
+        </figure>
+
+        <figure class="phone-card" data-video="" style="--i:1">
+          <div class="phone"><div class="phone-frame"><div class="phone-screen">
+            <div class="demo demo-stream" aria-hidden="true">
+              <div class="status"><span>9:41</span><span>●●●</span></div>
+              <span class="logo"></span>
+              <span class="chips"><i></i><i></i><i></i></span>
+              <span class="lbl" style="top:17%"></span>
+              <div class="row r1"><i style="--a:#3a8fd9;--b:#0b2342"></i><i style="--a:#d9a521;--b:#4a2c05"></i><i style="--a:#2aa36b;--b:#06301d"></i><i style="--a:#c6408c;--b:#3d0a26"></i></div>
+              <span class="lbl" style="top:41%"></span>
+              <div class="row r2"><i style="--a:#e50914;--b:#4a0b12"></i><i style="--a:#8f8bff;--b:#1d1b52"></i><i style="--a:#e0603a;--b:#401405"></i><i style="--a:#3ac7d9;--b:#063a42"></i></div>
+              <span class="lbl" style="top:65%"></span>
+              <div class="row r3"><i style="--a:#5a55f0;--b:#14123d"></i><i style="--a:#d93a5a;--b:#420615"></i><i style="--a:#a2d93a;--b:#253d06"></i><i style="--a:#d9773a;--b:#422106"></i></div>
+              <div class="qv"><div class="poster"></div><div class="info"><i></i><i></i><i></i><span class="btns"><b></b><b></b></span></div></div>
+              <span class="tap"></span>
+            </div>
+          </div><span class="island"></span></div></div>
+          <span class="floor-shadow" aria-hidden="true"></span>
+          <figcaption><span class="c-app">Netflix</span><span class="c-name">Quick View</span><span class="c-desc">Peek at a title's details without leaving the grid.</span></figcaption>
+        </figure>
+
+        <figure class="phone-card" data-video="" style="--i:2">
+          <div class="phone"><div class="phone-frame"><div class="phone-screen">
+            <div class="demo demo-incog" aria-hidden="true">
+              <div class="status"><span>9:41</span><span>●●●</span></div>
+              <div class="gl"><i style="--c:#4285f4"></i><i style="--c:#ea4335"></i><i style="--c:#fbbc05"></i><i style="--c:#34a853"></i></div>
+              <div class="search"></div>
+              <div class="icon-wrap">
+                <svg class="hat" viewBox="0 0 100 44"><path fill="currentColor" d="M22 30 30 6c1-3 4-5 7-4l13 4 13-4c3-1 6 1 7 4l8 24c6 1 14 3 18 6-14 6-34 8-50 8S14 42 0 36c4-3 12-5 18-6z"/></svg>
+                <svg class="glasses" viewBox="0 0 100 40"><g fill="none" stroke="currentColor" stroke-width="6"><circle cx="26" cy="22" r="14"/><circle cx="74" cy="22" r="14"/><path d="M40 20c6-4 14-4 20 0"/></g></svg>
+              </div>
+              <div class="copy"><i></i><i></i></div>
+            </div>
+          </div><span class="island"></span></div></div>
+          <span class="floor-shadow" aria-hidden="true"></span>
+          <figcaption><span class="c-app">Google</span><span class="c-name">Incognito Animation</span><span class="c-desc">A playful hand-off into private browsing.</span></figcaption>
+        </figure>
+
+        <figure class="phone-card" data-video="" style="--i:3">
+          <div class="phone"><div class="phone-frame"><div class="phone-screen">
+            <div class="demo demo-icons" aria-hidden="true">
+              <div class="status"><span>9:41</span><span>●●●</span></div>
+              <div class="home">
+                <i style="--i:0;--c:linear-gradient(150deg,#ff8a65,#e0473a)"></i><i style="--i:1;--c:linear-gradient(150deg,#ffd54f,#f0a020)"></i><i style="--i:2;--c:linear-gradient(150deg,#81c784,#2e9a5e)"></i><i style="--i:3;--c:linear-gradient(150deg,#64b5f6,#2f6fd6)"></i>
+                <i style="--i:1;--c:linear-gradient(150deg,#ba68c8,#7b3fb0)"></i><i style="--i:2;--c:linear-gradient(150deg,#4dd0e1,#1f97a8)"></i><i style="--i:3;--c:linear-gradient(150deg,#ff8a80,#d6335a)"></i><i style="--i:4;--c:linear-gradient(150deg,#fff,#dcdcf0)"></i>
+                <i style="--i:2;--c:linear-gradient(150deg,#9fa8da,#5a55f0)"></i><i style="--i:3;--c:linear-gradient(150deg,#ffcc80,#e8791f)"></i><i style="--i:4;--c:linear-gradient(150deg,#a5d6a7,#43a047)"></i><i style="--i:5;--c:linear-gradient(150deg,#f48fb1,#c2185b)"></i>
+                <i style="--i:3;--c:linear-gradient(150deg,#80deea,#00838f)"></i><i style="--i:4;--c:linear-gradient(150deg,#ce93d8,#8e24aa)"></i><i style="--i:5;--c:linear-gradient(150deg,#ffab91,#d84315)"></i><i style="--i:6;--c:linear-gradient(150deg,#90caf9,#1565c0)"></i>
+              </div>
+              <div class="dock">
+                <i style="--i:0;--c:linear-gradient(150deg,#69f0ae,#00a152)"></i><i style="--i:1;--c:linear-gradient(150deg,#82b1ff,#2962ff)"></i><i style="--i:2;--c:linear-gradient(150deg,#ff8a80,#d50000)"></i><i style="--i:3;--c:linear-gradient(150deg,#ffe57f,#ffab00)"></i>
+              </div>
+            </div>
+          </div><span class="island"></span></div></div>
+          <span class="floor-shadow" aria-hidden="true"></span>
+          <figcaption><span class="c-app">App Icons</span><span class="c-name">Play</span><span class="c-desc">Home screen icons that respond with a little bounce.</span></figcaption>
+        </figure>
+
+        <figure class="phone-card" data-video="" style="--i:4">
+          <div class="phone"><div class="phone-frame"><div class="phone-screen">
+            <div class="demo demo-wall" aria-hidden="true">
+              <div class="w w0"></div><div class="w w1"></div><div class="w w2"></div><div class="w w3"></div>
+              <div class="status" style="color:#fff"><span>9:41</span><span>●●●</span></div>
+              <div class="clock"><span>Saturday, 1 November</span><b>9:41</b></div>
+              <div class="note"></div>
+              <span class="tapdot"></span>
+            </div>
+          </div><span class="island"></span></div></div>
+          <span class="floor-shadow" aria-hidden="true"></span>
+          <figcaption><span class="c-app">Wallpaper</span><span class="c-name">Change Animation</span><span class="c-desc">Swap wallpapers with a ripple from your fingertip.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="band" id="about">
+    <div class="wrap">
+      <div class="about-grid">
+        <div class="about-copy reveal">
+          <span class="eyebrow">About Me</span>
+          <h2>A curious mind, shaped by many <span class="serif">places.</span></h2>
+          <p>I grew up an Air Force kid and changed six or seven schools before I turned 18. Meeting people from so many backgrounds taught me to observe first and design for everyone.</p>
+          <p>Before I make anything, I hunt for four answers: who it's for, what needs to change, why it matters, and how to get there.</p>
+          <span class="role-label"><b>UX</b>UI/UX Designer at DigiMantra, Mohali</span>
+        </div>
+
+        <div class="reveal">
+          <div class="cube-card" id="cubeCard" title="Hover to pause">
+            <canvas id="cubeCanvas" role="img" aria-label="A small spider walks on top of a turning cube. Its four sides read Who, What, Why and How."></canvas>
+            <div class="cube-hud">
+              <span class="rec" id="cubeRec">Hunting for answers</span>
+              <button class="cube-toggle" id="cubeToggle" type="button" aria-label="Pause animation">
+                <svg class="icon i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>
+                <svg class="icon i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+              </button>
+            </div>
+            <div class="cube-caption"><span class="words">Who · What · Why · How</span><span id="cubeHint">Hover to pause</span></div>
+            <div class="cube-fallback">Who · What · Why · How</div>
+          </div>
+        </div>
+      </div>
+
+      <ol class="journey">
+        <li class="reveal"><h3>Animator</h3><p>Rotoscoping, 3D modelling, lighting and rigging across a stack of software. Huge effort for a few seconds of output, and more art than problem solving.</p></li>
+        <li class="reveal"><h3>The turn</h3><p>I went looking for animation that solves problems and found micro-interactions. A UI/UX subject in my final year of animation sealed it.</p></li>
+        <li class="reveal"><h3>Master's in UI/UX</h3><p>I went back to study and made the switch from making things move to making things work.</p></li>
+        <li class="reveal now"><h3>DigiMantra</h3><p>3.5+ years as a UI/UX Designer on EarthLink, DE Medic and DeSafe, plus interaction concepts on the side.</p></li>
+      </ol>
+
+      <div class="places reveal">
+        <div>
+          <span class="eyebrow">Many places</span>
+          <h3 style="margin-top:12px">Jammu to Mumbai, Kerala to Pune.</h3>
+          <p style="margin-top:10px">My father serves in the Indian Air Force, so home kept moving. When you've lived among many cultures you stay humble. The only pride I keep is in what I've achieved, not what I was born with.</p>
+        </div>
+        <svg class="route" viewBox="0 0 520 170" role="img" aria-label="A dotted flight path through Jammu, Mumbai, Kerala, Pune, Agra and Jaisalmer.">
+          <path d="M10 150 C 70 60, 120 120, 170 90 S 270 30, 320 70 S 420 120, 490 30"/>
+          <circle cx="40" cy="108" r="4"/><text x="22" y="132">Jammu</text>
+          <circle cx="120" cy="104" r="4"/><text x="98" y="128">Mumbai</text>
+          <circle cx="205" cy="74" r="4"/><text x="186" y="98">Kerala</text>
+          <circle cx="285" cy="52" r="4"/><text x="270" y="40">Pune</text>
+          <circle cx="360" cy="86" r="4"/><text x="344" y="110">Agra</text>
+          <circle cx="440" cy="84" r="4"/><text x="414" y="108">Jaisalmer</text>
+          <path class="plane" transform="translate(490 30) rotate(-52)" d="M-9 -7 L11 0 L-9 7 L-5 0 Z" style="stroke:none;stroke-dasharray:none"/>
+        </svg>
+      </div>
+
+      <div class="beyond">
+        <div class="reveal"><h4>I think sideways</h4><p>I like looking at a situation the way most people wouldn't. That's where new ideas come from.</p></div>
+        <div class="reveal"><h4>I wrote rap</h4><p>I used to make rap music and wrote all my own lyrics. It's one of the things I'm proudest of.</p></div>
+        <div class="reveal"><h4>I redesign my apps</h4><p>Every app I use gives me an idea: an add-on, or a fix for something that bugged me. I love talking these through.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+    <span class="arc" aria-hidden="true"></span>
+    <div class="wrap">
+      <div class="contact-inner reveal">
+        <span class="eyebrow">Let's talk</span>
+        <h2>Got an idea? <span class="serif">Let's discuss it.</span></h2>
+        <p>I'm always up for a conversation about products, interactions or a concept you can't stop thinking about.</p>
+        <div class="contact-actions">
+          <!-- TODO: replace the # links with your real profiles and resume -->
+          <a class="btn btn-dark" href="#contact">Download resume</a>
+          <a class="btn" href="#contact">LinkedIn</a>
+          <a class="btn" href="#contact">Behance</a>
+        </div>
+      </div>
+      <div class="footer-bar">
+        <div><strong>Mayank Chauhan</strong>UI/UX Designer · Mohali, India</div>
+        <div class="socials">
+          <a href="#contact" aria-label="LinkedIn">in</a>
+          <a href="#contact" aria-label="Behance">Bē</a>
+          <a href="#contact" aria-label="GitHub"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- =====================================================================
+     CASE STUDY: DE MEDIC
+     Replace any .media-box placeholder with <img src="..." alt="..."> or
+     <video src="..." autoplay muted loop playsinline></video> inside the box.
+     ===================================================================== -->
+<article class="view" data-view="demedic" hidden>
+  <div class="wrap case-hero">
+    <a class="back" href="#work"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All work</a>
+    <span class="pill"><span class="dot"></span>DE Medic · Healthcare · Germany</span>
+    <h1>Making complex duty swaps simple for <span class="serif">doctors.</span></h1>
+    <p class="lede">A journey that lets doctors offer a duty, bid on someone else's, pick the best swap and get it approved, with every edge case and overlap handled along the way.</p>
+    <dl class="case-meta">
+      <div><dt>Role</dt><dd>UI/UX Designer</dd></div>
+      <div><dt>Company</dt><dd>DigiMantra</dd></div>
+      <div><dt>Platform</dt><dd>Mobile app</dd></div>
+      <div><dt>Feature</dt><dd>Duty Swap</dd></div>
+    </dl>
+  </div>
+  <div class="wrap">
+    <figure class="media">
+      <div class="media-box" style="--ar:16/8"><span><em class="kind">Video</em><b>Hero: Duty Swap walkthrough</b>A 15–20 second loop of the full offer → bid → swap journey.<code>assets/media/demedic/hero.mp4</code></span></div>
+    </figure>
+  </div>
+
+  <div class="wrap case-body">
+    <nav class="toc" aria-label="Sections">
+      <button type="button" data-target="dm-who">Who</button>
+      <button type="button" data-target="dm-what">What</button>
+      <button type="button" data-target="dm-why">Why</button>
+      <button type="button" data-target="dm-how">How</button>
+      <button type="button" data-target="dm-outcome">Outcome</button>
+    </nav>
+    <div class="case-content">
+
+      <section class="case-sec" data-sec="dm-who">
+        <div class="sec-q"><span class="q">Who</span><span class="q-sub">is it for?</span></div>
+        <h2>Doctors in Germany who need calm, obvious tools.</h2>
+        <p>DE Medic helps doctors with their day-to-day operational tasks. Many of its users are in a senior age group and less familiar with modern UI trends and dynamic components. Every swap also passes through an admin, who has the final say.</p>
+        <div class="cards-3">
+          <div class="info-card"><span class="k">Primary</span><h3>Doctor offering a duty</h3><p>Needs to give away or trade a shift and see its status at a glance.</p></div>
+          <div class="info-card"><span class="k">Primary</span><h3>Doctor taking or bidding</h3><p>Wants to pick up a duty or offer one or more of their own in exchange.</p></div>
+          <div class="info-card"><span class="k">Secondary</span><h3>Admin</h3><p>Approves the final swap before the schedule updates.</p></div>
+        </div>
+        <div class="info-card"><span class="k">My role</span><p>I designed the Duty Swap feature end to end at DigiMantra: the journey, every duty-card state, and the edge cases between them.</p></div>
+      </section>
+
+      <section class="case-sec" data-sec="dm-what">
+        <div class="sec-q"><span class="q">What</span><span class="q-sub">needed to change?</span></div>
+        <h2>A way for doctors to switch duties, without overlaps or confusion.</h2>
+        <p>The core brief: build a feature and a journey that lets doctors swap their duties, while resolving every possible edge case and overlap. A swap is a negotiation between at least two doctors and an admin, so the design had to make each step's status impossible to miss.</p>
+        <div class="media-row">
+          <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Image</em><b>Duty tab</b>Two weeks of duties, each with an Offer button.<code>assets/media/demedic/duty-tab.png</code></span></div><figcaption>The Duty tab: two weeks of duties at a glance.</figcaption></figure>
+          <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Image</em><b>Marketplace tab</b>Open offers from other doctors, private offers pinned on top.<code>assets/media/demedic/marketplace.png</code></span></div><figcaption>The Marketplace tab, where offers live.</figcaption></figure>
+        </div>
+      </section>
+
+      <section class="case-sec" data-sec="dm-why">
+        <div class="sec-q"><span class="q">Why</span><span class="q-sub">does it matter?</span></div>
+        <h2>Small mistakes in a schedule land on patients.</h2>
+        <p>A swap touches two schedules, credits and an approval. If a doctor can't tell whether a duty is offered, bid on or waiting for approval, they double-book or miss a shift. For users less at home with modern interfaces, every hidden state is a support call.</p>
+        <div class="cards-2">
+          <div class="info-card"><span class="k">Constraint</span><h3>Senior users</h3><ul><li>Big, clear buttons</li><li>Less scrolling</li><li>Generous spacing between tappable cards and elements</li></ul></div>
+          <div class="info-card"><span class="k">Constraint</span><h3>Many states, one card</h3><ul><li>A distinct colour for every duty state</li><li>Icons and labels as well as colour, never colour alone</li><li>Built for German doctors</li></ul></div>
+        </div>
+      </section>
+
+      <section class="case-sec" data-sec="dm-how">
+        <div class="sec-q"><span class="q">How</span><span class="q-sub">did we get there?</span></div>
+        <h2>Four phases, two doctors, one clear status at every step.</h2>
+        <ol class="phases">
+          <li class="phase reveal">
+            <div>
+              <div class="phase-head"><span class="phase-num">PHASE 01</span><span class="actor">Doctor 1</span></div>
+              <h3>Offer a duty</h3>
+              <ol>
+                <li>Opens Swap Duty and sees all their duties for the next two weeks.</li>
+                <li>Taps <b>Offer</b> next to a duty.</li>
+                <li>Chooses to keep the duty's credits or give them to whoever takes or swaps it.</li>
+                <li>Offers it publicly to everyone, or privately to a specific doctor.</li>
+                <li>The offer goes live in the Marketplace. In their Duty tab the card turns orange with an Offered tag: a globe for public, or a lock and the doctor's name for private.</li>
+              </ol>
+            </div>
+            <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Video</em><b>Offer flow</b>Credits choice, then public or private.<code>assets/media/demedic/phase-1.mp4</code></span></div></figure>
+          </li>
+          <li class="phase reveal">
+            <div>
+              <div class="phase-head"><span class="phase-num">PHASE 02</span><span class="actor d2">Doctor 2</span></div>
+              <h3>Take it, or bid a swap</h3>
+              <ol>
+                <li>Sees a notification at the top and taps it.</li>
+                <li>Lands in the Marketplace with Doctor 1's private offer pinned at the top.</li>
+                <li>Opens it and either takes the duty or swaps it for one of their own.</li>
+                <li>Can bid several of their duties. Doctor 1 decides which one to accept.</li>
+                <li>On Doctor 2's Duty tab, the duties they bid turn purple, tagged as bids on a swap offer.</li>
+              </ol>
+            </div>
+            <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Video</em><b>Bid flow</b>Notification → Marketplace → pick duties to bid.<code>assets/media/demedic/phase-2.mp4</code></span></div></figure>
+          </li>
+          <li class="phase reveal">
+            <div>
+              <div class="phase-head"><span class="phase-num">PHASE 03</span><span class="actor">Doctor 1</span></div>
+              <h3>Pick a bid</h3>
+              <ol>
+                <li>Opens the app and sees the bids right on the offered duty card in their Duty tab.</li>
+                <li>Taps the bids to view the duties on offer.</li>
+                <li>Selects one and confirms.</li>
+              </ol>
+            </div>
+            <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Image</em><b>Bid selection</b>Offered card with a bid count, then the list of bids.<code>assets/media/demedic/phase-3.png</code></span></div></figure>
+          </li>
+          <li class="phase reveal">
+            <div>
+              <div class="phase-head"><span class="phase-num">PHASE 04</span><span class="actor">Both doctors</span><span class="actor d2">Admin</span></div>
+              <h3>Swap and approval</h3>
+              <ol>
+                <li>Once Doctor 1 approves, the two duties swap places on both doctors' screens.</li>
+                <li>Each swapped card carries a note: under admin approval, updates shortly.</li>
+                <li>After approval, the duty is updated in each doctor's duty list.</li>
+              </ol>
+            </div>
+            <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Image</em><b>Pending approval</b>Swapped duty with the admin note.<code>assets/media/demedic/phase-4.png</code></span></div></figure>
+          </li>
+        </ol>
+
+        <div class="prose" style="margin-top:12px">
+          <h3 style="font-size:var(--step-2)">One card, every state</h3>
+          <p>Each state gets its own colour, plus an icon and a label, so nobody has to remember what orange means.</p>
+        </div>
+        <div class="states">
+          <div class="state"><div class="dcard"><span class="when">Mon 14 Oct · 20:00–08:00</span><span class="what">Night duty</span><span class="where">Station 3</span><span class="tag" style="background:var(--bg-2);color:var(--fg-2)">Scheduled</span></div><p>Default. A plain card with an Offer button.</p></div>
+          <div class="state"><div class="dcard s-offer"><span class="when">Wed 16 Oct · 08:00–16:00</span><span class="what">Day duty</span><span class="where">Emergency</span><span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Offered to all</span></div><p>Offered publicly. Orange with a globe.</p></div>
+          <div class="state"><div class="dcard s-offer"><span class="when">Fri 18 Oct · 16:00–00:00</span><span class="what">Late duty</span><span class="where">Station 1</span><span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Offered to Dr. Becker</span></div><p>Offered privately. Orange with a lock and the doctor's name (example).</p></div>
+          <div class="state"><div class="dcard s-offer"><span class="badge">2 bids</span><span class="when">Wed 16 Oct · 08:00–16:00</span><span class="what">Day duty</span><span class="where">Emergency</span><span class="tag">Review bids</span></div><p>Bids received. The count sits on the card itself.</p></div>
+          <div class="state"><div class="dcard s-bid"><span class="when">Tue 22 Oct · 20:00–08:00</span><span class="what">Night duty</span><span class="where">Station 2</span><span class="tag">Your bid on a swap</span></div><p>Bid placed. Purple, so it never reads as an offer.</p></div>
+          <div class="state"><div class="dcard s-pending"><span class="when">Tue 22 Oct · 20:00–08:00</span><span class="what">Night duty</span><span class="where">Station 2</span><span class="tag">Under admin approval</span></div><p>Swapped, waiting for the admin. Updates shortly.</p></div>
+        </div>
+
+        <div class="info-card" style="margin-top:8px"><span class="k">Edge case</span><h3>A duty can be offered and bid at the same time</h3><p>A doctor can put a duty up as an offer and also bid that same duty on someone else's swap offer. The card shows both states, and once one swap goes through, the other is resolved so the duty is never promised twice.</p></div>
+      </section>
+
+      <section class="case-sec" data-sec="dm-outcome">
+        <div class="sec-q"><span class="q">So</span><span class="q-sub">what changed?</span></div>
+        <h2>A multi-person negotiation that reads like a to-do list.</h2>
+        <p>Doctors can see the status of every duty from the Duty tab alone. Big targets, fewer scrolls and a colour-plus-label for each state keep the feature usable for doctors who don't live in modern apps.</p>
+        <!-- TODO: add real outcome numbers if you have them (adoption, swaps per week, support tickets) -->
+        <figure class="media"><div class="media-box" style="--ar:16/9"><span><em class="kind">Image</em><b>Final screens</b>A lineup of the key screens side by side.<code>assets/media/demedic/final.png</code></span></div></figure>
+        <a class="next-case" href="#earthlink"><span><small>Next case study</small><strong>EarthLink: a faster fiber checkout</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      </section>
+    </div>
+  </div>
+</article>
+
+<!-- =====================================================================
+     CASE STUDY: EARTHLINK
+     ===================================================================== -->
+<article class="view" data-view="earthlink" hidden>
+  <div class="wrap case-hero">
+    <a class="back" href="#work"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All work</a>
+    <span class="pill"><span class="dot"></span>EarthLink · Telecom · United States</span>
+    <h1>Simplifying fiber checkout for a faster <span class="serif">purchase.</span></h1>
+    <p class="lede">I cut the fiber checkout from six steps to four, so an ideal purchase now takes three to four clicks.</p>
+    <dl class="case-meta">
+      <div><dt>Role</dt><dd>UI/UX Designer</dd></div>
+      <div><dt>Company</dt><dd>DigiMantra</dd></div>
+      <div><dt>Platform</dt><dd>Web + responsive</dd></div>
+      <div><dt>Flow</dt><dd>B2C checkout</dd></div>
+    </dl>
+  </div>
+  <div class="wrap">
+    <figure class="media">
+      <div class="media-box" style="--ar:16/8"><span><em class="kind">Video</em><b>Hero: the new checkout</b>Plan → date → details → Review &amp; Pay, in one take.<code>assets/media/earthlink/hero.mp4</code></span></div>
+    </figure>
+  </div>
+
+  <div class="wrap case-body">
+    <nav class="toc" aria-label="Sections">
+      <button type="button" data-target="el-who">Who</button>
+      <button type="button" data-target="el-what">What</button>
+      <button type="button" data-target="el-why">Why</button>
+      <button type="button" data-target="el-how">How</button>
+      <button type="button" data-target="el-outcome">Outcome</button>
+    </nav>
+    <div class="case-content">
+
+      <section class="case-sec" data-sec="el-who">
+        <div class="sec-q"><span class="q">Who</span><span class="q-sub">is it for?</span></div>
+        <h2>People buying home fiber internet online.</h2>
+        <p>EarthLink is a US telecommunications company that provides internet services. It runs platforms for customers and for agents. This project is the B2C website checkout, used on desktop and on mobile through the responsive site.</p>
+        <div class="cards-3">
+          <div class="info-card"><span class="k">Customers</span><h3>B2C website</h3><p>Choose a fiber plan and check out. The flow in this case study.</p></div>
+          <div class="info-card"><span class="k">Agents</span><h3>AC portal</h3><p>Where agents convert leads and set up follow-ups.</p></div>
+          <div class="info-card"><span class="k">Customers</span><h3>CFS app</h3><p>Track plans, payments and support after purchase.</p></div>
+        </div>
+        <div class="info-card"><span class="k">My role</span><p>I design most of EarthLink's new features and concepts in Figma, and suggest product decisions that improve productivity and reduce customer support enquiries.</p></div>
+      </section>
+
+      <section class="case-sec" data-sec="el-what">
+        <div class="sec-q"><span class="q">What</span><span class="q-sub">needed to change?</span></div>
+        <h2>A shorter journey from plan to paid.</h2>
+        <p>The goal was to shorten the journey for buying a fiber product, so customers check out faster.</p>
+        <div class="flow">
+          <div class="flow-row">
+            <div class="flow-label">Before<span>6 steps</span></div>
+            <ol class="steps"><li>Select plan</li><li>Installation date</li><li>Customer details</li><li class="cut">Payment options</li><li class="cut">Read terms</li><li class="cut">Pay &amp; checkout</li></ol>
+          </div>
+          <div class="flow-row after">
+            <div class="flow-label">After<span>4 steps</span></div>
+            <ol class="steps"><li>Select plan</li><li>Installation date</li><li>Customer details</li><li class="merge">Review &amp; Pay</li></ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-sec" data-sec="el-why">
+        <div class="sec-q"><span class="q">Why</span><span class="q-sub">does it matter?</span></div>
+        <h2>Every extra step, field and decision is a chance to drop off.</h2>
+        <p>Typing details by hand, picking a date from a closed component, and opening a cart on mobile all added clicks. On the responsive site the cart breakdown sat behind an extra tap, which broke the momentum of a quick checkout.</p>
+        <figure class="media"><div class="media-box" style="--ar:16/9"><span><em class="kind">Image</em><b>Old checkout</b>The six-step flow with friction points marked.<code>assets/media/earthlink/before.png</code></span></div></figure>
+      </section>
+
+      <section class="case-sec" data-sec="el-how">
+        <div class="sec-q"><span class="q">How</span><span class="q-sub">did we get there?</span></div>
+        <h2>Seven changes, each one removing a click or a decision.</h2>
+        <div class="cards-2">
+          <div class="info-card reveal"><span class="k">Payment</span><h3>Google Pay and Apple Pay</h3><p>Added to the payment options for a one-tap payment.</p></div>
+          <div class="info-card reveal"><span class="k">Details</span><h3>Autofill with Google or Apple login</h3><p>Instead of typing, customers tap Google or Apple to fill their details. Two clicks in total.</p></div>
+          <div class="info-card reveal"><span class="k">Date</span><h3>Open date cards</h3><p>The installation date picker became open, tappable date cards. Fewer clicks to choose.</p></div>
+          <div class="info-card reveal"><span class="k">Date</span><h3>First date pre-selected</h3><p>After choosing a plan, the first available date is already selected. If it works, Save &amp; Next is a single click.</p></div>
+          <div class="info-card reveal"><span class="k">Review</span><h3>One Review &amp; Pay step</h3><p>Terms, payment and cart are combined in one place. No extra tap on mobile to see the cart.</p></div>
+          <div class="info-card reveal"><span class="k">Review</span><h3>Due today, up front</h3><p>The most important number in the bill, the amount due today, sits right above the payment methods.</p></div>
+          <div class="info-card reveal"><span class="k">Loading</span><h3>Skeleton loaders</h3><p>They replace the spinner, appear faster and help customers anticipate the next screen.</p></div>
+        </div>
+        <div class="media-row">
+          <figure class="media"><div class="media-box" style="--ar:4/3"><span><em class="kind">Video</em><b>Autofill</b>Google or Apple login filling customer details.<code>assets/media/earthlink/autofill.mp4</code></span></div><figcaption>Two clicks instead of a form.</figcaption></figure>
+          <figure class="media"><div class="media-box" style="--ar:4/3"><span><em class="kind">Image</em><b>Date cards</b>First available date pre-selected.<code>assets/media/earthlink/dates.png</code></span></div><figcaption>Verify and move on.</figcaption></figure>
+        </div>
+        <figure class="media"><div class="media-box" style="--ar:16/9"><span><em class="kind">Image</em><b>Review &amp; Pay</b>Cart, terms and payment together, with Due today above the pay buttons.<code>assets/media/earthlink/review-pay.png</code></span></div></figure>
+      </section>
+
+      <section class="case-sec" data-sec="el-outcome">
+        <div class="sec-q"><span class="q">So</span><span class="q-sub">what changed?</span></div>
+        <h2>A faster checkout with fewer decisions.</h2>
+        <div class="stats">
+          <div class="stat"><b>6 → 4</b><span>steps in the checkout journey</span></div>
+          <div class="stat"><b>3–4</b><span>clicks for an ideal purchase</span></div>
+          <div class="stat"><b>2</b><span>clicks to fill customer details</span></div>
+        </div>
+        <p>The journey is simpler and asks for fewer decisions. Most of the remaining clicks just confirm what the system has already filled in.</p>
+        <a class="next-case" href="#demedic"><span><small>Next case study</small><strong>DE Medic: duty swaps for doctors</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      </section>
+    </div>
+  </div>
+</article>
+
+</main>
+
+<script src="assets/vendor/three.min.js"></script>
+<script src="assets/js/cube.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
