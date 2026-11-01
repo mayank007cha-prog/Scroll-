@@ -196,16 +196,15 @@ button { font: inherit; color: inherit; }
   transition: transform 0.8s var(--soft), filter 0.8s var(--soft);
 }
 .intro-copy { display: grid; gap: 18px; min-width: 0; }
-.intro-kicker, .intro-words { margin: 0; display: grid; }
-.intro-kicker span, .intro-words span { grid-area: 1 / 1; opacity: 0; transition: opacity 1s var(--fade); }
-.intro-kicker { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); }
+.intro-words { margin: 0; display: grid; }
+.intro-words span { grid-area: 1 / 1; opacity: 0; transition: opacity 1s var(--fade); }
 .intro-words { font-weight: 500; line-height: 1.08; letter-spacing: -0.035em; }
 .intro-words .w1 { font-size: clamp(1.9rem, 3.6vw, 3rem); color: var(--fg-2); }
 .intro-words .w2 { font-size: clamp(2.2rem, 4.4vw, 3.6rem); color: var(--fg); }
 .intro-words .w2 em { color: var(--accent); }
-.intro.p1 .k1, .intro.p1 .w1 { opacity: 1; }
-.intro.p3 .k1, .intro.p3 .w1 { opacity: 0; transition-duration: 0.7s; }
-.intro.p3 .k2, .intro.p3 .w2 { opacity: 1; transition-delay: 0.25s; }
+.intro.p1 .w1 { opacity: 1; }
+.intro.p3 .w1 { opacity: 0; transition-duration: 0.5s; }                  /* out first… */
+.intro.p3 .w2 { opacity: 1; transition-delay: 0.55s; transition-duration: 0.9s; }   /* …then in, no overlap */
 
 /* scene = the phone's box; everything is positioned inside it */
 .intro-scene { position: relative; width: var(--pw); height: var(--ph); }
