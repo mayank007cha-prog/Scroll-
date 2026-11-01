@@ -80,19 +80,16 @@ single image, or drop it.
 
 ## Home page case cards (`cards/`)
 
-The small screen on each case-study card. Put it in upright: the site tilts it
-about −9° and tucks it into the card's bottom-right corner, so the right and
-bottom edges get cropped. Keep the important part in the top-left two-thirds
-(marked "Safe area" in Figma).
+Each case-study card shows a full phone screen inside a silver 3D phone (the
+site adds the frame, tilt and glow). Export a phone screen at 300 × 650
+(2× = 600 × 1300). The top half always shows; the bottom dips below the card.
 
-| File | Shape | What to show |
-| --- | --- | --- |
-| demedic.png | 3:4, 600 × 800 | Duty Swap list: offered, bid and swapped states |
-| earthlink.png | 3:4, 600 × 800 | Review & Pay with "Due today" and the pay buttons |
-| desafe.png | 3:4, 600 × 800 | The SOS / alert screen |
-| design-system.png | 3:4, 600 × 800 | Button variants, toggle, chips, swatches |
-
-Until these arrive, the cards keep the drawn mockups.
+| File | Status |
+| --- | --- |
+| demedic.webp | Done, from "Dropdown 01 · Closed (Meine Dienste)" |
+| earthlink.webp | Done, from "Earthlink Checkout Screen" |
+| desafe.webp | Done, from "Desafe alarm Screen" |
+| design-system.webp | Still needed: a component screen (the card shows a drawn component sheet until then) |
 
 ## Concept videos (5)
 

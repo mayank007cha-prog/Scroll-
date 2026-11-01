@@ -516,13 +516,67 @@ section { scroll-margin-top: 84px; }
 .client-logo { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-size: 0.6rem; font-weight: 600; letter-spacing: 0; }
 .case-card h3 { font-size: var(--step-2); max-width: 14ch; letter-spacing: -0.03em; }
 .case-card .meta-line { font-size: var(--step--1); color: var(--muted); display: flex; align-items: center; gap: 14px; }
-/* art sits in its own column, bleeding off the bottom-right edge, so it never covers the title */
-.case-art { align-self: end; justify-self: end; position: relative; width: 100%; max-width: 250px; margin: 0 -28px -44px 0; transition: transform 0.7s var(--ease); }
-.case-card:hover .case-art { transform: translate(-4px, -8px) rotate(-1deg); }
-@media (max-width: 860px) { .case-grid { grid-template-columns: 1fr; } }
+/* art: a silver phone with the real screen, tilted in 3D and dipping below the
+   card edge, with a soft glow in the product's colour behind it */
+.case-card { min-height: 400px; }
+.case-art {
+  position: relative; align-self: stretch; min-height: 300px;
+  perspective: 1100px; perspective-origin: 30% 20%;
+}
+.case-art::before {
+  content: ""; position: absolute; right: -10%; bottom: -30%; width: 120%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow, var(--accent)) 30%, transparent), transparent 70%);
+  opacity: 0.55; transition: opacity 0.6s var(--ease);
+}
+.case-card:hover .case-art::before { opacity: 0.85; }
+.metal-phone {
+  --w: clamp(150px, 16vw, 200px);
+  position: absolute; right: 20%; top: 34px; width: var(--w); aspect-ratio: 600 / 1299;
+  padding: calc(var(--w) * 0.035); border-radius: calc(var(--w) * 0.16);
+  /* brushed titanium */
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5), transparent 8%, transparent 92%, rgba(255, 255, 255, 0.4)),
+    linear-gradient(135deg, #f8f8fa 0%, #d3d5da 16%, #9a9da4 32%, #eef0f3 48%, #b3b6bc 64%, #e6e8eb 80%, #8c8f96 100%);
+  transform-style: preserve-3d;
+  transform: rotateY(-28deg) rotateX(14deg) rotateZ(7deg);
+  /* stacked edges read as the frame's thickness once it's tilted */
+  box-shadow:
+    1px 1px 0 #c6c8cd, 2px 2px 0 #b5b7bc, 3px 3px 0 #a4a6ac, 4px 4px 0 #94969c, 5px 5px 0 #84868c, 6px 6px 0 #74767c,
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 0 0 2px rgba(0, 0, 0, 0.18),
+    30px 50px 60px -24px rgba(16, 14, 50, 0.55);
+  transition: transform 0.9s var(--ease), box-shadow 0.9s var(--ease);
+}
+.metal-phone::before, .metal-phone::after {            /* side buttons */
+  content: ""; position: absolute; width: 3px; border-radius: 2px;
+  background: linear-gradient(90deg, #8c8f96, #eef0f3, #9a9da4);
+}
+.metal-phone::before { left: -3px; top: 22%; height: 7%; box-shadow: 0 calc(var(--w) * 0.22) 0 #b3b6bc; }
+.metal-phone::after { right: -3px; top: 28%; height: 12%; }
+.mp-screen {
+  position: relative; height: 100%; overflow: hidden; background: #000;
+  border-radius: calc(var(--w) * 0.13);
+  box-shadow: 0 0 0 calc(var(--w) * 0.018) #0a0a0e;      /* black bezel */
+}
+.mp-screen img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.mp-screen::after {                                       /* glass glare */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.06) 30%, transparent 46%);
+}
+.case-card:hover .metal-phone {
+  transform: translateY(-12px) rotateY(-14deg) rotateX(8deg) rotateZ(3deg);
+  box-shadow:
+    1px 1px 0 #c6c8cd, 2px 2px 0 #b5b7bc, 3px 3px 0 #a4a6ac, 4px 4px 0 #94969c,
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 0 0 2px rgba(0, 0, 0, 0.18),
+    24px 60px 70px -24px rgba(16, 14, 50, 0.5);
+}
+/* design-system card: the component sheet fills the phone screen */
+.mp-screen .mini-ds { height: 100%; aspect-ratio: auto; transform: none; border: 0; border-radius: 0; box-shadow: none; padding: 34% 12px 12px; gap: 12px; }
+.mp-screen .mini-ds .ds-row b { height: 24px; }
+@media (max-width: 860px) { .case-grid { grid-template-columns: 1fr; } .metal-phone { --w: clamp(150px, 30vw, 200px); } }
 @media (max-width: 520px) {
   .case-card { grid-template-columns: 1fr; padding: 24px 0 0 24px; min-height: 0; }
-  .case-art { width: 62%; max-width: 210px; margin: -4px -20px -96px 0; }
+  .case-art { min-height: 250px; margin-top: -8px; }
+  .metal-phone { --w: 160px; right: 16%; top: 10px; }
 }
 
 /* mini UI art inside cards */
