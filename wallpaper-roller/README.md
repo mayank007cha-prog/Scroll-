@@ -30,3 +30,19 @@ Layers, bottom to top: old wallpaper, chat, new paper, roller.
 Assets in `assets/`: the roller image, the doodle chat wallpaper and the
 blue cat wallpaper come from Figma; the sunset and mint wallpapers were drawn
 for this prototype.
+
+## Android app
+
+`android/WallpaperRoller.apk` is an installable Android app (Android 7.0+,
+package `com.mayank.wallpaperroller`). It shows the prototype full screen in a
+WebView, works offline, and is locked to portrait.
+
+To rebuild it after changing the prototype:
+
+    python3 android/build_apk.py        # writes android/WallpaperRoller.apk
+    python3 android/verify_apk.py android/WallpaperRoller.apk
+
+The builder needs only Python 3 with Pillow and `openssl`; it does not use the
+Android SDK. It signs with a debug key that it creates in `android/debug-key/`
+(git-ignored). A build signed with a different key cannot update an installed
+copy, so uninstall the old app first.
