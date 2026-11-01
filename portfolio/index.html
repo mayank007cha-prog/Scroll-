@@ -134,17 +134,21 @@
 
   <!-- CASE STUDIES -->
   <section class="band" id="work">
-    <div class="wrap split">
-      <div class="split-intro reveal">
-        <span class="eyebrow">Case Studies</span>
-        <h2>Solving real problems at scale.</h2>
+    <div class="wrap">
+      <div class="work-head reveal">
+        <div class="work-title">
+          <span class="eyebrow">Case Studies</span>
+          <h2>Solving real problems at scale.</h2>
+        </div>
         <p>Thoughtful design. Measurable impact. Each one told as Who, What, Why and How.</p>
       </div>
       <div class="case-grid">
         <a class="case-card reveal" href="#demedic">
-          <span class="client"><span class="client-logo">DE</span>DE Medic</span>
-          <h3>Making complex duty swaps simple for doctors.</h3>
-          <span class="meta-line"><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Healthcare · Mobile app</span>
+          <div class="case-text">
+            <span class="client"><span class="client-logo">DE</span>DE Medic</span>
+            <h3>Making complex duty swaps simple for doctors.</h3>
+            <span class="meta-line"><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Healthcare · Mobile app</span>
+          </div>
           <div class="case-art" aria-hidden="true">
             <div class="mini-phone">
               <span class="mp-title">Duty Swap</span>
@@ -157,10 +161,13 @@
             </div>
           </div>
         </a>
-        <a class="case-card reveal" href="#earthlink" style="transition-delay:80ms">
-          <span class="client"><span class="client-logo">EL</span>EarthLink</span>
-          <h3>Simplifying fiber checkout for a faster purchase.</h3>
-          <span class="meta-line"><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Telecom · Web checkout</span>
+
+        <a class="case-card reveal" href="#earthlink">
+          <div class="case-text">
+            <span class="client"><span class="client-logo">EL</span>EarthLink</span>
+            <h3>Simplifying fiber checkout for a faster purchase.</h3>
+            <span class="meta-line"><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Telecom · Web checkout</span>
+          </div>
           <div class="case-art" aria-hidden="true">
             <div class="mini-pay">
               <span class="mp-h">Review &amp; Pay</span>
@@ -170,6 +177,39 @@
               <span class="amt">$59.99</span>
               <span class="paybtn">G Pay</span>
               <span class="paybtn">Apple Pay</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="case-card reveal" href="#desafe">
+          <div class="case-text">
+            <span class="client"><span class="client-logo">DS</span>DeSafe</span>
+            <h3>One tap to alert the people who can help.</h3>
+            <span class="meta-line"><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Lone worker safety · Mobile app</span>
+          </div>
+          <div class="case-art" aria-hidden="true">
+            <div class="mini-sos">
+              <span class="mp-h">DeSafe</span>
+              <span class="sos"><i></i><i></i><b>SOS</b></span>
+              <span class="sos-sent"><span class="avs"><i></i><i></i><i></i></span>Alert sent</span>
+              <span class="sos-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6z"/></svg>Nearby police notified</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="case-card reveal" href="#design-system">
+          <div class="case-text">
+            <span class="client"><span class="client-logo">◆</span>Design System</span>
+            <h3>One button, every state: a component built to scale.</h3>
+            <span class="meta-line"><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Components · Tokens · Docs</span>
+          </div>
+          <div class="case-art" aria-hidden="true">
+            <div class="mini-ds">
+              <span class="mp-h">Button <em>12 variants</em></span>
+              <span class="ds-row"><b class="b1">Primary</b><b class="b2">Secondary</b></span>
+              <span class="ds-row"><b class="b3">Ghost</b><b class="b4"><i></i></b></span>
+              <span class="ds-row"><span class="tgl"><i></i></span><span class="chip">Chip</span><span class="chip on">Active</span></span>
+              <span class="swatches"><i></i><i></i><i></i><i></i><i></i></span>
             </div>
           </div>
         </a>
@@ -305,17 +345,98 @@
         </div>
       </div>
 
-      <ol class="journey">
-        <li class="reveal"><h3>Animator</h3><p>Rotoscoping, 3D modelling, lighting and rigging across a stack of software. Huge effort for a few seconds of output, and more art than problem solving.</p></li>
-        <li class="reveal"><h3>The turn</h3><p>I went looking for animation that solves problems and found micro-interactions. A UI/UX subject in my final year of animation sealed it.</p></li>
-        <li class="reveal"><h3>Master's in UI/UX</h3><p>I went back to study and made the switch from making things move to making things work.</p></li>
-        <li class="reveal now"><h3>DigiMantra</h3><p>3.5+ years as a UI/UX Designer on EarthLink, DE Medic and DeSafe, plus interaction concepts on the side.</p></li>
-      </ol>
+      <!-- THE PATH: a real sequence, drawn as a timeline with a small scene at each stop -->
+      <div class="path">
+        <div class="path-head reveal">
+          <span class="eyebrow">The path</span>
+          <h3>How I got here.</h3>
+        </div>
+        <ol class="journey">
+          <li class="stop reveal">
+            <div class="stop-art art-keys" aria-hidden="true">
+              <svg viewBox="0 0 200 120">
+                <path id="keysCurve" class="curve" d="M20 92 C 60 92, 70 30, 100 30 S 150 92, 180 60"/>
+                <g class="keys"><rect x="16" y="88" width="8" height="8" transform="rotate(45 20 92)"/><rect x="96" y="26" width="8" height="8" transform="rotate(45 100 30)"/><rect x="176" y="56" width="8" height="8" transform="rotate(45 180 60)"/></g>
+                <circle class="kball" r="7"><animateMotion dur="2.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.45 0 0.55 1"><mpath href="#keysCurve"/></animateMotion></circle>
+              </svg>
+            </div>
+            <span class="stop-node" aria-hidden="true"></span>
+            <span class="stop-n">01 · Earlier</span>
+            <h4>Animator</h4>
+            <p>Rotoscoping, 3D modelling, lighting and rigging across a stack of software. Huge effort for a few seconds of output, and more art than problem solving.</p>
+          </li>
+          <li class="stop reveal">
+            <div class="stop-art art-toggle">
+              <button class="big-toggle" type="button" aria-pressed="false" aria-label="Try the micro-interaction: toggle"><i></i></button>
+              <span class="tap-hint" aria-hidden="true">tap me</span>
+            </div>
+            <span class="stop-node" aria-hidden="true"></span>
+            <span class="stop-n">02 · The turn</span>
+            <h4>Micro-interactions</h4>
+            <p>I went looking for animation that solves problems and found micro-interactions. A UI/UX subject in my final year of animation sealed it.</p>
+          </li>
+          <li class="stop reveal">
+            <div class="stop-art art-layers" aria-hidden="true">
+              <div class="layers">
+                <span class="ly ly1"><b>Research</b></span>
+                <span class="ly ly2"><b>Wireframe</b><i></i><i></i></span>
+                <span class="ly ly3"><b>UI</b><i></i><i></i><em></em></span>
+              </div>
+            </div>
+            <span class="stop-node" aria-hidden="true"></span>
+            <span class="stop-n">03 · Study</span>
+            <h4>Master's in UI/UX</h4>
+            <p>I went back to study and learned the layers under a screen: research, structure, then the interface on top.</p>
+          </li>
+          <li class="stop now reveal">
+            <div class="stop-art art-orbit" aria-hidden="true">
+              <span class="hub">DM</span>
+              <span class="orbit"><i>EL</i><i>DE</i><i>DS</i></span>
+            </div>
+            <span class="stop-node" aria-hidden="true"></span>
+            <span class="stop-n">04 · Now</span>
+            <h4>DigiMantra</h4>
+            <p>3.5+ years as a UI/UX Designer on EarthLink, DE Medic and DeSafe, plus interaction concepts on the side.</p>
+          </li>
+        </ol>
+      </div>
 
-      <div class="beyond">
-        <div class="reveal"><h4>I think sideways</h4><p>I like looking at a situation the way most people wouldn't. That's where new ideas come from.</p></div>
-        <div class="reveal"><h4>I wrote rap</h4><p>I used to make rap music and wrote all my own lyrics. It's one of the things I'm proudest of.</p></div>
-        <div class="reveal"><h4>I redesign my apps</h4><p>Every app I use gives me an idea: an add-on, or a fix for something that bugged me. I love talking these through.</p></div>
+      <!-- OFF THE CLOCK: three objects, each one interactive -->
+      <div class="offclock">
+        <div class="path-head reveal">
+          <span class="eyebrow">Off the clock</span>
+          <h3>A few things about me.</h3>
+        </div>
+        <div class="traits">
+          <article class="trait reveal" data-tilt>
+            <div class="trait-art" aria-hidden="true">
+              <div class="gcube-wrap"><div class="gcube">
+                <i class="f1"></i><i class="f2"></i><i class="f3">?</i><i class="f4"></i><i class="f5"></i><i class="f6"></i>
+              </div></div>
+            </div>
+            <h4>I think sideways</h4>
+            <p>I like looking at a situation the way most people wouldn't. That's where new ideas come from.</p>
+            <span class="trait-hint">Move your cursor to turn the cube</span>
+          </article>
+          <article class="trait reveal" data-tilt>
+            <div class="trait-art" aria-hidden="true">
+              <div class="eq">
+                <i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i>
+              </div>
+            </div>
+            <h4>I wrote rap</h4>
+            <p>I used to make rap music and wrote all my own lyrics. It's one of the things I'm proudest of.</p>
+            <span class="trait-hint">Hover to turn it up</span>
+          </article>
+          <article class="trait reveal" data-tilt>
+            <div class="trait-art" aria-hidden="true">
+              <div class="apps"><i class="a1"></i><i class="a2"></i><i class="a3"></i><b>+</b></div>
+            </div>
+            <h4>I redesign my apps</h4>
+            <p>Every app I use gives me an idea: an add-on, or a fix for something that bugged me. I love talking these through.</p>
+            <span class="trait-hint">Hover to fan them out</span>
+          </article>
+        </div>
       </div>
     </div>
   </section>
@@ -594,6 +715,199 @@
           <div class="stat"><b>2</b><span>clicks to fill customer details</span></div>
         </div>
         <p>The journey is simpler and asks for fewer decisions. Most of the remaining clicks just confirm what the system has already filled in.</p>
+        <a class="next-case" href="#desafe"><span><small>Next case study</small><strong>DeSafe: one-tap alerts for lone workers</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      </section>
+    </div>
+  </div>
+</article>
+
+<!-- =====================================================================
+     CASE STUDY: DESAFE
+     Dashed "To add" notes mark the details still to write.
+     ===================================================================== -->
+<article class="view" data-view="desafe" hidden>
+  <div class="wrap case-hero">
+    <a class="back" href="#work"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All work</a>
+    <span class="pill"><span class="dot"></span>DeSafe · Lone worker safety</span>
+    <h1>One tap to alert the people who can <span class="serif">help.</span></h1>
+    <p class="lede">A lone worker protection app. With one tap, someone working alone can alert nearby police, family and friends at the same time.</p>
+    <dl class="case-meta">
+      <div><dt>Role</dt><dd>UI/UX Designer</dd></div>
+      <div><dt>Company</dt><dd>DigiMantra</dd></div>
+      <div><dt>Platform</dt><dd>Mobile app</dd></div>
+      <div><dt>Users</dt><dd>Lone workers</dd></div>
+    </dl>
+  </div>
+  <div class="wrap">
+    <figure class="media">
+      <div class="media-box" style="--ar:16/8"><span><em class="kind">Video</em><b>Hero: raising an alert</b>From the home screen to "Alert sent" in one take.<code>assets/media/desafe/hero.mp4</code></span></div>
+    </figure>
+  </div>
+
+  <div class="wrap case-body">
+    <nav class="toc" aria-label="Sections">
+      <button type="button" data-target="ds-who">Who</button>
+      <button type="button" data-target="ds-what">What</button>
+      <button type="button" data-target="ds-why">Why</button>
+      <button type="button" data-target="ds-how">How</button>
+      <button type="button" data-target="ds-outcome">Outcome</button>
+    </nav>
+    <div class="case-content">
+      <section class="case-sec" data-sec="ds-who">
+        <div class="sec-q"><span class="q">Who</span><span class="q-sub">is it for?</span></div>
+        <h2>People who work alone, and the people who look out for them.</h2>
+        <p>DeSafe is for lone workers, and for anyone who might need to reach help quickly: nearby police, family and friends.</p>
+        <div class="cards-3">
+          <div class="info-card"><span class="k">Primary</span><h3>Lone worker</h3><p>Needs to raise an alert fast, often under stress.</p></div>
+          <div class="info-card"><span class="k">Receives</span><h3>Family and friends</h3><p>Their trusted contacts, alerted at the same moment.</p></div>
+          <div class="info-card"><span class="k">Receives</span><h3>Nearby police</h3><p>Notified so help can reach them.</p></div>
+        </div>
+        <p class="todo">To add: which industries or kinds of lone workers you designed for, and any research you did with them.</p>
+      </section>
+
+      <section class="case-sec" data-sec="ds-what">
+        <div class="sec-q"><span class="q">What</span><span class="q-sub">needed to change?</span></div>
+        <h2>Asking for help should take one action.</h2>
+        <p>The core of the app is a single action that tells the right people at once, instead of calling or messaging each of them.</p>
+        <p class="todo">To add: the brief, and what existed before your design (an older app, manual check-ins, phone calls).</p>
+        <div class="media-row">
+          <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Image</em><b>Home / SOS screen</b><code>assets/media/desafe/home.png</code></span></div></figure>
+          <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Image</em><b>Alert sent</b>Who was notified, and what happens next.<code>assets/media/desafe/alert-sent.png</code></span></div></figure>
+        </div>
+      </section>
+
+      <section class="case-sec" data-sec="ds-why">
+        <div class="sec-q"><span class="q">Why</span><span class="q-sub">does it matter?</span></div>
+        <h2>When you're alone and in trouble, every extra step costs time.</h2>
+        <p class="todo">To add: the risks lone workers face, and the constraints you designed for (one-handed use, panic, poor signal, accidental presses).</p>
+      </section>
+
+      <section class="case-sec" data-sec="ds-how">
+        <div class="sec-q"><span class="q">How</span><span class="q-sub">did we get there?</span></div>
+        <h2>The journey, step by step.</h2>
+        <p class="todo">To add: the main flow as phases (set up contacts → raise an alert → confirm → follow-up), with a screen or video for each. The DE Medic page's phase layout is ready to copy.</p>
+        <figure class="media"><div class="media-box" style="--ar:16/9"><span><em class="kind">Video</em><b>Alert flow</b><code>assets/media/desafe/flow.mp4</code></span></div></figure>
+      </section>
+
+      <section class="case-sec" data-sec="ds-outcome">
+        <div class="sec-q"><span class="q">So</span><span class="q-sub">what changed?</span></div>
+        <h2>Help, one tap away.</h2>
+        <p class="todo">To add: the outcome, plus any numbers or feedback you have.</p>
+        <a class="next-case" href="#design-system"><span><small>Next case study</small><strong>Design System: one button, every state</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      </section>
+    </div>
+  </div>
+</article>
+
+<!-- =====================================================================
+     CASE STUDY: DESIGN SYSTEM COMPONENT
+     The playground below is live: it's built from this site's own tokens.
+     Swap in your own component screenshots where marked.
+     ===================================================================== -->
+<article class="view" data-view="design-system" hidden>
+  <div class="wrap case-hero">
+    <a class="back" href="#work"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All work</a>
+    <span class="pill"><span class="dot"></span>Design System · Component</span>
+    <h1>One button, every state: a component built to <span class="serif">scale.</span></h1>
+    <p class="lede">How I design a component so it stays consistent across products: anatomy, tokens, variants, states and the rules for using it.</p>
+    <dl class="case-meta">
+      <div><dt>Role</dt><dd>UI/UX Designer</dd></div>
+      <div><dt>Focus</dt><dd>Design systems</dd></div>
+      <div><dt>Tool</dt><dd>Figma</dd></div>
+      <div><dt>Component</dt><dd>Button</dd></div>
+    </dl>
+  </div>
+
+  <div class="wrap">
+    <div class="playground" id="dsPlayground">
+      <div class="pg-stage"><button class="ds-btn" id="dsPreview" type="button"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="ds-label">Add to plan</span><span class="ds-spin" aria-hidden="true"></span></button></div>
+      <div class="pg-controls">
+        <fieldset><legend>Variant</legend>
+          <label><input type="radio" name="ds-v" id="ds-v-primary" value="primary" checked>Primary</label>
+          <label><input type="radio" name="ds-v" id="ds-v-secondary" value="secondary">Secondary</label>
+          <label><input type="radio" name="ds-v" id="ds-v-ghost" value="ghost">Ghost</label>
+          <label><input type="radio" name="ds-v" id="ds-v-danger" value="danger">Destructive</label>
+        </fieldset>
+        <fieldset><legend>Size</legend>
+          <label><input type="radio" name="ds-s" id="ds-s-s" value="s">S</label>
+          <label><input type="radio" name="ds-s" id="ds-s-m" value="m" checked>M</label>
+          <label><input type="radio" name="ds-s" id="ds-s-l" value="l">L</label>
+        </fieldset>
+        <fieldset><legend>State</legend>
+          <label><input type="radio" name="ds-st" id="ds-st-default" value="default" checked>Default</label>
+          <label><input type="radio" name="ds-st" id="ds-st-hover" value="hover">Hover</label>
+          <label><input type="radio" name="ds-st" id="ds-st-pressed" value="pressed">Pressed</label>
+          <label><input type="radio" name="ds-st" id="ds-st-focus" value="focus">Focus</label>
+          <label><input type="radio" name="ds-st" id="ds-st-disabled" value="disabled">Disabled</label>
+          <label><input type="radio" name="ds-st" id="ds-st-loading" value="loading">Loading</label>
+        </fieldset>
+        <fieldset><legend>Icon</legend>
+          <label><input type="checkbox" id="ds-icon" checked>Leading icon</label>
+        </fieldset>
+      </div>
+      <dl class="pg-tokens" id="dsTokens"></dl>
+    </div>
+    <p class="pg-caption">Try it: every combination above is one component with properties, not a separate drawing.</p>
+  </div>
+
+  <div class="wrap case-body">
+    <nav class="toc" aria-label="Sections">
+      <button type="button" data-target="sy-who">Who</button>
+      <button type="button" data-target="sy-what">What</button>
+      <button type="button" data-target="sy-why">Why</button>
+      <button type="button" data-target="sy-how">How</button>
+      <button type="button" data-target="sy-outcome">Outcome</button>
+    </nav>
+    <div class="case-content">
+      <section class="case-sec" data-sec="sy-who">
+        <div class="sec-q"><span class="q">Who</span><span class="q-sub">is it for?</span></div>
+        <h2>Designers who build screens with it, and developers who build it in code.</h2>
+        <p>A component is a contract between design and engineering. It has to be quick to use in Figma and map one-to-one to the coded version.</p>
+        <p class="todo">To add: which products and teams use your system.</p>
+      </section>
+
+      <section class="case-sec" data-sec="sy-what">
+        <div class="sec-q"><span class="q">What</span><span class="q-sub">is a button made of?</span></div>
+        <h2>Anatomy first, then everything else.</h2>
+        <div class="anatomy">
+          <div class="anat-stage">
+            <span class="ds-btn v-primary s-l anat-btn"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="ds-label">Add to plan</span></span>
+            <span class="callout c1">1</span><span class="callout c2">2</span><span class="callout c3">3</span><span class="callout c4">4</span>
+          </div>
+          <ol class="anat-list">
+            <li><b>Container</b> carries the variant colour, radius and height.</li>
+            <li><b>Leading icon</b> is optional and always 16, 18 or 20px to match the size.</li>
+            <li><b>Label</b> is one to three words in sentence case, starting with a verb.</li>
+            <li><b>Padding</b> comes from the spacing scale, never typed in by hand.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="case-sec" data-sec="sy-why">
+        <div class="sec-q"><span class="q">Why</span><span class="q-sub">does it matter?</span></div>
+        <h2>Without one source of truth, every team redraws the button a little differently.</h2>
+        <p>Small differences in colour, size and states add up to products that feel inconsistent, and to more design and QA time on every release.</p>
+        <p class="todo">To add: the inconsistencies you found before (an audit screenshot works well).</p>
+        <figure class="media"><div class="media-box" style="--ar:16/8"><span><em class="kind">Image</em><b>Audit: buttons in the wild</b><code>assets/media/design-system/audit.png</code></span></div></figure>
+      </section>
+
+      <section class="case-sec" data-sec="sy-how">
+        <div class="sec-q"><span class="q">How</span><span class="q-sub">did I build it?</span></div>
+        <h2>Tokens, variants and states, all as properties.</h2>
+        <div class="cards-3">
+          <div class="info-card"><span class="k">Tokens</span><h3>Named by purpose</h3><p>Colours are named for what they do (action, surface, border), so themes like dark mode swap values, not components.</p></div>
+          <div class="info-card"><span class="k">Variants</span><h3>4 × 3 × 6</h3><p>Four variants, three sizes and six states, built as properties of one component.</p></div>
+          <div class="info-card"><span class="k">Docs</span><h3>Rules next to the component</h3><p>When to use each variant, and when not to: one primary button per view.</p></div>
+        </div>
+        <h3 style="font-size:var(--step-2)">Every variant, every state</h3>
+        <div class="matrix-wrap"><table class="matrix" id="dsMatrix"><caption class="visually-hidden">Button variants by state</caption></table></div>
+        <figure class="media"><div class="media-box" style="--ar:16/9"><span><em class="kind">Image</em><b>Your Figma component</b>Properties panel and variant grid.<code>assets/media/design-system/figma.png</code></span></div></figure>
+      </section>
+
+      <section class="case-sec" data-sec="sy-outcome">
+        <div class="sec-q"><span class="q">So</span><span class="q-sub">what changed?</span></div>
+        <h2>One component instead of dozens of lookalikes.</h2>
+        <p class="todo">To add: the result, e.g. how many old button styles it replaced, or time saved in design and QA.</p>
         <a class="next-case" href="#demedic"><span><small>Next case study</small><strong>DE Medic: duty swaps for doctors</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
       </section>
     </div>
@@ -602,8 +916,9 @@
 
 </main>
 
+<!-- main.js first so the intro's clock starts at first paint, not after the 3D library downloads -->
+<script src="assets/js/main.js"></script>
 <script src="assets/vendor/three.min.js"></script>
 <script src="assets/js/cube.js"></script>
-<script src="assets/js/main.js"></script>
 </body>
 </html>

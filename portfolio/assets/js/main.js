@@ -5,7 +5,8 @@
   var root = document.documentElement;
   var body = document.body;
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var caseViews = ["demedic", "earthlink"];
+  var caseViews = ["demedic", "earthlink", "desafe", "design-system"];
+  var caseTitles = { demedic: "DE Medic", earthlink: "EarthLink", desafe: "DeSafe", "design-system": "Design System" };
   var homeSections = ["work", "concepts", "about", "contact"];
 
   function store(key, value) {
@@ -68,11 +69,11 @@
   }, { passive: true });
 
   /* ---------------- intro ----------------
-     0s    the ball bounces on its own
-     2s    "From making things move" fades in at the bottom
-     3s    the phone travels forward from behind the ball; Loading starts at 0%
-     5s    Loading is at 50%; "to making things work." joins (2s after the phone)
-     7s    Loading hits 100% and the home page opens (2s after that)       */
+     0s  the ball bounces on its own
+     1s  "From making things move" fades in, and holds
+     3s  the phone comes forward from behind the ball; Loading starts at 0%
+     4s  "to making things work." joins underneath
+     6s  Loading hits 100% and the home page opens (about 7s with the fade) */
   var intro = document.getElementById("intro");
   var countEl = document.getElementById("introCount");
   var timers = [];
@@ -106,10 +107,10 @@
   function startIntro() {
     body.classList.add("intro-on");
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
-    at(2000, function () { intro.classList.add("p1"); });
-    at(3000, function () { intro.classList.add("p2"); runCounter(4000); });  // 0% → 100% exactly at 7s
-    at(5000, function () { intro.classList.add("p3"); });
-    at(7000, endIntro);
+    at(1000, function () { intro.classList.add("p1"); });
+    at(3000, function () { intro.classList.add("p2"); runCounter(3000); });  // 0% at 3s → 100% at 6s
+    at(4000, function () { intro.classList.add("p3"); });
+    at(6000, endIntro);
   }
 
   document.getElementById("introSkip").addEventListener("click", endIntro);
@@ -145,7 +146,7 @@
     });
     if (v !== "home") {
       window.scrollTo({ top: 0, behavior: "auto" });
-      document.title = (v === "demedic" ? "DE Medic Case Study" : "EarthLink Case Study") + " · Mayank Chauhan";
+      document.title = caseTitles[v] + " Case Study · Mayank Chauhan";
     } else {
       document.title = "Mayank Chauhan Portfolio";
       if (homeSections.indexOf(h) > -1) {
@@ -239,4 +240,103 @@
     }, { rootMargin: "-35% 0px -55% 0px" });
     Object.keys(map).forEach(function (k) { io.observe(document.querySelector('[data-sec="' + k + '"]')); });
   });
+
+  /* ---------------- tilt: about-me cards follow the cursor ---------------- */
+  if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
+    document.querySelectorAll("[data-tilt]").forEach(function (el) {
+      el.addEventListener("pointermove", function (e) {
+        var r = el.getBoundingClientRect();
+        el.style.setProperty("--tx", ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
+        el.style.setProperty("--ty", ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+        el.classList.add("tilting");
+      });
+      el.addEventListener("pointerleave", function () {
+        el.classList.remove("tilting");
+        el.style.setProperty("--tx", "0");
+        el.style.setProperty("--ty", "0");
+      });
+    });
+  }
+  // touch screens have no hover: a tap plays the card's interaction
+  document.querySelectorAll(".trait").forEach(function (el) {
+    el.addEventListener("click", function () { el.classList.toggle("active"); });
+  });
+
+  /* ---------------- timeline toggle (a real micro-interaction) ---------------- */
+  var bigToggle = document.querySelector(".big-toggle");
+  if (bigToggle) {
+    var flip = function () { bigToggle.setAttribute("aria-pressed", String(bigToggle.getAttribute("aria-pressed") !== "true")); };
+    // it flips itself until someone tries it
+    var demo = reduceMotion ? 0 : setInterval(flip, 2600);
+    bigToggle.addEventListener("click", function () {
+      if (demo) { clearInterval(demo); demo = 0; }
+      flip();
+      var hint = bigToggle.parentElement.querySelector(".tap-hint");
+      if (hint) hint.textContent = bigToggle.getAttribute("aria-pressed") === "true" ? "on" : "off";
+    });
+  }
+
+  /* ---------------- design system: button playground + matrix ---------------- */
+  var pg = document.getElementById("dsPlayground");
+  if (pg) {
+    var preview = document.getElementById("dsPreview");
+    var tokensEl = document.getElementById("dsTokens");
+    var SIZE = { s: { h: 32, px: 12, r: 8, n: "sm" }, m: { h: 40, px: 16, r: 10, n: "md" }, l: { h: 48, px: 20, r: 12, n: "lg" } };
+    var BG = { primary: "action/primary", secondary: "surface/default", ghost: "action/ghost", danger: "action/destructive" };
+    var FG = { primary: "text/on-action", secondary: "text/primary", ghost: "action/primary", danger: "text/on-action" };
+    var STATE_SUFFIX = { hover: "/hover", pressed: "/pressed" };
+
+    var hex = function (rgb) {
+      var m = rgb.match(/[\d.]+/g);
+      if (!m) return rgb;
+      if (m.length > 3 && parseFloat(m[3]) === 0) return "transparent";
+      return "#" + m.slice(0, 3).map(function (x) { return ("0" + Math.round(+x).toString(16)).slice(-2); }).join("");
+    };
+    var val = function (name) { var el = pg.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ""; };
+
+    var classes = function (v, sz, st, icon) {
+      return "ds-btn v-" + v + " s-" + sz + " st-" + st + (icon ? "" : " no-icon");
+    };
+
+    var update = function () {
+      var v = val("ds-v"), sz = val("ds-s"), st = val("ds-st"), icon = document.getElementById("ds-icon").checked;
+      preview.className = classes(v, sz, st, icon);
+      preview.disabled = st === "disabled";
+      preview.setAttribute("aria-busy", String(st === "loading"));
+      // read the real computed colours once the 0.2s colour transition has settled
+      clearTimeout(update.t);
+      update.t = setTimeout(function () {
+        var cs = getComputedStyle(preview);
+        var size = SIZE[sz];
+        var rows = [
+          ["Background", "color/" + BG[v] + (STATE_SUFFIX[st] || ""), hex(cs.backgroundColor)],
+          ["Text", "color/" + FG[v], hex(cs.color)],
+          ["Border", v === "secondary" ? "color/border/strong" : "none", v === "secondary" ? hex(cs.borderTopColor) : ""],
+          ["Radius", "radius/" + size.n, size.r + "px"],
+          ["Height", "size/control-" + size.n, size.h + "px"],
+          ["Padding", "space/x-" + size.n, size.px + "px"]
+        ];
+        tokensEl.innerHTML = rows.map(function (r) {
+          return "<dt>" + r[0] + "</dt><dd>" + r[1] + (r[2] ? " <span>· " + r[2] + "</span>" : "") + "</dd>";
+        }).join("");
+      }, 260);
+    };
+    pg.addEventListener("change", update);
+    window.addEventListener("themechange", update);
+    update();
+
+    // static matrix: every variant in every state
+    var matrix = document.getElementById("dsMatrix");
+    var variants = [["primary", "Primary"], ["secondary", "Secondary"], ["ghost", "Ghost"], ["danger", "Destructive"]];
+    var states = [["default", "Default"], ["hover", "Hover"], ["pressed", "Pressed"], ["focus", "Focus"], ["disabled", "Disabled"], ["loading", "Loading"]];
+    var html = "<thead><tr><th scope=\"col\">Variant</th>" + states.map(function (s2) { return "<th scope=\"col\">" + s2[1] + "</th>"; }).join("") + "</tr></thead><tbody>";
+    variants.forEach(function (v2) {
+      html += "<tr><th scope=\"row\">" + v2[1] + "</th>";
+      states.forEach(function (s2) {
+        html += "<td><span class=\"" + classes(v2[0], "s", s2[0], false) + "\" role=\"img\" aria-label=\"" + v2[1] + " button, " + s2[1] + "\"><span class=\"ds-label\">Button</span><span class=\"ds-spin\"></span></span></td>";
+      });
+      html += "</tr>";
+    });
+    matrix.insertAdjacentHTML("beforeend", html + "</tbody>");
+  }
 })();
