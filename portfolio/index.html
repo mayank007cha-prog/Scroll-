@@ -362,7 +362,7 @@
             </div>
             <span class="stop-node" aria-hidden="true"></span>
             <span class="stop-n">01 · Earlier</span>
-            <h4>Animator</h4>
+            <h4>BSc Animation</h4>
             <p>Rotoscoping, 3D modelling, lighting and rigging across a stack of software. Huge effort for a few seconds of output, and more art than problem solving.</p>
           </li>
           <li class="stop reveal">
@@ -485,6 +485,12 @@
       <div><dt>Platform</dt><dd>Mobile app</dd></div>
       <div><dt>Feature</dt><dd>Duty Swap</dd></div>
     </dl>
+    <dl class="tldr" aria-label="Summary">
+      <div><dt>Problem</dt><dd>Doctors needed to swap duties with each other, without overlaps, in an app used mostly by senior doctors.</dd></div>
+      <div><dt>My role</dt><dd>UI/UX Designer at DigiMantra. I designed the journey, every duty-card state and the edge cases.</dd></div>
+      <div><dt>Team</dt><dd><span class="todo-inline">Add: PM, developers, client team.</span></dd></div>
+      <div><dt>Outcome</dt><dd>A four-phase swap journey where every duty's status is visible from the Duty tab.</dd></div>
+    </dl>
   </div>
   <div class="wrap">
     <figure class="media">
@@ -498,6 +504,8 @@
       <button type="button" data-target="dm-what">What</button>
       <button type="button" data-target="dm-why">Why</button>
       <button type="button" data-target="dm-how">How</button>
+      <button type="button" data-target="dm-iter">Iterations</button>
+      <button type="button" data-target="dm-dec">Decisions</button>
       <button type="button" data-target="dm-outcome">Outcome</button>
     </nav>
     <div class="case-content">
@@ -608,12 +616,92 @@
         <div class="info-card" style="margin-top:8px"><span class="k">Edge case</span><h3>A duty can be offered and bid at the same time</h3><p>A doctor can put a duty up as an offer and also bid that same duty on someone else's swap offer. The card shows both states, and once one swap goes through, the other is resolved so the duty is never promised twice.</p></div>
       </section>
 
+      <section class="case-sec" data-sec="dm-iter">
+        <div class="sec-q"><span class="q">Iterations</span><span class="q-sub">what I tried first</span></div>
+        <h2>The versions that didn't make it, and why.</h2>
+        <ol class="iters">
+          <li class="iter reveal">
+            <div class="iter-media">
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/demedic/iteration-1-before.png</code></span></div></figure>
+              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/demedic/iteration-1-after.png</code></span></div></figure>
+            </div>
+            <div class="iter-text">
+              <span class="phase-num">ITERATION 01</span>
+              <h3>From a text-only status to colour, icon and label</h3>
+              <dl>
+                <dt>What I tried</dt><dd><span class="todo-inline">Add: the earlier version and what it did.</span></dd>
+                <dt>Why it changed</dt><dd><span class="todo-inline">Add: what you learned (feedback, testing, a constraint) that made you change it.</span></dd>
+              </dl>
+            </div>
+          </li>
+          <li class="iter reveal">
+            <div class="iter-media">
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/demedic/iteration-2-before.png</code></span></div></figure>
+              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/demedic/iteration-2-after.png</code></span></div></figure>
+            </div>
+            <div class="iter-text">
+              <span class="phase-num">ITERATION 02</span>
+              <h3>Where doctors see the bids on their offer</h3>
+              <dl>
+                <dt>What I tried</dt><dd><span class="todo-inline">Add: the earlier version and what it did.</span></dd>
+                <dt>Why it changed</dt><dd><span class="todo-inline">Add: what you learned (feedback, testing, a constraint) that made you change it.</span></dd>
+              </dl>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="case-sec" data-sec="dm-dec">
+        <div class="sec-q"><span class="q">Decisions</span><span class="q-sub">and their trade-offs</span></div>
+        <h2>The calls that shaped the design.</h2>
+        <div class="decisions">
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>Every duty state gets a colour, an icon and a label</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>Many users are senior and less familiar with modern UI, so no state relies on colour alone.</dd>
+            </dl>
+          </div>
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>Show bids on the offered duty card itself</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>Doctor 1 sees responses where they already look after offering, in the Duty tab.</dd>
+            </dl>
+          </div>
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>Swap shows straight away, marked "under admin approval"</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>Both doctors see the result immediately while the admin keeps the final say.</dd>
+            </dl>
+          </div>
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>Big targets, less scrolling, wide spacing</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>Built for senior doctors: fewer mis-taps and less hunting for actions.</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
       <section class="case-sec" data-sec="dm-outcome">
         <div class="sec-q"><span class="q">So</span><span class="q-sub">what changed?</span></div>
         <h2>A multi-person negotiation that reads like a to-do list.</h2>
         <p>Doctors can see the status of every duty from the Duty tab alone. Big targets, fewer scrolls and a colour-plus-label for each state keep the feature usable for doctors who don't live in modern apps.</p>
-        <!-- TODO: add real outcome numbers if you have them (adoption, swaps per week, support tickets) -->
         <figure class="media"><div class="media-box" style="--ar:16/9"><span><em class="kind">Image</em><b>Final screens</b>A lineup of the key screens side by side.<code>assets/media/demedic/final.png</code></span></div></figure>
+                <div class="cards-2">
+          <div class="info-card"><span class="k">Impact</span><ul><li>Doctors can offer, bid, accept and track a swap without leaving the app.</li><li>Each duty's status reads at a glance from one tab.</li><li><span class="todo-inline">Add: feedback from the client or doctors.</span></li></ul></div>
+          <div class="info-card"><span class="k">What I learned</span><p><span class="todo-inline">Add: one or two things this project taught you.</span></p></div>
+        </div>
+        <p class="confidential">This was client work at DigiMantra, so exact numbers belong to the client. I've shown impact through the journey changes and the feedback instead.</p>
         <a class="next-case" href="#earthlink"><span><small>Next case study</small><strong>EarthLink: a faster fiber checkout</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
       </section>
     </div>
@@ -635,6 +723,12 @@
       <div><dt>Platform</dt><dd>Web + responsive</dd></div>
       <div><dt>Flow</dt><dd>B2C checkout</dd></div>
     </dl>
+    <dl class="tldr" aria-label="Summary">
+      <div><dt>Problem</dt><dd>Buying fiber online took six steps, lots of typing and many decisions.</dd></div>
+      <div><dt>My role</dt><dd>UI/UX Designer at DigiMantra. I redesigned the B2C checkout flow.</dd></div>
+      <div><dt>Team</dt><dd><span class="todo-inline">Add: PM, developers, EarthLink stakeholders.</span></dd></div>
+      <div><dt>Outcome</dt><dd>Four steps, and three to four clicks for an ideal purchase.</dd></div>
+    </dl>
   </div>
   <div class="wrap">
     <figure class="media">
@@ -648,6 +742,8 @@
       <button type="button" data-target="el-what">What</button>
       <button type="button" data-target="el-why">Why</button>
       <button type="button" data-target="el-how">How</button>
+      <button type="button" data-target="el-iter">Iterations</button>
+      <button type="button" data-target="el-dec">Decisions</button>
       <button type="button" data-target="el-outcome">Outcome</button>
     </nav>
     <div class="case-content">
@@ -706,6 +802,82 @@
         <figure class="media"><div class="media-box" style="--ar:16/9"><span><em class="kind">Image</em><b>Review &amp; Pay</b>Cart, terms and payment together, with Due today above the pay buttons.<code>assets/media/earthlink/review-pay.png</code></span></div></figure>
       </section>
 
+      <section class="case-sec" data-sec="el-iter">
+        <div class="sec-q"><span class="q">Iterations</span><span class="q-sub">what I tried first</span></div>
+        <h2>The versions that didn't make it, and why.</h2>
+        <ol class="iters">
+          <li class="iter reveal">
+            <div class="iter-media">
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/earthlink/iteration-1-before.png</code></span></div></figure>
+              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/earthlink/iteration-1-after.png</code></span></div></figure>
+            </div>
+            <div class="iter-text">
+              <span class="phase-num">ITERATION 01</span>
+              <h3>Installation date: from a picker to open date cards</h3>
+              <dl>
+                <dt>What I tried</dt><dd><span class="todo-inline">Add: the earlier version and what it did.</span></dd>
+                <dt>Why it changed</dt><dd><span class="todo-inline">Add: what you learned (feedback, testing, a constraint) that made you change it.</span></dd>
+              </dl>
+            </div>
+          </li>
+          <li class="iter reveal">
+            <div class="iter-media">
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/earthlink/iteration-2-before.png</code></span></div></figure>
+              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/earthlink/iteration-2-after.png</code></span></div></figure>
+            </div>
+            <div class="iter-text">
+              <span class="phase-num">ITERATION 02</span>
+              <h3>Separate terms, payment and cart steps become one Review &amp; Pay</h3>
+              <dl>
+                <dt>What I tried</dt><dd><span class="todo-inline">Add: the earlier version and what it did.</span></dd>
+                <dt>Why it changed</dt><dd><span class="todo-inline">Add: what you learned (feedback, testing, a constraint) that made you change it.</span></dd>
+              </dl>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="case-sec" data-sec="el-dec">
+        <div class="sec-q"><span class="q">Decisions</span><span class="q-sub">and their trade-offs</span></div>
+        <h2>The calls that shaped the design.</h2>
+        <div class="decisions">
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>Pre-select the first available date</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>Most customers take the first slot, so they only need to check it and press Save &amp; Next.</dd>
+            </dl>
+          </div>
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>Autofill details with Google or Apple login</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>Two clicks instead of typing a full form.</dd>
+            </dl>
+          </div>
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>Show "Due today" above the payment methods</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>It's the one number customers need before they pay.</dd>
+            </dl>
+          </div>
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>Skeleton loaders instead of a spinner</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>They appear faster and show the shape of the next screen.</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
       <section class="case-sec" data-sec="el-outcome">
         <div class="sec-q"><span class="q">So</span><span class="q-sub">what changed?</span></div>
         <h2>A faster checkout with fewer decisions.</h2>
@@ -715,6 +887,11 @@
           <div class="stat"><b>2</b><span>clicks to fill customer details</span></div>
         </div>
         <p>The journey is simpler and asks for fewer decisions. Most of the remaining clicks just confirm what the system has already filled in.</p>
+                <div class="cards-2">
+          <div class="info-card"><span class="k">Impact</span><ul><li>Checkout went from six steps to four.</li><li>An ideal purchase takes three to four clicks.</li><li>Customer details take two clicks instead of a typed form.</li></ul></div>
+          <div class="info-card"><span class="k">What I learned</span><p><span class="todo-inline">Add: one or two things this project taught you.</span></p></div>
+        </div>
+        <p class="confidential">This was client work at DigiMantra, so exact numbers belong to the client. I've shown impact through the journey changes and the feedback instead.</p>
         <a class="next-case" href="#desafe"><span><small>Next case study</small><strong>DeSafe: one-tap alerts for lone workers</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
       </section>
     </div>
@@ -737,6 +914,12 @@
       <div><dt>Platform</dt><dd>Mobile app</dd></div>
       <div><dt>Users</dt><dd>Lone workers</dd></div>
     </dl>
+    <dl class="tldr" aria-label="Summary">
+      <div><dt>Problem</dt><dd>Lone workers need to reach help fast, often under stress.</dd></div>
+      <div><dt>My role</dt><dd>UI/UX Designer at DigiMantra.</dd></div>
+      <div><dt>Team</dt><dd><span class="todo-inline">Add: who you worked with.</span></dd></div>
+      <div><dt>Outcome</dt><dd><span class="todo-inline">Add: the result in one line.</span></dd></div>
+    </dl>
   </div>
   <div class="wrap">
     <figure class="media">
@@ -750,6 +933,8 @@
       <button type="button" data-target="ds-what">What</button>
       <button type="button" data-target="ds-why">Why</button>
       <button type="button" data-target="ds-how">How</button>
+      <button type="button" data-target="ds-iter">Iterations</button>
+      <button type="button" data-target="ds-dec">Decisions</button>
       <button type="button" data-target="ds-outcome">Outcome</button>
     </nav>
     <div class="case-content">
@@ -789,10 +974,74 @@
         <figure class="media"><div class="media-box" style="--ar:16/9"><span><em class="kind">Video</em><b>Alert flow</b><code>assets/media/desafe/flow.mp4</code></span></div></figure>
       </section>
 
+      <section class="case-sec" data-sec="ds-iter">
+        <div class="sec-q"><span class="q">Iterations</span><span class="q-sub">what I tried first</span></div>
+        <h2>The versions that didn't make it, and why.</h2>
+        <ol class="iters">
+          <li class="iter reveal">
+            <div class="iter-media">
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/desafe/iteration-1-before.png</code></span></div></figure>
+              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/desafe/iteration-1-after.png</code></span></div></figure>
+            </div>
+            <div class="iter-text">
+              <span class="phase-num">ITERATION 01</span>
+              <h3>The alert button</h3>
+              <dl>
+                <dt>What I tried</dt><dd><span class="todo-inline">Add: the earlier version and what it did.</span></dd>
+                <dt>Why it changed</dt><dd><span class="todo-inline">Add: what you learned (feedback, testing, a constraint) that made you change it.</span></dd>
+              </dl>
+            </div>
+          </li>
+          <li class="iter reveal">
+            <div class="iter-media">
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/desafe/iteration-2-before.png</code></span></div></figure>
+              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/desafe/iteration-2-after.png</code></span></div></figure>
+            </div>
+            <div class="iter-text">
+              <span class="phase-num">ITERATION 02</span>
+              <h3>Confirming an alert was sent</h3>
+              <dl>
+                <dt>What I tried</dt><dd><span class="todo-inline">Add: the earlier version and what it did.</span></dd>
+                <dt>Why it changed</dt><dd><span class="todo-inline">Add: what you learned (feedback, testing, a constraint) that made you change it.</span></dd>
+              </dl>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="case-sec" data-sec="ds-dec">
+        <div class="sec-q"><span class="q">Decisions</span><span class="q-sub">and their trade-offs</span></div>
+        <h2>The calls that shaped the design.</h2>
+        <div class="decisions">
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>One tap alerts police, family and friends together</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd><span class="todo-inline">Add: why one action instead of separate calls or messages.</span></dd>
+            </dl>
+          </div>
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3><span class="todo-inline">Add: a decision about accidental presses or cancelling an alert.</span></h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd><span class="todo-inline">Add: why.</span></dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
       <section class="case-sec" data-sec="ds-outcome">
         <div class="sec-q"><span class="q">So</span><span class="q-sub">what changed?</span></div>
         <h2>Help, one tap away.</h2>
-        <p class="todo">To add: the outcome, plus any numbers or feedback you have.</p>
+                <div class="cards-2">
+          <div class="info-card"><span class="k">Impact</span><ul><li><span class="todo-inline">Add: what changed for users.</span></li></ul></div>
+          <div class="info-card"><span class="k">What I learned</span><p><span class="todo-inline">Add: one or two things this project taught you.</span></p></div>
+        </div>
+        <p class="confidential">This was client work at DigiMantra, so exact numbers belong to the client. I've shown impact through the journey changes and the feedback instead.</p>
         <a class="next-case" href="#design-system"><span><small>Next case study</small><strong>Design System: one button, every state</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
       </section>
     </div>
@@ -815,6 +1064,12 @@
       <div><dt>Focus</dt><dd>Design systems</dd></div>
       <div><dt>Tool</dt><dd>Figma</dd></div>
       <div><dt>Component</dt><dd>Button</dd></div>
+    </dl>
+    <dl class="tldr" aria-label="Summary">
+      <div><dt>Problem</dt><dd><span class="todo-inline">Add: the inconsistency you set out to fix.</span></dd></div>
+      <div><dt>My role</dt><dd>UI/UX Designer. I designed the component, its tokens, variants and documentation.</dd></div>
+      <div><dt>Team</dt><dd><span class="todo-inline">Add: designers and developers involved.</span></dd></div>
+      <div><dt>Outcome</dt><dd><span class="todo-inline">Add: the result in one line.</span></dd></div>
     </dl>
   </div>
 
@@ -856,6 +1111,8 @@
       <button type="button" data-target="sy-what">What</button>
       <button type="button" data-target="sy-why">Why</button>
       <button type="button" data-target="sy-how">How</button>
+      <button type="button" data-target="sy-iter">Iterations</button>
+      <button type="button" data-target="sy-dec">Decisions</button>
       <button type="button" data-target="sy-outcome">Outcome</button>
     </nav>
     <div class="case-content">
@@ -904,10 +1161,74 @@
         <figure class="media"><div class="media-box" style="--ar:16/9"><span><em class="kind">Image</em><b>Your Figma component</b>Properties panel and variant grid.<code>assets/media/design-system/figma.png</code></span></div></figure>
       </section>
 
+      <section class="case-sec" data-sec="sy-iter">
+        <div class="sec-q"><span class="q">Iterations</span><span class="q-sub">what I tried first</span></div>
+        <h2>The versions that didn't make it, and why.</h2>
+        <ol class="iters">
+          <li class="iter reveal">
+            <div class="iter-media">
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/design-system/iteration-1-before.png</code></span></div></figure>
+              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/design-system/iteration-1-after.png</code></span></div></figure>
+            </div>
+            <div class="iter-text">
+              <span class="phase-num">ITERATION 01</span>
+              <h3>Naming tokens by purpose instead of by colour</h3>
+              <dl>
+                <dt>What I tried</dt><dd><span class="todo-inline">Add: the earlier version and what it did.</span></dd>
+                <dt>Why it changed</dt><dd><span class="todo-inline">Add: what you learned (feedback, testing, a constraint) that made you change it.</span></dd>
+              </dl>
+            </div>
+          </li>
+          <li class="iter reveal">
+            <div class="iter-media">
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/design-system/iteration-2-before.png</code></span></div></figure>
+              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/design-system/iteration-2-after.png</code></span></div></figure>
+            </div>
+            <div class="iter-text">
+              <span class="phase-num">ITERATION 02</span>
+              <h3>From separate drawings to one component with properties</h3>
+              <dl>
+                <dt>What I tried</dt><dd><span class="todo-inline">Add: the earlier version and what it did.</span></dd>
+                <dt>Why it changed</dt><dd><span class="todo-inline">Add: what you learned (feedback, testing, a constraint) that made you change it.</span></dd>
+              </dl>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="case-sec" data-sec="sy-dec">
+        <div class="sec-q"><span class="q">Decisions</span><span class="q-sub">and their trade-offs</span></div>
+        <h2>The calls that shaped the design.</h2>
+        <div class="decisions">
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>Colour tokens are named for what they do</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>Themes like dark mode swap values, not components.</dd>
+            </dl>
+          </div>
+          <div class="decision reveal">
+            <span class="k">Decision</span>
+            <h3>One primary button per view</h3>
+            <dl>
+              <dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd>
+              <dt>Why this one</dt><dd>It keeps the main action obvious on every screen.</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
       <section class="case-sec" data-sec="sy-outcome">
         <div class="sec-q"><span class="q">So</span><span class="q-sub">what changed?</span></div>
         <h2>One component instead of dozens of lookalikes.</h2>
-        <p class="todo">To add: the result, e.g. how many old button styles it replaced, or time saved in design and QA.</p>
+                <div class="cards-2">
+          <div class="info-card"><span class="k">Impact</span><ul><li><span class="todo-inline">Add: how many old styles it replaced, or design and QA time saved.</span></li></ul></div>
+          <div class="info-card"><span class="k">What I learned</span><p><span class="todo-inline">Add: one or two things this project taught you.</span></p></div>
+        </div>
+        <p class="confidential">This was client work at DigiMantra, so exact numbers belong to the client. I've shown impact through the journey changes and the feedback instead.</p>
         <a class="next-case" href="#demedic"><span><small>Next case study</small><strong>DE Medic: duty swaps for doctors</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
       </section>
     </div>

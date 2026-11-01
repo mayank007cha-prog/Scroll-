@@ -19,6 +19,8 @@ cd portfolio && python3 -m http.server 8000
 
 ## Adding your media
 
+The full list of images, videos, logos and sizes is in [ASSETS.md](ASSETS.md).
+
 **Concept videos.** Put screen recordings in `assets/media/` and set `data-video` on the matching
 `<figure class="phone-card">`, e.g. `data-video="assets/media/spotify-mini-player.mp4"`.
 Use 9:19.5 portrait MP4s (H.264, muted). The CSS preview shows until the video loads.
