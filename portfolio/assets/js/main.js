@@ -68,20 +68,24 @@
     nav.classList.toggle("scrolled", window.scrollY > 8);
   }, { passive: true });
 
-  /* ---------------- intro (gone by ~7.4s) ----------------
-     Animation → UI/UX: the bouncing ball becomes the app's loader.
-     0s     p0  the ball starts bouncing
-     0.3s   p1  "From making things move" fades in on the left
-     1.5s   p2  the phone condenses around the ball, fully visible, and the
-                copy swaps to "to making things work."
-     2.8s   p3  inside the phone, "Loading 0 → 100%" appears under the ball
-     5.25s  p4  loading completes, the ball fades and the app appears
-     6.6s       the intro fades into the home page                         */
+  /* ---------------- intro (gone by ~6.9s) ----------------
+     One bouncing ball (animation) becomes the first dot of a four-dot app
+     loader (UI/UX). Motion is driven frame by frame so speed and height
+     change continuously, with no jumps between animations.
+     0s     the ball bounces tall, with real gravity
+     0.3s   p1  "From making things move" fades in under it
+     2.0s   p2  the ball glides into the first loader slot while its bounce
+                shrinks to the loader's hop; text swaps to "to making things work."
+     3.0s   p3  three dots join, one after another, a beat apart; the
+                loading number appears under them (0 → 100% by 5.6s)
+     5.6s       the dots settle onto the line; the page fades in            */
   var intro = document.getElementById("intro");
   var countEl = document.getElementById("introCount");
   var timers = [];
-  var rafId = 0;
+  var rafId = 0, loopId = 0;
   var introDone = false;
+
+  var T1 = 2.0, T2 = 3.0, LOAD0 = 3.0, LOAD1 = 5.6, SETTLE = 0.45;
 
   function endIntro() {
     if (introDone) return;
@@ -92,7 +96,7 @@
     intro.classList.add("done");
     body.classList.remove("intro-on");
     body.classList.add("ready");
-    setTimeout(function () { intro.remove(); }, 850);
+    setTimeout(function () { cancelAnimationFrame(loopId); intro.remove(); }, 850);
     observeReveals();
   }
 
@@ -100,23 +104,63 @@
     var start = performance.now();
     function tick(now) {
       var t = Math.min(1, (now - start) / duration);
-      var n = Math.floor(t * 100);          // linear: the number tracks real time
-      countEl.textContent = String(n);
+      countEl.textContent = String(Math.floor(t * 100));   // linear: tracks real time
       if (t < 1) rafId = requestAnimationFrame(tick);
     }
     rafId = requestAnimationFrame(tick);
   }
 
+  function runDots() {
+    var stage = intro.querySelector(".intro-stage");
+    var dots = intro.querySelectorAll(".dl-dot");
+    var shadow = intro.querySelector(".dl-shadow");
+    var cs = getComputedStyle(stage);
+    var G = parseFloat(cs.getPropertyValue("--g")) || 34;
+    var H = parseFloat(cs.getPropertyValue("--h")) || 84;    // first, tall bounce
+    var h = H * 0.3;                                           // loader hop
+    var clamp = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+    var ease = function (v) { v = clamp(v); return v < 0.5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
+    var lerp = function (a, b, k) { return a + (b - a) * k; };
+    var hop = function (f) { f -= Math.floor(f); return 4 * f * (1 - f); };   // gravity parabola, 0 on the ground
+    var t0 = performance.now(), last = t0, phase = 0;
+
+    function frame(now) {
+      var t = (now - t0) / 1000, dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      var k = ease((t - T1) / (T2 - T1));                      // ball → loader blend
+      var settle = 1 - ease((t - LOAD1) / SETTLE);              // hop dies down at the end
+      var period = lerp(0.82, 0.6, k);
+      phase += dt / period;
+      var amp = lerp(H, h, k) * settle;
+
+      // dot 0: the original ball, gliding into the first slot
+      var y0 = hop(phase), x0 = lerp(0, -1.5 * G, k);
+      var squash = Math.pow(1 - y0, 10) * 0.16 * (amp / H);    // a touch of squash at each landing
+      dots[0].style.opacity = String(clamp(t / 0.35));
+      dots[0].style.transform = "translate(" + x0.toFixed(2) + "px," + (-amp * y0).toFixed(2) + "px) scale(" + (1 + squash).toFixed(3) + "," + (1 - squash).toFixed(3) + ")";
+      shadow.style.opacity = String((0.14 * (1 - 0.7 * y0) * clamp(t / 0.35) * (1 - k)).toFixed(3));
+      shadow.style.transform = "translateX(" + x0.toFixed(2) + "px) scale(" + (0.55 + 0.45 * (1 - y0)).toFixed(3) + ")";
+
+      // dots 1–3 fade into their own slots, a beat apart, and take up the wave
+      for (var i = 1; i < 4; i++) {
+        var r = ease((t - (T2 - 0.05 + (i - 1) * 0.16)) / 0.5);
+        var yi = hop(phase - i * 0.16);
+        dots[i].style.opacity = String(r.toFixed(3));
+        dots[i].style.transform = "translate(" + ((i - 1.5) * G).toFixed(2) + "px," + (-h * r * settle * yi).toFixed(2) + "px) scale(" + (0.6 + 0.4 * r).toFixed(3) + ")";
+      }
+      if (!introDone || t < LOAD1 + 1.5) loopId = requestAnimationFrame(frame);
+    }
+    loopId = requestAnimationFrame(frame);
+  }
+
   function startIntro() {
     body.classList.add("intro-on");
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
-    intro.classList.add("p0");
+    runDots();
     at(300, function () { intro.classList.add("p1"); });
-    at(1500, function () { intro.classList.add("p2"); });
-    at(2800, function () { intro.classList.add("p3"); });
-    at(2800, function () { runCounter(2400); });   // 0% at 2.8s → 100% at 5.2s
-    at(5250, function () { intro.classList.add("p4"); });
-    at(6600, endIntro);
+    at(T1 * 1000, function () { intro.classList.add("p2"); });
+    at(LOAD0 * 1000, function () { intro.classList.add("p3"); runCounter((LOAD1 - LOAD0) * 1000); });
+    at((LOAD1 + 0.5) * 1000, endIntro);
   }
 
   document.getElementById("introSkip").addEventListener("click", endIntro);

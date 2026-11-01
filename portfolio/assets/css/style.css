@@ -166,7 +166,7 @@ button { font: inherit; color: inherit; }
 
 /* ---------- intro ---------- */
 .intro {
-  --soft: cubic-bezier(0.22, 1, 0.36, 1);   /* gentle ease-out used across the intro */
+  --soft: cubic-bezier(0.22, 1, 0.36, 1);
   --fade: cubic-bezier(0.4, 0, 0.2, 1);
   position: fixed; inset: 0; z-index: 100;
   background: var(--bg);
@@ -174,158 +174,46 @@ button { font: inherit; color: inherit; }
   overflow: hidden;
   transition: opacity 0.8s var(--soft);
 }
-.intro::before {                              /* soft glow behind the phone */
-  content: ""; position: absolute; right: 8%; top: 50%; width: 60vmax; height: 60vmax;
-  transform: translate(25%, -50%); border-radius: 50%;
-  background: radial-gradient(circle, var(--glow), transparent 62%);
-  opacity: 0; transition: opacity 1.6s var(--soft);
-}
-.intro.p2::before { opacity: 1; }
 .intro.done { opacity: 0; pointer-events: none; }
-.intro.done .intro-stage { transform: scale(0.985); filter: blur(4px); }
+.intro.done .intro-stage { transform: scale(0.98); filter: blur(3px); }
 
-/* layout: copy on the left, the phone fully visible on the right */
+/* one centred column: dots, then the loading number, then the line */
 .intro-stage {
-  --ph: min(70vh, 620px);                     /* phone height */
-  --pw: calc(var(--ph) * 0.4688);             /* 9 : 19.2 */
-  --cy: calc(var(--ph) * 0.47);               /* where the ball lands / the loader sits */
-  --drop: calc(var(--ph) * 0.11);             /* bounce height */
-  width: min(1120px, 100%);
-  padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px));
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: clamp(32px, 6vw, 96px);
+  --d: 18px;                  /* dot size */
+  --g: 34px;                  /* distance between dot centres */
+  --h: 84px;                  /* room above the ground for the first, tall bounce */
+  display: flex; flex-direction: column; align-items: center;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   transition: transform 0.8s var(--soft), filter 0.8s var(--soft);
 }
-.intro-copy { display: grid; gap: 18px; min-width: 0; }
-.intro-words { margin: 0; display: grid; }
-.intro-words span { grid-area: 1 / 1; opacity: 0; transition: opacity 1s var(--fade); }
-.intro-words { font-weight: 500; line-height: 1.08; letter-spacing: -0.035em; }
-.intro-words .w1 { font-size: clamp(1.9rem, 3.6vw, 3rem); color: var(--fg-2); }
-.intro-words .w2 { font-size: clamp(2.2rem, 4.4vw, 3.6rem); color: var(--fg); }
-.intro-words .w2 em { color: var(--accent); }
-.intro.p1 .w1 { opacity: 1; }
-/* the line swaps as the phone appears (p2): out first, then in, no overlap */
-.intro.p2 .w1 { opacity: 0; transition-duration: 0.5s; }
-.intro.p2 .w2 { opacity: 1; transition-delay: 0.55s; transition-duration: 0.9s; }
-
-/* scene = the phone's box; everything is positioned inside it */
-.intro-scene { position: relative; width: var(--pw); height: var(--ph); }
-
-/* phone condenses in place like smoke around the ball (no movement, no scaling) */
-@property --reveal { syntax: "<length>"; inherits: false; initial-value: 0px; }
-.intro-smoke {
-  --P: 64px; --reveal: 0px;
-  position: absolute; inset: calc(var(--P) * -1);
-  opacity: 0;
-  -webkit-mask-image:
-    radial-gradient(circle at 50% calc(var(--P) + var(--cy)), #000 var(--reveal), transparent calc(var(--reveal) + 140px)),
-    radial-gradient(circle at 34% calc(var(--P) + var(--cy) - 60px), #000 calc(var(--reveal) * 0.8), transparent calc(var(--reveal) * 0.8 + 160px)),
-    radial-gradient(circle at 66% calc(var(--P) + var(--cy) + 70px), #000 calc(var(--reveal) * 0.7), transparent calc(var(--reveal) * 0.7 + 180px));
-  mask-image:
-    radial-gradient(circle at 50% calc(var(--P) + var(--cy)), #000 var(--reveal), transparent calc(var(--reveal) + 140px)),
-    radial-gradient(circle at 34% calc(var(--P) + var(--cy) - 60px), #000 calc(var(--reveal) * 0.8), transparent calc(var(--reveal) * 0.8 + 160px)),
-    radial-gradient(circle at 66% calc(var(--P) + var(--cy) + 70px), #000 calc(var(--reveal) * 0.7), transparent calc(var(--reveal) * 0.7 + 180px));
-  transition: --reveal 2.2s cubic-bezier(0.65, 0, 0.35, 1), opacity 1.4s var(--fade);
+.dl { position: relative; width: calc(var(--g) * 4); height: calc(var(--h) + var(--d)); }
+.dl-dot {
+  position: absolute; left: 50%; bottom: 0; width: var(--d); height: var(--d); margin-left: calc(var(--d) / -2);
+  border-radius: 50%; transform-origin: 50% 100%;
+  background: radial-gradient(circle at 35% 30%, var(--accent-2), var(--accent) 65%);
+  box-shadow: 0 6px 14px -5px color-mix(in srgb, var(--accent) 65%, transparent);
+  opacity: 0; will-change: transform, opacity;
 }
-.intro.p2 .intro-smoke { --reveal: calc(var(--ph) * 1.2); opacity: 1; }
-.intro-smoke .phone-frame {
-  position: absolute; left: var(--P); top: var(--P); width: var(--pw); height: var(--ph);
-  filter: blur(16px); transition: filter 2s var(--fade);
-}
-.intro.p2 .intro-smoke .phone-frame { filter: blur(0); }
-.intro-smoke .phone-screen { background: var(--surface); color: var(--fg); }
-.scr-status {
-  position: absolute; left: 9%; right: 8%; top: 2.5%; height: 3.6%; z-index: 2;
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: calc(var(--pw) * 0.05); font-weight: 600; letter-spacing: -0.01em;
-}
-.scr-status span:first-child { padding-left: 4%; }
-.scr-icons { display: inline-flex; align-items: center; gap: calc(var(--pw) * 0.016); }
-.scr-icons svg { height: calc(var(--pw) * 0.04); width: auto; fill: currentColor; }
-
-/* the app that appears when loading completes */
-.app-ui { position: absolute; inset: 9% 7% 3%; display: flex; flex-direction: column; gap: 4.5%; }
-.app-ui > * { opacity: 0; transform: translateY(10px); transition: opacity 0.6s var(--soft), transform 0.7s var(--soft); }
-.intro.p4 .app-ui > * { opacity: 1; transform: none; }
-.intro.p4 .app-ui > :nth-child(2) { transition-delay: 0.06s; }
-.intro.p4 .app-ui > :nth-child(3) { transition-delay: 0.12s; }
-.intro.p4 .app-ui > :nth-child(4) { transition-delay: 0.2s; }
-.intro.p4 .app-ui > :nth-child(5) { transition-delay: 0.26s; }
-.intro.p4 .app-ui > :nth-child(6) { transition-delay: 0.32s; }
-.intro.p4 .app-ui > :nth-child(7) { transition-delay: 0.38s; }
-.au-head { display: flex; justify-content: space-between; align-items: center; }
-.au-head i { width: 18%; height: calc(var(--pw) * 0.03); border-radius: 99px; background: var(--line-strong); }
-.au-head b { width: calc(var(--pw) * 0.09); aspect-ratio: 1; border-radius: 50%; background: var(--accent-soft); }
-.au-title { display: grid; gap: calc(var(--pw) * 0.02); }
-.au-title i { height: calc(var(--pw) * 0.055); width: 70%; border-radius: 6px; background: var(--fg); opacity: 0.85; }
-.au-title i + i { width: 45%; opacity: 0.25; }
-.au-card {
-  position: relative; aspect-ratio: 1.6; border-radius: calc(var(--pw) * 0.06); overflow: hidden;
-  background: linear-gradient(135deg, var(--accent-2), var(--accent) 60%, #3b36c4);
-  padding: 7%; display: flex; flex-direction: column; justify-content: flex-end; gap: calc(var(--pw) * 0.02);
-}
-.au-card span { position: absolute; right: 8%; top: 12%; width: 26%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, rgba(255, 255, 255, 0.4) 40%, transparent 70%); }
-.au-card i { height: calc(var(--pw) * 0.03); width: 55%; border-radius: 99px; background: rgba(255, 255, 255, 0.9); }
-.au-card i + i { width: 35%; background: rgba(255, 255, 255, 0.55); }
-.au-row { display: flex; align-items: center; gap: 6%; padding: 4% 4%; border-radius: calc(var(--pw) * 0.04); background: var(--surface-2); border: 1px solid var(--line); }
-.au-row b { flex: none; width: calc(var(--pw) * 0.1); aspect-ratio: 1; border-radius: 30%; background: var(--accent-soft); }
-.au-row span { flex: 1; display: grid; gap: calc(var(--pw) * 0.018); }
-.au-row i { height: calc(var(--pw) * 0.025); border-radius: 99px; background: var(--line-strong); width: 75%; }
-.au-row i + i { width: 45%; opacity: 0.6; }
-.au-tabs { margin-top: auto; display: flex; justify-content: space-around; padding-top: 5%; border-top: 1px solid var(--line); }
-.au-tabs i { width: calc(var(--pw) * 0.06); aspect-ratio: 1; border-radius: 30%; background: var(--line-strong); }
-.au-tabs i:first-child { background: var(--accent); }
-
-/* the ball: bounces from the start, and becomes the app's loader once the
-   phone has formed. It keeps bouncing until loading completes. */
-.intro-ball {
-  position: absolute; left: 50%; z-index: 3;
-  top: calc(var(--cy) - var(--drop) - 11px);
-  width: 40px; height: calc(var(--drop) + 30px); margin-left: -20px;
-  opacity: 0; transition: opacity 0.4s var(--fade);
-}
-.intro.p0 .intro-ball { opacity: 1; }
-.intro-ball .ball {
-  position: absolute; left: 50%; top: 0; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, var(--accent-2), var(--accent) 62%);
-  box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent) 60%, transparent);
-}
-.intro-ball .shadow {
-  position: absolute; left: 50%; top: calc(var(--drop) + 18px); width: 26px; height: 5px; margin-left: -13px;
+.dl-shadow {
+  position: absolute; left: 50%; bottom: -5px; width: 24px; height: 5px; margin-left: -12px;
   border-radius: 50%; background: var(--fg); filter: blur(1.5px); opacity: 0;
 }
-.intro.p0 .intro-ball .ball { animation: intro-bounce 0.8s infinite; }
-.intro.p0 .intro-ball .shadow { animation: intro-bounce-shadow 0.8s infinite; }
-@keyframes intro-bounce {
-  0%, 100% { transform: translateY(0); animation-timing-function: cubic-bezier(0.45, 0, 0.85, 0.5); }
-  50% { transform: translateY(var(--drop)); animation-timing-function: cubic-bezier(0.15, 0.5, 0.55, 1); }
-}
-@keyframes intro-bounce-shadow {
-  0%, 100% { transform: scale(0.5); opacity: 0.04; animation-timing-function: cubic-bezier(0.45, 0, 0.85, 0.5); }
-  50% { transform: scale(1); opacity: 0.14; animation-timing-function: cubic-bezier(0.15, 0.5, 0.55, 1); }
-}
-.intro.p4 .intro-ball { opacity: 0; transition: opacity 0.4s var(--fade); }
-
-/* "Loading 0–100%" just under the ball's landing spot */
-.intro-loader {
-  position: absolute; left: 0; right: 0; z-index: 3; top: calc(var(--cy) + 30px);
-  display: flex; justify-content: center; align-items: baseline; gap: 0.6em;
-  font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--muted); font-variant-numeric: tabular-nums;
+.dl-num {
+  margin-top: 10px; height: 1.2em;
+  font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; color: var(--muted);
+  font-variant-numeric: tabular-nums;
   opacity: 0; transition: opacity 0.6s var(--fade);
 }
-.intro-loader .num { min-width: 4ch; color: var(--fg); letter-spacing: 0.04em; }
-.intro.p3 .intro-loader { opacity: 1; }
-.intro.p4 .intro-loader { opacity: 0; transition-duration: 0.4s; }
-
-@media (max-width: 760px) {
-  .intro-stage {
-    --ph: min(52vh, 460px);
-    grid-template-columns: 1fr; justify-items: center; align-content: center; gap: 28px;
-    padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
-  }
-  .intro-copy { justify-self: stretch; }
-  .intro::before { right: 50%; transform: translate(50%, -40%); }
-}
+.intro.p3 .dl-num { opacity: 1; }
+.intro-words { margin: 12px 0 0; display: grid; justify-items: center; text-align: center; line-height: 1.2; letter-spacing: -0.02em; }
+.intro-words span { grid-area: 1 / 1; opacity: 0; transition: opacity 0.9s var(--fade); }
+.intro-words .w1 { font-size: clamp(0.95rem, 1.8vw, 1.35rem); color: var(--fg-2); }
+.intro-words .w2 { font-size: clamp(1.1rem, 2.2vw, 1.6rem); font-weight: 500; color: var(--fg); }
+.intro-words .w2 em { color: var(--accent); }
+.intro.p1 .w1 { opacity: 1; }
+/* out first, then in: never on top of each other */
+.intro.p2 .w1 { opacity: 0; transition-duration: 0.45s; }
+.intro.p2 .w2 { opacity: 1; transition-delay: 0.5s; }
 
 .intro-skip {
   position: absolute;
