@@ -302,8 +302,9 @@ button { font: inherit; color: inherit; }
 .intro.p2 .intro-count { opacity: 1; }
 
 /* words: both lines share one slot and only their opacity changes, on the
-   same soft curve the phone uses. At p3 it's a single crossfade: the first
-   line fades out exactly as the second fades in. */
+   same soft curve the phone uses. The first line leaves as the phone starts
+   forming (p2), so nothing competes with it; the second arrives once the
+   phone has settled (p3). */
 .intro-line {
   --fade: cubic-bezier(0.4, 0, 0.2, 1);
   position: absolute; left: 16px; right: 16px;
@@ -315,7 +316,7 @@ button { font: inherit; color: inherit; }
 .intro-line .l1 { font-size: clamp(1.6rem, 5.9vw, 2.35rem); font-weight: 500; color: var(--fg-2); letter-spacing: -0.03em; }
 .intro-line .l2 { font-size: clamp(1.9rem, 7vw, 2.8rem); font-weight: 500; color: var(--fg); letter-spacing: -0.035em; }
 .intro.p1 .intro-line .l1 { opacity: 1; }
-.intro.p3 .intro-line .l1 { opacity: 0; }
+.intro.p2 .intro-line .l1 { opacity: 0; transition-duration: 1.2s; }
 .intro.p3 .intro-line .l2 { opacity: 1; }
 .intro-line .l2 em { color: var(--accent); font-size: 1.06em; }
 
