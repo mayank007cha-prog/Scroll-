@@ -198,37 +198,49 @@ button { font: inherit; color: inherit; }
   perspective: 1000px; perspective-origin: 50% 30%;
 }
 
-/* phone: no movement, no scaling. It materialises in place, like smoke
-   clearing outward from the ball. Three feathered puffs, slightly offset
-   around the bounce point, grow at different rates (their union gives the
-   edge an uneven, billowing shape) while the blur lifts. */
+/* phone: no movement, no scaling. It condenses in place like smoke around
+   the ball. Three layers so no edge is ever cropped hard:
+   .intro-phone  padded box; carries the bottom fade + overall opacity
+   .intro-smoke  same box; three soft puffs grow from the ball (their union
+                 billows unevenly)
+   .phone-frame  the device itself; carries the blur, which has room to
+                 spread inside the padding instead of being clipped */
 @property --reveal { syntax: "<length>"; inherits: false; initial-value: 0px; }
 .intro-phone {
-  --cy: calc(var(--pw) * 0.92 - 53px);     /* bounce centre, measured from the phone's top */
+  --P: 64px;                               /* room for the blur halo on every side */
+  --H: calc(var(--pw) * 2.1333);           /* phone height (9:19.2) */
+  --cy: calc(var(--P) + var(--pw) * 0.92 - 53px);   /* bounce centre inside this box */
+  position: absolute; left: 50%; z-index: 0;
+  top: calc(var(--pw) * -0.22 - var(--P));
+  width: calc(var(--pw) + var(--P) * 2); height: calc(var(--H) + var(--P) * 2);
+  margin-left: calc((var(--pw) + var(--P) * 2) / -2);
+  opacity: 0;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--P) + var(--H) * 0.4), transparent calc(var(--P) + var(--H) * 0.66));
+  mask-image: linear-gradient(to bottom, #000 calc(var(--P) + var(--H) * 0.4), transparent calc(var(--P) + var(--H) * 0.66));
+  transition: opacity 2.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.intro.p2 .intro-phone { opacity: 1; }
+.intro-smoke {
   --reveal: 0px;
-  position: absolute; left: 50%; top: calc(var(--pw) * -0.22); z-index: 0;
-  width: var(--pw); aspect-ratio: 9 / 19.2; margin-left: calc(var(--pw) / -2);
-  opacity: 0; filter: blur(16px);
+  position: absolute; inset: 0;
   -webkit-mask-image:
-    radial-gradient(circle at 50% var(--cy), #000 var(--reveal), transparent calc(var(--reveal) + 110px)),
-    radial-gradient(circle at 34% calc(var(--cy) - 46px), #000 calc(var(--reveal) * 0.78), transparent calc(var(--reveal) * 0.78 + 130px)),
-    radial-gradient(circle at 68% calc(var(--cy) + 58px), #000 calc(var(--reveal) * 0.66), transparent calc(var(--reveal) * 0.66 + 150px));
+    radial-gradient(circle at 50% var(--cy), #000 var(--reveal), transparent calc(var(--reveal) + 130px)),
+    radial-gradient(circle at 34% calc(var(--cy) - 46px), #000 calc(var(--reveal) * 0.78), transparent calc(var(--reveal) * 0.78 + 150px)),
+    radial-gradient(circle at 68% calc(var(--cy) + 58px), #000 calc(var(--reveal) * 0.66), transparent calc(var(--reveal) * 0.66 + 170px));
   mask-image:
-    radial-gradient(circle at 50% var(--cy), #000 var(--reveal), transparent calc(var(--reveal) + 110px)),
-    radial-gradient(circle at 34% calc(var(--cy) - 46px), #000 calc(var(--reveal) * 0.78), transparent calc(var(--reveal) * 0.78 + 130px)),
-    radial-gradient(circle at 68% calc(var(--cy) + 58px), #000 calc(var(--reveal) * 0.66), transparent calc(var(--reveal) * 0.66 + 150px));
-  transition:
-    --reveal 3.4s cubic-bezier(0.65, 0, 0.35, 1),
-    opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1),
-    filter 3s cubic-bezier(0.4, 0, 0.2, 1);
+    radial-gradient(circle at 50% var(--cy), #000 var(--reveal), transparent calc(var(--reveal) + 130px)),
+    radial-gradient(circle at 34% calc(var(--cy) - 46px), #000 calc(var(--reveal) * 0.78), transparent calc(var(--reveal) * 0.78 + 150px)),
+    radial-gradient(circle at 68% calc(var(--cy) + 58px), #000 calc(var(--reveal) * 0.66), transparent calc(var(--reveal) * 0.66 + 170px));
+  transition: --reveal 3.6s cubic-bezier(0.65, 0, 0.35, 1);
 }
-.intro.p2 .intro-phone { --reveal: calc(var(--pw) * 1.7); opacity: 1; filter: blur(0); }
-/* the bottom fade lives on the frame, so it never fights the smoke mask */
+.intro.p2 .intro-smoke { --reveal: calc(var(--pw) * 2); }
 .intro-phone .phone-frame {
-  height: 100%;
-  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 66%);
-  mask-image: linear-gradient(to bottom, #000 40%, transparent 66%);
+  position: absolute; left: var(--P); top: var(--P);
+  width: var(--pw); height: var(--H);
+  filter: blur(18px);
+  transition: filter 3.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.intro.p2 .intro-phone .phone-frame { filter: blur(0); }
 .intro-phone .phone-screen {
   background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 40%, var(--bg) 100%);
   color: var(--fg);
