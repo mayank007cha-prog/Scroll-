@@ -3,6 +3,13 @@
 Everything the site still needs, with the size to export at. Sizes are 2× the
 largest size each slot shows on screen, so they stay sharp on retina displays.
 
+**Figma:** every slot below has a matching frame on the "Assets for portfolio"
+page of the Interactions-motion file
+(https://www.figma.com/design/drf0JtS2gg4BL55VLqCkHP/Interactions-motion?node-id=324-1039).
+Frames are named with their path (e.g. `demedic/duty-tab`) and export at 2×, so
+an export lands each file in the right folder. Logos export to
+`assets/media/logos/`, favicon, photo and share image to `assets/media/brand/`.
+
 Send PNG or JPG for images and MP4 or MOV for video. I'll compress, convert and
 wire them in, so you don't need to optimise anything yourself.
 
