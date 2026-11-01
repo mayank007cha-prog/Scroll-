@@ -68,14 +68,15 @@
     nav.classList.toggle("scrolled", window.scrollY > 8);
   }, { passive: true });
 
-  /* ---------------- intro (about 8s in total) ----------------
-     0s     the ball bounces on its own
-     0.8s   "From making things move" fades in under the ball
-     2.4s   the phone starts forming around the ball; the line slips away and
-            Loading takes its place at 0%
-     4.64s  the phone has settled; "to making things work." fades in
-     7.2s   held, then Loading hits 100% and the page fades in (done by ~8s)
-     Every step and transition keeps the same proportions as before.      */
+  /* ---------------- intro (gone by ~7.4s) ----------------
+     Animation → UI/UX: the bouncing ball becomes the app's loader.
+     0s     p0  the ball starts bouncing
+     0.3s   p1  "Animation" · "From making things move" fade in on the left
+     1.5s   p2  the phone condenses around the ball, fully visible
+     2.8s   p3  inside the phone, "Loading 0 → 100%" appears under the ball;
+                the copy becomes "UI/UX Design" · "to making things work."
+     5.25s  p4  loading completes, the ball fades and the app appears
+     6.6s       the intro fades into the home page                         */
   var intro = document.getElementById("intro");
   var countEl = document.getElementById("introCount");
   var timers = [];
@@ -91,7 +92,7 @@
     intro.classList.add("done");
     body.classList.remove("intro-on");
     body.classList.add("ready");
-    setTimeout(function () { intro.remove(); }, 1000);
+    setTimeout(function () { intro.remove(); }, 850);
     observeReveals();
   }
 
@@ -109,10 +110,13 @@
   function startIntro() {
     body.classList.add("intro-on");
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
-    at(800, function () { intro.classList.add("p1"); });
-    at(2400, function () { intro.classList.add("p2"); runCounter(4800); });  // 0% at 2.4s → 100% at 7.2s
-    at(4640, function () { intro.classList.add("p3"); });
-    at(7200, endIntro);
+    intro.classList.add("p0");
+    at(300, function () { intro.classList.add("p1"); });
+    at(1500, function () { intro.classList.add("p2"); });
+    at(2800, function () { intro.classList.add("p3"); });
+    at(2800, function () { runCounter(2400); });   // 0% at 2.8s → 100% at 5.2s
+    at(5250, function () { intro.classList.add("p4"); });
+    at(6600, endIntro);
   }
 
   document.getElementById("introSkip").addEventListener("click", endIntro);

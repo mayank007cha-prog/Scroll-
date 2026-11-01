@@ -23,11 +23,20 @@
 </head>
 <body class="intro-on">
 
-<!-- ================= INTRO ================= -->
+<!-- ================= INTRO =================
+     Story: a bouncing ball (animation) ends up inside a phone as the app's
+     loader; when loading completes, the app appears (UI/UX). -->
 <div class="intro" id="intro" role="status" aria-label="Loading portfolio">
   <div class="intro-stage">
+    <div class="intro-copy">
+      <p class="intro-kicker"><span class="k1">Animation</span><span class="k2">UI/UX Design</span></p>
+      <p class="intro-words">
+        <span class="w1">From making things move</span>
+        <span class="w2">to making things <em class="serif">work.</em></span>
+      </p>
+    </div>
     <div class="intro-scene" aria-hidden="true">
-      <div class="intro-phone"><div class="intro-smoke">
+      <div class="intro-smoke">
         <div class="phone-frame"><div class="phone-screen">
           <div class="scr-status">
             <span>9:41</span>
@@ -37,17 +46,21 @@
               <svg viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="22" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".45"/><rect x="2.5" y="2.5" width="16" height="7" rx="1.8"/><rect x="23.8" y="4" width="1.8" height="4" rx=".8" opacity=".45"/></svg>
             </span>
           </div>
-          <div class="scr-head"><i></i><b></b></div>
+          <div class="app-ui">
+            <div class="au-head"><i></i><b></b></div>
+            <div class="au-title"><i></i><i></i></div>
+            <div class="au-card"><span></span><i></i><i></i></div>
+            <div class="au-row"><b></b><span><i></i><i></i></span></div>
+            <div class="au-row"><b></b><span><i></i><i></i></span></div>
+            <div class="au-row"><b></b><span><i></i><i></i></span></div>
+            <div class="au-tabs"><i></i><i></i><i></i><i></i></div>
+          </div>
         </div><span class="island"></span></div>
-      </div></div>
+      </div>
       <div class="intro-ball"><span class="shadow"></span><span class="ball"></span></div>
-      <p class="intro-cap">From making things move</p>
-      <div class="intro-count"><span class="lbl">Loading</span><span class="num" id="introCount">0</span>%</div>
+      <div class="intro-loader"><span class="lbl">Loading</span><span class="num"><span id="introCount">0</span>%</span></div>
     </div>
   </div>
-  <p class="intro-line">
-    <span class="l2">to making things <em class="serif">work.</em></span>
-  </p>
   <button class="intro-skip" id="introSkip" type="button">Skip intro</button>
 </div>
 
