@@ -68,11 +68,12 @@
   }, { passive: true });
 
   /* ---------------- intro ----------------
-     0s  the ball bounces on its own
-     2s  "From making things move" fades in below
-     3s  the phone travels forward from behind the ball; the count starts
-     5s  count reaches 100; "to making things work." joins underneath
-     7.4s the intro lifts away and the home screen animates in         */
+     0s    the ball bounces on its own
+     2s    "From making things move" fades in at the bottom
+     3s    the phone travels forward from behind the ball; Loading 0 → 100 starts
+     3.4s  "to making things work." joins as the phone settles
+     5s    Loading reaches 100%
+     6.9s  the intro lifts away and the home screen animates in         */
   var intro = document.getElementById("intro");
   var countEl = document.getElementById("introCount");
   var timers = [];
@@ -97,7 +98,7 @@
       var t = Math.min(1, (now - start) / duration);
       var eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       var n = Math.round(eased * 100);
-      countEl.textContent = String(n).padStart(3, "0");
+      countEl.textContent = String(n);
       if (t < 1) rafId = requestAnimationFrame(tick);
     }
     rafId = requestAnimationFrame(tick);
@@ -108,8 +109,8 @@
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
     at(2000, function () { intro.classList.add("p1"); });
     at(3000, function () { intro.classList.add("p2"); runCounter(2000); });
-    at(5000, function () { intro.classList.add("p3"); });
-    at(7400, endIntro);
+    at(3400, function () { intro.classList.add("p3"); });
+    at(6900, endIntro);
   }
 
   document.getElementById("introSkip").addEventListener("click", endIntro);
