@@ -182,18 +182,20 @@ button { font: inherit; color: inherit; }
 .intro-stage {
   --pw: min(280px, 66vw, 40vh);            /* phone width */
   position: relative; width: min(420px, 92vw);
-  margin-top: -9vh;                        /* sit above centre, leaving the bottom for the words */
+  margin-top: -5vh;                        /* sit a little above centre, leaving the bottom for the words */
   transition: transform 1.1s var(--soft), filter 1.1s var(--soft);
 }
 .intro-scene {
   position: relative; width: 100%;
-  height: calc(var(--pw) * 1.42);         /* the part of the phone that stays visible */
+  height: calc(var(--pw) * 1.2);          /* the part of the phone that stays visible */
   perspective: 1000px; perspective-origin: 50% 30%;
 }
 
 /* phone: travels forward on the z axis from behind the ball */
+/* The phone is lifted so the middle of the bounce lands at the centre of
+   its visible screen (status bar down to where the fade takes over). */
 .intro-phone {
-  position: absolute; left: 50%; top: 0; z-index: 0;
+  position: absolute; left: 50%; top: calc(var(--pw) * -0.22); z-index: 0;
   width: var(--pw); aspect-ratio: 9 / 19.2; margin-left: calc(var(--pw) / -2);
   opacity: 0;
   transform: translateZ(-800px);
