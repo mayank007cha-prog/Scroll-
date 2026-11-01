@@ -167,6 +167,7 @@ button { font: inherit; color: inherit; }
 /* ---------- intro ---------- */
 .intro {
   --soft: cubic-bezier(0.22, 1, 0.36, 1);  /* gentle ease-out used across the intro */
+  --flip: cubic-bezier(0.45, 0, 0.2, 1);   /* ease-in-out for the 3D text turn, so the rotation reads */
   position: fixed; inset: 0; z-index: 100;
   background: var(--bg);
   display: grid; place-items: center;
@@ -272,21 +273,37 @@ button { font: inherit; color: inherit; }
 .intro-count .num { min-width: 3ch; text-align: right; color: var(--fg); letter-spacing: 0.04em; margin-right: -0.5em; }
 .intro.p2 .intro-count { opacity: 1; }
 
-/* words */
+/* words: both lines share one slot. At p3 the first line flips up and away
+   while the second rises from below, rotating upright, and stays. */
 .intro-line {
   position: absolute; left: 16px; right: 16px;
   bottom: calc(max(9vh, 64px) + env(safe-area-inset-bottom, 0px));
-  margin: 0; text-align: center; display: grid; gap: 6px; letter-spacing: -0.02em; line-height: 1.2;
+  margin: 0; display: grid; place-items: center; text-align: center;
+  letter-spacing: -0.02em; line-height: 1.15;
+  perspective: 700px;
   transition: transform 1.1s var(--soft), filter 1.1s var(--soft);
 }
-.intro-line span {
-  display: block; opacity: 0; transform: translateY(8px); filter: blur(6px);
-  transition: opacity 1.4s var(--soft), transform 1.4s var(--soft), filter 1.4s var(--soft);
+.intro-line span { grid-area: 1 / 1; display: block; backface-visibility: hidden; will-change: transform, opacity; }
+.intro-line .l1 {
+  font-size: clamp(1.05rem, 3.6vw, 1.3rem); color: var(--fg-2);
+  opacity: 0; transform: translateY(10px); filter: blur(6px);
+  transform-origin: 50% 0%;
+  transition: opacity 1.2s var(--soft), transform 1.2s var(--soft), filter 1.2s var(--soft);
 }
-.intro-line .l1 { font-size: clamp(1rem, 3.4vw, 1.2rem); color: var(--fg-2); }
-.intro-line .l2 { font-size: clamp(1.45rem, 5.4vw, 1.95rem); font-weight: 500; color: var(--fg); letter-spacing: -0.03em; }
-.intro.p1 .intro-line .l1, .intro.p3 .intro-line .l2 { opacity: 1; transform: none; filter: none; }
-.intro-line .l2 em { color: var(--accent); font-size: 1.08em; }
+.intro.p1 .intro-line .l1 { opacity: 1; transform: none; filter: none; }
+.intro.p3 .intro-line .l1 {           /* tips over the top edge and goes */
+  opacity: 0; transform: translateY(-40%) rotateX(88deg); filter: blur(4px);
+  transition: opacity 1s var(--flip), transform 1.1s var(--flip), filter 1s var(--flip);
+}
+.intro-line .l2 {
+  font-size: clamp(1.9rem, 7vw, 2.8rem); font-weight: 500; color: var(--fg); letter-spacing: -0.035em;
+  opacity: 0; transform: translateY(70%) rotateX(-88deg); filter: blur(4px);
+  transform-origin: 50% 100%;
+  transition: opacity 1.2s var(--flip) 0.2s, transform 1.5s var(--flip) 0.2s, filter 1.2s var(--flip) 0.2s;
+}
+.intro.p3 .intro-line .l2 { opacity: 1; transform: none; filter: none; }
+.intro-line .l2 em { color: var(--accent); font-size: 1.06em; }
+
 .intro-skip {
   position: absolute;
   right: calc(20px + env(safe-area-inset-right, 0px));
