@@ -2,17 +2,14 @@
    WHO / WHAT / WHY / HOW. The spider never changes position; the cube turns
    underneath it, so its legs grip the moving surface like a treadmill.
    Scale is kept close to real life: think a 10 cm block and a house spider
-   with roughly a 4 cm leg span. Hover (or tap) pauses the loop.            */
+   with roughly a 4 cm leg span. Hovering (or press-and-hold on touch)
+   pauses the loop; nothing else is shown on the card.                      */
 (function () {
   "use strict";
 
   var card = document.getElementById("cubeCard");
   var canvas = document.getElementById("cubeCanvas");
   if (!card || !canvas) return;
-
-  var toggleBtn = document.getElementById("cubeToggle");
-  var hint = document.getElementById("cubeHint");
-  var rec = document.getElementById("cubeRec");
 
   function fail() { card.classList.add("no-webgl"); }
   if (!window.THREE) return fail();
@@ -346,35 +343,23 @@
   if ("ResizeObserver" in window) new ResizeObserver(resize).observe(card);
   else window.addEventListener("resize", resize);
 
-  /* ---------- play / pause ---------- */
+  /* ---------- pause while hovered ---------- */
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var pinned = reduce;   // paused by the button (or reduced motion)
-  var hovering = false;
-  var paused = pinned;
-  function syncPaused() {
-    paused = pinned || hovering;
+  var holding = false;
+  var paused = reduce;
+  function setHold(on) {
+    holding = on;
+    paused = reduce || holding;
     card.classList.toggle("is-paused", paused);
-    toggleBtn.setAttribute("aria-label", pinned ? "Play animation" : "Pause animation");
-    rec.textContent = paused ? "Paused" : "Hunting for answers";
-    hint.textContent = pinned ? "Paused. Press play to resume" : (hovering ? "Move away to resume" : "Hover to pause");
   }
-  var finePointer = window.matchMedia("(hover: hover)").matches;
-  if (finePointer) {
-    card.addEventListener("pointerenter", function () { hovering = true; syncPaused(); });
-    card.addEventListener("pointerleave", function () { hovering = false; syncPaused(); });
-  } else {
-    card.addEventListener("click", function (e) {
-      if (e.target.closest(".cube-toggle")) return;
-      pinned = !pinned; syncPaused();
-    });
-    hint.textContent = "Tap to pause";
-  }
-  toggleBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    pinned = !pinned; syncPaused();
+  card.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse" || e.pointerType === "pen") setHold(true); });
+  card.addEventListener("pointerleave", function () { setHold(false); });
+  // touch has no hover: press and hold to stop, release to carry on
+  card.addEventListener("pointerdown", function (e) { if (e.pointerType === "touch") setHold(true); });
+  ["pointerup", "pointercancel"].forEach(function (t) {
+    card.addEventListener(t, function (e) { if (e.pointerType === "touch") setHold(false); });
   });
-  syncPaused();
-  if (!finePointer && !pinned) hint.textContent = "Tap to pause";
+  setHold(false);
 
   /* ---------- loop ---------- */
   var angle = -0.12;      // cube rotation

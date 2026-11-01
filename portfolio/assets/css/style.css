@@ -677,20 +677,10 @@ section { scroll-margin-top: 84px; }
 .cube-card {
   position: relative; aspect-ratio: 1 / 0.92; width: 100%; border-radius: 28px; overflow: hidden;
   background: radial-gradient(90% 70% at 50% 40%, var(--surface) 0%, var(--bg-2) 100%);
-  border: 1px solid var(--line); box-shadow: var(--shadow); cursor: pointer;
+  border: 1px solid var(--line); box-shadow: var(--shadow);
+  touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
 .cube-card canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; }
-.cube-hud { position: absolute; left: 18px; right: 18px; top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; pointer-events: none; }
-.rec { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.rec::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #e5484d; animation: rec 1.6s steps(2, start) infinite; }
-.cube-card.is-paused .rec::before { background: var(--muted); animation: none; }
-@keyframes rec { to { visibility: hidden; } }
-.cube-toggle { pointer-events: auto; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--glass); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); display: grid; place-items: center; cursor: pointer; }
-.cube-toggle .i-play { display: none; }
-.cube-card.is-paused .cube-toggle .i-play { display: block; }
-.cube-card.is-paused .cube-toggle .i-pause { display: none; }
-.cube-caption { position: absolute; left: 18px; right: 18px; bottom: 16px; display: flex; justify-content: space-between; align-items: end; gap: 12px; font-size: var(--step--1); color: var(--fg-2); pointer-events: none; }
-.cube-caption .words { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
 .cube-fallback { position: absolute; inset: 0; display: none; place-items: center; text-align: center; padding: 24px; font-size: var(--step-2); }
 .cube-card.no-webgl .cube-fallback { display: grid; }
 @media (max-width: 900px) { .about-grid { grid-template-columns: 1fr; } }
@@ -704,20 +694,6 @@ section { scroll-margin-top: 84px; }
 .journey p { font-size: 0.9rem; color: var(--fg-2); line-height: 1.55; }
 @media (max-width: 960px) { .journey { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .journey { grid-template-columns: 1fr; } }
-
-/* places strip (about) */
-.places {
-  position: relative; margin-top: 18px; padding: clamp(24px, 4vw, 40px); border-radius: var(--radius);
-  background: var(--bg-2); border: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 28px; align-items: center; overflow: hidden;
-}
-.places h3 { font-size: var(--step-2); }
-.places p { color: var(--fg-2); font-size: 0.95rem; max-width: 52ch; }
-.route { position: relative; width: 100%; height: auto; overflow: visible; }
-.route path { fill: none; stroke: var(--line-strong); stroke-width: 1.2; stroke-dasharray: 3 5; }
-.route circle { fill: var(--fg); }
-.route text { fill: var(--fg-2); font-family: var(--font-sans); font-size: 12px; }
-.route .plane { fill: var(--fg); }
-@media (max-width: 760px) { .places { grid-template-columns: 1fr; } }
 
 .beyond { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
 .beyond div { padding: 22px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); display: grid; gap: 8px; align-content: start; }
