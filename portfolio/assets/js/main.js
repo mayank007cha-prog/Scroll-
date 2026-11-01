@@ -68,10 +68,11 @@
   }, { passive: true });
 
   /* ---------------- intro ----------------
-     0.0s  ball starts bouncing, "From making things move" fades in
-     2.0s  phone rises from behind, loading number appears and counts
-     3.1s  "to making things work." joins the line
-     4.6s  intro lifts away, home screen animates in                     */
+     0s  the ball bounces on its own
+     2s  "From making things move" fades in below
+     3s  the phone travels forward from behind the ball; the count starts
+     5s  count reaches 100; "to making things work." joins underneath
+     7.4s the intro lifts away and the home screen animates in         */
   var intro = document.getElementById("intro");
   var countEl = document.getElementById("introCount");
   var timers = [];
@@ -105,10 +106,10 @@
   function startIntro() {
     body.classList.add("intro-on");
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
-    at(150, function () { intro.classList.add("p1"); });
-    at(2000, function () { intro.classList.add("p2"); runCounter(2400); });
-    at(3100, function () { intro.classList.add("p3"); });
-    at(4700, endIntro);
+    at(2000, function () { intro.classList.add("p1"); });
+    at(3000, function () { intro.classList.add("p2"); runCounter(2000); });
+    at(5000, function () { intro.classList.add("p3"); });
+    at(7400, endIntro);
   }
 
   document.getElementById("introSkip").addEventListener("click", endIntro);

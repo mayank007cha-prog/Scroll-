@@ -173,57 +173,73 @@ button { font: inherit; color: inherit; }
 }
 .intro.p2::before { opacity: 1; }
 .intro.done { opacity: 0; transform: translateY(-3%); pointer-events: none; }
-.intro-stage { position: relative; width: min(380px, 90vw); height: min(600px, 86vh); }
-.intro-phone {
-  position: absolute; left: 50%; top: 9%;
-  width: min(270px, 66vw); aspect-ratio: 9 / 19.2;
-  transform: translate(-50%, 110vh);
-  transition: transform 1.25s cubic-bezier(0.16, 1, 0.3, 1);
-  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 64%);
-  mask-image: linear-gradient(to bottom, #000 30%, transparent 64%);
+/* Stage = a scene (phone + ball + counter) with the words in their own row
+   underneath, so the fading phone can never run into the text. */
+.intro-stage {
+  --pw: min(236px, 58vw);                 /* phone width */
+  position: relative; width: min(420px, 92vw);
+  display: grid; justify-items: center; gap: clamp(20px, 4vh, 36px);
 }
-.intro.p2 .intro-phone { transform: translate(-50%, 0); }
+.intro-scene {
+  position: relative; width: 100%;
+  height: calc(var(--pw) * 1.22);         /* the visible top of the phone */
+  perspective: 900px; perspective-origin: 50% 35%;
+}
+.intro-phone {
+  position: absolute; left: 50%; top: 0; z-index: 0;
+  width: var(--pw); aspect-ratio: 9 / 19.2; margin-left: calc(var(--pw) / -2);
+  opacity: 0;
+  transform: translate3d(0, -24px, -1100px);
+  transition: transform 1.9s cubic-bezier(0.16, 1, 0.3, 1), opacity 1s ease;
+  /* fully faded before the bottom of the scene */
+  -webkit-mask-image: linear-gradient(to bottom, #000 26%, transparent 54%);
+  mask-image: linear-gradient(to bottom, #000 26%, transparent 54%);
+}
+.intro.p2 .intro-phone { opacity: 1; transform: translate3d(0, 0, 0); }
 .intro-phone .phone-frame { height: 100%; }
 .intro-phone .phone-screen { background: linear-gradient(180deg, var(--surface-2), var(--bg)); }
 .intro-ball {
-  position: absolute; left: 50%; top: 22%;
-  width: 120px; height: 150px; transform: translateX(-50%);
+  position: absolute; left: 50%; top: 16%; z-index: 1;
+  width: 60px; height: 112px; margin-left: -30px;
+  opacity: 0; animation: fade-in 0.6s ease 0.1s forwards;
 }
 .intro-ball .ball {
-  position: absolute; left: 50%; top: 0; width: 22px; height: 22px; margin-left: -11px;
+  position: absolute; left: 50%; top: 0; width: 20px; height: 20px; margin-left: -10px;
   border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, var(--accent-2), var(--accent) 55%, #2f2bb0 100%);
-  animation: bounce 0.62s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+  background: radial-gradient(circle at 34% 30%, var(--accent-2), var(--accent) 60%);
   transform-origin: 50% 100%;
+  /* gravity: ease-in on the way down, the alternate run eases out on the way up */
+  animation: bounce 0.72s cubic-bezier(0.55, 0, 1, 0.45) infinite alternate;
 }
 .intro-ball .shadow {
-  position: absolute; left: 50%; bottom: 0; width: 34px; height: 6px; margin-left: -17px;
-  border-radius: 50%; background: var(--fg); opacity: 0.12; filter: blur(2px);
-  animation: bounce-shadow 0.62s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+  position: absolute; left: 50%; bottom: 0; width: 26px; height: 5px; margin-left: -13px;
+  border-radius: 50%; background: var(--fg); filter: blur(1.5px);
+  animation: bounce-shadow 0.72s cubic-bezier(0.55, 0, 1, 0.45) infinite alternate;
 }
 @keyframes bounce {
-  0% { transform: translateY(0) scale(0.92, 1.08); }
-  70% { transform: translateY(104px) scale(0.96, 1.04); }
-  100% { transform: translateY(122px) scale(1.28, 0.72); }
+  0% { transform: translateY(0); }
+  92% { transform: translateY(88px) scale(1, 1); }
+  100% { transform: translateY(92px) scale(1.08, 0.92); }
 }
 @keyframes bounce-shadow {
-  0% { transform: scale(0.45); opacity: 0.05; }
-  100% { transform: scale(1.1); opacity: 0.16; }
+  0% { transform: scale(0.5); opacity: 0.05; }
+  100% { transform: scale(1); opacity: 0.14; }
 }
+@keyframes fade-in { to { opacity: 1; } }
 .intro-count {
-  position: absolute; left: 0; right: 0; top: calc(22% + 168px);
-  text-align: center; font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.16em;
+  position: absolute; left: 0; right: 0; z-index: 1;
+  top: calc(16% + 124px);                 /* just under the ball's landing spot */
+  text-align: center; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.2em;
   color: var(--muted); font-variant-numeric: tabular-nums;
-  opacity: 0; transform: translateY(6px); transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+  opacity: 0; transition: opacity 0.9s ease;
 }
-.intro.p2 .intro-count { opacity: 1; transform: none; }
-.intro-line {
-  position: absolute; left: 0; right: 0; top: calc(22% + 204px);
-  text-align: center; font-size: clamp(1.45rem, 5vw, 2.1rem); line-height: 1.15; letter-spacing: -0.03em;
-}
-.intro-line span { display: block; opacity: 0; transform: translateY(14px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
+.intro.p2 .intro-count { opacity: 1; }
+.intro-line { margin: 0; text-align: center; display: grid; gap: 6px; letter-spacing: -0.02em; line-height: 1.2; }
+.intro-line span { display: block; opacity: 0; transform: translateY(10px); transition: opacity 1.1s var(--ease), transform 1.1s var(--ease); }
+.intro-line .l1 { font-size: clamp(1rem, 3.4vw, 1.2rem); color: var(--fg-2); }
+.intro-line .l2 { font-size: clamp(1.45rem, 5.4vw, 1.95rem); font-weight: 500; color: var(--fg); letter-spacing: -0.03em; }
 .intro.p1 .intro-line .l1, .intro.p3 .intro-line .l2 { opacity: 1; transform: none; }
-.intro-line .l2 em { color: var(--accent); }
+.intro-line .l2 em { color: var(--accent); font-size: 1.08em; }
 .intro-skip {
   position: absolute;
   right: calc(20px + env(safe-area-inset-right, 0px));
