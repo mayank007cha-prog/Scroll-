@@ -198,20 +198,37 @@ button { font: inherit; color: inherit; }
   perspective: 1000px; perspective-origin: 50% 30%;
 }
 
-/* phone: travels forward on the z axis from behind the ball */
-/* The phone is lifted so the middle of the bounce lands at the centre of
-   its visible screen (status bar down to where the fade takes over). */
+/* phone: no movement, no scaling. It materialises in place, like smoke
+   clearing outward from the ball. Three feathered puffs, slightly offset
+   around the bounce point, grow at different rates (their union gives the
+   edge an uneven, billowing shape) while the blur lifts. */
+@property --reveal { syntax: "<length>"; inherits: false; initial-value: 0px; }
 .intro-phone {
+  --cy: calc(var(--pw) * 0.92 - 53px);     /* bounce centre, measured from the phone's top */
+  --reveal: 0px;
   position: absolute; left: 50%; top: calc(var(--pw) * -0.22); z-index: 0;
   width: var(--pw); aspect-ratio: 9 / 19.2; margin-left: calc(var(--pw) / -2);
-  opacity: 0;
-  transform: translateZ(-800px);
-  transition: transform 2.2s var(--soft), opacity 1.4s var(--soft);
+  opacity: 0; filter: blur(16px);
+  -webkit-mask-image:
+    radial-gradient(circle at 50% var(--cy), #000 var(--reveal), transparent calc(var(--reveal) + 110px)),
+    radial-gradient(circle at 34% calc(var(--cy) - 46px), #000 calc(var(--reveal) * 0.78), transparent calc(var(--reveal) * 0.78 + 130px)),
+    radial-gradient(circle at 68% calc(var(--cy) + 58px), #000 calc(var(--reveal) * 0.66), transparent calc(var(--reveal) * 0.66 + 150px));
+  mask-image:
+    radial-gradient(circle at 50% var(--cy), #000 var(--reveal), transparent calc(var(--reveal) + 110px)),
+    radial-gradient(circle at 34% calc(var(--cy) - 46px), #000 calc(var(--reveal) * 0.78), transparent calc(var(--reveal) * 0.78 + 130px)),
+    radial-gradient(circle at 68% calc(var(--cy) + 58px), #000 calc(var(--reveal) * 0.66), transparent calc(var(--reveal) * 0.66 + 150px));
+  transition:
+    --reveal 3.4s cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.intro.p2 .intro-phone { --reveal: calc(var(--pw) * 1.7); opacity: 1; filter: blur(0); }
+/* the bottom fade lives on the frame, so it never fights the smoke mask */
+.intro-phone .phone-frame {
+  height: 100%;
   -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 66%);
   mask-image: linear-gradient(to bottom, #000 40%, transparent 66%);
 }
-.intro.p2 .intro-phone { opacity: 1; transform: translateZ(0); }
-.intro-phone .phone-frame { height: 100%; }
 .intro-phone .phone-screen {
   background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 40%, var(--bg) 100%);
   color: var(--fg);
@@ -285,7 +302,7 @@ button { font: inherit; color: inherit; }
 }
 .intro-line span { grid-area: 1 / 1; display: block; backface-visibility: hidden; will-change: transform, opacity; }
 .intro-line .l1 {
-  font-size: clamp(1.05rem, 3.6vw, 1.3rem); color: var(--fg-2);
+  font-size: clamp(1.9rem, 7vw, 2.8rem); font-weight: 500; color: var(--fg-2); letter-spacing: -0.035em;
   opacity: 0; transform: translateY(10px); filter: blur(6px);
   transform-origin: 50% 0%;
   transition: opacity 1.2s var(--soft), transform 1.2s var(--soft), filter 1.2s var(--soft);
