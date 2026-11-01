@@ -72,8 +72,9 @@
      0s  the ball bounces on its own
      1s  "From making things move" fades in, and holds
      3s  the phone comes forward from behind the ball; Loading starts at 0%
-     4s  the first line flips away; "to making things work." rotates in (settled ~5.7s)
-     7.7s held for 2s, then Loading hits 100% and the home page opens        */
+     4s  the first line dissolves like smoke; "to making things work." condenses
+         in its place (clear by ~5.9s)
+     7.9s held for 2s, then Loading hits 100% and the home page opens        */
   var intro = document.getElementById("intro");
   var countEl = document.getElementById("introCount");
   var timers = [];
@@ -108,9 +109,9 @@
     body.classList.add("intro-on");
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
     at(1000, function () { intro.classList.add("p1"); });
-    at(3000, function () { intro.classList.add("p2"); runCounter(4700); });  // 0% at 3s → 100% at 7.7s
+    at(3000, function () { intro.classList.add("p2"); runCounter(4900); });  // 0% at 3s → 100% at 7.9s
     at(4000, function () { intro.classList.add("p3"); });
-    at(7700, endIntro);
+    at(7900, endIntro);
   }
 
   document.getElementById("introSkip").addEventListener("click", endIntro);
