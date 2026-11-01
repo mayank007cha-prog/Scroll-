@@ -6,7 +6,7 @@
   var body = document.body;
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var caseViews = ["demedic", "earthlink", "desafe", "design-system"];
-  var caseTitles = { demedic: "DE Medic", earthlink: "EarthLink", desafe: "DeSafe", "design-system": "Design System" };
+  var caseTitles = { demedic: "DE Medic", earthlink: "EarthLink", desafe: "DeSafe", "design-system": "Table System" };
   var homeSections = ["work", "concepts", "about", "contact"];
 
   function store(key, value) {
@@ -278,67 +278,80 @@
     });
   }
 
-  /* ---------------- design system: button playground + matrix ---------------- */
-  var pg = document.getElementById("dsPlayground");
-  if (pg) {
-    var preview = document.getElementById("dsPreview");
-    var tokensEl = document.getElementById("dsTokens");
-    var SIZE = { s: { h: 32, px: 12, r: 8, n: "sm" }, m: { h: 40, px: 16, r: 10, n: "md" }, l: { h: 48, px: 20, r: 12, n: "lg" } };
-    var BG = { primary: "action/primary", secondary: "surface/default", ghost: "action/ghost", danger: "action/destructive" };
-    var FG = { primary: "text/on-action", secondary: "text/primary", ghost: "action/primary", danger: "text/on-action" };
-    var STATE_SUFFIX = { hover: "/hover", pressed: "/pressed" };
-
-    var hex = function (rgb) {
-      var m = rgb.match(/[\d.]+/g);
-      if (!m) return rgb;
-      if (m.length > 3 && parseFloat(m[3]) === 0) return "transparent";
-      return "#" + m.slice(0, 3).map(function (x) { return ("0" + Math.round(+x).toString(16)).slice(-2); }).join("");
-    };
-    var val = function (name) { var el = pg.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ""; };
-
-    var classes = function (v, sz, st, icon) {
-      return "ds-btn v-" + v + " s-" + sz + " st-" + st + (icon ? "" : " no-icon");
-    };
-
-    var update = function () {
-      var v = val("ds-v"), sz = val("ds-s"), st = val("ds-st"), icon = document.getElementById("ds-icon").checked;
-      preview.className = classes(v, sz, st, icon);
-      preview.disabled = st === "disabled";
-      preview.setAttribute("aria-busy", String(st === "loading"));
-      // read the real computed colours once the 0.2s colour transition has settled
-      clearTimeout(update.t);
-      update.t = setTimeout(function () {
-        var cs = getComputedStyle(preview);
-        var size = SIZE[sz];
-        var rows = [
-          ["Background", "color/" + BG[v] + (STATE_SUFFIX[st] || ""), hex(cs.backgroundColor)],
-          ["Text", "color/" + FG[v], hex(cs.color)],
-          ["Border", v === "secondary" ? "color/border/strong" : "none", v === "secondary" ? hex(cs.borderTopColor) : ""],
-          ["Radius", "radius/" + size.n, size.r + "px"],
-          ["Height", "size/control-" + size.n, size.h + "px"],
-          ["Padding", "space/x-" + size.n, size.px + "px"]
-        ];
-        tokensEl.innerHTML = rows.map(function (r) {
-          return "<dt>" + r[0] + "</dt><dd>" + r[1] + (r[2] ? " <span>· " + r[2] + "</span>" : "") + "</dd>";
-        }).join("");
-      }, 260);
-    };
-    pg.addEventListener("change", update);
-    window.addEventListener("themechange", update);
-    update();
-
-    // static matrix: every variant in every state
-    var matrix = document.getElementById("dsMatrix");
-    var variants = [["primary", "Primary"], ["secondary", "Secondary"], ["ghost", "Ghost"], ["danger", "Destructive"]];
-    var states = [["default", "Default"], ["hover", "Hover"], ["pressed", "Pressed"], ["focus", "Focus"], ["disabled", "Disabled"], ["loading", "Loading"]];
-    var html = "<thead><tr><th scope=\"col\">Variant</th>" + states.map(function (s2) { return "<th scope=\"col\">" + s2[1] + "</th>"; }).join("") + "</tr></thead><tbody>";
-    variants.forEach(function (v2) {
-      html += "<tr><th scope=\"row\">" + v2[1] + "</th>";
-      states.forEach(function (s2) {
-        html += "<td><span class=\"" + classes(v2[0], "s", s2[0], false) + "\" role=\"img\" aria-label=\"" + v2[1] + " button, " + s2[1] + "\"><span class=\"ds-label\">Button</span><span class=\"ds-spin\"></span></span></td>";
+  /* ---------------- table system: live demo built to the component spec ---------------- */
+  var demo = document.getElementById("tableDemo");
+  if (demo) {
+    var rows = [
+      { id: 202401, status: "New application", tag: "ok", sla: "2h 5m", slaMin: 125, who: "Alisha Morgan", borrower: "Jordan Rivers", product: "Chattel mortgage", amt: 128400 },
+      { id: 202402, status: "In review", tag: "warn", sla: "45m", slaMin: 45, who: "Alex Morgan", borrower: "Priya Shah", product: "Car loan", amt: 46250 },
+      { id: 202403, status: "Docs pending", tag: "warn", sla: "5h 30m", slaMin: 330, who: "Liam Thompson", borrower: "Noah Chen", product: "Equipment finance", amt: 212900 },
+      { id: 202404, status: "Approved", tag: "ok", sla: "1d 2h", slaMin: 1560, who: "Mia Patel", borrower: "Ella Brooks", product: "Chattel mortgage", amt: 89000 },
+      { id: 202405, status: "New application", tag: "ok", sla: "3h 10m", slaMin: 190, who: "Alex Morgan", borrower: "Oliver Grant", product: "Personal loan", amt: 18500 },
+      { id: 202406, status: "Declined", tag: "bad", sla: "20m", slaMin: 20, who: "Alisha Morgan", borrower: "Ava Wilson", product: "Car loan", amt: 33700 }
+    ];
+    var tbody = document.getElementById("tBody"), all = document.getElementById("tAll");
+    var bar = document.getElementById("tBar"), count = document.getElementById("tCount");
+    var selected = {}, sortKey = null, sortDir = 1;
+    var money = function (n) { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2 }); };
+    var initials = function (n) { return n.split(" ").map(function (p) { return p[0]; }).join(""); };
+    var ICONS = '<button type="button" aria-label="View"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+      '<button type="button" aria-label="Edit"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>' +
+      '<button type="button" aria-label="Archive"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg></button>' +
+      '<button type="button" aria-label="More"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>';
+    var render = function () {
+      var list = rows.slice();
+      if (sortKey) list.sort(function (a, b) {
+        var x = sortKey === "sla" ? a.slaMin : a[sortKey], y = sortKey === "sla" ? b.slaMin : b[sortKey];
+        return (x > y ? 1 : x < y ? -1 : 0) * sortDir;
       });
-      html += "</tr>";
+      tbody.innerHTML = list.map(function (r) {
+        var on = !!selected[r.id];
+        return '<tr class="' + (on ? "is-sel" : "") + '" data-id="' + r.id + '">' +
+          '<td class="c-check"><label class="cbx"><input type="checkbox" aria-label="Select application #' + r.id + '"' + (on ? " checked" : "") + '><i></i></label></td>' +
+          '<td class="b">#' + r.id + '</td>' +
+          '<td><span class="ttag ' + r.tag + '">' + r.status + '</span></td>' +
+          '<td>' + r.sla + '</td>' +
+          '<td><span class="av">' + initials(r.who) + '</span>' + r.who + '</td>' +
+          '<td>' + r.borrower + '</td>' +
+          '<td>' + r.product + '</td>' +
+          '<td class="num">' + money(r.amt) + '</td>' +
+          '<td class="c-act"><span class="acts">' + ICONS + '</span></td></tr>';
+      }).join("");
+      var n = Object.keys(selected).length;
+      bar.hidden = n === 0;
+      count.textContent = n + " selected";
+      all.checked = n === rows.length;
+      all.indeterminate = n > 0 && n < rows.length;
+      demo.querySelectorAll(".sort").forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-key") === sortKey);
+        b.setAttribute("aria-sort", b.getAttribute("data-key") === sortKey ? (sortDir > 0 ? "ascending" : "descending") : "none");
+      });
+    };
+    tbody.addEventListener("change", function (e) {
+      var tr = e.target.closest("tr"); if (!tr) return;
+      var id = tr.getAttribute("data-id");
+      if (e.target.checked) selected[id] = true; else delete selected[id];
+      render();
     });
-    matrix.insertAdjacentHTML("beforeend", html + "</tbody>");
+    all.addEventListener("change", function () {
+      selected = {};
+      if (all.checked) rows.forEach(function (r) { selected[r.id] = true; });
+      render();
+    });
+    document.getElementById("tClear").addEventListener("click", function () { selected = {}; render(); });
+    demo.querySelectorAll(".sort").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var k = b.getAttribute("data-key");
+        if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = 1; }
+        render();
+      });
+    });
+    demo.querySelectorAll(".seg button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        demo.querySelectorAll(".seg button").forEach(function (x) { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", String(x === b)); });
+        demo.classList.toggle("is-small", b.getAttribute("data-size") === "small");
+      });
+    });
+    render();
   }
 })();

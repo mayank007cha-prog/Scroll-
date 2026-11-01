@@ -67,7 +67,7 @@ Name the files exactly like this and put them in `portfolio/assets/media/<case>/
 | iteration-1-before.png / -after.png | 4:5 | The alert button |
 | iteration-2-before.png / -after.png | 4:5 | Confirming an alert was sent |
 
-### Design System (`design-system/`)
+### Table System (`design-system/` for iteration images; `table/` holds the component sheets, docs and example tables taken from Figma)
 | File | Shape | What to show |
 | --- | --- | --- |
 | audit.png | 16:8 | Inconsistent buttons found before |
@@ -89,7 +89,7 @@ site adds the frame, tilt and glow). Export a phone screen at 300 × 650
 | demedic.webp | Done, from "Dropdown 01 · Closed (Meine Dienste)" |
 | earthlink.webp | Done, from "Earthlink Checkout Screen" |
 | desafe.webp | Done, from "Desafe alarm Screen" |
-| design-system.webp | Still needed: a component screen (the card shows a drawn component sheet until then) |
+| table-light.webp / table-dark.webp | Done: the table system card shows your data table in a silver display, switching with the theme |
 
 ## Concept videos (5)
 
@@ -110,7 +110,7 @@ Put the raw screen recordings in `portfolio/assets/media/concepts/`:
 
 | Item | Format | Notes |
 | --- | --- | --- |
-| DE Medic, EarthLink, DeSafe logos | SVG, or PNG 128 × 128 with transparency | Shown at 22 px on the cards. Only if the client allows it; otherwise the initials stay. |
+| DE Medic, EarthLink, DeSafe logos | Done | Taken from your 500 × 500 icon frames; shown at 28 px on the cards. |
 | DigiMantra logo (optional) | SVG | For the "Now" stop in the timeline |
 | Your photo (optional) | 1200 × 1500 (4:5) | For the About section, if you'd like one |
 | Favicon | SVG, or PNG 512 × 512 | The tab icon. I can make one from your star mark if you like. |
