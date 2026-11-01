@@ -78,6 +78,22 @@ Name the files exactly like this and put them in `portfolio/assets/media/<case>/
 Don't have a "before" for an iteration? Tell me and I'll switch that block to a
 single image, or drop it.
 
+## Home page case cards (`cards/`)
+
+The small screen on each case-study card. Put it in upright: the site tilts it
+about −9° and tucks it into the card's bottom-right corner, so the right and
+bottom edges get cropped. Keep the important part in the top-left two-thirds
+(marked "Safe area" in Figma).
+
+| File | Shape | What to show |
+| --- | --- | --- |
+| demedic.png | 3:4, 600 × 800 | Duty Swap list: offered, bid and swapped states |
+| earthlink.png | 3:4, 600 × 800 | Review & Pay with "Due today" and the pay buttons |
+| desafe.png | 3:4, 600 × 800 | The SOS / alert screen |
+| design-system.png | 3:4, 600 × 800 | Button variants, toggle, chips, swatches |
+
+Until these arrive, the cards keep the drawn mockups.
+
 ## Concept videos (5)
 
 Put the raw screen recordings in `portfolio/assets/media/concepts/`:
