@@ -72,9 +72,9 @@
      Animation → UI/UX: the bouncing ball becomes the app's loader.
      0s     p0  the ball starts bouncing
      0.3s   p1  "From making things move" fades in on the left
-     1.5s   p2  the phone condenses around the ball, fully visible
-     2.8s   p3  inside the phone, "Loading 0 → 100%" appears under the ball;
-                the copy becomes "to making things work."
+     1.5s   p2  the phone condenses around the ball, fully visible, and the
+                copy swaps to "to making things work."
+     2.8s   p3  inside the phone, "Loading 0 → 100%" appears under the ball
      5.25s  p4  loading completes, the ball fades and the app appears
      6.6s       the intro fades into the home page                         */
   var intro = document.getElementById("intro");

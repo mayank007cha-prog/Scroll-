@@ -203,8 +203,9 @@ button { font: inherit; color: inherit; }
 .intro-words .w2 { font-size: clamp(2.2rem, 4.4vw, 3.6rem); color: var(--fg); }
 .intro-words .w2 em { color: var(--accent); }
 .intro.p1 .w1 { opacity: 1; }
-.intro.p3 .w1 { opacity: 0; transition-duration: 0.5s; }                  /* out first… */
-.intro.p3 .w2 { opacity: 1; transition-delay: 0.55s; transition-duration: 0.9s; }   /* …then in, no overlap */
+/* the line swaps as the phone appears (p2): out first, then in, no overlap */
+.intro.p2 .w1 { opacity: 0; transition-duration: 0.5s; }
+.intro.p2 .w2 { opacity: 1; transition-delay: 0.55s; transition-duration: 0.9s; }
 
 /* scene = the phone's box; everything is positioned inside it */
 .intro-scene { position: relative; width: var(--pw); height: var(--ph); }
