@@ -68,14 +68,14 @@
     nav.classList.toggle("scrolled", window.scrollY > 8);
   }, { passive: true });
 
-  /* ---------------- intro (about 6s in total) ----------------
+  /* ---------------- intro (about 8s in total) ----------------
      0s     the ball bounces on its own
-     0.6s   "From making things move" fades in under the ball
-     1.8s   the phone starts forming around the ball; the line slips away and
+     0.8s   "From making things move" fades in under the ball
+     2.4s   the phone starts forming around the ball; the line slips away and
             Loading takes its place at 0%
-     3.48s  the phone has settled; "to making things work." fades in
-     5.4s   held, then Loading hits 100% and the page fades in (done by ~6s)
-     Every step and transition is the earlier 9s version scaled by 0.6.   */
+     4.64s  the phone has settled; "to making things work." fades in
+     7.2s   held, then Loading hits 100% and the page fades in (done by ~8s)
+     Every step and transition keeps the same proportions as before.      */
   var intro = document.getElementById("intro");
   var countEl = document.getElementById("introCount");
   var timers = [];
@@ -91,7 +91,7 @@
     intro.classList.add("done");
     body.classList.remove("intro-on");
     body.classList.add("ready");
-    setTimeout(function () { intro.remove(); }, 750);
+    setTimeout(function () { intro.remove(); }, 1000);
     observeReveals();
   }
 
@@ -109,10 +109,10 @@
   function startIntro() {
     body.classList.add("intro-on");
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
-    at(600, function () { intro.classList.add("p1"); });
-    at(1800, function () { intro.classList.add("p2"); runCounter(3600); });  // 0% at 1.8s → 100% at 5.4s
-    at(3480, function () { intro.classList.add("p3"); });
-    at(5400, endIntro);
+    at(800, function () { intro.classList.add("p1"); });
+    at(2400, function () { intro.classList.add("p2"); runCounter(4800); });  // 0% at 2.4s → 100% at 7.2s
+    at(4640, function () { intro.classList.add("p3"); });
+    at(7200, endIntro);
   }
 
   document.getElementById("introSkip").addEventListener("click", endIntro);
