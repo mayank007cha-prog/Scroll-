@@ -160,85 +160,117 @@ button { font: inherit; color: inherit; }
 
 /* ---------- intro ---------- */
 .intro {
+  --soft: cubic-bezier(0.22, 1, 0.36, 1);  /* gentle ease-out used across the intro */
   position: fixed; inset: 0; z-index: 100;
   background: var(--bg);
   display: grid; place-items: center;
   overflow: hidden;
-  transition: opacity 0.8s var(--ease), transform 0.9s var(--ease);
+  transition: opacity 1.1s var(--soft);
 }
 .intro::before {
   content: ""; position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%;
   background: radial-gradient(circle, var(--glow), transparent 62%);
-  opacity: 0; transition: opacity 1.2s var(--ease);
+  opacity: 0; transition: opacity 2s var(--soft);
 }
 .intro.p2::before { opacity: 1; }
-.intro.done { opacity: 0; transform: translateY(-3%); pointer-events: none; }
+.intro.done { opacity: 0; pointer-events: none; }
+.intro.done .intro-stage { transform: scale(0.97); filter: blur(4px); }
+
 /* Stage = a scene (phone + ball + counter) with the words in their own row
-   underneath, so the fading phone can never run into the text. */
+   underneath, so the fading phone can never run into the text.
+   Everything in the scene is sized from the phone width (--pw). */
 .intro-stage {
-  --pw: min(236px, 58vw);                 /* phone width */
+  --pw: min(236px, 58vw);
   position: relative; width: min(420px, 92vw);
-  display: grid; justify-items: center; gap: clamp(20px, 4vh, 36px);
+  display: grid; justify-items: center; gap: clamp(18px, 3.5vh, 32px);
+  transition: transform 1.1s var(--soft), filter 1.1s var(--soft);
 }
 .intro-scene {
   position: relative; width: 100%;
-  height: calc(var(--pw) * 1.22);         /* the visible top of the phone */
-  perspective: 900px; perspective-origin: 50% 35%;
+  height: calc(var(--pw) * 1.2);          /* the part of the phone that stays visible */
+  perspective: 1000px; perspective-origin: 50% 30%;
 }
+
+/* phone: travels forward on the z axis from behind the ball */
 .intro-phone {
   position: absolute; left: 50%; top: 0; z-index: 0;
   width: var(--pw); aspect-ratio: 9 / 19.2; margin-left: calc(var(--pw) / -2);
   opacity: 0;
-  transform: translate3d(0, -24px, -1100px);
-  transition: transform 1.9s cubic-bezier(0.16, 1, 0.3, 1), opacity 1s ease;
-  /* fully faded before the bottom of the scene */
-  -webkit-mask-image: linear-gradient(to bottom, #000 26%, transparent 54%);
-  mask-image: linear-gradient(to bottom, #000 26%, transparent 54%);
+  transform: translateZ(-800px);
+  transition: transform 2.2s var(--soft), opacity 1.4s var(--soft);
+  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 56%);
+  mask-image: linear-gradient(to bottom, #000 30%, transparent 56%);
 }
-.intro.p2 .intro-phone { opacity: 1; transform: translate3d(0, 0, 0); }
+.intro.p2 .intro-phone { opacity: 1; transform: translateZ(0); }
 .intro-phone .phone-frame { height: 100%; }
-.intro-phone .phone-screen { background: linear-gradient(180deg, var(--surface-2), var(--bg)); }
+.intro-phone .phone-screen {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 40%, var(--bg) 100%);
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 8%, transparent);
+}
+.scr-status {
+  position: absolute; left: 9%; right: 8%; top: 2.5%; height: 3.6%;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: calc(var(--pw) * 0.052); font-weight: 600; letter-spacing: -0.01em;
+}
+.scr-status span:first-child { padding-left: 4%; }
+.scr-icons { display: inline-flex; align-items: center; gap: calc(var(--pw) * 0.016); }
+.scr-icons svg { height: calc(var(--pw) * 0.042); width: auto; fill: currentColor; }
+.scr-head {
+  position: absolute; left: 9%; right: 9%; top: 10%;
+  display: flex; align-items: center; justify-content: space-between; opacity: 0.55;
+}
+.scr-head i { width: 38%; height: calc(var(--pw) * 0.03); border-radius: 99px; background: var(--line-strong); }
+.scr-head b { width: calc(var(--pw) * 0.1); aspect-ratio: 1; border-radius: 50%; background: var(--accent-soft); }
+
+/* ball: a short, clean bounce centred in the phone's visible screen */
 .intro-ball {
-  position: absolute; left: 50%; top: 16%; z-index: 1;
-  width: 60px; height: 112px; margin-left: -30px;
-  opacity: 0; animation: fade-in 0.6s ease 0.1s forwards;
+  --drop: 44px;                            /* bounce height */
+  position: absolute; left: 50%; z-index: 1;
+  top: calc(var(--pw) * 0.6 - 40px);
+  width: 40px; height: calc(var(--drop) + 22px); margin-left: -20px;
+  opacity: 0; animation: intro-fade 0.9s var(--soft) 0.15s forwards;
 }
 .intro-ball .ball {
-  position: absolute; left: 50%; top: 0; width: 20px; height: 20px; margin-left: -10px;
+  position: absolute; left: 50%; top: 0; width: 18px; height: 18px; margin-left: -9px;
   border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, var(--accent-2), var(--accent) 60%);
-  transform-origin: 50% 100%;
-  /* gravity: ease-in on the way down, the alternate run eases out on the way up */
-  animation: bounce 0.72s cubic-bezier(0.55, 0, 1, 0.45) infinite alternate;
+  background: radial-gradient(circle at 34% 30%, var(--accent-2), var(--accent) 62%);
+  animation: intro-bounce 1s infinite;
 }
 .intro-ball .shadow {
-  position: absolute; left: 50%; bottom: 0; width: 26px; height: 5px; margin-left: -13px;
+  position: absolute; left: 50%; bottom: 0; width: 22px; height: 4px; margin-left: -11px;
   border-radius: 50%; background: var(--fg); filter: blur(1.5px);
-  animation: bounce-shadow 0.72s cubic-bezier(0.55, 0, 1, 0.45) infinite alternate;
+  animation: intro-bounce-shadow 1s infinite;
 }
-@keyframes bounce {
-  0% { transform: translateY(0); }
-  92% { transform: translateY(88px) scale(1, 1); }
-  100% { transform: translateY(92px) scale(1.08, 0.92); }
+/* gravity: speed up on the way down, slow down on the way up */
+@keyframes intro-bounce {
+  0%, 100% { transform: translateY(0); animation-timing-function: cubic-bezier(0.45, 0, 0.85, 0.5); }
+  50% { transform: translateY(var(--drop)); animation-timing-function: cubic-bezier(0.15, 0.5, 0.55, 1); }
 }
-@keyframes bounce-shadow {
-  0% { transform: scale(0.5); opacity: 0.05; }
-  100% { transform: scale(1); opacity: 0.14; }
+@keyframes intro-bounce-shadow {
+  0%, 100% { transform: scale(0.55); opacity: 0.05; animation-timing-function: cubic-bezier(0.45, 0, 0.85, 0.5); }
+  50% { transform: scale(1); opacity: 0.13; animation-timing-function: cubic-bezier(0.15, 0.5, 0.55, 1); }
 }
-@keyframes fade-in { to { opacity: 1; } }
+@keyframes intro-fade { to { opacity: 1; } }
+
 .intro-count {
   position: absolute; left: 0; right: 0; z-index: 1;
-  top: calc(16% + 124px);                 /* just under the ball's landing spot */
-  text-align: center; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.2em;
+  top: calc(var(--pw) * 0.6 - 40px + var(--drop, 44px) + 34px);   /* just under the landing spot */
+  text-align: center; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.22em;
   color: var(--muted); font-variant-numeric: tabular-nums;
-  opacity: 0; transition: opacity 0.9s ease;
+  opacity: 0; transition: opacity 1.2s var(--soft);
 }
 .intro.p2 .intro-count { opacity: 1; }
+
+/* words */
 .intro-line { margin: 0; text-align: center; display: grid; gap: 6px; letter-spacing: -0.02em; line-height: 1.2; }
-.intro-line span { display: block; opacity: 0; transform: translateY(10px); transition: opacity 1.1s var(--ease), transform 1.1s var(--ease); }
+.intro-line span {
+  display: block; opacity: 0; transform: translateY(8px); filter: blur(6px);
+  transition: opacity 1.4s var(--soft), transform 1.4s var(--soft), filter 1.4s var(--soft);
+}
 .intro-line .l1 { font-size: clamp(1rem, 3.4vw, 1.2rem); color: var(--fg-2); }
 .intro-line .l2 { font-size: clamp(1.45rem, 5.4vw, 1.95rem); font-weight: 500; color: var(--fg); letter-spacing: -0.03em; }
-.intro.p1 .intro-line .l1, .intro.p3 .intro-line .l2 { opacity: 1; transform: none; }
+.intro.p1 .intro-line .l1, .intro.p3 .intro-line .l2 { opacity: 1; transform: none; filter: none; }
 .intro-line .l2 em { color: var(--accent); font-size: 1.08em; }
 .intro-skip {
   position: absolute;

@@ -87,7 +87,7 @@
     intro.classList.add("done");
     body.classList.remove("intro-on");
     body.classList.add("ready");
-    setTimeout(function () { intro.remove(); }, 900);
+    setTimeout(function () { intro.remove(); }, 1200);
     observeReveals();
   }
 
@@ -95,7 +95,7 @@
     var start = performance.now();
     function tick(now) {
       var t = Math.min(1, (now - start) / duration);
-      var eased = 1 - Math.pow(1 - t, 3);
+      var eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       var n = Math.round(eased * 100);
       countEl.textContent = String(n).padStart(3, "0");
       if (t < 1) rafId = requestAnimationFrame(tick);
