@@ -73,8 +73,8 @@
      1s  "From making things move" fades in, and holds
      3s    the phone starts forming around the ball; the first line fades out,
            so only the ball, phone and Loading are on screen; Loading starts at 0%
-     5.8s  the phone has settled; "to making things work." fades in (in by ~7.6s)
-     9.6s  held for 2s, then Loading hits 100% and the home page opens       */
+     5.8s  the phone has settled; "to making things work." fades in (reads as in by ~7s)
+     9s    held 2s after it's in, then Loading hits 100% and the page opens   */
   var intro = document.getElementById("intro");
   var countEl = document.getElementById("introCount");
   var timers = [];
@@ -109,9 +109,9 @@
     body.classList.add("intro-on");
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
     at(1000, function () { intro.classList.add("p1"); });
-    at(3000, function () { intro.classList.add("p2"); runCounter(6600); });  // 0% at 3s → 100% at 9.6s
+    at(3000, function () { intro.classList.add("p2"); runCounter(6000); });  // 0% at 3s → 100% at 9s
     at(5800, function () { intro.classList.add("p3"); });
-    at(9600, endIntro);
+    at(9000, endIntro);
   }
 
   document.getElementById("introSkip").addEventListener("click", endIntro);
