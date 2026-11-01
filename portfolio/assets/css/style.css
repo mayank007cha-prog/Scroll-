@@ -605,10 +605,16 @@ section { scroll-margin-top: 84px; }
 .phone-frame::after { right: -2px; top: 28%; height: 13%; }
 .phone-screen { position: relative; height: 100%; border-radius: 12% / 5.6%; overflow: hidden; background: var(--ink-1); color: var(--screen-text); isolation: isolate; }
 .phone-screen::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255, 255, 255, 0.14) 0%, transparent 32%); pointer-events: none; z-index: 5; }
-.island { position: absolute; z-index: 6; left: 50%; top: 2.6%; width: 30%; height: 3.4%; transform: translateX(-50%); border-radius: 999px; background: #000; }
+/* pinhole camera, centred in the status bar row and clear of the screen edge */
+.island {
+  position: absolute; z-index: 6; left: 50%; top: 5.9%;
+  width: 4.4%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(circle at 36% 34%, #3a3a52 0 14%, #0d0d14 38%, #000 70%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
 .phone-screen video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 4; }
 .demo { position: absolute; inset: 0; font-size: 10px; }
-.status { position: absolute; top: 3.2%; left: 9%; right: 9%; display: flex; justify-content: space-between; font-size: 0.68em; font-weight: 600; z-index: 3; opacity: 0.9; }
+.status { position: absolute; top: 3.8%; left: 9%; right: 9%; display: flex; justify-content: space-between; font-size: 0.68em; font-weight: 600; z-index: 3; opacity: 0.9; }
 .paused .demo *, .paused .demo { animation-play-state: paused !important; }
 
 /* demo 1: music mini player that turns into a disc */
