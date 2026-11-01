@@ -70,10 +70,9 @@
   /* ---------------- intro ----------------
      0s    the ball bounces on its own
      2s    "From making things move" fades in at the bottom
-     3s    the phone travels forward from behind the ball; Loading 0 → 100 starts
-     3.4s  "to making things work." joins as the phone settles
-     5s    Loading reaches 100%
-     6.9s  the intro lifts away and the home screen animates in         */
+     3s    the phone travels forward from behind the ball; Loading starts at 0%
+     5s    Loading is at 50%; "to making things work." joins (2s after the phone)
+     7s    Loading hits 100% and the home page opens (2s after that)       */
   var intro = document.getElementById("intro");
   var countEl = document.getElementById("introCount");
   var timers = [];
@@ -85,6 +84,7 @@
     introDone = true;
     timers.forEach(clearTimeout);
     cancelAnimationFrame(rafId);
+    countEl.textContent = "100";              // always land on 100% as the page opens
     intro.classList.add("done");
     body.classList.remove("intro-on");
     body.classList.add("ready");
@@ -96,8 +96,7 @@
     var start = performance.now();
     function tick(now) {
       var t = Math.min(1, (now - start) / duration);
-      var eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      var n = Math.round(eased * 100);
+      var n = Math.floor(t * 100);          // linear: the number tracks real time
       countEl.textContent = String(n);
       if (t < 1) rafId = requestAnimationFrame(tick);
     }
@@ -108,9 +107,9 @@
     body.classList.add("intro-on");
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
     at(2000, function () { intro.classList.add("p1"); });
-    at(3000, function () { intro.classList.add("p2"); runCounter(2000); });
-    at(3400, function () { intro.classList.add("p3"); });
-    at(6900, endIntro);
+    at(3000, function () { intro.classList.add("p2"); runCounter(4000); });  // 0% → 100% exactly at 7s
+    at(5000, function () { intro.classList.add("p3"); });
+    at(7000, endIntro);
   }
 
   document.getElementById("introSkip").addEventListener("click", endIntro);
