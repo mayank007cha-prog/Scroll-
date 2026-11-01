@@ -67,16 +67,6 @@ Name the files exactly like this and put them in `portfolio/assets/media/<case>/
 | iteration-1-before.png / -after.png | 4:5 | The alert button |
 | iteration-2-before.png / -after.png | 4:5 | Confirming an alert was sent |
 
-### Table System (`design-system/` for iteration images; `table/` holds the component sheets, docs and example tables taken from Figma)
-| File | Shape | What to show |
-| --- | --- | --- |
-| audit.png | 16:8 | Inconsistent buttons found before |
-| figma.png | 16:9 | Your Figma component: properties panel and variants |
-| iteration-1-before.png / -after.png | 4:5 | Colour-named tokens → purpose-named tokens |
-| iteration-2-before.png / -after.png | 4:5 | Separate drawings → one component with properties |
-
-Don't have a "before" for an iteration? Tell me and I'll switch that block to a
-single image, or drop it.
 
 ## Home page case cards (`cards/`)
 
@@ -89,7 +79,6 @@ site adds the frame, tilt and glow). Export a phone screen at 300 × 650
 | demedic.webp | Done, from "Dropdown 01 · Closed (Meine Dienste)" |
 | earthlink.webp | Done, from "Earthlink Checkout Screen" |
 | desafe.webp | Done, from "Desafe alarm Screen" |
-| table-light.webp / table-dark.webp | Done: the table system card shows your data table in a silver display, switching with the theme |
 
 ## Concept videos (5)
 
@@ -112,7 +101,7 @@ Put the raw screen recordings in `portfolio/assets/media/concepts/`:
 | --- | --- | --- |
 | DE Medic, EarthLink, DeSafe logos | Done | Taken from your 500 × 500 icon frames; shown at 28 px on the cards. |
 | DigiMantra logo (optional) | SVG | For the "Now" stop in the timeline |
-| Your photo (optional) | 1200 × 1500 (4:5) | For the About section, if you'd like one |
+| Your photo | Done | Background removed and used on the glass ID card in the hero (`brand/mayank-portrait.webp`). |
 | Favicon | SVG, or PNG 512 × 512 | The tab icon. I can make one from your star mark if you like. |
 | Share image | 1200 × 630 | Shown when the link is shared on LinkedIn or WhatsApp. I can design this. |
 | Resume | PDF | For the Resume and Download resume buttons |

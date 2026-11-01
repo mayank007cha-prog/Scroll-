@@ -5,8 +5,8 @@
   var root = document.documentElement;
   var body = document.body;
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var caseViews = ["demedic", "earthlink", "desafe", "design-system"];
-  var caseTitles = { demedic: "DE Medic", earthlink: "EarthLink", desafe: "DeSafe", "design-system": "Table System" };
+  var caseViews = ["demedic", "earthlink", "desafe"];
+  var caseTitles = { demedic: "DE Medic", earthlink: "EarthLink", desafe: "DeSafe" };
   var homeSections = ["work", "concepts", "about", "contact"];
 
   function store(key, value) {
@@ -186,6 +186,22 @@
     }
   }
 
+  /* ---------------- hero ID card: tilts toward the cursor while hovered ---------------- */
+  var idCard = document.getElementById("idCard");
+  if (idCard && !reduceMotion && window.matchMedia("(hover: hover)").matches) {
+    idCard.addEventListener("pointermove", function (e) {
+      var r = idCard.getBoundingClientRect();
+      idCard.style.setProperty("--ix", ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
+      idCard.style.setProperty("--iy", ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+      idCard.classList.add("tracking");
+    });
+    idCard.addEventListener("pointerleave", function () {
+      idCard.classList.remove("tracking");
+      idCard.style.setProperty("--ix", "0");
+      idCard.style.setProperty("--iy", "0");
+    });
+  }
+
   /* ---------------- concept phones ---------------- */
   var phoneCards = document.querySelectorAll(".phone-card");
   phoneCards.forEach(function (card) {
@@ -278,80 +294,4 @@
     });
   }
 
-  /* ---------------- table system: live demo built to the component spec ---------------- */
-  var demo = document.getElementById("tableDemo");
-  if (demo) {
-    var rows = [
-      { id: 202401, status: "New application", tag: "ok", sla: "2h 5m", slaMin: 125, who: "Alisha Morgan", borrower: "Jordan Rivers", product: "Chattel mortgage", amt: 128400 },
-      { id: 202402, status: "In review", tag: "warn", sla: "45m", slaMin: 45, who: "Alex Morgan", borrower: "Priya Shah", product: "Car loan", amt: 46250 },
-      { id: 202403, status: "Docs pending", tag: "warn", sla: "5h 30m", slaMin: 330, who: "Liam Thompson", borrower: "Noah Chen", product: "Equipment finance", amt: 212900 },
-      { id: 202404, status: "Approved", tag: "ok", sla: "1d 2h", slaMin: 1560, who: "Mia Patel", borrower: "Ella Brooks", product: "Chattel mortgage", amt: 89000 },
-      { id: 202405, status: "New application", tag: "ok", sla: "3h 10m", slaMin: 190, who: "Alex Morgan", borrower: "Oliver Grant", product: "Personal loan", amt: 18500 },
-      { id: 202406, status: "Declined", tag: "bad", sla: "20m", slaMin: 20, who: "Alisha Morgan", borrower: "Ava Wilson", product: "Car loan", amt: 33700 }
-    ];
-    var tbody = document.getElementById("tBody"), all = document.getElementById("tAll");
-    var bar = document.getElementById("tBar"), count = document.getElementById("tCount");
-    var selected = {}, sortKey = null, sortDir = 1;
-    var money = function (n) { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2 }); };
-    var initials = function (n) { return n.split(" ").map(function (p) { return p[0]; }).join(""); };
-    var ICONS = '<button type="button" aria-label="View"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
-      '<button type="button" aria-label="Edit"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>' +
-      '<button type="button" aria-label="Archive"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg></button>' +
-      '<button type="button" aria-label="More"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>';
-    var render = function () {
-      var list = rows.slice();
-      if (sortKey) list.sort(function (a, b) {
-        var x = sortKey === "sla" ? a.slaMin : a[sortKey], y = sortKey === "sla" ? b.slaMin : b[sortKey];
-        return (x > y ? 1 : x < y ? -1 : 0) * sortDir;
-      });
-      tbody.innerHTML = list.map(function (r) {
-        var on = !!selected[r.id];
-        return '<tr class="' + (on ? "is-sel" : "") + '" data-id="' + r.id + '">' +
-          '<td class="c-check"><label class="cbx"><input type="checkbox" aria-label="Select application #' + r.id + '"' + (on ? " checked" : "") + '><i></i></label></td>' +
-          '<td class="b">#' + r.id + '</td>' +
-          '<td><span class="ttag ' + r.tag + '">' + r.status + '</span></td>' +
-          '<td>' + r.sla + '</td>' +
-          '<td><span class="av">' + initials(r.who) + '</span>' + r.who + '</td>' +
-          '<td>' + r.borrower + '</td>' +
-          '<td>' + r.product + '</td>' +
-          '<td class="num">' + money(r.amt) + '</td>' +
-          '<td class="c-act"><span class="acts">' + ICONS + '</span></td></tr>';
-      }).join("");
-      var n = Object.keys(selected).length;
-      bar.hidden = n === 0;
-      count.textContent = n + " selected";
-      all.checked = n === rows.length;
-      all.indeterminate = n > 0 && n < rows.length;
-      demo.querySelectorAll(".sort").forEach(function (b) {
-        b.classList.toggle("active", b.getAttribute("data-key") === sortKey);
-        b.setAttribute("aria-sort", b.getAttribute("data-key") === sortKey ? (sortDir > 0 ? "ascending" : "descending") : "none");
-      });
-    };
-    tbody.addEventListener("change", function (e) {
-      var tr = e.target.closest("tr"); if (!tr) return;
-      var id = tr.getAttribute("data-id");
-      if (e.target.checked) selected[id] = true; else delete selected[id];
-      render();
-    });
-    all.addEventListener("change", function () {
-      selected = {};
-      if (all.checked) rows.forEach(function (r) { selected[r.id] = true; });
-      render();
-    });
-    document.getElementById("tClear").addEventListener("click", function () { selected = {}; render(); });
-    demo.querySelectorAll(".sort").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var k = b.getAttribute("data-key");
-        if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = 1; }
-        render();
-      });
-    });
-    demo.querySelectorAll(".seg button").forEach(function (b) {
-      b.addEventListener("click", function () {
-        demo.querySelectorAll(".seg button").forEach(function (x) { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", String(x === b)); });
-        demo.classList.toggle("is-small", b.getAttribute("data-size") === "small");
-      });
-    });
-    render();
-  }
 })();

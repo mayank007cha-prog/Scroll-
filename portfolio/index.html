@@ -101,7 +101,7 @@
       </div>
 
       <!-- Hero artwork: the "earlier" animation card and the "now" product card, joined by an orbit -->
-      <div class="hero-art" id="heroArt" data-in style="--d:2" role="img" aria-label="Illustration: a bouncing 3D ball on a dark card labelled Animator (earlier), connected by an orbit line to a light interface card labelled UI/UX Designer (now).">
+      <div class="hero-art" id="heroArt" data-in style="--d:2" role="img" aria-label="Illustration: a glass employee ID card for Mayank Chauhan, UI/UX Designer, hanging on a lanyard between a dark animation card labelled Animator (earlier) and a light interface card labelled UI/UX Designer (now).">
         <svg class="orbits" viewBox="0 0 600 560" aria-hidden="true">
           <ellipse cx="300" cy="330" rx="250" ry="92" transform="rotate(-8 300 330)"/>
           <path d="M470 -10 C 420 120, 560 210, 640 250"/>
@@ -127,6 +127,27 @@
           <svg class="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6.5 1.5L9 19z"/></svg>
         </div>
         <span class="art-tag tag-now">UI/UX Designer <small>(now)</small></span>
+        <!-- glass ID card on a lanyard, centred between "earlier" and "now" -->
+        <div class="idcard-wrap" aria-hidden="true">
+          <span class="lanyard"></span>
+          <div class="idcard" id="idCard">
+            <span class="id-ring"></span>
+            <span class="id-slot"></span>
+            <div class="id-top">
+              <svg viewBox="0 0 24 24"><path d="M12 1v22M1 12h22M4.2 4.2l15.6 15.6M19.8 4.2 4.2 19.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+              <span>Portfolio ID</span><em>2026</em>
+            </div>
+            <div class="id-photo"><img src="assets/media/brand/mayank-portrait.webp" alt="" width="480" height="600" decoding="async"></div>
+            <div class="id-name">Mayank Chauhan</div>
+            <div class="id-role">UI/UX Designer</div>
+            <dl class="id-meta">
+              <div><dt>Works at</dt><dd>DigiMantra</dd></div>
+              <div><dt>Based in</dt><dd>Mohali, India</dd></div>
+            </dl>
+            <div class="id-foot"><span class="id-barcode"></span><span class="id-no">Animator → UX</span></div>
+            <span class="id-sheen"></span>
+          </div>
+        </div>
         <svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 0c.6 6.2 2.8 9.6 12 12-9.2 2.4-11.4 5.8-12 12-.6-6.2-2.8-9.6-12-12 9.2-2.4 11.4-5.8 12-12z"/></svg>
       </div>
     </div>
@@ -143,7 +164,7 @@
         <p>Thoughtful design. Measurable impact. Each one told as Who, What, Why and How.</p>
       </div>
       <div class="case-grid">
-        <a class="case-card reveal" href="#demedic">
+        <a class="case-card case-card-feature reveal" href="#demedic">
           <div class="case-text">
             <span class="client"><span class="client-logo has-img"><img src="assets/media/logos/demedic.webp" alt="" width="100" height="100"></span>DE Medic</span>
             <h3>Making complex duty swaps simple for doctors.</h3>
@@ -179,20 +200,6 @@
           </div>
         </a>
 
-        <a class="case-card case-card-wide reveal" href="#design-system">
-          <div class="case-text">
-            <span class="client"><span class="client-logo"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg></span>Table System</span>
-            <h3>A table system for dense lending data.</h3>
-            <p class="case-desc">Table components for a lending platform's credit queue: 36 cell variants, sortable titles, row selection and bulk actions, documented in light and dark.</p>
-            <span class="meta-line"><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Design system · Components</span>
-          </div>
-          <div class="case-art" aria-hidden="true" style="--glow:var(--accent)">
-            <div class="metal-display"><div class="md-screen">
-              <img class="t-light" src="assets/media/table/table-light.webp" alt="" width="1341" height="709" decoding="async">
-              <img class="t-dark" src="assets/media/table/table-dark.webp" alt="" width="1341" height="709" decoding="async">
-            </div></div>
-          </div>
-        </a>
       </div>
     </div>
   </section>
@@ -1022,229 +1029,12 @@
           <div class="info-card"><span class="k">What I learned</span><p><span class="todo-inline">Add: one or two things this project taught you.</span></p></div>
         </div>
         <p class="confidential">This was client work at DigiMantra, so exact numbers belong to the client. I've shown impact through the journey changes and the feedback instead.</p>
-        <a class="next-case" href="#design-system"><span><small>Next case study</small><strong>Table System: components for lending data</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
-      </section>
-    </div>
-  </div>
-</article>
-
-<!-- =====================================================================
-     CASE STUDY: TABLE COMPONENT SYSTEM (view id kept as design-system)
-     ===================================================================== -->
-<article class="view" data-view="design-system" hidden>
-  <div class="wrap case-hero">
-    <a class="back" href="#work"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All work</a>
-    <span class="pill"><span class="dot"></span>Design System · Table components</span>
-    <h1>A table system for dense lending <span class="serif">data.</span></h1>
-    <p class="lede">Table components for a lending platform's credit queue: column titles, 36 cell variants, row selection and bulk actions, documented and built in light and dark.</p>
-    <dl class="case-meta">
-      <div><dt>Role</dt><dd>UI/UX Designer</dd></div>
-      <div><dt>Product</dt><dd>Lending platform</dd></div>
-      <div><dt>Tool</dt><dd>Figma</dd></div>
-      <div><dt>Scope</dt><dd>Table components</dd></div>
-    </dl>
-    <dl class="tldr" aria-label="Summary">
-      <div><dt>Problem</dt><dd>Credit teams scan long queues of loan applications, eleven columns wide. Every table had to stay readable and behave the same way.</dd></div>
-      <div><dt>My role</dt><dd>Designed the table components, their variants and states, the documentation and the example tables.</dd></div>
-      <div><dt>Team</dt><dd><span class="todo-inline">Add: who you worked with.</span></dd></div>
-      <div><dt>Outcome</dt><dd>One set of components builds every table, from the full credit queue to small summaries, in light and dark.</dd></div>
-    </dl>
-  </div>
-  <div class="wrap">
-    <figure class="media">
-      <div class="media-box has-media" style="--ar:1520/803"><img src="assets/media/table/table-selected.webp" alt="The credit queue data table with four rows selected and a selection bar offering Edit, Assign, Archive and Delete." width="1520" height="803" loading="lazy" decoding="async"></div>
-      <figcaption>The credit queue with four applications selected. The selection bar swaps in bulk actions.</figcaption>
-    </figure>
-  </div>
-
-  <!-- live demo built to the component spec -->
-  <div class="wrap">
-    <div class="tdemo" id="tableDemo">
-      <div class="tdemo-head">
-        <div><span class="eyebrow">Try it</span><p class="tdemo-sub">A working version of the component: sort a column, select rows, switch the size. Rows never change height between states.</p></div>
-        <div class="seg" role="group" aria-label="Table size">
-          <button type="button" class="on" data-size="medium" aria-pressed="true">Medium</button>
-          <button type="button" data-size="small" aria-pressed="false">Small</button>
-        </div>
-      </div>
-      <div class="tbar" id="tBar" hidden>
-        <button type="button" class="tbar-x" id="tClear" aria-label="Clear selection"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-        <strong id="tCount">0 selected</strong>
-        <span class="tbar-actions">
-          <button type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Edit</button>
-          <button type="button"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6M16 17l2 2 4-4"/></svg>Assign</button>
-          <button type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg>Archive</button>
-          <button type="button" class="danger"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Delete</button>
-        </span>
-      </div>
-      <div class="tscroll" tabindex="0" aria-label="Credit queue, scrolls sideways">
-        <table class="dtable" id="dTable">
-          <caption class="visually-hidden">Credit queue (example data)</caption>
-          <thead><tr>
-            <th class="c-check"><label class="cbx"><input type="checkbox" id="tAll" aria-label="Select all rows"><i></i></label></th>
-            <th><button type="button" class="sort" data-key="id">App ID<svg viewBox="0 0 24 24"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button></th>
-            <th><button type="button" class="sort" data-key="status">Status<svg viewBox="0 0 24 24"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button></th>
-            <th><button type="button" class="sort" data-key="sla">SLA<svg viewBox="0 0 24 24"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button></th>
-            <th><button type="button" class="sort" data-key="who">Assigned to<svg viewBox="0 0 24 24"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button></th>
-            <th><button type="button" class="sort" data-key="borrower">Primary borrower<svg viewBox="0 0 24 24"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button></th>
-            <th><button type="button" class="sort" data-key="product">Product<svg viewBox="0 0 24 24"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button></th>
-            <th class="num"><button type="button" class="sort" data-key="amt">Amt financed<svg viewBox="0 0 24 24"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button></th>
-            <th class="c-act">Action</th>
-          </tr></thead>
-          <tbody id="tBody"></tbody>
-        </table>
-      </div>
-      <p class="tdemo-note">Example data. The action column stays put while the table scrolls sideways, as in the guidelines.</p>
-    </div>
-  </div>
-
-  <div class="wrap case-body">
-    <nav class="toc" aria-label="Sections">
-      <button type="button" data-target="sy-who">Who</button>
-      <button type="button" data-target="sy-what">What</button>
-      <button type="button" data-target="sy-why">Why</button>
-      <button type="button" data-target="sy-how">How</button>
-      <button type="button" data-target="sy-iter">Iterations</button>
-      <button type="button" data-target="sy-dec">Decisions</button>
-      <button type="button" data-target="sy-outcome">Outcome</button>
-    </nav>
-    <div class="case-content">
-      <section class="case-sec" data-sec="sy-who">
-        <div class="sec-q"><span class="q">Who</span><span class="q-sub">is it for?</span></div>
-        <h2>Credit teams working through queues, and the people who build their screens.</h2>
-        <div class="cards-3">
-          <div class="info-card"><span class="k">Uses the tables</span><h3>Credit and operations teams</h3><p>Scan, sort and assign loan applications by status, SLA, borrower and amount.</p></div>
-          <div class="info-card"><span class="k">Builds with them</span><h3>Designers</h3><p>Assemble any table from the same column titles and cells instead of drawing new ones.</p></div>
-          <div class="info-card"><span class="k">Builds with them</span><h3>Developers</h3><p>Get one documented component per pattern, with every variant and state already decided.</p></div>
-        </div>
-      </section>
-
-      <section class="case-sec" data-sec="sy-what">
-        <div class="sec-q"><span class="q">What</span><span class="q-sub">did I build?</span></div>
-        <h2>Six building blocks, every variant documented.</h2>
-        <div class="cards-3">
-          <div class="info-card"><span class="k">12 variants</span><h3>Column titles</h3><p>Border none, left or right · Medium or Small · with or without a checkbox · sorting icon on or off.</p></div>
-          <div class="info-card"><span class="k">36 variants</span><h3>Column cells</h3><p>Checkbox, normal, tag, bold text, action icons and pay-slip tag · border on or off · default, hover and selected.</p></div>
-          <div class="info-card"><span class="k">4 states</span><h3>Action icons</h3><p>View, edit, archive and more, in default, hover, pressed and disabled.</p></div>
-          <div class="info-card"><span class="k">2 states</span><h3>Checkbox</h3><p>On and off, used in titles for select-all and in cells for each row.</p></div>
-          <div class="info-card"><span class="k">Bulk actions</span><h3>Selection bar</h3><p>Appears when rows are selected: a count, then Edit, Assign, Archive and Delete.</p></div>
-          <div class="info-card"><span class="k">Anatomy</span><h3>Tag</h3><p>Prefix icon, label and suffix, for statuses and categories.</p></div>
-        </div>
-        <figure class="media"><div class="media-box has-media" style="--ar:1310/750"><img src="assets/media/table/cells.webp" alt="Column cells component sheet: six cell types in default, hover and selected, with and without borders." width="1310" height="750" loading="lazy" decoding="async"></div><figcaption>Column cells: six types × border × three states.</figcaption></figure>
-        <figure class="media"><div class="media-box has-media" style="--ar:1145/520"><img src="assets/media/table/titles.webp" alt="Column titles component sheet: border none, right and left, medium and small, with and without checkbox and sorting icon." width="1145" height="520" loading="lazy" decoding="async"></div><figcaption>Column titles: border, size, checkbox and sorting icon as properties.</figcaption></figure>
-      </section>
-
-      <section class="case-sec" data-sec="sy-why">
-        <div class="sec-q"><span class="q">Why</span><span class="q-sub">does it matter?</span></div>
-        <h2>Eleven columns, hundreds of rows: small inconsistencies become slow work.</h2>
-        <p>A credit queue shows App ID, status, SLA, assignee, referral codes, borrower, dealer, product, client manager, amount and actions on every row. When row heights, states or action placement differ from screen to screen, people scanning hundreds of applications slow down and make mistakes.</p>
-        <p class="todo">To add: what tables looked like before the system, or the problems you heard about (an audit screenshot works well).</p>
-      </section>
-
-      <section class="case-sec" data-sec="sy-how">
-        <div class="sec-q"><span class="q">How</span><span class="q-sub">did I build it?</span></div>
-        <h2>Anatomy, states, spacing and behaviour, written down.</h2>
-
-        <h3 class="sub-h">Anatomy and guidelines</h3>
-        <figure class="media"><div class="media-box has-media" style="--ar:1378/679"><img src="assets/media/table/anatomy.webp" alt="Tag anatomy: prefix, label and suffix, with usage guidelines." width="1378" height="679" loading="lazy" decoding="async"></div></figure>
-        <ul class="rules">
-          <li>Keep tag text short and clear.</li>
-          <li>Use consistent sizes and shapes.</li>
-          <li>Apply colours by meaning: success, error, neutral.</li>
-          <li>Keep equal spacing between tags.</li>
-        </ul>
-
-        <h3 class="sub-h">States that never move the layout</h3>
-        <figure class="media"><div class="media-box has-media" style="--ar:1378/587"><img src="assets/media/table/states.webp" alt="Cell states: default, selected and hover, with the don'ts listed below." width="1378" height="587" loading="lazy" decoding="async"></div></figure>
-        <ul class="rules donts">
-          <li>Don't change row height or padding when the state changes.</li>
-          <li>Don't use low-contrast colours that make states hard to tell apart.</li>
-          <li>Don't shift content when switching states.</li>
-          <li>Don't add hover or active states to rows or columns you can't interact with.</li>
-        </ul>
-
-        <h3 class="sub-h">Layout and spacing</h3>
-        <p>Every cell uses 12px padding, with 8px between an icon, avatar and text, so columns line up whatever they contain.</p>
-        <figure class="media"><div class="media-box has-media" style="--ar:1378/841"><img src="assets/media/table/spacing.webp" alt="Spacing specs for each cell type: 12px padding and 8px gaps." width="1378" height="841" loading="lazy" decoding="async"></div></figure>
-
-        <h3 class="sub-h">Two sizes</h3>
-        <p>Medium for the full queue, where people scan and act. Small for summaries inside an application, like income and expenses or existing loans.</p>
-        <div class="media-row">
-          <figure class="media"><div class="media-box has-media" style="--ar:1214/514"><img src="assets/media/table/medium.webp" alt="Medium data table: income and expenses across three borrowers." width="1214" height="514" loading="lazy" decoding="async"></div><figcaption>Medium</figcaption></figure>
-          <figure class="media"><div class="media-box has-media" style="--ar:986/617"><img src="assets/media/table/small.webp" alt="Small data table: lenders, borrowers, amounts, payment rating, term and actions." width="986" height="617" loading="lazy" decoding="async"></div><figcaption>Small</figcaption></figure>
-        </div>
-
-        <h3 class="sub-h">Behaviour</h3>
-        <div class="cards-2">
-          <div class="info-card"><span class="k">Frame</span><p>Height and width are fixed to the frame. Extra columns scroll sideways; extra rows scroll down.</p></div>
-          <div class="info-card"><span class="k">Action column</span><p>The last column stays fixed and always visible, however far the table scrolls.</p></div>
-        </div>
-
-        <h3 class="sub-h">Selection and bulk actions</h3>
-        <figure class="media"><div class="media-box has-media" style="--ar:1145/204"><img src="assets/media/table/selection-bar.webp" alt="Selection bar: 4 selected, with Edit, Assign, Archive and a red Delete." width="1145" height="204" loading="lazy" decoding="async"></div></figure>
-
-        <h3 class="sub-h">Light and dark</h3>
-        <div class="media-row">
-          <figure class="media"><div class="media-box has-media" style="--ar:1341/709"><img src="assets/media/table/table-light.webp" alt="Credit queue table in the light theme." width="1341" height="709" loading="lazy" decoding="async"></div><figcaption>Light</figcaption></figure>
-          <figure class="media"><div class="media-box has-media" style="--ar:1341/709"><img src="assets/media/table/table-dark.webp" alt="Credit queue table in the dark theme." width="1341" height="709" loading="lazy" decoding="async"></div><figcaption>Dark</figcaption></figure>
-        </div>
-      </section>
-
-      <section class="case-sec" data-sec="sy-iter">
-        <div class="sec-q"><span class="q">Iterations</span><span class="q-sub">what I tried first</span></div>
-        <h2>The versions that didn't make it, and why.</h2>
-        <ol class="iters">
-          <li class="iter reveal">
-            <div class="iter-media">
-              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/design-system/iteration-1-before.png</code></span></div></figure>
-              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/design-system/iteration-1-after.png</code></span></div></figure>
-            </div>
-            <div class="iter-text">
-              <span class="phase-num">ITERATION 01</span>
-              <h3>Row states without layout shift</h3>
-              <dl><dt>What I tried</dt><dd><span class="todo-inline">Add: the earlier hover or selected style.</span></dd><dt>Why it changed</dt><dd><span class="todo-inline">Add: what was wrong with it (shifting content, low contrast).</span></dd></dl>
-            </div>
-          </li>
-          <li class="iter reveal">
-            <div class="iter-media">
-              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">Before</em><b>Rejected version</b><code>assets/media/design-system/iteration-2-before.png</code></span></div></figure>
-              <span class="iter-arrow" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-              <figure class="media"><div class="media-box" style="--ar:4/5"><span><em class="kind">After</em><b>What shipped</b><code>assets/media/design-system/iteration-2-after.png</code></span></div></figure>
-            </div>
-            <div class="iter-text">
-              <span class="phase-num">ITERATION 02</span>
-              <h3>From per-row actions to a selection bar</h3>
-              <dl><dt>What I tried</dt><dd><span class="todo-inline">Add: how bulk actions worked before.</span></dd><dt>Why it changed</dt><dd><span class="todo-inline">Add: what made you move them into a bar.</span></dd></dl>
-            </div>
-          </li>
-        </ol>
-      </section>
-
-      <section class="case-sec" data-sec="sy-dec">
-        <div class="sec-q"><span class="q">Decisions</span><span class="q-sub">and their trade-offs</span></div>
-        <h2>The calls that shaped the system.</h2>
-        <div class="decisions">
-          <div class="decision reveal"><span class="k">Decision</span><h3>The action column never scrolls away</h3><dl><dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd><dt>Why this one</dt><dd>With eleven columns the table scrolls sideways, and the actions people need most should always be in reach.</dd></dl></div>
-          <div class="decision reveal"><span class="k">Decision</span><h3>States change colour, never size or position</h3><dl><dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd><dt>Why this one</dt><dd>Rows that grow or shift on hover make long lists jumpy and harder to scan.</dd></dl></div>
-          <div class="decision reveal"><span class="k">Decision</span><h3>Two sizes: Medium and Small</h3><dl><dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd><dt>Why this one</dt><dd>The queue needs room to scan and act; summary tables inside an application need density.</dd></dl></div>
-          <div class="decision reveal"><span class="k">Decision</span><h3>Selecting rows swaps in a selection bar</h3><dl><dt>Considered instead</dt><dd><span class="todo-inline">Add: the alternative you weighed.</span></dd><dt>Why this one</dt><dd>Bulk Edit, Assign, Archive and Delete live in one place, with Delete in red as the destructive action.</dd></dl></div>
-        </div>
-      </section>
-
-      <section class="case-sec" data-sec="sy-outcome">
-        <div class="sec-q"><span class="q">So</span><span class="q-sub">what changed?</span></div>
-        <h2>One set of components, every table.</h2>
-        <div class="cards-2">
-          <div class="info-card"><span class="k">Impact</span><ul><li>The same components build the credit queue, its selected state, and medium and small summary tables.</li><li>Every component works in light and dark.</li><li>Rules for states, spacing and scrolling sit next to the components.</li></ul></div>
-          <div class="info-card"><span class="k">What I learned</span><p><span class="todo-inline">Add: one or two things this project taught you.</span></p></div>
-        </div>
-        <p class="confidential">Exact numbers belong to the client, so I've shown impact through the system itself instead.</p>
         <a class="next-case" href="#demedic"><span><small>Next case study</small><strong>DE Medic: duty swaps for doctors</strong></span><span class="arrow-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
       </section>
     </div>
   </div>
 </article>
+
 
 </main>
 
