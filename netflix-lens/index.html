@@ -519,6 +519,22 @@ button, input { font: inherit; color: inherit; }
   background: rgba(0,0,0,0.6); cursor: pointer; pointer-events: auto;
 }
 .mute-btn:focus-visible, .fs-btn:focus-visible, .tz-title:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.row { z-index: 0; }   /* own stacking context so the backdrop sits behind the row title */
+.tz-back {
+  position: absolute; left: 0; right: 0; top: 0; z-index: -1;
+  overflow: hidden; pointer-events: none; opacity: 0;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 72%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 72%, transparent 100%);
+  transition: opacity 0.4s;
+}
+.tz-back canvas {
+  position: absolute; left: -15%; top: -10%; width: 130%; height: 120%;
+  filter: blur(34px) saturate(1.7) brightness(1.25); opacity: 1;
+}
+.tz-back i {
+  position: absolute; inset: 0;
+  background: radial-gradient(120% 70% at 50% 30%, rgba(0,0,0,0.05), rgba(0,0,0,0.45) 70%), linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.4));
+}
 .tz-title {
   position: absolute; left: 50px; right: 50px; bottom: 8px;
   padding: 0; border: 0; background: none; text-align: center;
@@ -1684,6 +1700,19 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   tzFrame.innerHTML = `<img alt=""><video muted playsinline loop preload="none"></video><div class="tz-shade"></div><button class="tz-title" type="button"></button><button class="fs-btn" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button class="mute-btn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button>`;
   const tzImg = tzFrame.querySelector("img"), tzVideo = tzFrame.querySelector("video"), tzMute = tzFrame.querySelector(".mute-btn");
   const tzFs = tzFrame.querySelector(".fs-btn"), tzTitle = tzFrame.querySelector(".tz-title");
+  // Ambient backdrop: the playing trailer, drawn small and blurred behind the row and its info, so it
+  // reads as a soft moving gradient. A dark wash on top keeps the text readable.
+  const tzBack = document.createElement("div");
+  tzBack.className = "tz-back";
+  tzBack.innerHTML = '<canvas width="96" height="54"></canvas><i></i>';
+  const backCtx = tzBack.querySelector("canvas").getContext("2d");
+  let backLoop = 0;
+  function drawBack() {
+    backLoop = 0;
+    if (!tz.on) return;
+    if (tzVideo.readyState >= 2 && !tzVideo.paused) { try { backCtx.drawImage(tzVideo, 0, 0, 96, 54); } catch (e) {} }
+    backLoop = requestAnimationFrame(drawBack);
+  }
   tzTitle.addEventListener("pointerdown", (e) => e.stopPropagation());
   tzTitle.addEventListener("click", () => openDetail());
   // mode: trailers on (after a long press, or Trailer tapped) or off (Poster tapped)
@@ -1734,6 +1763,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   function openFrame(want) {
     tz.on = true; tz.key = want.key; tz.openIdx = want.i;
     want.r.strip.appendChild(tzFrame);
+    want.r.sec.insertBefore(tzBack, want.r.sec.firstChild);
+    backCtx.clearRect(0, 0, 96, 54);
+    if (!backLoop) backLoop = requestAnimationFrame(drawBack);
     tzTitle.textContent = tx(want.key).title;
     tzImg.src = POSTERS[want.key] || "";
     tzVideo.classList.remove("ready");
@@ -1772,7 +1804,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     }
     if (!open && tz.v.x < 0.01) {
       tz.v.x = 0; tz.v.v = 0;
-      if (tz.on) { tz.on = false; tz.key = null; tzVideo.pause(); tzVideo.removeAttribute("src"); tzVideo.load(); tzFrame.remove(); }
+      if (tz.on) { tz.on = false; tz.key = null; tzVideo.pause(); tzVideo.removeAttribute("src"); tzVideo.load(); tzFrame.remove(); tzBack.remove(); }
       return false;
     }
     return true;
@@ -1803,6 +1835,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     tzFrame.style.height = fh.toFixed(2) + "px";
     tzFrame.style.transform = `translate3d(${(lensX() - w / 2).toFixed(2)}px,${top.toFixed(2)}px,0)`;
     tzTitle.style.opacity = smooth(0.5, 1, v).toFixed(3);
+    tzBack.style.top = (r.strip.offsetTop - 30).toFixed(0) + "px";
+    tzBack.style.height = (r.strip.offsetHeight + (parseFloat(r.hit.style.height) || 0) + 50).toFixed(0) + "px";
+    tzBack.style.opacity = (tzVideo.classList.contains("ready") ? smooth(0.4, 1, v) : 0).toFixed(3);
     tzFrame.style.opacity = Math.min(1, v * 6).toFixed(3);
     tzVideo.style.opacity = tzVideo.classList.contains("ready") ? smooth(0.55, 1, v).toFixed(3) : "0";
   }
