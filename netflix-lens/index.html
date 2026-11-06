@@ -235,8 +235,8 @@ button, input { font: inherit; color: inherit; }
   will-change: transform, opacity;
 }
 .gt {
-  position: absolute; left: 0; right: 0; top: 0;
-  text-align: center;
+  position: absolute; left: 0; right: 0; top: 48px;
+  text-align: left;
   will-change: transform, opacity;
 }
 .gt p {
@@ -247,14 +247,16 @@ button, input { font: inherit; color: inherit; }
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .avail {
-  display: flex; justify-content: center; align-items: center; gap: 14px;
-  font-size: 12.5px; font-weight: 600; line-height: 20px;
-  color: rgba(255,255,255,0.9);
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 500; line-height: 20px;
+  color: rgba(255,255,255,0.68);
   white-space: nowrap;
 }
 .av { display: inline-flex; align-items: center; gap: 5px; }
-.av svg { width: 18px; height: 18px; flex: none; }
-.av.off { color: rgba(255,255,255,0.42); }
+.av svg { width: 16px; height: 16px; flex: none; }
+.av.badge { padding: 1px 7px; border: 1px solid rgba(255,255,255,0.45); border-radius: 4px; color: rgba(255,255,255,0.92); font-size: 12px; font-weight: 600; }
+.av.type svg { display: none; }
+.av.off { color: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.2); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .close-focus {
   position: absolute; left: calc(50% - 22px); bottom: 30px;
@@ -464,24 +466,29 @@ button, input { font: inherit; color: inherit; }
 .pill-btn:focus-visible, .manage:focus-visible, .round-x:focus-visible, .pencil:focus-visible, .mc-head:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .gist-actions {
   position: absolute; left: 0; right: 0; top: 0;
-  display: flex; justify-content: center; gap: 8px;
+  display: flex; align-items: center; gap: 8px;
   pointer-events: none;
 }
-.gist-actions .act {
-  display: inline-flex; align-items: center; gap: 6px;
-  height: 28px; padding: 0 12px;
-  border: 0; border-radius: 4px;
-  background: rgba(255,255,255,0.18); color: var(--ink);
-  font-size: 12.5px; font-weight: 700; white-space: nowrap;
+.gist-actions .ic {
+  width: 36px; height: 36px; flex: none;
+  display: grid; place-items: center;
+  border: 1.5px solid rgba(255,255,255,0.55); border-radius: 50%;
+  background: rgba(20,20,22,0.7); color: var(--ink);
   cursor: pointer; pointer-events: auto;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
 }
-.gist-actions .act.play { background: var(--ink); color: #000; }
-#tzBtn .ic-poster, #tzBtn.on .ic-trailer { display: none; }
-#tzBtn.on .ic-poster { display: inline; }
-.gist-actions .act:hover { filter: brightness(0.9); }
-.gist-actions .act:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.gist-actions .ic:active { transform: scale(0.92); }
+.gist-actions .ic:hover { border-color: #fff; }
+.gist-actions .ic.play { background: var(--ink); border-color: var(--ink); color: #000; }
+.gist-actions .ic.play svg { margin-left: 2px; }
+.gist-actions .ic.more { margin-left: auto; }
+.gist-actions .ic[aria-pressed="true"]:not(#tzBtn) { background: rgba(255,255,255,0.16); border-color: #fff; }
+#likeBtn[aria-pressed="true"] svg { fill: currentColor; }
+#tzBtn .ic-poster, #tzBtn.on .ic-trailer, #listBtn .ic-added, #listBtn[aria-pressed="true"] .ic-add { display: none; }
+#tzBtn.on .ic-poster, #listBtn[aria-pressed="true"] .ic-added { display: block; }
+.gist-actions .ic:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .screen:not(.focus) .gist-actions { visibility: hidden; }
-.screen:not(.focus) .gist-actions .act { pointer-events: none; }
+.screen:not(.focus) .gist-actions .ic { pointer-events: none; }
 .teaser {
   position: absolute; left: 0; top: 0; z-index: 3;
   overflow: hidden; border-radius: 5px;
@@ -757,7 +764,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         </div>
 
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
-        <div id="gist"><div class="gist-actions" id="gistActions"><button class="act play" id="playBtn" type="button"><svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11L12.5 7z"/></svg><span data-i18n="play"></span></button><button class="act" id="tzBtn" type="button" aria-pressed="false"><svg class="ic-trailer" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor"/></svg><svg class="ic-poster" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 15l4-4 4 4 2-2 4 4"/></svg><span id="tzLabel"></span></button></div></div>
+        <div id="gist"><div class="gist-actions" id="gistActions">
+          <button class="ic play" id="playBtn" type="button" data-i18n-label="play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15L19.5 12z"/></svg></button>
+          <button class="ic" id="tzBtn" type="button" aria-pressed="false"><svg class="ic-trailer" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M10 9.3v5.4l4.6-2.7z" fill="currentColor"/></svg><svg class="ic-poster" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M5 16l4-4 3.5 3.5 2-2L19 18"/></svg></button>
+          <button class="ic" id="listBtn" type="button" aria-pressed="false"><svg class="ic-add" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><svg class="ic-added" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+          <button class="ic" id="likeBtn" type="button" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v10H4V10zM7 10l4-7c1.4 0 2.4 1.2 2.1 2.6L12.5 9H19a2 2 0 0 1 2 2.3l-1.2 6.6A2.5 2.5 0 0 1 17.3 20H7"/></svg></button>
+          <button class="ic more" id="moreBtn" type="button" data-i18n-label="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg></button>
+        </div></div>
         <button class="close-focus" id="closeFocus" type="button" tabindex="-1" aria-label="क्विक व्यू बंद करें" title="क्विक व्यू बंद करें">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
         </button>
@@ -892,7 +905,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <li><b>Tap</b><span>In quick view, tap any poster to bring it into focus.</span></li>
       <li><b>Trailer</b><span>After the long press, the centred title plays its trailer in a wide frame; swipe and the next title's trailer plays. Tap Poster to turn trailers off, Trailer to turn them back on. The ⛶ button plays it full screen; rotate the phone to fill the screen.</span></li>
       <li><b>Languages</b><span>Audio and subtitle labels always show your preferred viewing language (Hindi), even when the app is in English.</span></li>
-      <li><b>Details</b><span>Tap the title on the glass for the movie page, with similar titles below. Play opens the full-screen player.</span></li>
+      <li><b>Buttons</b><span>Under the poster: Play, trailer/poster, My List, Like, and ⌄ (or the title on the glass) for the movie page with similar titles. Muting once keeps every next trailer muted.</span></li>
       <li><b>Close</b><span>Tap the round × at the bottom right, or press Esc.</span></li>
       <li><b>Language</b><span>My Netflix → tap your profile name → pencil → Display language → English or हिन्दी → Restart. The app reopens on Home in that language, with posters in it where we have them, and shows the quick view demo once.</span></li>
     </ul>
@@ -1101,7 +1114,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `Switched to ${n}`,
       restartTitle: "Restart the app?", restartText: (n) => `The app will close and open again in ${n}.`,
       cancel: "Cancel", restart: "Restart",
-      play: "Play", fullscreen: "Play full screen", trailer: "Trailer", poster: "Poster", moreLike: "More Like This", closeTrailer: "Close video", mute: "Mute", unmute: "Turn sound on", details: (t) => `${t}: details`,
+      play: "Play", fullscreen: "Play full screen", trailer: "Trailer", playTrailer: "Play trailer", showPoster: "Show poster",
+      removeList: "Remove from My List", addedList: "Added to My List", like: "I like this", more: "More info", poster: "Poster", moreLike: "More Like This", closeTrailer: "Close video", mute: "Mute", unmute: "Turn sound on", details: (t) => `${t}: details`,
     },
     hi: {
       langName: "हिन्दी", page: "फ़िल्में", back: "वापस", cast: "डिवाइस पर कास्ट करें", nav: "मुख्य",
@@ -1131,7 +1145,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `${n} प्रोफ़ाइल पर स्विच किया गया`,
       restartTitle: "ऐप रीस्टार्ट करें?", restartText: (n) => `ऐप बंद होकर ${n} में दोबारा खुलेगा.`,
       cancel: "रद्द करें", restart: "रीस्टार्ट करें",
-      play: "चलाएं", fullscreen: "फ़ुल स्क्रीन में चलाएं", trailer: "ट्रेलर", poster: "पोस्टर", moreLike: "इससे मिलते-जुलते", closeTrailer: "वीडियो बंद करें", mute: "आवाज़ बंद करें", unmute: "आवाज़ चालू करें", details: (t) => `${t}: जानकारी`,
+      play: "चलाएं", fullscreen: "फ़ुल स्क्रीन में चलाएं", trailer: "ट्रेलर", playTrailer: "ट्रेलर चलाएं", showPoster: "पोस्टर दिखाएं",
+      removeList: "मेरी लिस्ट से हटाएं", addedList: "मेरी लिस्ट में जोड़ा गया", like: "यह पसंद है", more: "ज़्यादा जानकारी", poster: "पोस्टर", moreLike: "इससे मिलते-जुलते", closeTrailer: "वीडियो बंद करें", mute: "आवाज़ बंद करें", unmute: "आवाज़ चालू करें", details: (t) => `${t}: जानकारी`,
     },
   };
 
@@ -1177,7 +1192,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const TITLE_SLIDE = 22;  // px a title drifts while it hands over to the next one
   const DIM = 0.25;        // how much the neighbours darken in the focused row
   const GIST_GAP = 12;     // px between the zoomed poster and its gist
-  const TRAILER_H = 38;    // the Play button under the gist, with its gap
+  const TRAILER_H = 48;    // the row of icon buttons above the labels and gist, with its gap
   const TRAILER_PEEK = 22;  // px of each neighbouring poster left showing while a trailer plays
   const TRAILER_GROW = 24;  // extra frame height while a trailer plays
   const TRAILERS = ["trailer-a.mp4", "trailer-b.mp4", "trailer-c.mp4"];
@@ -1358,7 +1373,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     wrap.className = "avail";
     const item = (icon, text, label, off) => {
       const el = document.createElement("span");
-      el.className = off ? "av off" : "av";
+      el.className = "av " + (icon === "movie" || icon === "series" ? "type" : "badge") + (off ? " off" : "");
       el.title = label;
       el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[icon]}</svg>`;
       const t = document.createElement("span");
@@ -1609,6 +1624,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const tzFs = tzFrame.querySelector(".fs-btn");
   // mode: trailers on (after a long press, or Trailer tapped) or off (Poster tapped)
   const tz = { mode: false, key: null, v: { x: 0, v: 0 }, muted: false, on: false, openIdx: -1, step: null, settle: null };
+  try { tz.muted = localStorage.getItem("focuslens-muted") === "1"; } catch (e) {}
+  // once muted, every next trailer stays muted until sound is turned back on
+  function setMuted(m) {
+    tz.muted = m;
+    try { localStorage.setItem("focuslens-muted", m ? "1" : "0"); } catch (e) {}
+    applyMute();
+  }
   const SETTLE_MS = 350;   // a title must rest in the centre this long before its trailer opens
   // Three 20-second cuts of the Jagame Thandhiram teaser stand in for every title's trailer.
   const trailerSrc = (key) => TRAILERS[[...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % TRAILERS.length];
@@ -1624,13 +1646,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     setMuteIcon(dtMute, tz.muted);
   }
   tzMute.addEventListener("pointerdown", (e) => e.stopPropagation());
-  tzMute.addEventListener("click", () => { tz.muted = !tz.muted; applyMute(); });
+  tzMute.addEventListener("click", () => setMuted(!tz.muted));
   tzFs.addEventListener("pointerdown", (e) => e.stopPropagation());
   tzFs.addEventListener("click", () => openVideo(tz.key, tzFs, tzVideo));
   function playVideo(v) {
     const p = v.play();
     // without a recent tap the browser may refuse sound: fall back to muted
-    if (p && p.catch) p.catch(() => { if (!v.muted) { tz.muted = true; applyMute(); v.play().catch(() => {}); } });
+    if (p && p.catch) p.catch(() => { if (!v.muted) { v.muted = true; setMuteIcon(v === tzVideo ? tzMute : dtMute, true); v.play().catch(() => {}); } });
   }
   function teaserWanted(now) {
     const r = focus.on ? focus.row : null;
@@ -1662,7 +1684,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     tzBtn.classList.toggle("on", on);
     tzBtn.dataset.lang = lang;
     tzBtn.setAttribute("aria-pressed", String(on));
-    $("tzLabel").textContent = on ? S().poster : S().trailer;
+    tzBtn.setAttribute("aria-label", on ? S().showPoster : S().playTrailer);
+    tzBtn.title = tzBtn.getAttribute("aria-label");
   }
   function updateTeaser(now, dt) {
     const want = teaserWanted(now);
@@ -1774,6 +1797,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const tickNow = Math.round(f);
     if (tickNow !== focus.tick && r === focus.row) {
       focus.tick = tickNow;
+      if (typeof syncTitleBtns === "function") syncTitleBtns();
       try { navigator.vibrate && navigator.vibrate(3); } catch (e) {}
     }
 
@@ -1791,7 +1815,6 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     glass.style.height = gh + "px";
     glass.style.transform = `scale(${(0.92 + 0.08 * pa).toFixed(4)})`;
     gistEl.style.height = gistH + TRAILER_H + "px";
-    gistActions.style.top = gistH + 9 + "px";
     gistEl.style.transform = `translate3d(${(cx - gistW() / 2).toFixed(2)}px,${(zoomedBottom + GIST_GAP - (1 - pa) * 6).toFixed(2)}px,0)`;
     gistEl.style.opacity = vis;
   }
@@ -2000,6 +2023,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     screenEl.querySelectorAll("[data-i18n-label]").forEach((el) => el.setAttribute("aria-label", s[el.dataset.i18nLabel]));
     langList.querySelectorAll(".lang-radio").forEach((b) => b.setAttribute("aria-checked", String(b.lang === lang)));
     setCloseButton(focus.on);
+    syncTitleBtns();
     renderProfiles();
     renderMy();
   }
@@ -2127,6 +2151,32 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   }
   const focusedKey = () => focus.row ? focus.row.items[nearestIndex(focus.row)].key : null;
   playBtn.addEventListener("click", () => openVideo(focusedKey(), playBtn));
+  const myList = new Set(), liked = new Set();
+  const listBtn = $("listBtn"), likeBtn = $("likeBtn");
+  function syncTitleBtns() {
+    const k = focusedKey();
+    const inList = myList.has(k), isLiked = liked.has(k);
+    listBtn.setAttribute("aria-pressed", String(inList));
+    listBtn.setAttribute("aria-label", inList ? S().removeList : S().addList);
+    listBtn.title = listBtn.getAttribute("aria-label");
+    likeBtn.setAttribute("aria-pressed", String(isLiked));
+    likeBtn.setAttribute("aria-label", S().like);
+    likeBtn.title = S().like;
+  }
+  listBtn.addEventListener("click", () => {
+    const k = focusedKey();
+    if (!k) return;
+    if (myList.has(k)) myList.delete(k); else { myList.add(k); showToast(S().addedList); }
+    syncTitleBtns();
+  });
+  likeBtn.addEventListener("click", () => {
+    const k = focusedKey();
+    if (!k) return;
+    if (liked.has(k)) liked.delete(k); else liked.add(k);
+    syncTitleBtns();
+  });
+  $("moreBtn").addEventListener("click", () => openDetail());
+  for (const b of [playBtn, tzBtn, listBtn, likeBtn, $("moreBtn")]) b.addEventListener("pointerdown", (e) => e.stopPropagation());
 
   // Movie detail page, opened by tapping the title on the glass.
   let detailKey = null;
@@ -2169,7 +2219,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     else push(pgDetail);
   }
   dtVideo.addEventListener("playing", () => dtVideo.classList.add("ready"));
-  dtMute.addEventListener("click", () => { tz.muted = !tz.muted; applyMute(); });
+  dtMute.addEventListener("click", () => setMuted(!tz.muted));
   $("dtFs").addEventListener("click", () => openVideo(detailKey, $("dtFs"), dtVideo));
   $("dtPlay").addEventListener("click", () => openVideo(detailKey, $("dtPlay")));
   $("playerClose").addEventListener("click", closeTrailer);
