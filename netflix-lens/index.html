@@ -25,6 +25,7 @@
   --panel-bg: #101012;
   --sheet-bg: #232323;
   --card-bg: #0e0e0e;
+  --card-surface: #181818;
   --card-line: #2e2e2e;
   --card2-bg: #2b2b2b;
   --card3-bg: #1c1c1c;
@@ -235,28 +236,39 @@ button, input { font: inherit; color: inherit; }
   will-change: transform, opacity;
 }
 .gt {
-  position: absolute; left: 0; right: 0; top: 48px;
+  position: absolute; left: 0; right: 0; top: 0;
   text-align: left;
   will-change: transform, opacity;
 }
 .gt p {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   font-size: 13px; line-height: 1.42; font-weight: 500;
   color: rgba(255,255,255,0.8);
   text-wrap: pretty;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
+.info-rows { display: grid; gap: 10px; }
 .avail {
   display: flex; align-items: center; gap: 10px;
-  font-size: 13px; font-weight: 500; line-height: 20px;
+  font-size: 13px; font-weight: 500; line-height: 17px;
   color: rgba(255,255,255,0.68);
   white-space: nowrap;
 }
-.av { display: inline-flex; align-items: center; gap: 5px; }
-.av svg { width: 16px; height: 16px; flex: none; }
-.av.badge { padding: 1px 7px; border: 1px solid rgba(255,255,255,0.45); border-radius: 4px; color: rgba(255,255,255,0.92); font-size: 12px; font-weight: 600; }
-.av.type svg { display: none; }
-.av.off { color: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.2); }
+.m-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 7px; border: 1px solid rgba(255,255,255,0.45); border-radius: 1px;
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.92);
+}
+.m-badge.lang { padding: 2px 6px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.68); }
+.m-badge.lang.off { border-color: rgba(255,255,255,0.22); }
+.m-badge.hd { padding: 0 4px; border-radius: 2px; font-weight: 500; line-height: 14px; }
+.m-len { display: inline-flex; align-items: center; gap: 4px; }
+.li { display: inline-flex; color: #fff; }
+.li svg { width: 16px; height: 16px; }
+.li.off { color: rgba(255,255,255,0.35); }
+.tags { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 500; line-height: 18px; color: rgba(255,255,255,0.68); white-space: nowrap; overflow: hidden; }
+.tags .dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(217,217,217,0.6); flex: none; }
+.screen.lang-en .tags, .screen.lang-en .avail { letter-spacing: 0; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .close-focus {
   position: absolute; left: calc(50% - 22px); bottom: 30px;
@@ -482,6 +494,7 @@ button, input { font: inherit; color: inherit; }
 .gist-actions .ic.play { background: var(--ink); border-color: var(--ink); color: #000; }
 .gist-actions .ic.play svg { margin-left: 2px; }
 .gist-actions .ic.more { margin-left: auto; }
+#tzBtn { display: none; }
 .gist-actions .ic[aria-pressed="true"]:not(#tzBtn) { background: rgba(255,255,255,0.16); border-color: #fff; }
 #likeBtn[aria-pressed="true"] svg { fill: currentColor; }
 #tzBtn .ic-poster, #tzBtn.on .ic-trailer, #listBtn .ic-added, #listBtn[aria-pressed="true"] .ic-add { display: none; }
@@ -505,7 +518,22 @@ button, input { font: inherit; color: inherit; }
   border: 1px solid rgba(255,255,255,0.3); border-radius: 50%;
   background: rgba(0,0,0,0.6); cursor: pointer; pointer-events: auto;
 }
-.mute-btn:focus-visible, .fs-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.mute-btn:focus-visible, .fs-btn:focus-visible, .tz-title:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.tz-card {
+  position: absolute; left: 0; top: 0; z-index: 2;
+  border-radius: 5px; background: var(--card-surface);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+  pointer-events: none; opacity: 0;
+}
+.tz-title {
+  position: absolute; left: 8px; right: 50px; bottom: 8px;
+  padding: 0; border: 0; background: none; text-align: left;
+  color: #fff; font: inherit; font-size: 16px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: pointer; pointer-events: auto; opacity: 0;
+}
+.teaser .mute-btn { top: auto; right: 7px; bottom: 46px; opacity: 0.85; }
+.teaser .fs-btn { top: auto; right: 7px; bottom: 8px; }
 .fs-btn {
   position: absolute; right: 46px; top: 8px;
   width: 30px; height: 30px; display: grid; place-items: center;
@@ -769,7 +797,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
           <button class="ic" id="tzBtn" type="button" aria-pressed="false"><svg class="ic-trailer" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M10 9.3v5.4l4.6-2.7z" fill="currentColor"/></svg><svg class="ic-poster" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M5 16l4-4 3.5 3.5 2-2L19 18"/></svg></button>
           <button class="ic" id="listBtn" type="button" aria-pressed="false"><svg class="ic-add" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><svg class="ic-added" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
           <button class="ic" id="likeBtn" type="button" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v10H4V10zM7 10l4-7c1.4 0 2.4 1.2 2.1 2.6L12.5 9H19a2 2 0 0 1 2 2.3l-1.2 6.6A2.5 2.5 0 0 1 17.3 20H7"/></svg></button>
-          <button class="ic more" id="moreBtn" type="button" data-i18n-label="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg></button>
+          <button class="ic more" id="moreBtn" type="button" data-i18n-label="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg></button>
         </div></div>
         <button class="close-focus" id="closeFocus" type="button" tabindex="-1" aria-label="क्विक व्यू बंद करें" title="क्विक व्यू बंद करें">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
@@ -903,9 +931,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <li><b>Slide</b><span>Drag the row. Each poster takes its turn, and the labels and gist change with it.</span></li>
       <li><b>Scan</b><span>Scroll the page. Whichever row reaches the focus line pops on its own.</span></li>
       <li><b>Tap</b><span>In quick view, tap any poster to bring it into focus.</span></li>
-      <li><b>Trailer</b><span>After the long press, the centred title plays its trailer in a wide frame; swipe and the next title's trailer plays. Tap Poster to turn trailers off, Trailer to turn them back on. The ⛶ button plays it full screen; rotate the phone to fill the screen.</span></li>
+      <li><b>Trailer</b><span>After the long press, the centred title opens into a card and plays its trailer; swipe and the next title's trailer plays. The ⛶ button plays it full screen (rotate the phone to fill the screen). Muting once keeps every next trailer muted.</span></li>
       <li><b>Languages</b><span>Audio and subtitle labels always show your preferred viewing language (Hindi), even when the app is in English.</span></li>
-      <li><b>Buttons</b><span>Under the poster: Play, trailer/poster, My List, Like, and ⌄ (or the title on the glass) for the movie page with similar titles. Muting once keeps every next trailer muted.</span></li>
+      <li><b>Card</b><span>Type, rating, "In Hindi" with audio and subtitle icons (white when available, greyed and slashed when not), length and HD; then year and mood tags, the gist, and Play, My List, Like and › for the movie page.</span></li>
       <li><b>Close</b><span>Tap the round × at the bottom right, or press Esc.</span></li>
       <li><b>Language</b><span>My Netflix → tap your profile name → pencil → Display language → English or हिन्दी → Restart. The app reopens on Home in that language, with posters in it where we have them, and shows the quick view demo once.</span></li>
     </ul>
@@ -1089,7 +1117,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     en: {
       langName: "English", page: "Movies", back: "Back", cast: "Cast to device", nav: "Main",
       home: "Home", clips: "Clips", search: "Search", myNetflix: "My Netflix", recent: "Recently added",
-      movie: "Movie", series: "Series",
+      movie: "Film", series: "Series",
+      inLang: (n) => `In ${n}`, dur: (m) => (m >= 60 ? `${Math.floor(m / 60)}h ` : "") + (m % 60 ? `${m % 60}m` : ""),
+      seasons: (n) => `${n} Season${n > 1 ? "s" : ""}`, rating: "Rated",
       langNames: { hi: "Hindi", en: "English" },
       audioYes: (n) => `${n} audio available`, audioNo: (n) => `No ${n} audio`,
       dubbed: "(dubbed)", audioDub: (n) => `${n} dubbed audio available`,
@@ -1121,6 +1151,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       langName: "हिन्दी", page: "फ़िल्में", back: "वापस", cast: "डिवाइस पर कास्ट करें", nav: "मुख्य",
       home: "होम", clips: "क्लिप्स", search: "खोज", myNetflix: "मेरा Netflix", recent: "हाल ही में जोड़ा गया",
       movie: "फ़िल्म", series: "सीरीज़",
+      inLang: (n) => `${n} में`, dur: (m) => (m >= 60 ? `${Math.floor(m / 60)} घं ` : "") + (m % 60 ? `${m % 60} मि` : ""),
+      seasons: (n) => `${n} सीज़न`, rating: "रेटिंग",
       langNames: { hi: "हिन्दी", en: "अंग्रेज़ी" },
       audioYes: (n) => `${n} ऑडियो उपलब्ध है`, audioNo: (n) => `${n} ऑडियो उपलब्ध नहीं`,
       dubbed: "(डब)", audioDub: (n) => `${n} डब ऑडियो उपलब्ध है`,
@@ -1174,6 +1206,40 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     hi: { trailers: ["akka", "gajabraat", "paradise", "dorothy", "irumudi"], recent: [["moneyheist", 0.62], ["mandaadi", 0.3], ["dark", 0.85]] },
   };
 
+  // Card details (sample data): maturity rating, runtime in minutes or season count ("s3"), three mood tags.
+  const DETAILS = {
+    akka: ["A", "s1", ["period", "dark", "suspense"]], baththa: ["U/A 16+", 152, ["action", "gritty", "exciting"]],
+    vishwanath: ["U/A 7+", 141, ["family", "feelgood", "emotional"]], paradise: ["A", 158, ["action", "violent", "rousing"]],
+    gajabraat: ["U/A 13+", 118, ["comedy", "thriller", "quirky"]], dorothy: ["U/A 13+", 134, ["comedy", "romantic", "quirky"]],
+    irumudi: ["U/A 7+", 146, ["family", "emotional", "inspiring"]], mandaadi: ["U/A 13+", 149, ["sports", "rousing", "inspiring"]],
+    donttrouble: ["U", 124, ["fantasy", "comedy", "feelgood"]], sigma: ["A", 139, ["action", "crime", "thriller"]],
+    dark: ["U/A 16+", "s3", ["scifi", "mindbending", "dark"]], moneyheist: ["A", "s5", ["heist", "thriller", "exciting"]],
+    hillhouse: ["U/A 16+", "s1", ["horror", "emotional", "mystery"]], strangerthings: ["U/A 16+", "s5", ["scifi", "horror", "exciting"]],
+    squidgame: ["A", "s3", ["thriller", "dark", "suspense"]], maharaja: ["U/A 16+", 141, ["thriller", "suspense", "emotional"]],
+    luckybaskhar: ["U/A 13+", 150, ["crime", "drama", "witty"]], jagame: ["U/A 16+", 158, ["crime", "action", "dark"]],
+    meiyazhagan: ["U", 177, ["emotional", "feelgood", "heartfelt"]], thunivu: ["U/A 13+", 145, ["heist", "action", "exciting"]],
+    leo: ["U/A 16+", 164, ["action", "thriller", "violent"]], kantara: ["U/A 13+", 148, ["folklore", "action", "rousing"]],
+    gunturkaaram: ["U/A 13+", 159, ["action", "family", "emotional"]], grayman: ["U/A 16+", 122, ["action", "spy", "exciting"]],
+    adamproject: ["U/A 13+", 106, ["scifi", "adventure", "feelgood"]], purplehearts: ["U/A 13+", 122, ["romantic", "emotional", "drama"]],
+    scoop: ["U/A 13+", 102, ["drama", "real", "suspense"]], nightteeth: ["A", 107, ["horror", "thriller", "dark"]],
+    enolaholmes: ["U/A 13+", 123, ["mystery", "adventure", "witty"]], nightalwayscomes: ["A", 110, ["thriller", "suspense", "gritty"]],
+    matrix: ["U/A 16+", 136, ["scifi", "action", "mindbending"]], topgun: ["U/A 13+", 131, ["action", "rousing", "exciting"]],
+    anyonebutyou: ["A", 103, ["romantic", "comedy", "witty"]], myoxfordyear: ["U/A 13+", 112, ["romantic", "emotional", "heartfelt"]],
+    hitman: ["A", 115, ["comedy", "crime", "witty"]], blackbag: ["A", 94, ["spy", "thriller", "suspense"]],
+    heartofstone: ["U/A 13+", 125, ["spy", "action", "exciting"]], skyfall: ["U/A 13+", 143, ["spy", "action", "exciting"]],
+    smallthings: ["U/A 13+", 98, ["drama", "emotional", "period"]], dragon: ["U/A 7+", 125, ["fantasy", "adventure", "family"]],
+  };
+  const TAGS = {
+    action: ["Action", "एक्शन"], thriller: ["Thriller", "थ्रिलर"], suspense: ["Suspenseful", "सस्पेंस"], dark: ["Dark", "डार्क"],
+    emotional: ["Emotional", "भावुक"], romantic: ["Romantic", "रोमैंटिक"], family: ["Family", "फ़ैमिली"], feelgood: ["Feel-good", "फ़ील-गुड"],
+    comedy: ["Comedy", "कॉमेडी"], witty: ["Witty", "मज़ेदार"], scifi: ["Sci-fi", "साइंस-फ़िक्शन"], mindbending: ["Mind-bending", "उलझा देने वाली"],
+    horror: ["Scary", "डरावनी"], mystery: ["Mystery", "रहस्य"], crime: ["Crime", "क्राइम"], gritty: ["Gritty", "कड़वी सच्चाई"],
+    heist: ["Heist", "हाइस्ट"], spy: ["Spy", "जासूसी"], adventure: ["Adventure", "एडवेंचर"], fantasy: ["Fantasy", "फ़ैंटेसी"],
+    sports: ["Sports", "स्पोर्ट्स"], period: ["Period", "पीरियड"], rousing: ["Rousing", "जोशीली"], exciting: ["Exciting", "रोमांचक"],
+    inspiring: ["Inspiring", "प्रेरक"], heartfelt: ["Heartfelt", "दिल छू लेने वाली"], quirky: ["Quirky", "अनोखी"], violent: ["Violent", "हिंसक"],
+    folklore: ["Folklore", "लोककथा"], drama: ["Drama", "ड्रामा"], real: ["Based on real events", "सच्ची घटना पर आधारित"],
+  };
+
   // The profile's preferred language for audio and subtitles (set under Audio & Subtitle Languages).
   const PREF_LANG = "hi";
 
@@ -1181,7 +1247,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   let lang = "hi";
   try { const saved = localStorage.getItem("focuslens-lang"); if (saved === "en" || saved === "hi") lang = saved; } catch (e) {}
   const S = () => STR[lang];
-  const tx = (key) => { const c = CATALOG[key]; const [title, genre, gist] = c[lang]; return { ...c, title, genre, gist }; };
+  const tx = (key) => { const c = CATALOG[key]; const [title, genre, gist] = c[lang]; return { ...c, key, title, genre, gist }; };
 
   // Geometry straight from the Figma frame.
   const PW = 118, PH = 166, GAP = 8, PADX = 16, STEP = PW + GAP;
@@ -1191,10 +1257,11 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const DECAY = 4.5;       // fling friction (1/s): a fling travels about v / DECAY px
   const TITLE_SLIDE = 22;  // px a title drifts while it hands over to the next one
   const DIM = 0.25;        // how much the neighbours darken in the focused row
-  const GIST_GAP = 12;     // px between the zoomed poster and its gist
-  const TRAILER_H = 48;    // the row of icon buttons above the labels and gist, with its gap
+  const GIST_GAP = 10;     // px between the zoomed poster (or trailer) and its gist
+  const TRAILER_H = 48;    // the row of icon buttons under the labels and gist, with its gap
+  const CARD_PAD = 10;     // the card's side padding around the info block while a trailer plays
   const TRAILER_PEEK = 22;  // px of each neighbouring poster left showing while a trailer plays
-  const TRAILER_GROW = 24;  // extra frame height while a trailer plays
+  const TRAILER_FRAME_H = 192;  // trailer frame height (the zoomed poster is ~196)
   const TRAILERS = ["trailer-a.mp4", "trailer-b.mp4", "trailer-c.mp4"];
   const FOCUS_LINE = 0.36; // where on screen (fraction of height) a row takes focus while you scroll
   const LONG_PRESS = 450;  // ms
@@ -1313,7 +1380,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   let titles = [], gists = [], gistH = 0;
 
   const lensX = () => W / 2;
-  const gistW = () => Math.min(W - 40, 340);
+  const gistW = () => Math.min(W - 40, 352 - 2 * 10);
   const posUnder = (r) => (lensX() + r.x - PADX - PW / 2) / STEP;   // continuous poster index in the centre
   const posterCenter = (i) => PADX + i * STEP + PW / 2;            // in track coordinates
   const centredX = (i) => posterCenter(i) - lensX();               // row offset that puts poster i in the centre
@@ -1363,39 +1430,43 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     movie: '<path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M7.5 4v16M16.5 4v16M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/>',
     series: '<rect x="3" y="6" width="18" height="12.5" rx="2"/><path d="M8.5 21.5h7M9 2.5l3 3.5 3-3.5"/>',
     audio: '<path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6M18.6 6.5a8 8 0 0 1 0 11"/>',
-    audioOff: '<path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/>',
+    audioOff: '<path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6"/><path d="M3 3l18 18" stroke-width="2.2"/>',
     subs: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M6.5 12h4M13 12h4.5M6.5 15.2h7M15.8 15.2h1.7"/>',
     subsOff: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M6.5 12h4M13 12h4.5M6.5 15.2h7M15.8 15.2h1.7"/><path d="M3 3l18 18" stroke-width="2.2"/>',
   };
+  // Two quiet rows under the poster: type, rating, availability in the preferred language (audio and
+  // subtitle icons white when available, greyed and slashed when not), length, HD; then year and mood tags.
   function availability(info) {
     const s = S();
+    const [rating, length, tags] = DETAILS[info.key] || ["U/A 13+", 120, []];
     const wrap = document.createElement("div");
-    wrap.className = "avail";
-    const item = (icon, text, label, off) => {
-      const el = document.createElement("span");
-      el.className = "av " + (icon === "movie" || icon === "series" ? "type" : "badge") + (off ? " off" : "");
-      el.title = label;
-      el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[icon]}</svg>`;
-      const t = document.createElement("span");
-      t.textContent = text;
-      t.setAttribute("aria-hidden", "true");
-      const sr = document.createElement("span");
-      sr.className = "sr";
-      sr.textContent = label;
-      el.append(t, sr);
-      return el;
+    wrap.className = "info-rows";
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const icon = (name, off, label) => {
+      const i = el("span", "li" + (off ? " off" : ""));
+      i.title = label;
+      i.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name]}</svg>`;
+      i.append(el("span", "sr", label));
+      return i;
     };
-    // Audio and subtitles are checked against the profile's preferred viewing language (Audio & Subtitle
-    // Languages), whatever the display language is. The first audio language is the original; others are dubs.
+    // first audio language is the original; others are dubs
     const pref = PREF_LANG, name = s.langNames[pref];
     const audio = info.audio.includes(pref), subs = info.subs.includes(pref);
     const dubbed = audio && info.audio[0] !== pref;
-    wrap.append(
-      item(info.type, s[info.type], s[info.type], false),
-      item(audio ? "audio" : "audioOff", dubbed ? `${name} ${s.dubbed}` : name,
-        audio ? (dubbed ? s.audioDub(name) : s.audioYes(name)) : s.audioNo(name), !audio),
-      item(subs ? "subs" : "subsOff", name, subs ? s.subsYes(name) : s.subsNo(name), !subs),
-    );
+    const meta = el("div", "avail");
+    meta.append(el("span", "m-text", s[info.type]), el("span", "m-badge", rating));
+    const lb = el("span", "m-badge lang" + (!audio && !subs ? " off" : ""));
+    lb.append(el("span", "", s.inLang(name)),
+      icon(audio ? "audio" : "audioOff", !audio, audio ? (dubbed ? s.audioDub(name) : s.audioYes(name)) : s.audioNo(name)),
+      icon(subs ? "subs" : "subsOff", !subs, subs ? s.subsYes(name) : s.subsNo(name)));
+    meta.append(lb);
+    const len = el("span", "m-len");
+    len.append(el("span", "m-text", typeof length === "string" ? s.seasons(+length.slice(1)) : s.dur(length)), el("span", "m-badge hd", "HD"));
+    meta.append(len);
+    const tagRow = el("div", "tags");
+    tagRow.append(el("span", "", String(info.year)));
+    for (const t of tags) { tagRow.append(el("i", "dot"), el("span", "", TAGS[t][lang === "hi" ? 1 : 0])); }
+    wrap.append(meta, tagRow);
     return wrap;
   }
   function clearOverlay() {
@@ -1619,9 +1690,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   // turns into Poster to switch back. Moving to another poster also switches back.
   const tzFrame = document.createElement("div");
   tzFrame.className = "teaser";
-  tzFrame.innerHTML = `<img alt=""><video muted playsinline loop preload="none"></video><div class="tz-shade"></div><button class="fs-btn" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button class="mute-btn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button>`;
+  tzFrame.innerHTML = `<img alt=""><video muted playsinline loop preload="none"></video><div class="tz-shade"></div><button class="tz-title" type="button"></button><button class="fs-btn" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button class="mute-btn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button>`;
   const tzImg = tzFrame.querySelector("img"), tzVideo = tzFrame.querySelector("video"), tzMute = tzFrame.querySelector(".mute-btn");
-  const tzFs = tzFrame.querySelector(".fs-btn");
+  const tzFs = tzFrame.querySelector(".fs-btn"), tzTitle = tzFrame.querySelector(".tz-title");
+  const tzCard = document.createElement("div");
+  tzCard.className = "tz-card";
+  tzTitle.addEventListener("pointerdown", (e) => e.stopPropagation());
+  tzTitle.addEventListener("click", () => openDetail());
   // mode: trailers on (after a long press, or Trailer tapped) or off (Poster tapped)
   const tz = { mode: false, key: null, v: { x: 0, v: 0 }, muted: false, on: false, openIdx: -1, step: null, settle: null };
   try { tz.muted = localStorage.getItem("focuslens-muted") === "1"; } catch (e) {}
@@ -1669,7 +1744,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   }
   function openFrame(want) {
     tz.on = true; tz.key = want.key; tz.openIdx = want.i;
+    want.r.strip.appendChild(tzCard);
     want.r.strip.appendChild(tzFrame);
+    tzTitle.textContent = tx(want.key).title;
     tzImg.src = POSTERS[want.key] || "";
     tzVideo.classList.remove("ready");
     tzVideo.src = trailerSrc(want.key);
@@ -1707,7 +1784,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     }
     if (!open && tz.v.x < 0.01) {
       tz.v.x = 0; tz.v.v = 0;
-      if (tz.on) { tz.on = false; tz.key = null; tzVideo.pause(); tzVideo.removeAttribute("src"); tzVideo.load(); tzFrame.remove(); }
+      if (tz.on) { tz.on = false; tz.key = null; tzVideo.pause(); tzVideo.removeAttribute("src"); tzVideo.load(); tzFrame.remove(); tzCard.remove(); }
       return false;
     }
     return true;
@@ -1727,15 +1804,22 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   tzVideo.addEventListener("playing", () => tzVideo.classList.add("ready"));
   const frameOn = (r) => tz.on && tzFrame.parentNode === r.strip;
   function teaserExtra(r) { return frameOn(r) ? (frameW() - PW * CFG.zoom) / 2 * clamp(tz.v.x, 0, 1) : 0; }
-  function teaserDH(r) { return frameOn(r) ? TRAILER_GROW * clamp(tz.v.x, 0, 1) : 0; }
+  function teaserDH(r) { return frameOn(r) ? (TRAILER_FRAME_H - PH * CFG.zoom) * clamp(tz.v.x, 0, 1) : 0; }
   function placeTeaser(r) {
     if (!tz.on || tzFrame.parentNode !== r.strip) return;
     const v = clamp(tz.v.x, 0, 1);
     const zw = PW * CFG.zoom, zh = PH * CFG.zoom;
     const w = zw + (frameW() - zw) * v;
     tzFrame.style.width = w.toFixed(2) + "px";
-    tzFrame.style.height = (zh + TRAILER_GROW * v).toFixed(2) + "px";
-    tzFrame.style.transform = `translate3d(${(lensX() - w / 2).toFixed(2)}px,${(BLEED + PH * ORIGIN_Y * (1 - CFG.zoom)).toFixed(2)}px,0)`;
+    const fh = zh + (TRAILER_FRAME_H - zh) * v, top = BLEED + PH * ORIGIN_Y * (1 - CFG.zoom);
+    tzFrame.style.height = fh.toFixed(2) + "px";
+    tzFrame.style.transform = `translate3d(${(lensX() - w / 2).toFixed(2)}px,${top.toFixed(2)}px,0)`;
+    // the card behind the trailer and the info block below it
+    tzCard.style.width = w.toFixed(2) + "px";
+    tzCard.style.height = (fh + GIST_GAP + gistH + TRAILER_H + 12).toFixed(2) + "px";
+    tzCard.style.transform = tzFrame.style.transform;
+    tzCard.style.opacity = smooth(0.2, 1, v).toFixed(3);
+    tzTitle.style.opacity = smooth(0.5, 1, v).toFixed(3);
     tzFrame.style.opacity = Math.min(1, v * 6).toFixed(3);
     tzVideo.style.opacity = tzVideo.classList.contains("ready") ? smooth(0.55, 1, v).toFixed(3) : "0";
   }
@@ -1811,10 +1895,12 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const gh = Math.round(h0 + (h1 - h0) * blend) + 18;
     const vis = clamp((p - 0.15) / 0.7, 0, 1).toFixed(3);
     lensEl.style.transform = `translate3d(${(cx - glassW() / 2).toFixed(2)}px,${(zoomedBottom - GLASS_INSET - gh + (1 - pa) * 10).toFixed(2)}px,0)`;
-    lensEl.style.opacity = vis;
+    const tv = frameOn(r) ? clamp(tz.v.x, 0, 1) : 0;
+    lensEl.style.opacity = (vis * (1 - smooth(0.2, 0.7, tv))).toFixed(3);
     glass.style.height = gh + "px";
     glass.style.transform = `scale(${(0.92 + 0.08 * pa).toFixed(4)})`;
     gistEl.style.height = gistH + TRAILER_H + "px";
+    gistActions.style.top = gistH + 12 + "px";
     gistEl.style.transform = `translate3d(${(cx - gistW() / 2).toFixed(2)}px,${(zoomedBottom + GIST_GAP - (1 - pa) * 6).toFixed(2)}px,0)`;
     gistEl.style.opacity = vis;
   }
