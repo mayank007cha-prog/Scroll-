@@ -51,6 +51,12 @@
     const/16 v4, 0x64
     invoke-virtual {v3, v4}, Landroid/webkit/WebSettings;->setTextZoom(I)V
 
+    # window.FocusLensApp, used by the full-screen player to allow rotation
+    new-instance v3, Lcom/focuslens/app/AppBridge;
+    invoke-direct {v3, p0}, Lcom/focuslens/app/AppBridge;-><init>(Lcom/focuslens/app/MainActivity;)V
+    const-string v4, "FocusLensApp"
+    invoke-virtual {v2, v3, v4}, Landroid/webkit/WebView;->addJavascriptInterface(Ljava/lang/Object;Ljava/lang/String;)V
+
     new-instance v3, Landroid/webkit/WebViewClient;
     invoke-direct {v3}, Landroid/webkit/WebViewClient;-><init>()V
     invoke-virtual {v2, v3}, Landroid/webkit/WebView;->setWebViewClient(Landroid/webkit/WebViewClient;)V
