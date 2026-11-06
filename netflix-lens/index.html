@@ -1498,7 +1498,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     gistH = gists.reduce((m, g) => Math.max(m, g.el.offsetHeight), 0);
   }
   function resetPosters(r) {
-    for (const el of r.els) { el.style.transform = ""; el.style.filter = ""; el.style.zIndex = ""; }
+    for (const el of r.els) { el.style.transform = ""; el.style.filter = ""; el.style.zIndex = ""; el.style.visibility = ""; }
     for (const sh of r.shades) sh.style.opacity = "";
     r.h.style.marginBottom = r.sec.style.marginBottom = r.hit.style.height = r.hit.style.top = "";
     r.styled = false;
@@ -1834,7 +1834,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const fh = zh + (TRAILER_FRAME_H - zh) * v, top = BLEED + PH * ORIGIN_Y * (1 - CFG.zoom);
     tzFrame.style.height = fh.toFixed(2) + "px";
     tzFrame.style.transform = `translate3d(${(lensX() - w / 2).toFixed(2)}px,${top.toFixed(2)}px,0)`;
-    tzTitle.style.opacity = smooth(0.5, 1, v).toFixed(3);
+    tzTitle.style.opacity = smooth(0.3, 0.6, v).toFixed(3);
     tzBack.style.top = (r.strip.offsetTop - 30).toFixed(0) + "px";
     tzBack.style.height = (r.strip.offsetHeight + (parseFloat(r.hit.style.height) || 0) + 50).toFixed(0) + "px";
     tzBack.style.opacity = (tzVideo.classList.contains("ready") ? smooth(0.4, 1, v) : 0).toFixed(3);
@@ -1870,6 +1870,8 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       el.style.filter = `brightness(${(1 - DIM * (1 - t) * pa).toFixed(3)})`;
       el.style.zIndex = t > 0.5 ? "2" : "";
       r.shades[i].style.opacity = (t * pa).toFixed(3);
+      // the poster under an open trailer frame would peek out at its edges
+      el.style.visibility = frameOn(r) && i === tz.openIdx && tz.v.x > 0.3 ? "hidden" : "";
     });
     r.styled = true;
     placeTeaser(r);
@@ -1914,7 +1916,10 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const vis = clamp((p - 0.15) / 0.7, 0, 1).toFixed(3);
     lensEl.style.transform = `translate3d(${(cx - glassW() / 2).toFixed(2)}px,${(zoomedBottom - GLASS_INSET - gh + (1 - pa) * 10).toFixed(2)}px,0)`;
     const tv = frameOn(r) ? clamp(tz.v.x, 0, 1) : 0;
-    lensEl.style.opacity = (vis * (1 - smooth(0.2, 0.7, tv))).toFixed(3);
+    // the glass hands over to the title on the video: gone almost as soon as the frame starts opening
+    const go = vis * (1 - smooth(0, 0.12, tv));
+    lensEl.style.opacity = go.toFixed(3);
+    lensEl.style.visibility = go < 0.01 ? "hidden" : "";
     glass.style.height = gh + "px";
     glass.style.transform = `scale(${(0.92 + 0.08 * pa).toFixed(4)})`;
     gistEl.style.height = gistH + TRAILER_H + "px";
