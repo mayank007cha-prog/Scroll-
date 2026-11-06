@@ -237,7 +237,7 @@ button, input { font: inherit; color: inherit; }
 }
 .gt {
   position: absolute; left: 0; right: 0; top: 0;
-  text-align: left;
+  text-align: center;
   will-change: transform, opacity;
 }
 .gt p {
@@ -247,9 +247,9 @@ button, input { font: inherit; color: inherit; }
   text-wrap: pretty;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-.info-rows { display: grid; gap: 10px; }
+.info-rows { display: grid; gap: 10px; justify-items: center; }
 .avail {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
   font-size: 13px; font-weight: 500; line-height: 17px;
   color: rgba(255,255,255,0.68);
   white-space: nowrap;
@@ -266,7 +266,7 @@ button, input { font: inherit; color: inherit; }
 .li { display: inline-flex; color: #fff; }
 .li svg { width: 16px; height: 16px; }
 .li.off { color: rgba(255,255,255,0.35); }
-.tags { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 500; line-height: 18px; color: rgba(255,255,255,0.68); white-space: nowrap; overflow: hidden; }
+.tags { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px; font-weight: 500; line-height: 18px; color: rgba(255,255,255,0.68); white-space: nowrap; overflow: hidden; }
 .tags .dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(217,217,217,0.6); flex: none; }
 .screen.lang-en .tags, .screen.lang-en .avail { letter-spacing: 0; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -478,7 +478,7 @@ button, input { font: inherit; color: inherit; }
 .pill-btn:focus-visible, .manage:focus-visible, .round-x:focus-visible, .pencil:focus-visible, .mc-head:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .gist-actions {
   position: absolute; left: 0; right: 0; top: 0;
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
   pointer-events: none;
 }
 .gist-actions .ic {
@@ -493,7 +493,7 @@ button, input { font: inherit; color: inherit; }
 .gist-actions .ic:hover { border-color: #fff; }
 .gist-actions .ic.play { background: var(--ink); border-color: var(--ink); color: #000; }
 .gist-actions .ic.play svg { margin-left: 2px; }
-.gist-actions .ic.more { margin-left: auto; }
+.gist-actions .ic.more { margin-left: 0; }
 #tzBtn { display: none; }
 .gist-actions .ic[aria-pressed="true"]:not(#tzBtn) { background: rgba(255,255,255,0.16); border-color: #fff; }
 #likeBtn[aria-pressed="true"] svg { fill: currentColor; }
@@ -520,8 +520,8 @@ button, input { font: inherit; color: inherit; }
 }
 .mute-btn:focus-visible, .fs-btn:focus-visible, .tz-title:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .tz-title {
-  position: absolute; left: 8px; right: 50px; bottom: 8px;
-  padding: 0; border: 0; background: none; text-align: left;
+  position: absolute; left: 50px; right: 50px; bottom: 8px;
+  padding: 0; border: 0; background: none; text-align: center;
   color: #fff; font: inherit; font-size: 16px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   cursor: pointer; pointer-events: auto; opacity: 0;
