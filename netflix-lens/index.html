@@ -1726,7 +1726,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   }
   const SETTLE_MS = 350;   // a title must rest in the centre this long before its trailer opens
   // Three 20-second cuts of the Jagame Thandhiram teaser stand in for every title's trailer.
-  const trailerSrc = (key) => TRAILERS[[...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % TRAILERS.length];
+  // Real 10-second clips for these titles; everything else uses one of the three Jagame cuts.
+  const CLIPS = { scoop: "clip-scoop.mp4", purplehearts: "clip-purplehearts.mp4", dragon: "clip-dragon.mp4", nightalwayscomes: "clip-nightalwayscomes.mp4" };
+  const trailerSrc = (key) => CLIPS[key] || TRAILERS[[...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % TRAILERS.length];
   const frameW = () => W - 2 * (GAP + TRAILER_PEEK);
   function setMuteIcon(btn, muted) {
     btn.innerHTML = muted ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6M18.6 6.5a8 8 0 0 1 0 11"/></svg>`;
