@@ -519,12 +519,6 @@ button, input { font: inherit; color: inherit; }
   background: rgba(0,0,0,0.6); cursor: pointer; pointer-events: auto;
 }
 .mute-btn:focus-visible, .fs-btn:focus-visible, .tz-title:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-.tz-card {
-  position: absolute; left: 0; top: 0; z-index: 2;
-  border-radius: 5px; background: var(--card-surface);
-  box-shadow: 0 10px 28px rgba(0,0,0,0.55);
-  pointer-events: none; opacity: 0;
-}
 .tz-title {
   position: absolute; left: 8px; right: 50px; bottom: 8px;
   padding: 0; border: 0; background: none; text-align: left;
@@ -1402,10 +1396,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       const nm = document.createElement("div");
       nm.className = "lt-name";
       nm.textContent = info.title;
-      const mt = document.createElement("div");
-      mt.className = "lt-meta";
-      mt.textContent = `${info.year} · ${info.genre}`;
-      el.append(nm, mt);
+      el.append(nm);
       el.style.opacity = "0";
       glass.appendChild(el);
       return { el, h: 0, op: 0 };
@@ -1693,8 +1684,6 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   tzFrame.innerHTML = `<img alt=""><video muted playsinline loop preload="none"></video><div class="tz-shade"></div><button class="tz-title" type="button"></button><button class="fs-btn" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button class="mute-btn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12.5 19V5L7.5 9.5H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button>`;
   const tzImg = tzFrame.querySelector("img"), tzVideo = tzFrame.querySelector("video"), tzMute = tzFrame.querySelector(".mute-btn");
   const tzFs = tzFrame.querySelector(".fs-btn"), tzTitle = tzFrame.querySelector(".tz-title");
-  const tzCard = document.createElement("div");
-  tzCard.className = "tz-card";
   tzTitle.addEventListener("pointerdown", (e) => e.stopPropagation());
   tzTitle.addEventListener("click", () => openDetail());
   // mode: trailers on (after a long press, or Trailer tapped) or off (Poster tapped)
@@ -1744,7 +1733,6 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   }
   function openFrame(want) {
     tz.on = true; tz.key = want.key; tz.openIdx = want.i;
-    want.r.strip.appendChild(tzCard);
     want.r.strip.appendChild(tzFrame);
     tzTitle.textContent = tx(want.key).title;
     tzImg.src = POSTERS[want.key] || "";
@@ -1784,7 +1772,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     }
     if (!open && tz.v.x < 0.01) {
       tz.v.x = 0; tz.v.v = 0;
-      if (tz.on) { tz.on = false; tz.key = null; tzVideo.pause(); tzVideo.removeAttribute("src"); tzVideo.load(); tzFrame.remove(); tzCard.remove(); }
+      if (tz.on) { tz.on = false; tz.key = null; tzVideo.pause(); tzVideo.removeAttribute("src"); tzVideo.load(); tzFrame.remove(); }
       return false;
     }
     return true;
@@ -1814,11 +1802,6 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     const fh = zh + (TRAILER_FRAME_H - zh) * v, top = BLEED + PH * ORIGIN_Y * (1 - CFG.zoom);
     tzFrame.style.height = fh.toFixed(2) + "px";
     tzFrame.style.transform = `translate3d(${(lensX() - w / 2).toFixed(2)}px,${top.toFixed(2)}px,0)`;
-    // the card behind the trailer and the info block below it
-    tzCard.style.width = w.toFixed(2) + "px";
-    tzCard.style.height = (fh + GIST_GAP + gistH + TRAILER_H + 12).toFixed(2) + "px";
-    tzCard.style.transform = tzFrame.style.transform;
-    tzCard.style.opacity = smooth(0.2, 1, v).toFixed(3);
     tzTitle.style.opacity = smooth(0.5, 1, v).toFixed(3);
     tzFrame.style.opacity = Math.min(1, v * 6).toFixed(3);
     tzVideo.style.opacity = tzVideo.classList.contains("ready") ? smooth(0.55, 1, v).toFixed(3) : "0";
