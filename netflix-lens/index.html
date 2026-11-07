@@ -476,18 +476,15 @@ button, input { font: inherit; color: inherit; }
 .lang-radio.off { color: var(--ink-2); }
 .set-row:focus-visible, .edit-row:focus-visible, .lang-radio:focus-visible, .who:focus-visible, .other:focus-visible,
 .pill-btn:focus-visible, .manage:focus-visible, .round-x:focus-visible, .pencil:focus-visible, .mc-head:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-/* Actions in two groups, centred: save/react (My List, Like) on the left, decide (Trailer, Play) on the
-   right with Play last. The gap between the groups separates them; More info lives on the title. */
+/* Actions centred: Play, My List and Like together, the trailer button set apart on the right.
+   More info lives on the title. */
 .gist-actions {
   position: absolute; left: 0; right: 0; top: 0;
-  display: flex; align-items: center; justify-content: center; gap: 28px;
+  display: flex; align-items: center; justify-content: center; gap: 24px;
   pointer-events: none;
 }
 .gist-actions .grp { display: flex; align-items: center; gap: 10px; }
-.gist-actions .grp.secondary { gap: 8px; }
-.gist-actions .grp.secondary .ic { width: 32px; height: 32px; border-color: rgba(255,255,255,0.35); background: transparent; }
-.gist-actions .grp.secondary .ic svg { width: 16px; height: 16px; }
-.gist-actions .grp.primary .ic { width: 38px; height: 38px; }
+.gist-actions .grp .ic { width: 38px; height: 38px; }
 #moreBtn { display: none; }
 .chev { display: inline-block; vertical-align: middle; margin: -0.1em 0 0 3px; opacity: 0.75; flex: none; }
 .tz-title .chev { margin-top: 0; }
@@ -552,7 +549,7 @@ button, input { font: inherit; color: inherit; }
   background: radial-gradient(120% 70% at 50% 30%, rgba(0,0,0,0.05), rgba(0,0,0,0.45) 70%), linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.4));
 }
 .tz-title {
-  position: absolute; left: 50px; right: 50px; bottom: 8px;
+  position: absolute; left: 50px; right: 50px; bottom: 12px;
   display: flex; align-items: center; justify-content: center;
   padding: 0; border: 0; background: none; text-align: center;
   color: #fff; font: inherit; font-size: 16px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em;
@@ -822,13 +819,13 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
 
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
         <div id="gist"><div class="gist-actions" id="gistActions">
-          <div class="grp secondary">
+          <div class="grp main">
+          <button class="ic play" id="playBtn" type="button" data-i18n-label="play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15L19.5 12z"/></svg></button>
           <button class="ic" id="listBtn" type="button" aria-pressed="false"><svg class="ic-add" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><svg class="ic-added" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
           <button class="ic" id="likeBtn" type="button" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v10H4V10zM7 10l4-7c1.4 0 2.4 1.2 2.1 2.6L12.5 9H19a2 2 0 0 1 2 2.3l-1.2 6.6A2.5 2.5 0 0 1 17.3 20H7"/></svg></button>
           </div>
-          <div class="grp primary">
+          <div class="grp trailer">
           <button class="ic" id="tzBtn" type="button" aria-pressed="false"><svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18.5"/><circle class="ring-p" cx="20" cy="20" r="18.5" pathLength="100"/></svg><svg class="ic-trailer" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M10 9.3v5.4l4.6-2.7z" fill="currentColor"/></svg><svg class="ic-stop" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
-          <button class="ic play" id="playBtn" type="button" data-i18n-label="play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15L19.5 12z"/></svg></button>
           </div>
           <button class="ic more" id="moreBtn" type="button" data-i18n-label="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg></button>
         </div></div>
@@ -964,7 +961,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <li><b>Slide</b><span>Drag the row. Each poster takes its turn, and the labels and gist change with it.</span></li>
       <li><b>Scan</b><span>Scroll the page. Whichever row reaches the focus line pops on its own.</span></li>
       <li><b>Tap</b><span>In quick view, tap any poster to bring it into focus.</span></li>
-      <li><b>Actions</b><span>Centred in two groups: My List and Like on the left, Trailer and Play on the right. The trailer button shows a progress ring and turns into × to return to the poster. Tap the title (›) for the movie page.</span></li>
+      <li><b>Actions</b><span>Centred: Play, My List and Like together, with the trailer button set apart. It shows a progress ring while the trailer plays and turns into × to return to the poster. Tap the title (›) for the movie page.</span></li>
       <li><b>Browse</b><span>Outside quick view, tapping a poster opens its movie page.</span></li>
       <li><b>Languages</b><span>Audio and subtitle labels always show your preferred viewing language (Hindi), even when the app is in English.</span></li>
       <li><b>Card</b><span>Type, rating, "In Hindi" with audio and subtitle icons (white when available, greyed and slashed when not), length and HD; then year and mood tags, the gist, and Play, My List, Like and › for the movie page.</span></li>
