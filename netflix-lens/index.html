@@ -494,11 +494,17 @@ button, input { font: inherit; color: inherit; }
 .gist-actions .ic.play { background: var(--ink); border-color: var(--ink); color: #000; }
 .gist-actions .ic.play svg { margin-left: 2px; }
 .gist-actions .ic.more { margin-left: 0; }
-#tzBtn { display: none; }
 .gist-actions .ic[aria-pressed="true"]:not(#tzBtn) { background: rgba(255,255,255,0.16); border-color: #fff; }
 #likeBtn[aria-pressed="true"] svg { fill: currentColor; }
-#tzBtn .ic-poster, #tzBtn.on .ic-trailer, #listBtn .ic-added, #listBtn[aria-pressed="true"] .ic-add { display: none; }
-#tzBtn.on .ic-poster, #listBtn[aria-pressed="true"] .ic-added { display: block; }
+#tzBtn .ic-stop, #tzBtn.on .ic-trailer, #listBtn .ic-added, #listBtn[aria-pressed="true"] .ic-add { display: none; }
+#tzBtn.on .ic-stop, #listBtn[aria-pressed="true"] .ic-added { display: block; }
+#tzBtn { position: relative; }
+#tzBtn .ring { position: absolute; inset: -3px; width: calc(100% + 6px); height: calc(100% + 6px); transform: rotate(-90deg); pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+#tzBtn .ring circle { fill: none; stroke-width: 2; }
+#tzBtn .ring circle:first-child { stroke: rgba(255,255,255,0.18); }
+#tzBtn .ring-p { stroke: #fff; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; }
+#tzBtn.on { border-color: transparent; }
+#tzBtn.on .ring { opacity: 1; }
 .gist-actions .ic:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .screen:not(.focus) .gist-actions { visibility: hidden; }
 .screen:not(.focus) .gist-actions .ic { pointer-events: none; }
@@ -804,9 +810,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
         <div id="lens" aria-live="polite"><div class="glass" id="glass"></div></div>
         <div id="gist"><div class="gist-actions" id="gistActions">
           <button class="ic play" id="playBtn" type="button" data-i18n-label="play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15L19.5 12z"/></svg></button>
-          <button class="ic" id="tzBtn" type="button" aria-pressed="false"><svg class="ic-trailer" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M10 9.3v5.4l4.6-2.7z" fill="currentColor"/></svg><svg class="ic-poster" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M5 16l4-4 3.5 3.5 2-2L19 18"/></svg></button>
           <button class="ic" id="listBtn" type="button" aria-pressed="false"><svg class="ic-add" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><svg class="ic-added" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
           <button class="ic" id="likeBtn" type="button" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v10H4V10zM7 10l4-7c1.4 0 2.4 1.2 2.1 2.6L12.5 9H19a2 2 0 0 1 2 2.3l-1.2 6.6A2.5 2.5 0 0 1 17.3 20H7"/></svg></button>
+          <button class="ic" id="tzBtn" type="button" aria-pressed="false"><svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18.5"/><circle class="ring-p" cx="20" cy="20" r="18.5" pathLength="100"/></svg><svg class="ic-trailer" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M10 9.3v5.4l4.6-2.7z" fill="currentColor"/></svg><svg class="ic-stop" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
           <button class="ic more" id="moreBtn" type="button" data-i18n-label="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg></button>
         </div></div>
         <button class="close-focus" id="closeFocus" type="button" tabindex="-1" aria-label="क्विक व्यू बंद करें" title="क्विक व्यू बंद करें">
@@ -941,7 +947,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       <li><b>Slide</b><span>Drag the row. Each poster takes its turn, and the labels and gist change with it.</span></li>
       <li><b>Scan</b><span>Scroll the page. Whichever row reaches the focus line pops on its own.</span></li>
       <li><b>Tap</b><span>In quick view, tap any poster to bring it into focus.</span></li>
-      <li><b>Trailer</b><span>After the long press, the centred title opens into a card and plays its trailer; swipe and the next title's trailer plays. The ⛶ button plays it full screen (rotate the phone to fill the screen). Muting once keeps every next trailer muted.</span></li>
+      <li><b>Trailer</b><span>The trailer button (between Like and ›) plays the trailer in a card; a ring around it shows progress and it turns into × to stop and return to the poster. While trailers are on, swiping plays the next title's. The ⛶ button plays full screen. Muting once keeps every next trailer muted.</span></li>
       <li><b>Languages</b><span>Audio and subtitle labels always show your preferred viewing language (Hindi), even when the app is in English.</span></li>
       <li><b>Card</b><span>Type, rating, "In Hindi" with audio and subtitle icons (white when available, greyed and slashed when not), length and HD; then year and mood tags, the gist, and Play, My List, Like and › for the movie page.</span></li>
       <li><b>Close</b><span>Tap the round × at the bottom right, or press Esc.</span></li>
@@ -1154,7 +1160,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `Switched to ${n}`,
       restartTitle: "Restart the app?", restartText: (n) => `The app will close and open again in ${n}.`,
       cancel: "Cancel", restart: "Restart",
-      play: "Play", fullscreen: "Play full screen", trailer: "Trailer", playTrailer: "Play trailer", showPoster: "Show poster",
+      play: "Play", fullscreen: "Play full screen", trailer: "Trailer", playTrailer: "Play trailer", showPoster: "Stop trailer",
       removeList: "Remove from My List", addedList: "Added to My List", like: "I like this", more: "More info", poster: "Poster", moreLike: "More Like This", closeTrailer: "Close video", mute: "Mute", unmute: "Turn sound on", details: (t) => `${t}: details`,
     },
     hi: {
@@ -1187,7 +1193,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       switched: (n) => `${n} प्रोफ़ाइल पर स्विच किया गया`,
       restartTitle: "ऐप रीस्टार्ट करें?", restartText: (n) => `ऐप बंद होकर ${n} में दोबारा खुलेगा.`,
       cancel: "रद्द करें", restart: "रीस्टार्ट करें",
-      play: "चलाएं", fullscreen: "फ़ुल स्क्रीन में चलाएं", trailer: "ट्रेलर", playTrailer: "ट्रेलर चलाएं", showPoster: "पोस्टर दिखाएं",
+      play: "चलाएं", fullscreen: "फ़ुल स्क्रीन में चलाएं", trailer: "ट्रेलर", playTrailer: "ट्रेलर चलाएं", showPoster: "ट्रेलर बंद करें",
       removeList: "मेरी लिस्ट से हटाएं", addedList: "मेरी लिस्ट में जोड़ा गया", like: "यह पसंद है", more: "ज़्यादा जानकारी", poster: "पोस्टर", moreLike: "इससे मिलते-जुलते", closeTrailer: "वीडियो बंद करें", mute: "आवाज़ बंद करें", unmute: "आवाज़ चालू करें", details: (t) => `${t}: जानकारी`,
     },
   };
@@ -1518,7 +1524,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   function enterFocus(r, i) {
     if (!CFG.lens) return false;
     focus.on = true;
-    tz.mode = true;   // a long press plays trailers by default; Poster turns them off
+    tz.mode = false;  // trailers start only from the trailer button
     warm(r, i);
     focus.scrollRef = scroller.scrollTop;
     screenEl.classList.add("focus");
@@ -1712,6 +1718,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     backLoop = 0;
     if (!tz.on) return;
     if (tzVideo.readyState >= 2 && !tzVideo.paused) { try { backCtx.drawImage(tzVideo, 0, 0, 96, 54); } catch (e) {} }
+    updateRing();
     backLoop = requestAnimationFrame(drawBack);
   }
   tzTitle.addEventListener("pointerdown", (e) => e.stopPropagation());
@@ -1796,6 +1803,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     tzBtn.classList.toggle("on", on);
     tzBtn.dataset.lang = lang;
     tzBtn.setAttribute("aria-pressed", String(on));
+    if (!on) ringP.style.strokeDashoffset = "100";
     tzBtn.setAttribute("aria-label", on ? S().showPoster : S().playTrailer);
     tzBtn.title = tzBtn.getAttribute("aria-label");
   }
@@ -1837,6 +1845,14 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     kick();
   });
   tzVideo.addEventListener("playing", () => tzVideo.classList.add("ready"));
+  tzVideo.loop = false;
+  const ringP = tzBtn.querySelector(".ring-p");
+  function updateRing() {
+    const d = tzVideo.duration, t = tzVideo.currentTime;
+    ringP.style.strokeDashoffset = tz.mode && d > 0 ? (100 - (t / d) * 100).toFixed(2) : "100";
+  }
+  // when the trailer ends it goes back to the poster
+  tzVideo.addEventListener("ended", () => { tz.mode = false; updateRing(); kick(); });
   const frameOn = (r) => tz.on && tzFrame.parentNode === r.strip;
   function teaserExtra(r) { return frameOn(r) ? (frameW() - PW * CFG.zoom) / 2 * clamp(tz.v.x, 0, 1) : 0; }
   function teaserDH(r) { return frameOn(r) ? (TRAILER_FRAME_H - PH * CFG.zoom) * clamp(tz.v.x, 0, 1) : 0; }
@@ -1995,7 +2011,6 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       if (moved) bringToLine(r);
     }
     g.state = "held";
-    tz.mode = true;
     interacted = true;
     try { navigator.vibrate && navigator.vibrate(12); } catch (e) {}
   }
