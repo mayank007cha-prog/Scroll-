@@ -585,9 +585,10 @@ button, input { font: inherit; color: inherit; }
 .dt-hero .mute-btn { top: auto; bottom: 12px; right: 12px; z-index: 1; }
 #pgDetail:not(.has-video) .dt-hero .mute-btn, #pgDetail:not(.has-video) .dt-hero .fs-btn { display: none; }
 .dt-body { padding: 4px 16px 0; }
-.dt-body h2 { margin: 0 0 4px; font-size: 22px; font-weight: 800; line-height: 1.3; }
-.dt-meta { margin-bottom: 10px; font-size: 13px; color: var(--ink-2); }
-.dt-body .avail { justify-content: flex-start; margin-bottom: 14px; }
+.dt-body h2 { margin: 0 0 10px; font-size: 22px; font-weight: 800; line-height: 1.3; }
+.dt-meta { display: none; }   /* year and mood are in the tags row */
+.dt-body .info-rows { justify-items: start; gap: 8px; margin-bottom: 16px; }
+.dt-body .avail, .dt-body .tags { justify-content: flex-start; }
 .dt-play {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; height: 40px; margin-bottom: 14px;
