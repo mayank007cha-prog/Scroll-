@@ -510,7 +510,7 @@ button, input { font: inherit; color: inherit; }
   pointer-events: none; opacity: 0;
 }
 .teaser img, .teaser video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.teaser video { opacity: 0; transition: opacity 0.5s; }
+.teaser video { opacity: 0; transition: opacity 0.18s; }
 .tz-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,0.72) 66%, rgba(0,0,0,0.95) 100%); }
 .mute-btn {
   position: absolute; right: 8px; top: 8px;
@@ -525,7 +525,7 @@ button, input { font: inherit; color: inherit; }
   overflow: hidden; pointer-events: none; opacity: 0;
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 72%, transparent 100%);
   mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 72%, transparent 100%);
-  transition: opacity 0.4s;
+  transition: opacity 0.2s;
 }
 .tz-back canvas {
   position: absolute; left: -15%; top: -10%; width: 130%; height: 120%;
@@ -1279,7 +1279,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
   const CFG = { lens: true, zoom: 1.18 };
   const glassW = () => Math.round(PW * CFG.zoom - GLASS_INSET * 2);
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const K_SNAP = reduceMotion ? 220 : 50;
+  const K_SNAP = reduceMotion ? 260 : 140;   // snap glide: quick, no bounce
 
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
@@ -1519,6 +1519,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     if (!CFG.lens) return false;
     focus.on = true;
     tz.mode = true;   // a long press plays trailers by default; Poster turns them off
+    warm(r, i);
     focus.scrollRef = scroller.scrollTop;
     screenEl.classList.add("focus");
     setCloseButton(true);
@@ -1647,7 +1648,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
       const target = focus.row === r ? 1 : 0;
       if (r.lp.x !== target || r.lp.v !== 0) {
         if (reduceMotion) { r.lp.x = target; r.lp.v = 0; }
-        else spring(r.lp, target, target ? 260 : 170, target ? 0.8 : 1, dt);
+        else spring(r.lp, target, target ? 420 : 320, target ? 0.85 : 1, dt);
         if (Math.abs(r.lp.x - target) < 0.002 && Math.abs(r.lp.v) < 0.01) { r.lp.x = target; r.lp.v = 0; }
         else busy = true;
       }
@@ -1724,7 +1725,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     try { localStorage.setItem("focuslens-muted", m ? "1" : "0"); } catch (e) {}
     applyMute();
   }
-  const SETTLE_MS = 350;   // a title must rest in the centre this long before its trailer opens
+  const SETTLE_MS = 90;    // a title must rest in the centre this long before its trailer opens
   // Three 20-second cuts of the Jagame Thandhiram teaser stand in for every title's trailer.
   // Real 10-second clips for these titles; everything else uses one of the three Jagame cuts.
   const CLIPS = { scoop: "clip-scoop.mp4", purplehearts: "clip-purplehearts.mp4", dragon: "clip-dragon.mp4", nightalwayscomes: "clip-nightalwayscomes.mp4" };
@@ -1754,13 +1755,25 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     if (!tz.mode || !r || r.lp.x < 0.95 || tz.step || demo) { tz.settle = null; return null; }
     const i = nearestIndex(r), key = r.items[i].key;
     const scrubbing = gesture && gesture.r === r && gesture.state === "scrub";
-    if (r.anim || scrubbing || Math.abs(r.x - centredX(i)) > 1.5) { tz.settle = null; return null; }
+    const near = Math.abs(r.x - centredX(i)) < 6 && Math.abs(r.v) < 300 && (!r.anim || r.snap != null);
+    if (scrubbing || !near) { tz.settle = null; return null; }
     if (tz.on && tz.openIdx === i && tzFrame.parentNode === r.strip) return { r, i, key };
     if (!tz.settle || tz.settle.r !== r || tz.settle.i !== i) {
       tz.settle = { r, i, at: now };
       setTimeout(kick, SETTLE_MS + 20);
     }
     return now - tz.settle.at >= SETTLE_MS ? { r, i, key } : null;
+  }
+  const warmed = new Map();
+  function warm(r, i) {
+    for (const j of [i - 1, i, i + 1]) {
+      if (j < 0 || j >= r.items.length) continue;
+      const src = trailerSrc(r.items[j].key);
+      if (warmed.has(src)) continue;
+      const v = document.createElement("video");
+      v.muted = true; v.preload = "auto"; v.playsInline = true; v.src = src; v.load();
+      warmed.set(src, v);
+    }
   }
   function openFrame(want) {
     tz.on = true; tz.key = want.key; tz.openIdx = want.i;
@@ -1797,9 +1810,9 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     // close when the viewer taps Poster, the row moves or quick view ends; the next title opens once it settles
     const open = !!want && tz.key === want.key;
     if (reduceMotion) { tz.v.x = open ? 1 : 0; tz.v.v = 0; }
-    else spring(tz.v, open ? 1 : 0, open ? 110 : 260, 1, dt);
+    else spring(tz.v, open ? 1 : 0, open ? 380 : 900, 1, dt);
     // a swipe during the trailer: once the frame is nearly back to a poster, glide to the next title
-    if (tz.step && tz.v.x < 0.08) {
+    if (tz.step && tz.v.x < 0.45) {   // start gliding while the frame is still closing
       const st = tz.step;
       tz.step = null;
       if (focus.row === st.row) centrePoster(st.row, nearestIndex(st.row) + st.dir);
@@ -1841,7 +1854,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     tzBack.style.height = (r.strip.offsetHeight + (parseFloat(r.hit.style.height) || 0) + 50).toFixed(0) + "px";
     tzBack.style.opacity = (tzVideo.classList.contains("ready") ? smooth(0.4, 1, v) : 0).toFixed(3);
     tzFrame.style.opacity = Math.min(1, v * 6).toFixed(3);
-    tzVideo.style.opacity = tzVideo.classList.contains("ready") ? smooth(0.55, 1, v).toFixed(3) : "0";
+    tzVideo.style.opacity = tzVideo.classList.contains("ready") ? smooth(0.15, 0.6, v).toFixed(3) : "0";
   }
 
   function styleRow(r) {
@@ -1904,6 +1917,7 @@ input[type=range] { width: 100%; accent-color: var(--red); margin: 0; }
     if (tickNow !== focus.tick && r === focus.row) {
       focus.tick = tickNow;
       if (typeof syncTitleBtns === "function") syncTitleBtns();
+      if (tz.mode) warm(r, tickNow);
       try { navigator.vibrate && navigator.vibrate(3); } catch (e) {}
     }
 
