@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- fold:start -->
+<title>Mayank Chauhan Portfolio</title>
+<meta name="description" content="Mayank Chauhan, an animator turned UI/UX designer. From making things move to making things work.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap">
+<style>
+  /* Layout: one screen. Nav on top, then two columns: the statement on the left,
+     the loop on the right with nothing behind it. Dark is the default look. */
+  :root {
+    --bg: #0b0b10;
+    --fg: #f4f4f8;
+    --muted: #b7b7c6;
+    --line: rgba(255, 255, 255, 0.16);
+    --chip: rgba(255, 255, 255, 0.045);
+    --accent: #8b8cf8;
+    --work: #8c8cae;
+    --font: "Geist", "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+    --serif: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f6fa;
+    --fg: #101017;
+    --muted: #4d4d5e;
+    --line: rgba(16, 16, 23, 0.16);
+    --chip: rgba(16, 16, 23, 0.035);
+    --accent: #5a58d6;
+    --work: #6f6e9d;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 400 16px/1.5 var(--font);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+  .page {
+    min-height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    padding-left: max(24px, env(safe-area-inset-left, 0px));
+    padding-right: max(24px, env(safe-area-inset-right, 0px));
+  }
+  .shell { width: 100%; max-width: 1140px; margin: 0 auto; }
+
+  /* Nav */
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-block: 16px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; letter-spacing: -0.01em; }
+  .brand svg { width: 22px; height: 22px; }
+  .links { display: flex; gap: 38px; font-size: 14.5px; color: var(--muted); }
+  .links a { transition: color 0.2s ease; }
+  .links a:hover { color: var(--fg); }
+  .actions { display: flex; align-items: center; gap: 10px; }
+  .icon-btn, .cta {
+    height: 44px; border-radius: 999px; border: 1px solid var(--line); background: var(--chip); color: var(--fg);
+    display: inline-flex; align-items: center; justify-content: center; font: inherit; cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  }
+  .icon-btn { width: 44px; padding: 0; }
+  .icon-btn svg { width: 17px; height: 17px; }
+  .cta { padding: 0 20px; gap: 12px; font-weight: 600; font-size: 14.5px; }
+  .cta svg { width: 11px; height: 11px; transition: transform 0.25s ease; }
+  .icon-btn:hover, .cta:hover { border-color: var(--accent); }
+  .cta:hover svg { transform: translate(2px, -2px); }
+  :root[data-theme="light"] .sun, :root:not([data-theme="light"]) .moon { display: none; }
+
+  /* Hero */
+  .hero {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr); align-items: center; gap: 24px;
+    padding-block: clamp(16px, 4vh, 56px) clamp(32px, 7vh, 88px);
+  }
+  .copy { display: grid; justify-items: start; gap: 0; min-width: 0; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 9px; height: 34px; padding: 0 15px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--chip); font-size: 13.5px; color: var(--muted);
+  }
+  .tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  h1 {
+    margin: 30px 0 0; font-weight: 500; font-size: clamp(2.7rem, 5.75vw, 4.75rem); line-height: 1.045;
+    letter-spacing: -0.048em; text-wrap: balance;
+  }
+  h1 span { display: block; }
+  h1 em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -0.02em; color: var(--work); font-size: 1.07em; line-height: 0.9; }
+  .lede { margin: 30px 0 0; max-width: 34em; font-size: clamp(1rem, 1.25vw, 1.12rem); line-height: 1.65; color: var(--muted); }
+  .scroll { margin-top: 34px; display: inline-flex; align-items: center; gap: 14px; font-size: 14px; color: var(--muted); }
+  .scroll i { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--chip); display: grid; place-items: center; }
+  .scroll svg { width: 12px; height: 12px; animation: nudge 2.4s cubic-bezier(.65, 0, .35, 1) infinite; }
+  .scroll:hover { color: var(--fg); }
+  @keyframes nudge { 0%, 100% { transform: translateY(-2px); } 50% { transform: translateY(3px); } }
+
+  /* The loop. The canvas is transparent; the mask only softens its edges. */
+  .stage { position: relative; width: 100%; max-width: 640px; justify-self: end; aspect-ratio: 1 / 0.98; }
+  .stage canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+    mask-composite: intersect;
+  }
+  .stage .toggle {
+    position: absolute; right: 6%; bottom: 3%; width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--chip); color: var(--muted); display: grid; place-items: center; cursor: pointer; padding: 0;
+    opacity: 0; transition: opacity 0.25s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .stage:hover .toggle, .stage .toggle:focus-visible, .stage.is-paused .toggle { opacity: 1; }
+  .stage .toggle:hover { color: var(--fg); border-color: var(--accent); }
+  .stage .toggle svg { width: 11px; height: 11px; }
+  .stage.is-paused .i-pause, .stage:not(.is-paused) .i-play { display: none; }
+  .stage.no-webgl { display: none; }
+
+  @media (max-width: 900px) {
+    .links { display: none; }
+    .hero { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-block: 28px 40px; }
+    .stage { justify-self: center; max-width: 520px; }
+    .stage .toggle { opacity: 1; }
+  }
+  @media (max-width: 420px) {
+    .page { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+    .brand span { font-size: 15px; }
+    .cta { padding: 0 15px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scroll svg { animation: none; }
+    body { transition: none; }
+  }
+</style>
+<!-- fold:head-end -->
+</head>
+<body>
+<!-- fold:body-start -->
+<div class="page">
+  <header class="shell nav">
+    <a class="brand" href="#top" aria-label="Mayank Chauhan, home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9 4.9 19.1"/></svg>
+      <span>Mayank Chauhan</span>
+    </a>
+    <nav class="links" aria-label="Primary">
+      <a href="#work">Work</a>
+      <a href="#concepts">Concepts</a>
+      <a href="#about">About</a>
+      <a href="#resume">Resume</a>
+    </nav>
+    <div class="actions">
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch to light theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.5 1.5M17.6 17.6l1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
+      </button>
+      <a class="cta" href="#contact">Let's talk
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 9.5l7-7M4 2.5h5.5V8"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <main class="shell hero" id="top">
+    <div class="copy">
+      <span class="tag">UI/UX Designer</span>
+      <h1>
+        <span>From making</span>
+        <span>things move</span>
+        <span>to making</span>
+        <span>things <em>work.</em></span>
+      </h1>
+      <p class="lede">I'm Mayank, an animator turned UI/UX designer. I design product features that solve real problems, and interaction concepts for the apps I use every day.</p>
+      <a class="scroll" href="#work">
+        <i><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 1.5v9M2.5 7 6 10.5 9.5 7"/></svg></i>
+        Scroll to explore
+      </a>
+    </div>
+
+    <div class="stage" id="stage">
+      <canvas id="heroLoop" role="img" aria-label="Looping animation: a bouncing ball becomes a row of loading dots, the dots become fingertips drumming on a desk, the camera pulls back to Mayank at his laptop, then pushes into the screen where the same ball is bouncing."></canvas>
+      <button class="toggle" id="loopBtn" type="button" aria-label="Pause animation">
+        <svg class="i-pause" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><rect x="2.5" y="2" width="2.4" height="8" rx="1"/><rect x="7.1" y="2" width="2.4" height="8" rx="1"/></svg>
+        <svg class="i-play" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M3.2 1.9v8.2a.6.6 0 0 0 .9.5l6.5-4.1a.6.6 0 0 0 0-1L4.1 1.4a.6.6 0 0 0-.9.5Z"/></svg>
+      </button>
+    </div>
+  </main>
+</div>
+
+<script src="hero/vendor/three.min.js"></script>
+<script src="hero/hero-loop.js"></script>
+<script>
+(function () {
+  var root = document.documentElement, stage = document.getElementById('stage');
+  var themeBtn = document.getElementById('themeBtn'), loopBtn = document.getElementById('loopBtn');
+  var theme = 'dark';
+  try { theme = localStorage.getItem('mc-theme') || root.getAttribute('data-theme') || 'dark'; } catch (e) {}
+  var loop = null;
+  try { loop = window.HeroLoop.init(document.getElementById('heroLoop'), { theme: theme }); }
+  catch (e) { stage.classList.add('no-webgl'); }
+
+  function applyTheme(next) {
+    theme = next === 'light' ? 'light' : 'dark';
+    root.setAttribute('data-theme', theme);
+    themeBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    if (loop) loop.setTheme(theme);
+    try { localStorage.setItem('mc-theme', theme); } catch (e) {}
+  }
+  applyTheme(theme);
+  themeBtn.addEventListener('click', function () { applyTheme(theme === 'dark' ? 'light' : 'dark'); });
+
+  function setPaused(p) {
+    stage.classList.toggle('is-paused', p);
+    loopBtn.setAttribute('aria-label', p ? 'Play animation' : 'Pause animation');
+    if (loop) { if (p) loop.pause(); else loop.play(); }
+  }
+  if (loop && !loop.playing) setPaused(true);
+  loopBtn.addEventListener('click', function () { setPaused(!stage.classList.contains('is-paused')); });
+  window.__heroLoop = loop;
+})();
+</script>
+<!-- fold:body-end -->
+</body>
+</html>
