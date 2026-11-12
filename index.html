@@ -13,7 +13,7 @@
 <style>
   /* Layout: one screen. Nav on top, then two columns: the statement on the left,
      the film on the right, bleeding toward the edge with smoke over its sides.
-     Dark is the default look. */
+     Dark only. */
   :root {
     --bg: #0b0b10;
     --fg: #f4f4f8;
@@ -25,16 +25,6 @@
     --font: "Geist", "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
     --serif: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
     color-scheme: dark;
-  }
-  :root[data-theme="light"] {
-    --bg: #f6f6fa;
-    --fg: #101017;
-    --muted: #4d4d5e;
-    --line: rgba(16, 16, 23, 0.16);
-    --chip: rgba(16, 16, 23, 0.035);
-    --accent: #5a58d6;
-    --work: #6f6e9d;
-    color-scheme: light;
   }
 
   * { box-sizing: border-box; }
@@ -80,7 +70,7 @@
   .cta svg { width: 11px; height: 11px; transition: transform 0.25s ease; }
   .icon-btn:hover, .cta:hover { border-color: var(--accent); }
   .cta:hover svg { transform: translate(2px, -2px); }
-  :root[data-theme="light"] .sun, :root:not([data-theme="light"]) .moon { display: none; }
+
 
   /* Hero */
   .hero {
@@ -122,14 +112,8 @@
     mask-composite: intersect;
   }
   .stage.is-ready video { opacity: 1; }
-  /* On the dark page, anything in the film darker than the page takes the page colour, so there is no box */
-  :root:not([data-theme="light"]) .stage video { mix-blend-mode: lighten; }
-  /* On the light page the dark film sits in a rounded frame instead of fading out */
-  :root[data-theme="light"] .stage video {
-    left: 3%; top: 7%; width: 87%; height: 86%; border-radius: 26px;
-    -webkit-mask-image: none; mask-image: none;
-    box-shadow: 0 34px 80px -34px rgba(46, 38, 120, 0.55), 0 0 0 1px rgba(16, 16, 23, 0.08);
-  }
+  /* Anything in the film darker than the page takes the page colour, so there is no box */
+  .stage.is-ready video { mix-blend-mode: lighten; }
   .stage .smoke {
     position: absolute; left: -10%; top: -14%; width: 126%; height: 128%; display: block; pointer-events: none;
     filter: blur(7px); opacity: 0; transition: opacity 1.4s ease;
@@ -183,10 +167,6 @@
       <a href="#resume">Resume</a>
     </nav>
     <div class="actions">
-      <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch to light theme">
-        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.5 1.5M17.6 17.6l1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"/></svg>
-        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
-      </button>
       <a class="cta" href="#contact">Let's talk
         <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 9.5l7-7M4 2.5h5.5V8"/></svg>
       </a>
@@ -225,9 +205,9 @@
 
 <script>
 (function () {
-  var root = document.documentElement, stage = document.getElementById('stage');
+  var stage = document.getElementById('stage');
   var video = document.getElementById('heroVideo'), smokeCanvas = document.getElementById('heroSmoke');
-  var themeBtn = document.getElementById('themeBtn'), loopBtn = document.getElementById('loopBtn');
+  var loopBtn = document.getElementById('loopBtn');
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ── Smoke: textured wisps that drift up along the left and right sides of the film.
@@ -235,7 +215,7 @@
   var smoke = (function (canvas) {
     var ctx = canvas.getContext('2d'), W = 0, H = 0, puffs = [], last = null, running = false, raf = 0;
     var EXT_L = 0.10, EXT_R = 0.16, SPAN = 1 + EXT_L + EXT_R;      // how far this canvas reaches past the film (matches the CSS)
-    var cfg = { fog: '11,11,16', glow: '160,130,255', additive: true, fogOn: true, left: 0.05, right: 0.95, glowA: 1 };
+    var cfg = { fog: '11,11,16', glow: '160,130,255', left: 0.05, right: 0.95 };
     var masks = [], tinted = { fog: [], glow: [] };
     function rand(a, b) { return a + Math.random() * (b - a); }
 
@@ -276,10 +256,12 @@
       }
       p.age = warm ? rand(0, p.life) : 0;
     }
+    tinted.fog = tint(cfg.fog); tinted.glow = tint(cfg.glow);
     [-1, 1].forEach(function (side) {
       for (var i = 0; i < 9; i++) puffs.push({ kind: 'fog', side: side });
       for (var j = 0; j < 11; j++) puffs.push({ kind: 'glow', side: side });
     });
+    puffs.forEach(function (p) { spawn(p, true); });
 
     function size() {
       var w = Math.max(100, Math.round(canvas.clientWidth / 2.5)), h = Math.max(60, Math.round(canvas.clientHeight / 2.5));
@@ -289,13 +271,12 @@
       size(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
       for (var pass = 0; pass < 2; pass++) {
         var kind = pass ? 'glow' : 'fog';
-        ctx.globalCompositeOperation = pass && cfg.additive ? 'lighter' : 'source-over';
+        ctx.globalCompositeOperation = pass ? 'lighter' : 'source-over';
         for (var i = 0; i < puffs.length; i++) {
           var p = puffs[i]; if (p.kind !== kind) continue;
           p.age += dt; if (p.age > p.life) spawn(p, false);
           p.x += (p.vx + Math.sin(time * 0.35 + p.ph) * 0.004) * dt; p.y += p.vy * dt; p.r += p.grow * dt; p.rot += p.spin * dt;
-          if (kind === 'fog' && !cfg.fogOn) continue;
-          var a = p.a * Math.pow(Math.sin(Math.PI * p.age / p.life), 1.3) * (kind === 'glow' ? cfg.glowA : 1); if (a <= 0.004) continue;
+          var a = p.a * Math.pow(Math.sin(Math.PI * p.age / p.life), 1.3); if (a <= 0.004) continue;
           var r = p.r * W;
           ctx.setTransform(1, 0, 0, 1, p.x * W, p.y * H); ctx.rotate(p.rot); ctx.globalAlpha = Math.min(1, a);
           ctx.drawImage(tinted[kind][p.shape], -r, -r * p.sy, r * 2, r * 2 * p.sy);
@@ -311,31 +292,9 @@
     return {
       start: function () { if (running) return; running = true; last = null; raf = requestAnimationFrame(frame); },
       stop: function () { running = false; cancelAnimationFrame(raf); },
-      still: function () { draw(0, 0); },
-      setTheme: function (t) {
-        // dark: the film is feathered, so fog works its edges. light: the film is a card, so only a violet haze drifts past it.
-        cfg = t === 'light'
-          ? { fog: '246,246,250', glow: '126,108,232', additive: false, fogOn: false, left: 0.05, right: 0.90, glowA: 1.5 }
-          : { fog: '11,11,16', glow: '160,130,255', additive: true, fogOn: true, left: 0.05, right: 0.95, glowA: 1 };
-        tinted.fog = tint(cfg.fog); tinted.glow = tint(cfg.glow);
-        puffs.forEach(function (p) { spawn(p, true); });
-        if (!running) draw(0, 0);
-      }
+      still: function () { draw(0, 0); }
     };
   })(smokeCanvas);
-
-  // ── Theme
-  var theme = 'dark';
-  try { theme = localStorage.getItem('mc-theme') || root.getAttribute('data-theme') || 'dark'; } catch (e) {}
-  function applyTheme(next) {
-    theme = next === 'light' ? 'light' : 'dark';
-    root.setAttribute('data-theme', theme);
-    themeBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
-    smoke.setTheme(theme);
-    try { localStorage.setItem('mc-theme', theme); } catch (e) {}
-  }
-  applyTheme(theme);
-  themeBtn.addEventListener('click', function () { applyTheme(theme === 'dark' ? 'light' : 'dark'); });
 
   // ── Film: loops forever; its last frame is its first frame, so the restart is invisible
   var wantPlay = !reduced, onScreen = true;
