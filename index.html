@@ -12,7 +12,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap">
 <style>
   /* Layout: one screen. Nav on top, then two columns: the statement on the left,
-     the loop on the right with nothing behind it. Dark is the default look. */
+     the film on the right, bleeding toward the edge with smoke over its sides.
+     Dark is the default look. */
   :root {
     --bg: #0b0b10;
     --fg: #f4f4f8;
@@ -53,6 +54,8 @@
     min-height: 100%;
     display: grid;
     grid-template-rows: auto 1fr;
+    overflow: hidden;
+    overflow: clip;
     padding-left: max(24px, env(safe-area-inset-left, 0px));
     padding-right: max(24px, env(safe-area-inset-right, 0px));
   }
@@ -81,53 +84,77 @@
 
   /* Hero */
   .hero {
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr); align-items: center; gap: 24px;
+    display: grid; grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); align-items: center; gap: 8px;
     padding-block: clamp(16px, 4vh, 56px) clamp(32px, 7vh, 88px);
   }
-  .copy { display: grid; justify-items: start; gap: 0; min-width: 0; }
+  .copy { position: relative; z-index: 2; display: grid; justify-items: start; gap: 0; min-width: 0; }
   .tag {
     display: inline-flex; align-items: center; gap: 9px; height: 34px; padding: 0 15px; border-radius: 999px;
     border: 1px solid var(--line); background: var(--chip); font-size: 13.5px; color: var(--muted);
   }
   .tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
   h1 {
-    margin: 30px 0 0; font-weight: 500; font-size: clamp(2.7rem, 5.75vw, 4.75rem); line-height: 1.045;
-    letter-spacing: -0.048em; text-wrap: balance;
+    margin: 26px 0 0; font-weight: 500; font-size: clamp(2.15rem, 3.95vw, 3.4rem); line-height: 1.07;
+    letter-spacing: -0.042em; text-wrap: balance;
   }
   h1 span { display: block; }
   h1 em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -0.02em; color: var(--work); font-size: 1.07em; line-height: 0.9; }
-  .lede { margin: 30px 0 0; max-width: 34em; font-size: clamp(1rem, 1.25vw, 1.12rem); line-height: 1.65; color: var(--muted); }
-  .scroll { margin-top: 34px; display: inline-flex; align-items: center; gap: 14px; font-size: 14px; color: var(--muted); }
+  .lede { margin: 24px 0 0; max-width: 29em; font-size: clamp(0.98rem, 1.15vw, 1.06rem); line-height: 1.65; color: var(--muted); }
+  .scroll { margin-top: 30px; display: inline-flex; align-items: center; gap: 14px; font-size: 14px; color: var(--muted); }
   .scroll i { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--chip); display: grid; place-items: center; }
   .scroll svg { width: 12px; height: 12px; animation: nudge 2.4s cubic-bezier(.65, 0, .35, 1) infinite; }
   .scroll:hover { color: var(--fg); }
   @keyframes nudge { 0%, 100% { transform: translateY(-2px); } 50% { transform: translateY(3px); } }
 
-  /* The loop. The canvas is transparent; the mask only softens its edges. */
-  .stage { position: relative; width: 100%; max-width: 640px; justify-self: end; aspect-ratio: 1 / 0.98; }
-  .stage canvas {
-    position: absolute; inset: 0; width: 100%; height: 100%; display: block;
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+  /* The film. Its edges are feathered away, and a layer of drifting smoke sits
+     over the left and right sides so it never reads as a rectangle. */
+  .stage {
+    --bleed: clamp(0px, 6vw, 96px);
+    position: relative; width: calc(100% + var(--bleed)); margin-right: calc(-1 * var(--bleed));
+    aspect-ratio: 16 / 9; justify-self: stretch;
+  }
+  .stage video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+    opacity: 0; transition: opacity 0.9s ease;
+    -webkit-mask-image: linear-gradient(to right, transparent 1%, #000 19%, #000 81%, transparent 99%), linear-gradient(to bottom, transparent 1%, #000 15%, #000 85%, transparent 99%);
     -webkit-mask-composite: source-in;
-    mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+    mask-image: linear-gradient(to right, transparent 1%, #000 19%, #000 81%, transparent 99%), linear-gradient(to bottom, transparent 1%, #000 15%, #000 85%, transparent 99%);
     mask-composite: intersect;
   }
+  .stage.is-ready video { opacity: 1; }
+  /* On the dark page, anything in the film darker than the page takes the page colour, so there is no box */
+  :root:not([data-theme="light"]) .stage video { mix-blend-mode: lighten; }
+  /* On the light page the dark film sits in a rounded frame instead of fading out */
+  :root[data-theme="light"] .stage video {
+    left: 3%; top: 7%; width: 87%; height: 86%; border-radius: 26px;
+    -webkit-mask-image: none; mask-image: none;
+    box-shadow: 0 34px 80px -34px rgba(46, 38, 120, 0.55), 0 0 0 1px rgba(16, 16, 23, 0.08);
+  }
+  .stage .smoke {
+    position: absolute; left: -10%; top: -14%; width: 126%; height: 128%; display: block; pointer-events: none;
+    filter: blur(7px); opacity: 0; transition: opacity 1.4s ease;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+    mask-composite: intersect;
+  }
+  .stage.is-ready .smoke { opacity: 1; }
   .stage .toggle {
-    position: absolute; right: 6%; bottom: 3%; width: 36px; height: 36px; border-radius: 50%;
+    position: absolute; right: 19%; bottom: 13%; width: 36px; height: 36px; border-radius: 50%;
     border: 1px solid var(--line); background: var(--chip); color: var(--muted); display: grid; place-items: center; cursor: pointer; padding: 0;
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     opacity: 0; transition: opacity 0.25s ease, border-color 0.2s ease, color 0.2s ease;
   }
   .stage:hover .toggle, .stage .toggle:focus-visible, .stage.is-paused .toggle { opacity: 1; }
   .stage .toggle:hover { color: var(--fg); border-color: var(--accent); }
   .stage .toggle svg { width: 11px; height: 11px; }
   .stage.is-paused .i-pause, .stage:not(.is-paused) .i-play { display: none; }
-  .stage.no-webgl { display: none; }
 
   @media (max-width: 900px) {
     .links { display: none; }
-    .hero { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-block: 28px 40px; }
-    .stage { justify-self: center; max-width: 520px; }
-    .stage .toggle { opacity: 1; }
+    .hero { grid-template-columns: minmax(0, 1fr); gap: 4px; padding-block: 28px 40px; }
+    .stage { width: calc(100% + 48px); margin: 0 -24px; }
+    .stage .toggle { opacity: 1; right: 7%; bottom: 0; }
   }
   @media (max-width: 420px) {
     .page { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
@@ -136,7 +163,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .scroll svg { animation: none; }
-    body { transition: none; }
+    body, .stage video, .stage .smoke { transition: none; }
   }
 </style>
 <!-- fold:head-end -->
@@ -183,7 +210,11 @@
     </div>
 
     <div class="stage" id="stage">
-      <canvas id="heroLoop" role="img" aria-label="Looping animation: a bouncing ball becomes a row of loading dots, the dots become fingertips drumming on a desk, the camera pulls back to Mayank at his laptop, then pushes into the screen where the same ball is bouncing."></canvas>
+      <video id="heroVideo" muted loop playsinline preload="auto" poster="hero/hero-poster.jpg"
+             aria-label="Looping film: a bouncing ball becomes a row of loading dots, the dots become fingertips drumming on a desk, the camera pulls back to Mayank at his laptop, then pushes into the screen where the same ball is bouncing.">
+        <source src="hero/hero-loop.mp4" type="video/mp4">
+      </video>
+      <canvas class="smoke" id="heroSmoke" aria-hidden="true"></canvas>
       <button class="toggle" id="loopBtn" type="button" aria-label="Pause animation">
         <svg class="i-pause" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><rect x="2.5" y="2" width="2.4" height="8" rx="1"/><rect x="7.1" y="2" width="2.4" height="8" rx="1"/></svg>
         <svg class="i-play" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M3.2 1.9v8.2a.6.6 0 0 0 .9.5l6.5-4.1a.6.6 0 0 0 0-1L4.1 1.4a.6.6 0 0 0-.9.5Z"/></svg>
@@ -192,36 +223,139 @@
   </main>
 </div>
 
-<script src="hero/vendor/three.min.js"></script>
-<script src="hero/hero-loop.js"></script>
 <script>
 (function () {
   var root = document.documentElement, stage = document.getElementById('stage');
+  var video = document.getElementById('heroVideo'), smokeCanvas = document.getElementById('heroSmoke');
   var themeBtn = document.getElementById('themeBtn'), loopBtn = document.getElementById('loopBtn');
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── Smoke: textured wisps that drift up along the left and right sides of the film.
+  // "Fog" wisps are the page colour and eat into the film's edges; "glow" wisps carry its violet light.
+  var smoke = (function (canvas) {
+    var ctx = canvas.getContext('2d'), W = 0, H = 0, puffs = [], last = null, running = false, raf = 0;
+    var EXT_L = 0.10, EXT_R = 0.16, SPAN = 1 + EXT_L + EXT_R;      // how far this canvas reaches past the film (matches the CSS)
+    var cfg = { fog: '11,11,16', glow: '160,130,255', additive: true, fogOn: true, left: 0.05, right: 0.95, glowA: 1 };
+    var masks = [], tinted = { fog: [], glow: [] };
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    // A few cloud shapes, made once: soft falloff multiplied by layered noise
+    function makeMask(seed) {
+      var n = 112, c = document.createElement('canvas'); c.width = c.height = n;
+      var x = c.getContext('2d'), im = x.createImageData(n, n), d = im.data, G = 16, lat = [], sd = seed;
+      for (var k = 0; k < G * G; k++) { sd = (sd * 16807) % 2147483647; lat.push((sd & 0xffff) / 65536); }
+      function vn(u, v) {
+        var xi = Math.floor(u), yi = Math.floor(v), fx = u - xi, fy = v - yi; fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy);
+        var a = lat[(yi % G) * G + xi % G], b = lat[(yi % G) * G + (xi + 1) % G], c2 = lat[((yi + 1) % G) * G + xi % G], d2 = lat[((yi + 1) % G) * G + (xi + 1) % G];
+        return a + (b - a) * fx + (c2 - a) * fy + (a - b - c2 + d2) * fx * fy;
+      }
+      for (var yy = 0; yy < n; yy++) for (var xx = 0; xx < n; xx++) {
+        var u = xx / n, v = yy / n, f = 0.52 * vn(u * 3, v * 3) + 0.30 * vn(u * 6 + 5, v * 6 + 3) + 0.18 * vn(u * 12 + 9, v * 12 + 7);
+        var r = Math.min(1, Math.sqrt((u - 0.5) * (u - 0.5) + (v - 0.5) * (v - 0.5)) * 2), fall = 1 - r; fall = fall * fall * (3 - 2 * fall);
+        var o = (yy * n + xx) * 4; d[o] = d[o + 1] = d[o + 2] = 255; d[o + 3] = 255 * Math.min(1, fall * Math.max(0, (f - 0.25) / 0.42));
+      }
+      x.putImageData(im, 0, 0); return c;
+    }
+    [7, 131, 977].forEach(function (sd) { masks.push(makeMask(sd)); });
+    function tint(rgb) {
+      return masks.map(function (m) {
+        var c = document.createElement('canvas'); c.width = c.height = m.width; var x = c.getContext('2d');
+        x.drawImage(m, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = 'rgb(' + rgb + ')'; x.fillRect(0, 0, c.width, c.height); return c;
+      });
+    }
+
+    function spawn(p, warm) {
+      var edge = (EXT_L + (p.side < 0 ? cfg.left : cfg.right)) / SPAN, inward = -p.side;
+      p.shape = Math.floor(Math.random() * masks.length); p.rot = rand(0, 6.28); p.spin = rand(-0.07, 0.07); p.ph = rand(0, 6.28);
+      if (p.kind === 'fog') {
+        p.x = edge + inward * rand(-0.075, 0.035); p.y = rand(-0.05, 1.05); p.r = rand(0.12, 0.21); p.sy = rand(1.0, 1.35);
+        p.vx = inward * rand(-0.004, 0.005); p.vy = -rand(0.004, 0.014); p.a = rand(0.6, 0.95); p.life = rand(10, 16); p.grow = rand(0.002, 0.007);
+      } else {
+        p.x = edge + inward * rand(-0.06, 0.085); p.y = rand(0.3, 1.05); p.r = rand(0.055, 0.125); p.sy = rand(1.15, 1.8);
+        p.vx = inward * rand(-0.005, 0.009); p.vy = -rand(0.016, 0.042); p.a = rand(0.09, 0.24); p.life = rand(6, 11); p.grow = rand(0.004, 0.011);
+      }
+      p.age = warm ? rand(0, p.life) : 0;
+    }
+    [-1, 1].forEach(function (side) {
+      for (var i = 0; i < 9; i++) puffs.push({ kind: 'fog', side: side });
+      for (var j = 0; j < 11; j++) puffs.push({ kind: 'glow', side: side });
+    });
+
+    function size() {
+      var w = Math.max(100, Math.round(canvas.clientWidth / 2.5)), h = Math.max(60, Math.round(canvas.clientHeight / 2.5));
+      if (w !== W || h !== H) { W = canvas.width = w; H = canvas.height = h; }
+    }
+    function draw(dt, time) {
+      size(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+      for (var pass = 0; pass < 2; pass++) {
+        var kind = pass ? 'glow' : 'fog';
+        ctx.globalCompositeOperation = pass && cfg.additive ? 'lighter' : 'source-over';
+        for (var i = 0; i < puffs.length; i++) {
+          var p = puffs[i]; if (p.kind !== kind) continue;
+          p.age += dt; if (p.age > p.life) spawn(p, false);
+          p.x += (p.vx + Math.sin(time * 0.35 + p.ph) * 0.004) * dt; p.y += p.vy * dt; p.r += p.grow * dt; p.rot += p.spin * dt;
+          if (kind === 'fog' && !cfg.fogOn) continue;
+          var a = p.a * Math.pow(Math.sin(Math.PI * p.age / p.life), 1.3) * (kind === 'glow' ? cfg.glowA : 1); if (a <= 0.004) continue;
+          var r = p.r * W;
+          ctx.setTransform(1, 0, 0, 1, p.x * W, p.y * H); ctx.rotate(p.rot); ctx.globalAlpha = Math.min(1, a);
+          ctx.drawImage(tinted[kind][p.shape], -r, -r * p.sy, r * 2, r * 2 * p.sy);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+    function frame(now) {
+      raf = requestAnimationFrame(frame);
+      var dt = last == null ? 0 : Math.min(0.06, (now - last) / 1000); last = now;
+      draw(dt, now / 1000);
+    }
+    return {
+      start: function () { if (running) return; running = true; last = null; raf = requestAnimationFrame(frame); },
+      stop: function () { running = false; cancelAnimationFrame(raf); },
+      still: function () { draw(0, 0); },
+      setTheme: function (t) {
+        // dark: the film is feathered, so fog works its edges. light: the film is a card, so only a violet haze drifts past it.
+        cfg = t === 'light'
+          ? { fog: '246,246,250', glow: '126,108,232', additive: false, fogOn: false, left: 0.05, right: 0.90, glowA: 1.5 }
+          : { fog: '11,11,16', glow: '160,130,255', additive: true, fogOn: true, left: 0.05, right: 0.95, glowA: 1 };
+        tinted.fog = tint(cfg.fog); tinted.glow = tint(cfg.glow);
+        puffs.forEach(function (p) { spawn(p, true); });
+        if (!running) draw(0, 0);
+      }
+    };
+  })(smokeCanvas);
+
+  // ── Theme
   var theme = 'dark';
   try { theme = localStorage.getItem('mc-theme') || root.getAttribute('data-theme') || 'dark'; } catch (e) {}
-  var loop = null;
-  try { loop = window.HeroLoop.init(document.getElementById('heroLoop'), { theme: theme }); }
-  catch (e) { stage.classList.add('no-webgl'); }
-
   function applyTheme(next) {
     theme = next === 'light' ? 'light' : 'dark';
     root.setAttribute('data-theme', theme);
     themeBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
-    if (loop) loop.setTheme(theme);
+    smoke.setTheme(theme);
     try { localStorage.setItem('mc-theme', theme); } catch (e) {}
   }
   applyTheme(theme);
   themeBtn.addEventListener('click', function () { applyTheme(theme === 'dark' ? 'light' : 'dark'); });
 
-  function setPaused(p) {
-    stage.classList.toggle('is-paused', p);
-    loopBtn.setAttribute('aria-label', p ? 'Play animation' : 'Pause animation');
-    if (loop) { if (p) loop.pause(); else loop.play(); }
+  // ── Film: loops forever; its last frame is its first frame, so the restart is invisible
+  var wantPlay = !reduced, onScreen = true;
+  function ready() { stage.classList.add('is-ready'); }
+  video.addEventListener('loadeddata', ready); setTimeout(ready, 1500);
+  if (video.readyState >= 2) ready();
+  function sync() {
+    var go = wantPlay && onScreen && !document.hidden;
+    stage.classList.toggle('is-paused', !wantPlay);
+    loopBtn.setAttribute('aria-label', wantPlay ? 'Pause animation' : 'Play animation');
+    if (go) {
+      smoke.start();
+      var pr = video.play();
+      if (pr && pr.catch) pr.catch(function () { wantPlay = false; sync(); });   // autoplay refused: show the play button
+    } else { video.pause(); smoke.stop(); smoke.still(); }
   }
-  if (loop && !loop.playing) setPaused(true);
-  loopBtn.addEventListener('click', function () { setPaused(!stage.classList.contains('is-paused')); });
-  window.__heroLoop = loop;
+  loopBtn.addEventListener('click', function () { wantPlay = !wantPlay; sync(); });
+  if (window.IntersectionObserver) new IntersectionObserver(function (es) { onScreen = es[0].isIntersecting; sync(); }).observe(stage);
+  document.addEventListener('visibilitychange', sync);
+  sync();
 })();
 </script>
 <!-- fold:body-end -->
