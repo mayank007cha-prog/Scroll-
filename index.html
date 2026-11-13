@@ -113,8 +113,28 @@
   .stage.is-ready video { opacity: 1; }
   /* Anything in the film darker than the page takes the page colour, so there is no box */
   .stage.is-ready video { mix-blend-mode: lighten; }
+  /* Quiet supporting pieces around the film: orbit lines, tick marks, a spark and three small slowly turning solids.
+     They sit behind the film and are masked out of its middle, so they frame it without crossing the picture. */
+  .decor { position: absolute; inset: -9% -3% -9% -7%; pointer-events: none; z-index: 0; opacity: 0; transition: opacity 1.6s ease 0.3s; }
+  .stage.is-ready .decor { opacity: 1; }
+  .decor .orbits {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    -webkit-mask-image: radial-gradient(ellipse 43% 41% at 51% 50%, transparent 62%, #000 100%);
+    mask-image: radial-gradient(ellipse 43% 41% at 51% 50%, transparent 62%, #000 100%);
+  }
+  .decor .dot { position: absolute; left: 0; top: 0; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px 2px rgba(139, 140, 248, 0.55); }
+  .decor .spark { position: absolute; left: 90.5%; top: 63%; width: 15px; height: 15px; color: var(--accent); opacity: 0.75; animation: twinkle 5.5s ease-in-out infinite; }
+  .decor .solid { position: absolute; display: block; }
+  .decor .s1 { left: 85%; top: 9%; width: 54px; height: 54px; opacity: 0.8; }
+  .decor .s2 { left: 6.5%; top: 80%; width: 38px; height: 38px; opacity: 0.6; }
+  .decor .s3 { left: 15%; top: 10%; width: 22px; height: 22px; opacity: 0.42; filter: blur(0.6px); }
+  @keyframes twinkle { 0%, 100% { transform: scale(0.72) rotate(0deg); opacity: 0.3; } 50% { transform: scale(1) rotate(45deg); opacity: 0.8; } }
+  .stage video { z-index: 1; }
+  .timeline { position: absolute; z-index: 2; left: 27%; right: 27%; bottom: 4.5%; height: 1px; background: linear-gradient(to right, transparent, var(--line) 12%, var(--line) 88%, transparent); opacity: 0; transition: opacity 1.6s ease 0.6s; }
+  .stage.is-ready .timeline { opacity: 1; }
+  .timeline i { position: absolute; top: -2px; left: 0; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--fg); opacity: 0.75; }
   .stage .toggle {
-    position: absolute; right: 19%; bottom: 13%; width: 36px; height: 36px; border-radius: 50%;
+    position: absolute; z-index: 3; right: 19%; bottom: 13%; width: 36px; height: 36px; border-radius: 50%;
     border: 1px solid var(--line); background: var(--chip); color: var(--muted); display: grid; place-items: center; cursor: pointer; padding: 0;
     -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     opacity: 0; transition: opacity 0.25s ease, border-color 0.2s ease, color 0.2s ease;
@@ -128,6 +148,10 @@
     .links { display: none; }
     .hero { grid-template-columns: minmax(0, 1fr); gap: 4px; padding-block: 28px 40px; }
     .stage { width: calc(100% + 48px); margin: 0 -24px; }
+    .decor { inset: -6% 0; }
+    .decor .s1 { left: 82%; top: 2%; width: 40px; height: 40px; }
+    .decor .s2 { left: 8%; top: 86%; width: 28px; height: 28px; }
+    .timeline { left: 22%; right: 22%; bottom: 1%; }
     .stage .toggle { opacity: 1; right: 7%; bottom: 0; }
   }
   @media (max-width: 420px) {
@@ -137,7 +161,8 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .scroll svg { animation: none; }
-    body, .stage video { transition: none; }
+    body, .stage video, .decor, .timeline { transition: none; }
+    .decor .spark { animation: none; }
   }
 </style>
 <!-- fold:head-end -->
@@ -180,10 +205,30 @@
     </div>
 
     <div class="stage" id="stage">
+      <div class="decor" id="decor" aria-hidden="true">
+        <svg class="orbits" viewBox="0 0 1000 620" fill="none" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="orbA" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".35" stop-color="#fff" stop-opacity=".26"/><stop offset=".7" stop-color="#b3a4ff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+            <linearGradient id="orbB" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#b3a4ff" stop-opacity=".0"/><stop offset=".5" stop-color="#b3a4ff" stop-opacity=".24"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient>
+          </defs>
+          <ellipse cx="500" cy="318" rx="486" ry="172" transform="rotate(-11 500 318)" stroke="url(#orbA)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+          <ellipse cx="520" cy="300" rx="402" ry="278" transform="rotate(19 520 300)" stroke="url(#orbB)" stroke-width="1" stroke-dasharray="2 9" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+          <path d="M82 468 H 210" stroke="#fff" stroke-opacity=".14" vector-effect="non-scaling-stroke"/>
+          <path d="M82 462v12 M114 465v6 M146 465v6 M178 465v6 M210 462v12" stroke="#fff" stroke-opacity=".2" vector-effect="non-scaling-stroke"/>
+          <path d="M846 118 H 938 M892 96 V 140" stroke="#fff" stroke-opacity=".1" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <i class="dot" id="orbitDot"></i>
+        <svg class="spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5c.9 5.4 3.2 8.2 10.5 10.5C15.2 14.300 12.900 17.100 12 22.500 11.100 17.100 8.800 14.300 1.500 12 8.800 9.700 11.100 6.900 12 1.500Z" fill="currentColor"/></svg>
+        <canvas class="solid s1" data-shape="ico" data-depth="18"></canvas>
+        <canvas class="solid s2" data-shape="octa" data-depth="30"></canvas>
+        <canvas class="solid s3" data-shape="ico" data-depth="8"></canvas>
+      </div>
       <video id="heroVideo" muted loop playsinline preload="auto" poster="hero/hero-poster.jpg"
              aria-label="Looping film: a bouncing ball becomes a row of loading dots, the dots become fingertips drumming on a desk, the camera pulls back to Mayank at his laptop, then pushes into the screen where the same ball is bouncing.">
+        <source src="hero/hero-loop-720.mp4" type="video/mp4" media="(max-width: 720px)">
         <source src="hero/hero-loop.mp4" type="video/mp4">
       </video>
+      <div class="timeline" aria-hidden="true"><i id="playhead"></i></div>
       <button class="toggle" id="loopBtn" type="button" aria-label="Pause animation">
         <svg class="i-pause" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><rect x="2.5" y="2" width="2.4" height="8" rx="1"/><rect x="7.1" y="2" width="2.4" height="8" rx="1"/></svg>
         <svg class="i-play" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M3.2 1.9v8.2a.6.6 0 0 0 .9.5l6.5-4.1a.6.6 0 0 0 0-1L4.1 1.4a.6.6 0 0 0-.9.5Z"/></svg>
@@ -199,6 +244,70 @@
   var loopBtn = document.getElementById('loopBtn');
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // ── Supporting pieces: three small low-poly solids that turn slowly, a dot riding the outer orbit,
+  //    a playhead that follows the film, and a few pixels of parallax with the pointer.
+  var decor = (function () {
+    var box = document.getElementById('decor'), dot = document.getElementById('orbitDot'), head = document.getElementById('playhead');
+    var PHI = (1 + Math.sqrt(5)) / 2;
+    var SHAPES = {
+      ico: { v: [[-1, PHI, 0], [1, PHI, 0], [-1, -PHI, 0], [1, -PHI, 0], [0, -1, PHI], [0, 1, PHI], [0, -1, -PHI], [0, 1, -PHI], [PHI, 0, -1], [PHI, 0, 1], [-PHI, 0, -1], [-PHI, 0, 1]],
+             f: [[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]] },
+      octa: { v: [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]],
+              f: [[0, 2, 4], [2, 1, 4], [1, 3, 4], [3, 0, 4], [2, 0, 5], [1, 2, 5], [3, 1, 5], [0, 3, 5]] }
+    };
+    Object.keys(SHAPES).forEach(function (k) {              // scale every solid to radius 1
+      var s = SHAPES[k], r = Math.hypot.apply(null, s.v[0]); s.v = s.v.map(function (p) { return [p[0] / r, p[1] / r, p[2] / r]; });
+    });
+    var LIGHT = (function (l) { var n = Math.hypot(l[0], l[1], l[2]); return [l[0] / n, l[1] / n, l[2] / n]; })([-0.45, -0.75, 0.6]);
+    var solids = [].slice.call(box.querySelectorAll('.solid')).map(function (c, i) {
+      return { c: c, ctx: c.getContext('2d'), shape: SHAPES[c.getAttribute('data-shape')], depth: +c.getAttribute('data-depth'), spin: [0.11, -0.16, 0.07][i], tilt: [0.5, 1.1, 2.0][i], size: 0 };
+    });
+    function drawSolid(o, time) {
+      var dpr = Math.min(2, window.devicePixelRatio || 1), px = Math.round(o.c.clientWidth * dpr);
+      if (!px) return;
+      if (px !== o.size) { o.c.width = o.c.height = o.size = px; }
+      var a = time * o.spin + o.tilt, b = 0.42 + Math.sin(time * 0.13 + o.tilt) * 0.22;
+      var ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+      var P = o.shape.v.map(function (p) {                 // turn about the vertical axis, then tip toward the viewer
+        var x = p[0] * ca + p[2] * sa, z = -p[0] * sa + p[2] * ca, y = p[1] * cb - z * sb; z = p[1] * sb + z * cb; return [x, y, z];
+      });
+      var ctx = o.ctx, R = px * 0.44, c = px / 2; ctx.clearRect(0, 0, px, px); ctx.lineJoin = 'round';
+      o.shape.f.map(function (f) {
+        var A = P[f[0]], B = P[f[1]], C = P[f[2]];
+        var n = [(B[1] - A[1]) * (C[2] - A[2]) - (B[2] - A[2]) * (C[1] - A[1]), (B[2] - A[2]) * (C[0] - A[0]) - (B[0] - A[0]) * (C[2] - A[2]), (B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0])];
+        var l = Math.hypot(n[0], n[1], n[2]); n = [n[0] / l, n[1] / l, n[2] / l];
+        if (n[0] * (A[0] + B[0] + C[0]) + n[1] * (A[1] + B[1] + C[1]) + n[2] * (A[2] + B[2] + C[2]) < 0) n = [-n[0], -n[1], -n[2]];   // outward
+        return { p: [A, B, C], n: n };
+      }).filter(function (t) { return t.n[2] > 0; }).forEach(function (t) {
+        var s = Math.max(0, t.n[0] * LIGHT[0] + t.n[1] * LIGHT[1] + t.n[2] * LIGHT[2]), k = 0.12 + 0.88 * s;
+        var col = 'rgb(' + Math.round(54 + 178 * k) + ',' + Math.round(44 + 170 * k) + ',' + Math.round(128 + 127 * k) + ')';
+        ctx.beginPath(); t.p.forEach(function (q, j) { ctx[j ? 'lineTo' : 'moveTo'](c + q[0] * R, c + q[1] * R); }); ctx.closePath();
+        ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 0.6 * dpr; ctx.fill(); ctx.stroke();
+      });
+    }
+    var raf = 0, running = false, px = 0, py = 0, tx = 0, ty = 0, t0 = performance.now();
+    var canHover = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    function frame(now) {
+      var time = (now - t0) / 1000;
+      solids.forEach(function (o) { drawSolid(o, time); });
+      // dot on the outer orbit (same ellipse as the SVG: centre 50%/51.3%, radii 48.6%/27.7%, turned -11 degrees)
+      var w = box.clientWidth, h = box.clientHeight, a = time * 0.11 + 2.2, rot = -11 * Math.PI / 180;
+      var ex = Math.cos(a) * 0.486 * w, ey = Math.sin(a) * 0.2774 * h;
+      dot.style.transform = 'translate(' + (0.5 * w + ex * Math.cos(rot) - ey * Math.sin(rot)).toFixed(1) + 'px,' + (0.5129 * h + ex * Math.sin(rot) + ey * Math.cos(rot)).toFixed(1) + 'px)';
+      if (video.duration) head.style.left = (video.currentTime / video.duration * 100).toFixed(2) + '%';
+      px += (tx - px) * 0.06; py += (ty - py) * 0.06;
+      solids.forEach(function (o) { o.c.style.transform = 'translate3d(' + (px * o.depth).toFixed(2) + 'px,' + (py * o.depth).toFixed(2) + 'px,0)'; });
+      if (running) raf = requestAnimationFrame(frame);
+    }
+    if (canHover && !reduced) window.addEventListener('pointermove', function (e) { tx = e.clientX / window.innerWidth - 0.5; ty = e.clientY / window.innerHeight - 0.5; }, { passive: true });
+    return {
+      start: function () { if (running) return; running = true; raf = requestAnimationFrame(frame); },
+      stop: function () { running = false; cancelAnimationFrame(raf); },
+      still: function () { frame(t0 + 4000); }
+    };
+  })();
+  decor.still();
+
   // ── Film: loops forever; its last frame is its first frame, so the restart is invisible
   var wantPlay = !reduced, onScreen = true;
   function ready() { stage.classList.add('is-ready'); }
@@ -209,9 +318,10 @@
     stage.classList.toggle('is-paused', !wantPlay);
     loopBtn.setAttribute('aria-label', wantPlay ? 'Pause animation' : 'Play animation');
     if (go) {
+      decor.start();
       var pr = video.play();
       if (pr && pr.catch) pr.catch(function () { wantPlay = false; sync(); });   // autoplay refused: show the play button
-    } else { video.pause(); }
+    } else { video.pause(); decor.stop(); }
   }
   loopBtn.addEventListener('click', function () { wantPlay = !wantPlay; sync(); });
   if (window.IntersectionObserver) new IntersectionObserver(function (es) { onScreen = es[0].isIntersecting; sync(); }).observe(stage);

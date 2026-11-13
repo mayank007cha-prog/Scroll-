@@ -86,8 +86,10 @@ def hold_fix(f):
     if t > 0.97: return load(i + 1)
     return _flow_mid(load(i), load(i + 1), t)
 
+GLITCH = 667
 def fix(f):
     """Returns the corrected frame f, or None when the frame needs no change here."""
+    if f == GLITCH: return _flow_mid(load(GLITCH - 1), load(GLITCH + 1), 0.5)   # one broken frame in the footage: rebuilt from its neighbours
     if f in K_LAND: return land_fix(f)
     if LOOK0 <= f <= LOOK1: return look_fix(f)
     if H0 < f < H1: return hold_fix(f)
